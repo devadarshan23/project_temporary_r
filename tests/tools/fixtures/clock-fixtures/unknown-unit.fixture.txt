@@ -1,0 +1,14 @@
+/* An interval unit the checker cannot measure, against a real frozen clock.
+ *
+ * A delta that cannot be computed is an assertion that cannot be made. This
+ * must FAIL CLOSED — verdict `unparsed`, exit 1, "extend UNIT_MS" — and must
+ * never be silently skipped, because a skipped row is a file reported clean
+ * that was never evaluated.
+ *
+ * Correct verdict: `unparsed`. */
+
+const NOW = '2026-09-19T12:00:00.000Z' as Timestamp
+
+await mig.query(`UPDATE tenant.membership SET expires_at = now() - interval '3 fortnights'`)
+
+const verdict = decide({ principal, capability: 'view_run', now: NOW })

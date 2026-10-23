@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@200;300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./journeys.css">
+</helmet>
+
+<main class="jp">
+
+  <div class="masthead">
+    <span class="logo" style="--logo-size:1.0625rem"><span>Reconcile</span><span class="badge">AI</span></span>
+    <span class="who">
+      <b>User journeys · customer · partner · 1CloudHub</b>
+      thirteen roles · three planes · two deployment modes
+    </span>
+  </div>
+
+  <h1>the journeys</h1>
+  <p class="lede">Every journey the three actor classes can take, marked for
+  whether v1 supports it, whether anything specifies it, and where it can stall
+  because the next step is not ours to execute.</p>
+
+  <p class="note"><b>Read the marks before the map.</b>
+  <span class="st" data-s="v1">v1</span> is in scope and has a surface.
+  <span class="st" data-s="v2">v2</span> is deferred by a decision.
+  <span class="st" data-s="unspecified">unspecified</span> means nothing
+  specifies it — no contract, no route, no owner — and that is a
+  <b>refusal by omission</b> rather than a later version, which is why it wears
+  the refused step and not the receded one.
+  <span class="st" data-s="refused">refused</span> means a decision
+  deliberately withheld it from this actor.</p>
+
+  <p class="note">Whose move is carried by grammar, as everywhere else in this
+  system: <b class="mono">›</b> the actor acts now ·
+  <b class="mono">…</b> the actor is waiting on somebody else and there is
+  nothing for them to do · <b class="mono">✕</b> the branch where it breaks.</p>
+
+  <nav>
+    <ul class="tabs">
+      <li><button type="button" aria-current="{{ tabCustomer }}" onClick="{{ goCustomer }}">Customer<span class="ct">{{ nCustomer }}</span></button></li>
+      <li><button type="button" aria-current="{{ tabPartner }}" onClick="{{ goPartner }}">Partner<span class="ct">{{ nPartner }}</span></button></li>
+      <li><button type="button" aria-current="{{ tabHub }}" onClick="{{ goHub }}">1CloudHub<span class="ct">{{ nHub }}</span></button></li>
+      <li><button type="button" aria-current="{{ tabRoutes }}" onClick="{{ goRoutes }}">Routes &amp; visibility</button></li>
+      <li><button type="button" aria-current="{{ tabHandoffs }}" onClick="{{ goHandoffs }}">Handoffs<span class="ct">10</span></button></li>
+      <li><button type="button" aria-current="{{ tabDecisions }}" onClick="{{ goDecisions }}">Decisions<span class="ct">19</span></button></li>
+    </ul>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       THE THREE JOURNEY TABS — one list, filtered
+       ═══════════════════════════════════════════════════════════════════ -->
+  <sc-if value="{{ showJourneys }}" hint-placeholder-val="{{ true }}">
+    <div>
+      <h2>{{ actorTitle }}</h2>
+      <p class="sub">{{ actorSub }}</p>
+
+      <div class="roles">
+        <sc-for list="{{ roles }}" as="r" hint-placeholder-count="4">
+          <div class="role">
+            <span class="nm">{{ r.name }}</span>
+            <span class="rt">{{ r.signin }}</span>
+            <p>{{ r.does }}</p>
+          </div>
+        </sc-for>
+      </div>
+
+      <div class="filters">
+        <span class="lab" style="margin:0">Scope</span>
+        <button class="chip" type="button" aria-pressed="{{ fAll }}" onClick="{{ setAll }}">Everything</button>
+        <button class="chip" type="button" aria-pressed="{{ fV1 }}" onClick="{{ setV1 }}">v1 only</button>
+        <button class="chip" type="button" aria-pressed="{{ fGap }}" onClick="{{ setGap }}">Gaps only</button>
+        <span class="count">{{ countLine }}</span>
+        <span style="flex:1"></span>
+        <button class="chip" type="button" onClick="{{ toggleAll }}">{{ expandLabel }}</button>
+      </div>
+
+      <div class="journeys">
+        <sc-for list="{{ journeys }}" as="j" hint-placeholder-count="6">
+          <div class="j">
+            <button class="j-head" type="button" aria-expanded="{{ j.expanded }}" onClick="{{ j.toggle }}">
+              <span class="j-id">{{ j.id }}</span>
+              <span class="j-main">
+                <span class="j-name">{{ j.name }}</span>
+                <span class="j-trig">{{ j.trigger }}</span>
+                <span class="spine" aria-hidden="true">
+                  <sc-for list="{{ j.spine }}" as="p" hint-placeholder-count="5">
+                    <i data-k="{{ p.kind }}"></i>
+                  </sc-for>
+                </span>
+              </span>
+              <span class="j-right">
+                <span class="st" data-s="{{ j.status }}">{{ j.statusLabel }}</span>
+                <span class="j-trig" style="margin:0">{{ j.roleLabel }}</span>
+                <span class="j-open" aria-hidden="true">{{ j.caret }}</span>
+              </span>
+            </button>
+            <sc-if value="{{ j.open }}" hint-placeholder-val="{{ false }}">
+              <div class="j-body">
+                <div class="flow" role="img" aria-label="{{ j.flowAlt }}">
+                  <sc-for list="{{ j.flow }}" as="c" hint-placeholder-count="4">
+                    <div class="fc">
+                      <div class="fn" data-k="{{ c.kind }}">
+                        <span class="fno">{{ c.no }}</span>
+                        <span class="fl"><span class="fm">{{ c.mark }}</span>{{ c.t }}</span>
+                      </div>
+                      <sc-for list="{{ c.branches }}" as="b" hint-placeholder-count="0">
+                        <div class="fb" data-stall="{{ b.stall }}">
+                          <span class="fno">{{ b.no }}</span>
+                          <span class="fl"><span class="fm">{{ b.mark }}</span>{{ b.t }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-for>
+                </div>
+                <div class="flow-key">
+                  <span><b>›</b> the actor acts</span>
+                  <span><b>…</b> waiting on somebody else</span>
+                  <span><b>✕</b> drops off the rail</span>
+                  <span>a doubled left edge marks where it stalls</span>
+                </div>
+                <ol class="steps">
+                  <sc-for list="{{ j.steps }}" as="s" hint-placeholder-count="4">
+                    <li data-kind="{{ s.kind }}">
+                      <span class="s-n">{{ s.mark }}</span>
+                      <span class="s-t">
+                        <b>{{ s.t }}</b> — {{ s.d }}
+                        <span class="tags">
+                          <span>plane <b>{{ s.plane }}</b></span>
+                          <span>surface <b>{{ s.surface }}</b></span>
+                          <span>system <b>{{ s.system }}</b></span>
+                          <span class="hands" data-h="{{ s.handsKey }}">hands <b>{{ s.hands }}</b></span>
+                          <span>state <b>{{ s.exists }}</b></span>
+                          <span>stage <b>{{ s.stage }}</b></span>
+                        </span>
+                        <sc-if value="{{ s.hasStall }}" hint-placeholder-val="{{ false }}">
+                          <span class="stall"><b>Stalls here.</b> {{ s.stall }}</span>
+                        </sc-if>
+                      </span>
+                    </li>
+                  </sc-for>
+                </ol>
+                <p class="note"><b>Exit.</b> {{ j.exit }}</p>
+                <sc-if value="{{ j.hasNote }}" hint-placeholder-val="{{ false }}">
+                  <p class="note">{{ j.note }}</p>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{ showEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule-strong);padding:calc(var(--u)*6)">
+            <b style="font-size:var(--s3)">{{ emptyTitle }}</b>
+            <p class="note" style="margin-top:calc(var(--u)*2)">{{ emptyBody }}</p>
+            <div style="margin-top:calc(var(--u)*4)">
+              <button class="chip" type="button" onClick="{{ setAll }}">Show everything on this tab</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       ROUTES AND VISIBILITY
+       ═══════════════════════════════════════════════════════════════════ -->
+  <sc-if value="{{ showRoutes }}" hint-placeholder-val="{{ false }}">
+    <div>
+      <h2>Routes and visibility</h2>
+      <p class="sub">Which routes exist, which plane serves them, whether they
+      are behind authentication, and who can see each one. <b>Both of the surfaces that were the
+      largest holes in the product are now specified</b> — the staff console and
+      the partner portal — so this tab is the authority on what each is allowed
+      to be rather than a list of what is missing.</p>
+
+      <h3>What is served from where, and whether it is protected</h3>
+      <div class="wrap">
+        <table>
+          <caption>A route served from the <b>data plane</b> runs in the
+          customer's own AWS account and never transits ours. A route served
+          from the <b>control plane</b> runs in the 1CloudHub account and must
+          never read tenant data — invariant 3.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Route</th>
+              <th scope="col">Plane</th>
+              <th scope="col">Protected</th>
+              <th scope="col">Identity provider</th>
+              <th scope="col">Exists</th>
+              <th scope="col">Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row" class="rt-route">/entry</th>
+              <td>data</td><td>public</td>
+              <td>the customer's own IdP, per-tenant host</td>
+              <td>built</td>
+              <td class="job">The only public route in the product. The sign-in
+              route is the one surface an unauthenticated person meets.</td>
+            </tr>
+            <tr>
+              <th scope="row" class="rt-route">/close</th>
+              <td>data</td><td>authenticated</td>
+              <td>customer IdP over OIDC or SAML</td>
+              <td>built</td>
+              <td class="job">The register. Tier 1 work surface.</td>
+            </tr>
+            <tr>
+              <th scope="row" class="rt-route">/ask</th>
+              <td>data</td><td>authenticated</td>
+              <td>customer IdP</td>
+              <td>built</td>
+              <td class="job">A capability first and a destination second — it
+              is also the drawer over the register.</td>
+            </tr>
+            <tr>
+              <th scope="row" class="rt-route">/reports</th>
+              <td>data</td><td>authenticated</td>
+              <td>customer IdP</td>
+              <td>partial</td>
+              <td class="job"><b>Almost entirely hatched.</b> Report,
+              ReportDefinition, ScheduledReport, PinnedAnswer, ExportJob and
+              ReportSchedule export nothing between them — the destination is an
+              export desk plus one report.</td>
+            </tr>
+            <tr>
+              <th scope="row" class="rt-route">/setup/*</th>
+              <td>data</td><td>authenticated</td>
+              <td>customer IdP</td>
+              <td>partial</td>
+              <td class="job">Source and pack configuration <b>must</b> execute
+              in the data plane — it binds credentials that live in the
+              customer's own Secrets Manager and that we never see.</td>
+            </tr>
+            <tr>
+              <th scope="row" class="rt-route">/audit</th>
+              <td>data</td><td>authenticated</td>
+              <td>customer IdP</td>
+              <td>specified</td>
+              <td class="job">✅ <b>Ruled.</b> A <b>door behind the avatar</b>,
+              beside Setup — not a fourth destination, so R3 holds. The id the
+              status bar has been printing on every surface resolves to the run,
+              the decisions on it and who took them.</td>
+            </tr>
+            <tr>
+              <th scope="row" class="rt-route">staff console</th>
+              <td>control</td><td>authenticated</td>
+              <td>1CloudHub IdP</td>
+              <td>specified</td>
+              <td class="job">✅ <b>Ruled: specify the whole console.</b>
+              Tenancy, catalogue, rate cards, plans and onboarding state, in
+              <span class="spec">administration.openapi.yaml</span>. It was the
+              largest v1 gap and nine journeys depended on it. ⚠️ The cost of
+              specifying all five before building any is that every step stays
+              manual for longer than an onboarding-state-first slice would
+              have.</td>
+            </tr>
+            <tr>
+              <th scope="row" class="rt-route">partner portal</th>
+              <td>control</td><td>authenticated</td>
+              <td>partner IdP</td>
+              <td class="no">neither</td>
+              <td class="job">✅ <b>The proposal is accepted.</b> G51 governs the
+              DATA plane only: no partner user reaches a tenant host or a row of
+              tenant data. The portal is control-plane — rate cards,
+              arrangements, tenants sold, commission owed — and carries
+              <b>one write</b>: a deal registration, which is a request until
+              staff approve it.</td>
+            </tr>
+            <tr>
+              <th scope="row" class="rt-route">telemetry / traces</th>
+              <td>control</td><td>authenticated</td>
+              <td>1CloudHub IdP</td>
+              <td class="no">neither</td>
+              <td class="job">✅ <b>Ruled: mint the capability.</b> The grant was
+              expressible and the token was unissuable, so support was authorised
+              for a read they could not perform — and found out mid-incident.
+              Minting it closes that; the customer's own support access mode
+              still bounds how much of the trace is in scope.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The public plane — and it is a third plane nothing names</h3>
+      <p class="note">Every route in the table above is control-plane or
+      data-plane. <b>These two are neither.</b> They are 1CloudHub-owned public
+      web surfaces with no tenant, no session and no capability model — and the
+      architecture documents do not describe a public plane at all, so nothing
+      states who owns it, where it deploys, or what it is allowed to claim.</p>
+      <div class="wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Route</th>
+              <th scope="col">Plane</th>
+              <th scope="col">Protected</th>
+              <th scope="col">Exists</th>
+              <th scope="col">What it has to do, and what it cannot</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row" class="rt-route">/</th>
+              <td>public</td><td>public</td>
+              <td>specified</td>
+              <td class="job">The landing page. Must explain a product whose
+              central fact — <b>it runs in your AWS account</b> — is the hardest
+              thing to put on a marketing page. 🛑 Cannot carry a price (rate
+              cards are per-arrangement in the control plane), cannot offer
+              sign-up (four tenant-creation decisions have no defaults), and
+              and does not carry one. ✅ Sign-in is an <b>email lookup</b> at
+              <span class="spec">/lookup</span>. Marketing owns the content
+              through a CMS; engineering owns the shell, which is what keeps the
+              page on-system.</td>
+            </tr>
+            <tr>
+              <th scope="row" class="rt-route">/demo</th>
+              <td>public</td><td>public</td>
+              <td>specified</td>
+              <td class="job">The only conversion the product has, which makes
+              it the <b>highest-leverage unspecified surface in the map</b>.
+              ✅ Leads go to the <b>CRM</b> and the console never sees one.
+              Partner attribution is <b>registration-first</b>: the lead is
+              matched to a deal the partner registered in advance (P9), not
+              attributed after the fact.</td>
+            </tr>
+            <tr>
+              <th scope="row" class="rt-route">/lookup</th>
+              <td>public</td><td>public</td>
+              <td>specified</td>
+              <td class="job">Takes a work email and routes to the right tenant
+              host. 1CloudHub maintains the domain allow-list as control-plane
+              data; an unlisted domain gets a generic reply.
+              ⚠️ <b>A resolving domain is still a yes</b>, so this narrows the
+              enumeration oracle rather than closing it — accepted knowingly,
+              and the first thing to re-read before a security review.</td>
+            </tr>
+            <tr>
+              <th scope="row" class="rt-route">/entry</th>
+              <td>data</td><td>public</td>
+              <td>built</td>
+              <td class="job">Listed again here because it is the <b>third</b>
+              public route and the only one in the data plane. A visitor cannot
+              reach it without already knowing their tenant host, which is what
+              makes tenant discovery a real unmade decision rather than a
+              nicety.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Who can see what</h3>
+      <div class="wrap">
+        <table class="matrix">
+          <caption><span class="yes">act</span> can act ·
+          <span class="ro">read</span> can see but not act ·
+          <span class="no">—</span> cannot see it at all. Read-only is a
+          distinct row in this matrix because three roles exist mainly to
+          look. ✅ Two cells changed with the rulings: the assurance reader now has a real
+          <span class="spec">/audit</span> door, and reads the register and the
+          reports as well — a trail with no access to what it describes is a
+          list of hashes. ✅ And the three partner rows now <b>act</b> on the
+          portal rather than only read it, because a deal registration is a
+          write — the one the portal has.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Role</th>
+              <th scope="col">/close</th>
+              <th scope="col">/ask</th>
+              <th scope="col">/reports</th>
+              <th scope="col">/setup</th>
+              <th scope="col">/audit</th>
+              <th scope="col">staff</th>
+              <th scope="col">partner</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Customer · user</th><td class="yes">act</td><td class="yes">act</td><td class="yes">act</td><td class="ro">read</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+            <tr><th scope="row">Customer · approver</th><td class="yes">act</td><td class="yes">act</td><td class="ro">read</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+            <tr><th scope="row">Customer · tenant administrator</th><td class="ro">read</td><td class="yes">act</td><td class="yes">act</td><td class="yes">act</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+            <tr><th scope="row">Customer · cloud engineer</th><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
+            <tr><th scope="row">Customer · assurance reader</th><td class="ro">read</td><td class="no">—</td><td class="ro">read</td><td class="no">—</td><td class="ro">read</td><td class="no">—</td><td class="no">—</td></tr>
+            <tr><th scope="row">Partner · admin</th><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="yes">act</td></tr>
+            <tr><th scope="row">Partner · sales</th><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="yes">act</td></tr>
+            <tr><th scope="row">Partner · delivery</th><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="ro">read</td></tr>
+            <tr><th scope="row">1CloudHub · FDE</th><td class="yes">act</td><td class="yes">act</td><td class="yes">act</td><td class="yes">act</td><td class="no">—</td><td class="yes">act</td><td class="no">—</td></tr>
+            <tr><th scope="row">1CloudHub · support</th><td class="ro">read</td><td class="no">—</td><td class="no">—</td><td class="ro">read</td><td class="no">—</td><td class="yes">act</td><td class="no">—</td></tr>
+            <tr><th scope="row">1CloudHub · billing</th><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="yes">act</td><td class="no">—</td></tr>
+            <tr><th scope="row">1CloudHub · catalogue</th><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="yes">act</td><td class="no">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">⚠️ <b>Two rows are entirely empty, and both are
+      deliberate.</b> The <b>cloud engineer</b> executes four onboarding steps
+      inside the customer's AWS account and never signs into the product — they
+      work in the AWS console, the CLI and their own IdP admin, which is why
+      their journeys are real and their route access is none. The three
+      <b>partner</b> rows are empty in the data plane by G51 and read-only in a
+      control-plane surface that does not exist.</p>
+
+      <h3>Segregation of duties — where the conflicts actually are</h3>
+      <div class="wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Conflict</th>
+              <th scope="col">Roles</th>
+              <th scope="col">Status</th>
+              <th scope="col">What it means</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Proposer and approver</th>
+              <td>user · approver</td>
+              <td><span class="st" data-s="v1">resolved</span></td>
+              <td class="job">It <em>was</em> an assertion of nothing:
+              <span class="spec">ApprovalConfig.segregationOfDuties</span> is
+              trivially satisfied when the proposer is the agent, so the check
+              passed without constraining anybody.
+              <br>✅ <b>Ruled: the user who triages an exception is the
+              proposer of record.</b> The existing check now has a name to
+              compare against and no eighth policy kind is needed — the defect
+              was the missing proposer, not the missing policy.
+              <br>⚠️ <b>And this is the first version of the control that bites,
+              which means it bites your smallest customers.</b> A one-person
+              finance team cannot close at all, so segregation is a
+              <b>per-tenant policy</b> a small tenant may waive knowingly — and
+              every approval it permits is recorded as self-approved, so the
+              trail says which tenants bought speed with the control.</td>
+            </tr>
+            <tr>
+              <th scope="row">Configures the rule, approves its output</th>
+              <td>tenant administrator · approver</td>
+              <td><span class="st" data-s="unspecified">unguarded</span></td>
+              <td class="job">A tenant administrator who can edit a match rule and also
+              approve the exceptions it produces can make an exception class
+              disappear rather than resolve it. No policy expresses this.</td>
+            </tr>
+            <tr>
+              <th scope="row">Sets the floor, delivers the outcome</th>
+              <td>1CloudHub FDE</td>
+              <td><span class="st" data-s="refused">by design</span></td>
+              <td class="job">The extraction confidence floor is FDE-set and
+              <b>off the tenant surface entirely</b> — read-only where it
+              appears, and pack configuration that refuses on absence. The same
+              party sets the threshold and is measured on the result. That is a
+              deliberate trade for delivery speed, and it is the one SoD
+              conflict the product chose on purpose.</td>
+            </tr>
+            <tr>
+              <th scope="row">Support reads tenant data</th>
+              <td>1CloudHub support</td>
+              <td><span class="st" data-s="v1">gated</span></td>
+              <td class="job">Constrained by the support access mode chosen at
+              tenant creation, so it is the customer's decision rather than
+              ours. ✅ The <b>trace</b> half is no longer unmintable — the
+              capability is minted, so the grant support holds can actually be
+              issued. What remains is the customer's own ceiling, which is a
+              decision with an owner rather than a defect.</td>
+            </tr>
+            <tr>
+              <th scope="row">Partner sees a tenant's work</th>
+              <td>partner delivery</td>
+              <td><span class="st" data-s="refused">G51 · costed</span></td>
+              <td class="job">No partner user reaches the data plane, so a
+              partner cannot support the tenant it sold. ✅ <b>Ruled: 1CloudHub
+              is always the support path, priced into the partner deal.</b>
+              Delegated tenant grants are not pursued. That turns an unserved
+              role into a commercial term — and it means partner support
+              capacity has to be <b>planned against resale volume</b> rather
+              than discovered by it.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The G51 ruling</h3>
+      <p class="note"><b>The contradiction was never between two decisions — it
+      was between two readings of one word.</b> G51 says no partner user signs
+      in during v1. OC2 specifies a partner portal. Both were defensible,
+      because "signs in" was doing two jobs: signing into <b>the tenant</b>, and
+      signing into <b>anything at all</b>.</p>
+      <div class="callout"><b>✅ Ruled: G51 governs the data plane, and only the
+      data plane.</b> No partner user ever authenticates against a customer's
+      per-tenant host or reads a row of tenant data — that is the invariant
+      worth protecting, and it is what makes resale safe to sell. The portal is a
+      <b>control-plane surface</b>: rate cards, arrangements, the tenants a
+      partner has sold, commission owed. All of it is control-plane data the
+      partner already has a commercial right to see, and it lands in
+      <span class="spec">administration.openapi.yaml</span>, which had to exist
+      anyway for the staff console — a second audience on one surface rather
+      than a second contract.
+      <br><br><b>And it carries exactly one write.</b> A <b>deal
+      registration</b> (P9) is submitted by the partner and is a <b>request
+      until staff approve it</b>, which is what keeps a visibility surface from
+      quietly becoming a system partners can enter facts into. The control plane
+      owns the registration; the CRM holds a copy.
+      <br><br><b>What the ruling deliberately does not grant.</b> Partner
+      delivery still cannot support the tenant it sold, because that needs
+      data-plane access and G51 correctly refuses it. <b>Delegated tenant grants
+      are not pursued</b> — 1CloudHub is always the support path, priced into the
+      partner deal. That makes the refusal a costed commercial term rather than
+      an unserved role.</div>
+      <p class="note">The partner journeys read against the ruling:
+      <b>P1, P2, P4, P5, P8 and P9 are v1</b>, with everything but P9 executed
+      by us; <b>P3 and P6 are v1</b> — the invitation now has somewhere to
+      arrive, and a partner can see its own commercial position; and <b>P7 stays
+      refused</b>, costed rather than deferred. ⚠️ Two questions the registry
+      created are open: <b>precedence</b> when two partners register the same
+      deal, and <b>expiry</b> — without one the registry becomes a
+      land-grab.</p>
+    </div>
+  </sc-if>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       HANDOFFS
+       ═══════════════════════════════════════════════════════════════════ -->
+  <sc-if value="{{ showHandoffs }}" hint-placeholder-val="{{ false }}">
+    <div>
+      <h2>The handoffs</h2>
+      <p class="sub">Ten places where a journey stops being one actor's and
+      becomes another's. <b>Every one of them is where onboarding actually
+      stalls</b>, and none of them exists as a tracked object today — which is
+      why "why is this customer not live" has no answer.</p>
+
+      <div class="handoffs">
+        <div class="ho">
+          <div>
+            <span class="nm">1 · Provisioning consent</span>
+            <span class="pass">1CloudHub <span class="arrow">→</span> cloud engineer</span>
+          </div>
+          <div>
+            <p>We hand over a CDK stack; they run it in their own account, with
+            their mandatory resource tags applied. <b>We cannot execute this and
+            we cannot see whether it has been executed</b> until the stack
+            reports back.</p>
+            <p>Needs: a provisioning state per tenant, and a tag policy agreed
+            <em>before</em> the stack runs rather than after — a stack deployed
+            without the customer's tags is a chargeback hole that only surfaces
+            on the first invoice.</p>
+          </div>
+        </div>
+
+        <div class="ho">
+          <div>
+            <span class="nm">2 · Key exchange</span>
+            <span class="pass">cloud engineer <span class="arrow">→</span> 1CloudHub</span>
+          </div>
+          <div>
+            <p>A KMS key pair is generated <b>in their account</b>; we register
+            only the public half. The private half never leaves their
+            boundary.</p>
+            <p>This is the handoff that makes the whole tenancy claim true, and
+            it is one manual step with no state. If it is skipped, everything
+            downstream appears to work until the first encrypted artefact.</p>
+          </div>
+        </div>
+
+        <div class="ho">
+          <div>
+            <span class="nm">3 · Model access pre-flight</span>
+            <span class="pass">cloud engineer <span class="arrow">→</span> 1CloudHub</span>
+          </div>
+          <div>
+            <p>Which Bedrock models, which region, which quotas, on-demand or
+            provisioned. <b>Under BYOA the inference bill is theirs</b>, so this
+            is a commercial conversation disguised as a configuration step.</p>
+            <p>The common stall: model access not enabled in their account, or a
+            quota too low for the first close. Nothing in the product detects
+            either until extraction fails.</p>
+          </div>
+        </div>
+
+        <div class="ho">
+          <div>
+            <span class="nm">4 · Identity federation</span>
+            <span class="pass">cloud engineer <span class="arrow">→</span> tenant administrator</span>
+          </div>
+          <div>
+            <p>Their IdP over OIDC or SAML, roles mapped to the product's roles.
+            <b>This is where the role model stops being ours</b> — every
+            journey's access depends on a mapping executed by someone who never
+            signs into the product.</p>
+            <p>A wrong mapping is invisible: the user signs in successfully
+            and is missing a destination.</p>
+          </div>
+        </div>
+
+        <div class="ho">
+          <div>
+            <span class="nm">5 · Connector credentials</span>
+            <span class="pass">cloud engineer <span class="arrow">→</span> the source system</span>
+          </div>
+          <div>
+            <p>Into <b>their</b> Secrets Manager. We never see one, which is the
+            point — and which is why a bad credential is diagnosable only from
+            the symptom.</p>
+            <p>The journey that suffers is C4, and its failure branch is a
+            source that reads as unreachable with no way for us to tell whether
+            the credential is wrong or the network is.</p>
+          </div>
+        </div>
+
+        <div class="ho">
+          <div>
+            <span class="nm">6 · Tag policy</span>
+            <span class="pass">tenant administrator <span class="arrow">↔</span> 1CloudHub</span>
+          </div>
+          <div>
+            <p>The cost-centre vocabulary, and <b>which key drives
+            chargeback</b>. Genuinely joint: they own the vocabulary, we own
+            what the meter does with it.</p>
+            <p>Agreed late, it invalidates every usage record emitted before the
+            agreement — the one handoff whose lateness cannot be repaired
+            retrospectively.</p>
+          </div>
+        </div>
+
+        <div class="ho">
+          <div>
+            <span class="nm">7 · First lease and heartbeat</span>
+            <span class="pass">1CloudHub <span class="arrow">→</span> the data plane</span>
+          </div>
+          <div>
+            <p>The control plane issues the lease; the data plane confirms
+            heartbeat and the usage stream. <b>This is the moment the tenant
+            becomes billable</b>, and it is the only handoff the product can
+            fully observe.</p>
+            <p>It is also the correct definition of "live" — and the reason
+            onboarding needs a state per step is so that this and
+            <em>signed</em> are never confused.</p>
+          </div>
+        </div>
+
+        <div class="ho">
+          <div>
+            <span class="nm">8 · Support access grant</span>
+            <span class="pass">tenant administrator <span class="arrow">→</span> 1CloudHub support</span>
+          </div>
+          <div>
+            <p>The support access mode is chosen at tenant creation, so how much
+            we can see during an incident is <b>their</b> decision rather than
+            ours.</p>
+            <p>⚠️ The trace half of this grant is <b>unmintable</b> — expressible
+            as a grant, not issuable as a token. Support can be authorised for a
+            read they cannot perform, and they find out during the incident.</p>
+          </div>
+        </div>
+
+        <div class="ho">
+          <div>
+            <span class="nm">9 · Partner tenant creation</span>
+            <span class="pass">partner user <span class="arrow">→</span> 1CloudHub <span class="arrow">→</span> customer</span>
+          </div>
+          <div>
+            <p>A partner sells; <b>we create</b>, because no partner user can
+            sign in. Defaults to hosted — BYOA under a partner is a deliberate
+            escalation and pulls the customer's own cloud engineer into a deal
+            the partner owns.</p>
+            <p>Three parties. ✅ The G51 ruling gives the partner a
+            control-plane surface, but not this step — tenant creation stays
+            ours, because four of its decisions have no defaults.</p>
+          </div>
+        </div>
+
+        <div class="ho">
+          <div>
+            <span class="nm">10 · Usage to invoice</span>
+            <span class="pass">data plane <span class="arrow">→</span> control plane <span class="arrow">→</span> billing</span>
+          </div>
+          <div>
+            <p>Usage records ship up to the control plane and become an invoice
+            against a rate card — wholesale to the partner, retail to the
+            customer, or both.</p>
+            <p>⚠️ <b>UsageRecord carries no UserId</b>, so per-user analytics is
+            impossible by construction. Any journey that assumes per-seat
+            billing or per-user chargeback is unbuildable, not unbuilt.</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="note"><b>What all ten have in common.</b> Four onboarding steps
+      are executed by a person who never signs into the product, two more are
+      joint, and one becomes irreparable if it is agreed late. <b>Onboarding is
+      a pipeline with a state per step, not a checklist</b> — and none of it
+      exists in <span class="spec">model/</span> today.</p>
+    </div>
+  </sc-if>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       DECISIONS
+       ═══════════════════════════════════════════════════════════════════ -->
+  <sc-if value="{{ showDecisions }}" hint-placeholder-val="{{ false }}">
+    <div>
+      <h2>The nineteen rulings</h2>
+      <p class="sub">What the map asked and what was decided. <b>Each entry
+      carries what the ruling cost</b>, because a decision recorded without its
+      consequence reads as free — and gets reopened by whoever meets the
+      consequence first.</p>
+      <p class="note"><b>Nine came first and closed the product’s own gaps.
+      The ten below closed the public plane, the partner surface, and the four
+      questions the first nine created.</b> What is left open is at the
+      foot.</p>
+
+      <div class="handoffs">
+        <div class="ho">
+          <div><span class="nm">1 · The audit trail is a door</span>
+            <span class="pass">C11 · unspecified <span class="arrow">→</span> v1</span></div>
+          <div><p>A read-only <span class="spec">/audit</span> surface the assurance reader lands in,
+             and the id every status bar prints resolves to a record — the run,
+             the decisions on it, and who took them.</p>
+             <p><b>Cost.</b> It would have been a fourth destination, and the
+             shell rule says never a fourth. It is a <b>door behind the
+             avatar</b> beside Setup instead, so R3 holds — and the assurance reader reads
+             the register and the reports too, because a trail with no access to
+             what it describes is a list of hashes.</p></div>
+        </div>
+
+        <div class="ho">
+          <div><span class="nm">2 · The whole staff console is specified</span>
+            <span class="pass">H1 · H2 · H8 <span class="arrow">→</span> v1</span></div>
+          <div><p>Tenancy, catalogue, rate cards, plans and onboarding state, all in
+             <span class="spec">administration.openapi.yaml</span>. It was the
+             largest v1 gap and nine journeys depended on it.</p>
+             <p><b>Cost.</b> Specifying all five before building any is slower to
+             first use than an onboarding-state-first slice. Every step stays
+             manual for longer, and H1 says so in place.</p></div>
+        </div>
+
+        <div class="ho">
+          <div><span class="nm">3 · The user is the proposer of record</span>
+            <span class="pass">C5 · vacuous <span class="arrow">→</span> biting</span></div>
+          <div><p>Whoever triaged the exception proposed it. The existing segregation
+             check finally has a name to compare against, and no eighth policy
+             kind is needed — <b>the defect was the missing proposer, not the
+             missing policy</b>.</p>
+             <p><b>Cost.</b> This is the first version of the control that bites,
+             and it bites the smallest customers: a one-person finance team
+             cannot close at all.</p></div>
+        </div>
+
+        <div class="ho">
+          <div><span class="nm">4 · Segregation is a per-tenant policy</span>
+            <span class="pass">C13 · a new journey</span></div>
+          <div><p>A tenant too small to staff two people may waive it
+             <b>knowingly</b>, and every approval the waiver permits is recorded
+             as self-approved.</p>
+             <p><b>Cost.</b> The product now ships a control a customer can turn
+             off, which is harder to say in a security review than one that is
+             always on. The recording is what makes it defensible — the trail
+             says which tenants waived it and what the waiver permitted.</p></div>
+        </div>
+
+        <div class="ho">
+          <div><span class="nm">5 · Telemetry gets a capability</span>
+            <span class="pass">H5 · unmintable <span class="arrow">→</span> issuable</span></div>
+          <div><p>The grant was expressible and the token was unissuable, so support
+             was authorised for a read they could not perform — and found out
+             during the incident.</p>
+             <p><b>Cost.</b> None worth naming. This was a defect rather than a
+             trade, and the customer's own support access mode still bounds how
+             much of the trace is in scope.</p></div>
+        </div>
+
+        <div class="ho">
+          <div><span class="nm">6 · Reports is export plus scheduled delivery</span>
+            <span class="pass">C7 · unspecified <span class="arrow">→</span> v1</span></div>
+          <div><p>To email, their own S3, their SFTP, or a webhook. The tenant administrator
+             owns the schedule; an user may schedule their own.</p>
+             <p><b>Cost.</b> Report definitions, pinned answers and job history
+             are out — and the controls for them should <b>stop being drawn</b>
+             rather than stay hatched. It also creates a <b>new failure
+             mode</b>: a schedule that fires with no run behind it delivers a
+             confident empty report, on time. That needs a precondition nobody
+             has specified yet.</p></div>
+        </div>
+
+        <div class="ho">
+          <div><span class="nm">7 · Delivery destinations are allow-listed</span>
+            <span class="pass">C7 · C13</span></div>
+          <div><p>The tenant administrator approves destinations; an user may only
+             schedule to one already approved.</p>
+             <p><b>Cost.</b> An user who needs a new destination waits for an
+             admin. That is the right trade — three of the four destination kinds
+             leave the customer's account, and <b>an user opening an egress
+             path alone is the first thing a security review asks about</b>.</p></div>
+        </div>
+
+        <div class="ho">
+          <div><span class="nm">8 · Migration moves everything, then tears down</span>
+            <span class="pass">C12 · v2 <span class="arrow">→</span> v1</span></div>
+          <div><p>Documents, runs, resolutions, approvals and the audit trail. No
+             loss — a partial migration is a lost history wearing a better word.
+             The old plane is decommissioned <b>once the new one is
+             verified</b>, so no duplicate of regulated data lingers in an
+             account we may no longer be provisioned in.</p>
+             <p><b>Cost.</b> Tearing down on verification rather than on
+             completion is what makes it recoverable, and it leaves a window
+             where two planes hold the same period. <b>Which one is
+             authoritative during that window is not specified</b> — the one
+             thing this ruling left open.</p></div>
+        </div>
+
+        <div class="ho">
+          <div><span class="nm">9 · 1CloudHub is always the support path</span>
+            <span class="pass">P7 · refused, and costed</span></div>
+          <div><p>Partner-led support stays refused and delegated tenant grants are
+             not pursued. G51's invariant holds: no partner user reaches the data
+             plane.</p>
+             <p><b>Cost.</b> Every partner-sold incident routes through your
+             support team, and it is priced into the deal. That makes the refusal
+             honest rather than an unserved role — but <b>partner support
+             capacity now has to be planned against resale volume</b> rather than
+             discovered by it.</p></div>
+        </div>
+      </div>
+
+      <h3>The further ten</h3>
+      <div class="wrap">
+        <table>
+          <caption>Closing the public plane, the partner surface, and the four
+          questions the first nine created.</caption>
+          <thead><tr><th scope="col">#</th><th scope="col">Ruling</th><th scope="col">Where</th><th scope="col">What it cost</th></tr></thead>
+          <tbody>
+            <tr><td class="num">10</td><th scope="row">The partner portal is accepted — control-plane only</th><td class="job">P3 · P6</td><td class="job">G51 governs the data plane and nothing else; no partner user reaches a tenant host. <b>v1 is no longer inconsistent with itself.</b> The cost is a surface to build and secure that was not in the plan.</td></tr>
+            <tr><td class="num">11</td><th scope="row">Partners submit registrations; staff approve</th><td class="job">P9 · new</td><td class="job">The portal’s one write, and it is a request rather than a commitment. Cost: a registry to run, plus two questions it created — <b>precedence between two partners registering the same deal</b>, and <b>expiry</b>.</td></tr>
+            <tr><td class="num">12</td><th scope="row">The control plane owns deal registration</th><td class="job">P9 · H11</td><td class="job">The CRM holds a copy. Cost: a registry lands in the console after leads were deliberately kept out of it — the line is that the product knows tenants and registrations, and the CRM knows people.</td></tr>
+            <tr><td class="num">13</td><th scope="row">The public plane has an owner</th><td class="job">V1</td><td class="job">Marketing owns content through a CMS; engineering owns the shell, which is what keeps the page on-system. Cost: it is still a third plane the architecture does not describe, and it now needs its own entry.</td></tr>
+            <tr><td class="num">14</td><th scope="row">No price on the landing page</th><td class="job">V1</td><td class="job">Rate cards are per-arrangement, so any public number is one somebody has to honour. Cost: <b>the demo booking carries the whole funnel.</b></td></tr>
+            <tr><td class="num">15</td><th scope="row">Sign-in is an email lookup behind a domain allow-list</th><td class="job">V1 · H11</td><td class="job">1CloudHub maintains the list. ⚠️ Cost, and it is the sharpest on this page: <b>a resolving domain is still a yes</b>, so the oracle is narrowed rather than closed — and every contractor and subsidiary becomes a support request.</td></tr>
+            <tr><td class="num">16</td><th scope="row">Leads go to the CRM; registration-first attribution</th><td class="job">V2</td><td class="job">The console never sees a lead, and a referral is matched to a registration rather than attributed after the fact. Cost: an unregistered referral is a conversation, not a record.</td></tr>
+            <tr><td class="num">17</td><th scope="row">A real demo tenant, exempt and stated as exempt</th><td class="job">V2</td><td class="job">Leased and metered like any other, excluded from invoicing, reset nightly — and the demo flag disables retention and audit retention. 🛑 Stated deliberately: <b>an unstated exception to an audit rule becomes the precedent for the next one.</b></td></tr>
+            <tr><td class="num">18</td><th scope="row">Schedules hold when there is no run</th><td class="job">C7</td><td class="job">Per-schedule choice, holding by default. A held delivery reads as a question; an empty file delivered on time reads as a clean period.</td></tr>
+            <tr><td class="num">19</td><th scope="row">Effective dates, never retroactive, corrections by adjustment</th><td class="job">H8</td><td class="job">An issued invoice stands; a correction is a manual adjustment with a reason. ⚠️ Cost: an old invoice may not be reproducible from the current card, so <b>the adjustment reason is the only record of why they disagree</b> — load-bearing rather than a note.</td></tr>
+            <tr><td class="num">—</td><th scope="row">New plane authoritative from cutover</th><td class="job">C12</td><td class="job">The old plane goes read-only immediately, so two planes never both accept work. Cost: a failed verification cannot be fixed by falling back — only by re-migrating forward.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>What is still open</h3>
+      <p class="sub" style="margin-top:calc(var(--u)*2)">Five, and four were
+      created by the rulings themselves. That is normal and worth recording — a
+      decision that creates no new question usually was not deciding much.</p>
+      <div class="handoffs">
+        <div class="ho">
+          <div><span class="nm">Registration precedence and expiry</span>
+            <span class="pass">created by ruling 11</span></div>
+          <div><p>Two partners register the same deal and both believe they
+             sourced it. Nothing specifies precedence — first to register, or
+             first to bring the meeting.</p>
+             <p>And a deal registered and never closed holds the account
+             forever. <b>Without an expiry the registry becomes a
+             land-grab</b>, which is the failure mode every partner programme
+             eventually meets.</p></div>
+        </div>
+
+        <div class="ho">
+          <div><span class="nm">The enumeration oracle</span>
+            <span class="pass">accepted, not closed — ruling 15</span></div>
+          <div><p>A domain that resolves in the public lookup <b>is</b> a
+             customer, and under BYOA a host name may carry their name. The
+             allow-list narrows the oracle; it does not close it.</p>
+             <p>Answering only by email would close it completely. That trade
+             was considered and the faster happy path was chosen — recorded
+             here rather than discovered in a security review.</p></div>
+        </div>
+
+        <div class="ho">
+          <div><span class="nm">Support load from the allow-list</span>
+            <span class="pass">created by ruling 15</span></div>
+          <div><p>Every contractor, subsidiary and consultant on a domain that
+             is not the customer's becomes a <b>support request</b> before they
+             can sign in.</p>
+             <p>It lands on support rather than on the tenant administrator, and it
+             scales with the customer's org chart rather than with usage — which
+             is the wrong axis for a support cost to grow along.</p></div>
+        </div>
+
+        <div class="ho">
+          <div><span class="nm">Invoice reproducibility</span>
+            <span class="pass">created by ruling 19</span></div>
+          <div><p>Effective dates without versioning means an old invoice may
+             not be reproducible from the current rate card. The adjustment
+             reason is the only record of why the two disagree.</p></div>
+        </div>
+
+        <div class="ho">
+          <div><span class="nm">Per-user attribution · the hosted frontend</span>
+            <span class="pass">pre-existing, and unchanged</span></div>
+          <div><p><b>Per-user attribution</b> is unbuildable rather than
+             unbuilt: <span class="spec">UsageRecord</span> ships with no
+             <span class="spec">UserId</span>, so any journey assuming per-seat
+             billing cannot be built without changing the record. It also bounds
+             what a partner dispute can ever be answered with.</p>
+             <p><b>The customer-hosted frontend</b> is H10's branch — the app is
+             served from our CloudFront and executes against their data in their
+             browser. The data path is clean and the code path is ours, and it is
+             the one BYOA question the delivery model cannot answer yes to.</p></div>
+        </div>
+
+      </div>
+    </div>
+  </sc-if>
+
+  <section>
+    <h2>The reconciliation · 18 Sep 2026</h2>
+    <p class="note">The three families were read against the design records —
+    data architecture, day-2 operations, governance, the access model, the
+    injection posture and the channel research. <b>Seven journeys disagreed with
+    a record, and one record disagrees with this page.</b> Both directions are
+    written down.</p>
+
+    <div class="ho">
+      <div><span class="nm">The role vocabulary was three vocabularies</span>
+        <span class="pass">applied everywhere</span></div>
+      <div><p><b>user · administrator · author · sponsor · assurance.</b>
+      <span class="spec">operator</span> is gone — it has no standing in ITIL,
+      COBIT, TOGAF or NIST, and in a technical room it means a Kubernetes
+      controller. <span class="spec">auditor</span> became
+      <b>assurance</b>, which is the word the IIA, Basel, the OCC, MAS and ISACA
+      all use for independent non-operating verification. Partner roles became
+      partner administrator and partner user. <b>Approver stays</b> — it names a
+      capability holder rather than a stakeholder class.</p>
+      <p><b>Two classes became real roles rather than names.</b> Assurance reads
+      the trail, the governance console, closed periods of the register and
+      policy with its amendment history — and <b>never live work</b>, because an
+      auditor watching an open queue is watching people work. The sponsor holds
+      one act: acknowledging a period.</p></div>
+    </div>
+
+    <div class="ho">
+      <div><span class="nm">Break-glass was rebuilt the same day it was decided</span>
+        <span class="pass">H5 · reversed</span></div>
+      <div><p>The afternoon's ruling was a self-issued 24-hour grant with a typed
+      reason and no second approver. The access record had already decided the
+      opposite in August, and the grant type <b>re-checks the two-person rule
+      when the grant is used</b>, not only when it is issued — so the ruling was
+      not implementable against the model that exists.</p>
+      <p><b>What replaced it:</b> the customer authorises at signing — purpose,
+      resource classes, a ceiling on hours, who may invoke, the notification
+      path — and each incident draws against it with <b>a second 1CloudHub
+      person approving</b>. Nobody at the customer is woken and nobody waits on
+      their change control. ⚠️ The cost is a rota: at 03:00 on a Sunday, two
+      people awake. That is an operational commitment and it should be priced
+      before it is promised.</p></div>
+    </div>
+
+    <div class="ho">
+      <div><span class="nm">What we may reach, and what arrives anyway</span>
+        <span class="pass">H1 · H5 · a second axis</span></div>
+      <div><p>The support access mode was doing two jobs. It now sits beside a
+      <b>telemetry profile</b> — minimum, standard, full — because one says what
+      we may reach <em>on request</em> and the other says what arrives
+      <em>continuously, without asking</em>. <span class="spec">minimum</span>
+      is a floor nobody goes below: it carries no customer content and is the
+      smallest set a failure can be classified from, so it belongs in the SLA
+      rather than in a negotiation.</p>
+      <p>The pair has a consequence worth contracting: <span class="spec">minimum</span>
+      plus support access <span class="spec">never</span> is a customer
+      supportable at error-class triage and a customer-run bundle and no
+      further. <b>Legitimate, and not a thing to discover during an
+      incident.</b></p></div>
+    </div>
+
+    <div class="ho">
+      <div><span class="nm">Five journeys nobody had drawn</span>
+        <span class="pass">C · governance · new</span></div>
+      <div><p>Subject access, correction, erasure, breach and legal hold were
+      all modelled and none was on this page. They now sit in a
+      <b>governance destination on the tenant surface</b>, because the acts are
+      the tenant's: answering a request and running an erasure are theirs to
+      perform, and assurance reads the result.</p>
+      <p><b>The subject is usually not a user.</b> In KYC the person whose
+      passport was verified has no account and cannot be named by a user id, so
+      requests arrive through the tenant keyed by an opaque reference. An
+      erasure claims <b>erased</b>, unqualified — residuals are a contractual
+      disclosure rather than a screen. ⚠️ The subject index reaches database
+      rows only: exports, page renders and traces are outside it, and a copy
+      that exists only in a backup has no disposition at all.</p>
+      <p><b>Two of the five are ours and are named rather than drawn.</b> Breach
+      is three states with three clocks and a detector — the statutory clock
+      runs from assessment, and under a customer-owned plane the tenant may
+      detect first. Legal hold is the one statutory act we may reach, by
+      break-glass, scoped to <em>placing</em> a hold and never to answering a
+      request on the controller's behalf.</p></div>
+    </div>
+
+    <div class="ho">
+      <div><span class="nm">The lease is disclosed, or it is a catastrophe</span>
+        <span class="pass">C8 · H6</span></div>
+      <div><p>A signed 30-day entitlement, drawn down locally, with a 7-day
+      grace — on the plan surface with its dates, because <b>a kill switch in
+      someone's account is a trust catastrophe if it is discovered rather than
+      disclosed</b>. The ceiling is a multiple of the tier, not equal to it:
+      equal numbers would stop a month-end close over a commercial limit.</p>
+      <p>The ladder is stated: warned, new runs refused, read-only. <b>A run in
+      flight always completes and export and the trail are never blocked.</b>
+      That settles the in-flight question rather than leaving it to a
+      preference.</p></div>
+    </div>
+
+    <div class="ho">
+      <div><span class="nm">The door that stays shut, drawn open</span>
+        <span class="pass">P7 · refused, and evidenced</span></div>
+      <div><p>The governance record has a per-customer opt-in reaching a
+      partner into exceptions. <b>P7 stays refused and the grant is the
+      exception that proves it</b> — drawn in the portal with nobody holding
+      one, granted only by a named person at the customer, time-bounded and
+      revocable. A live grant almost certainly makes the partner a
+      <b>sub-processor</b>, which their customer's own contract has to permit.
+      Absence of a grant is what keeps a partner a reseller.</p></div>
+    </div>
+
+    <div class="ho">
+      <div><span class="nm">Two ways an address resolves</span>
+        <span class="pass">V3 · H11</span></div>
+      <div><p>Federation sits beside the allow-list rather than replacing it: a
+      registered directory routes by <b>DNS-verified domain</b>, and everyone
+      else resolves against the list we keep. <b>A directory asserts membership,
+      not employment</b>, so a guest in a customer's directory is refused and
+      sent to its own realm — otherwise a partner's engineer arrives as that
+      customer's own person. And because a directory knows who someone is now
+      rather than who they were then, <b>the organisation is stamped on every
+      act at the time it happens</b>.</p></div>
+    </div>
+
+    <div class="ho">
+      <div><span class="nm">Where this page disagrees with a record</span>
+        <span class="pass">G36 · unreconciled, by ruling</span></div>
+      <div><p><b>G36 slips BYOA to v1+1.</b> Two records carry banners saying
+      their own premise is reversed by it, and <span class="spec">model/deployment.ts</span>
+      is dropped for v1 whole — which would take the fleet, the heartbeat,
+      liveness, engine and schema versions with it.</p>
+      <p>This page keeps BYOA in v1 <b>by ruling</b>: the first non-demo customer
+      is a regulated enterprise on a customer-owned plane. So C12 and P8 stand,
+      the partner sandbox stays a tenant in the partner's own account, and half
+      the tenants in the staff console are BYOA. ⚠️ <b>The disagreement is
+      recorded rather than resolved</b>, and it is the one place a reader should
+      check which document they are trusting.</p></div>
+    </div>
+  </section>
+
+  <p class="synthetic">Every journey, role and route on this page is derived
+  from the systems inventory, the C4 model and the deployment and model
+  topologies. Figures are illustrative; nothing here is deployed.</p>
+
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: {&quot;width&quot;: 1200},
+  &quot;showGapsFirst&quot;: {&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Reading order&quot;,&quot;label&quot;:&quot;Sort gaps to the top&quot;},
+  &quot;defaultTab&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;customer&quot;,&quot;partner&quot;,&quot;hub&quot;,&quot;routes&quot;,&quot;handoffs&quot;,&quot;decisions&quot;],&quot;default&quot;:&quot;customer&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Reading order&quot;,&quot;label&quot;:&quot;Tab to open on&quot;}
+}">
+class Component extends DCLogic {
+  state = { tab:null, filter:'all', open:{}, allOpen:false };
+
+  ROLES = {
+    customer: [
+      {name:'Visitor / prospect', signin:'no account · public web', does:'Nobody yet. Arrives on the marketing site, reads what the product claims, and either books a demo or leaves. ⚠️ These are the only surfaces in the product served from a PUBLIC plane — neither control nor data — and the architecture documents do not name that plane at all.'},
+      {name:'User', signin:'signs in · data plane', does:'The actor the product is built around. Triages the register, resolves exceptions against SOPs, asks questions. Every row was run by the agent, so the user is the exception handler rather than the doer.'},
+      {name:'Approver / authority', signin:'signs in · data plane', does:'Approves or rejects what the agent proposed, with a required reason. The reason is what an SOP amendment would be drafted from. Whether this is a different person from the user is a policy choice the product cannot currently enforce.'},
+      {name:'Tenant administrator', signin:'signs in · data plane', does:'Owns sources, packs, the tag vocabulary and the plan. Configures what the user then works inside. Reads the register but is not its user.'},
+      {name:'Cloud engineer', signin:'no product login · BYOA only', does:'Runs the CDK stack, generates the KMS key pair, enables Bedrock models, maps the IdP, writes connector credentials into Secrets Manager. Four onboarding steps are theirs, all executed in the AWS console and their own IdP admin — never in the product.'},
+      {name:'Assurance reader', signin:'signs in · read-only', does:'Reads what happened and cannot change it. ⚠️ Has no destination: the status bar cites an audit trail id on every surface and no route resolves it.'}
+    ],
+    partner: [
+      {name:'Partner administrator', signin:'signs in · control plane only', does:'Owns the billing arrangement, the rate cards and which admins exist. ✅ Signs into the control-plane portal against the partner\'s own IdP — never a tenant host, never a row of tenant data.'},
+      {name:'Partner user', signin:'signs in · control plane only', does:'Sells a tenant and asks us to create it, and registers deals in advance so a later lead can be matched to them. Sees tenants sold, usage against each and commission owed — all control-plane data.'},
+      {name:'Partner delivery / support', signin:'no data-plane access, by ruling', does:'Would support the tenant they sold. Needs data-plane access, which G51 correctly refuses. ✅ Ruled: 1CloudHub is always the support path, priced into the partner deal — so the role is unserved deliberately, and the cost is carried commercially rather than by the product.'}
+    ],
+    hub: [
+      {name:'FDE — forward deployment', signin:'signs in · both planes', does:'Runs onboarding, installs blueprints, sets the extraction confidence floor off the tenant surface. The most privileged role in the product and the one with the least specified surface.'},
+      {name:'Support', signin:'signs in · gated', does:'Incident response, constrained by the support access mode the customer chose at tenant creation. The trace half of that grant is unmintable.'},
+      {name:'Billing & commercial', signin:'signs in · control plane', does:'Rate cards, plans, arrangements, invoices, partner reconciliation. Operates entirely on control-plane data and never reads a tenant row — invariant 3.'},
+      {name:'Catalogue / platform', signin:'signs in · control plane', does:'Authors and publishes packs and blueprints, owns the catalogue and which partner may resell what. Publishes downward; never reads upward.'}
+    ]
+  };
+
+  /* ── plane · surface · system · hands · exists · stage ── */
+  s(t,d,a){ return Object.assign({t,d,kind:'step',mark:'›'}, a||{}); }
+  w(t,d,a){ return Object.assign({t,d,kind:'wait',mark:'…'}, a||{}); }
+  x(t,d,a){ return Object.assign({t,d,kind:'branch',mark:'✕'}, a||{}); }
+
+  JOURNEYS = {
+    customer: [
+      {id:'V1', name:'Arrive on the landing page', status:'v1', roles:'visitor / prospect', mode:'n/a',
+       trigger:'A search, a referral, a partner, or a conference badge.',
+       exit:'Booked a demo, or left. There is no third outcome and no self-serve sign-up.',
+       note:'✅ The public plane is now named and owned: marketing owns the content, engineering owns the shell, and a CMS sits behind our chrome. It is still a third plane the architecture documents do not describe — no tenant, no session, no capability model — so it needs its own entry rather than being folded into either of the other two. The design system applies to the shell, which is what stops a CMS from producing a page that is off-system.',
+       steps:[
+        {t:'Land on the page',d:'served from our CloudFront, public, no session. The only truly public surface the product has besides sign-in.',plane:'public',surface:'/',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Read the claim',d:'what the product does, and for whom. 🛑 Every figure, logo, testimonial and benchmark is illustrative — none has been established, so the page cannot name a customer or quote a number yet.',plane:'public',surface:'/',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Understand the deployment question',d:'hosted or their own AWS account. It is the first thing an enterprise buyer asks and the hardest thing to say on a landing page.',plane:'public',surface:'/',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Looks for pricing',d:'✅ and there is none, deliberately. Rate cards are per-arrangement in the control plane, so any number on a public page would be a number somebody has to honour.',plane:'public',surface:'/',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'Nobody — it is decided. ⚠️ The consequence is real: the page has to convert to a demo without a price, so the demo booking carries the whole funnel.'},
+        {t:'Tries to sign up',d:'and cannot. There is no self-serve path: a tenant is created by us, with a deployment mode, residency, retention and support access mode chosen first.',plane:'public',surface:'/',system:'—',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'1CloudHub sales. This is correct rather than a gap — four of the tenant-creation decisions cannot be defaulted — but the page must not imply a sign-up it does not have.'},
+        {t:'Signs in instead',d:'✅ email lookup: they type a work email and we route them to their own host.',plane:'public',surface:'/lookup',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—'},
+        {t:'Their domain is not on the list',d:'a generic reply, and no confirmation either way. 1CloudHub maintains the allow-list as control-plane data, changed by support request.',plane:'control',surface:'/lookup',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'1CloudHub support adds the domain. ⚠️ Contractors, subsidiaries and anyone on another domain hit this, and it is the part that will actually break in practice.'},
+        {t:'A resolving domain is still a yes',d:'the allow-list narrows the enumeration oracle rather than closing it: a domain that resolves is a customer, and under BYOA a host name may carry their name.',plane:'public',surface:'/lookup',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'Accepted knowingly rather than closed. Answering only by email would close it completely; that trade was considered and the faster happy path was chosen. Worth re-reading before the first security review.'}
+       ]},
+      {id:'V2', name:'Book a demo', status:'v1', roles:'visitor / prospect · 1CloudHub', mode:'n/a',
+       trigger:'A visitor who wants to see it work.',
+       exit:'A booked slot and a qualified lead — or a form submission that reaches nobody.',
+       note:'✅ The only conversion the public plane has — and with no price on the landing page it carries the whole funnel. Leads go to the CRM; the console never sees one. A partner-referred prospect is matched against a deal registration the partner submitted in advance.',
+       steps:[
+        {t:'Open the demo form',d:'name, company, and what they are reconciling today.',plane:'public',surface:'/demo',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Qualify',d:'volume, document types, source systems, and whether they need their own AWS account. The last one decides which onboarding pipeline they would enter.',plane:'public',surface:'/demo',system:'build',hands:'both',handsKey:'both',exists:'neither',stage:'—'},
+        {t:'Match a deal registration',d:'✅ partners register deals up front (P9), so the lead is matched to a registration rather than attributed after the fact.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—'},
+        {t:'No registration matches',d:'a partner claims the deal afterwards and there is nothing to match it to.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'1CloudHub sales, by judgement. Registration-first is what makes attribution defensible, and its cost is that an unregistered referral is a conversation rather than a record.'},
+        {t:'Book a slot',d:'against a real calendar, not a promise to be in touch.',plane:'public',surface:'/demo',system:'buy · scheduling',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Waiting for us',d:'the visitor has done everything they can and the next move is entirely ours.',plane:'—',surface:'—',system:'—',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'wait',mark:'…'},
+        {t:'Run it on the demo tenant',d:'✅ a permanent seeded tenant, reset nightly. A REAL tenant with a demo flag — leased and metered like any other, excluded from invoicing.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'1–6'},
+        {t:'The nightly reset deletes runs and approvals',d:'which is the one thing the migration ruling said must never be lost.',plane:'data',surface:'—',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'Nobody — it is exempt, and the exemption is STATED. The demo flag disables retention and audit retention. 🛑 Written down deliberately: an unstated exception to an audit rule becomes the precedent for the next one.'},
+        {t:'Lead lands in the CRM',d:'✅ and the console never sees a lead. The product knows about tenants; the CRM knows about people who are not tenants yet.',plane:'—',surface:'CRM',system:'buy · CRM',hands:'us',handsKey:'us',exists:'specified',stage:'—'}
+       ]},
+      {id:'C1', name:'Reach work', status:'v1', roles:'user', mode:'both',
+       trigger:'A person opens the per-tenant host at the start of a shift.',
+       exit:'Standing in /close with the register loaded and the status bar naming the run behind it.',
+       steps:[
+        {t:'Sign in',d:'against the customer\'s own IdP at their own host. No 1CloudHub identity is involved at any point.',plane:'data',surface:'/entry',system:'buy · IdP',hands:'them',handsKey:'them',exists:'built',stage:'—',kind:'step',mark:'›'},
+        {t:'Land in Close',d:'the default destination. Three destinations and a door; never a fourth.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'6 · show',kind:'step',mark:'›'},
+        {t:'Read the status bar',d:'keys left, provenance middle, audit trail last — so the screen says which run it is describing before anything is acted on.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'6 · show',kind:'step',mark:'›'},
+        {t:'No run for the period',d:'the register is empty and says so in the provenance slot. Nothing has been measured, so there is nothing to be clean about.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'—',kind:'branch',mark:'✕'},
+        {t:'Role mapping wrong',d:'sign-in succeeds and a destination is missing. Indistinguishable from a permission-shortened tree, which is drawn as absent rather than disabled.',plane:'data',surface:'/entry',system:'buy · IdP',hands:'them',handsKey:'them',exists:'built',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'The customer\'s IdP admin owns the mapping and never signs into the product. Nothing in the app can report the mismatch.'}
+       ]},
+      {id:'C2', name:'Run the close', status:'v1', roles:'user', mode:'both',
+       trigger:'A period opens, or documents arrive for one already open.',
+       exit:'A register of exceptions with a scope, a time and a denominator — or a stated clean night.',
+       steps:[
+        {t:'Documents arrive',d:'upload, S3 or SFTP, email, or a connector. The register is heterogeneous on purpose: ingestion residue sits in the same list so capture never becomes a second inbox.',plane:'data',surface:'/setup · sources',system:'build',hands:'both',handsKey:'both',exists:'built',stage:'1 · arrive'},
+        {t:'Inspect a delivery',d:'the source name in the intake list opens the delivery record: when it arrived, how many files or emails came with it, how many lines were read, where it was fetched from, and the record id. It answers the only question a count raises — is this all of it. The file itself stays in the tenant\'s account, and binding the source is the tenant administrator\'s (C9), so neither route is drawn for an user.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'1 · arrive'},
+        {t:'Extraction runs',d:'Textract then Bedrock, into typed values with a confidence per field.',plane:'data',surface:'—',system:'buy · AWS',hands:'us',handsKey:'us',exists:'built',stage:'2 · read'},
+        {t:'Below the floor',d:'a field under the confidence floor is parked for human confirmation rather than guessed. The floor is FDE-set and off this surface.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'2 · read',kind:'branch',mark:'✕'},
+        {t:'Matching',d:'definitions and rules produce match groups.',plane:'data',surface:'—',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'3 · pair'},
+        {t:'Exceptions judged',d:'predicates, severity, and an explanation the user can read — including what the model ruled out.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'4 · judge'},
+        {t:'Waiting on a source',d:'the bank feed is unreachable; the run is partial and the status bar says which sources answered. Not an empty state — the work is moving elsewhere.',plane:'data',surface:'/close',system:'build',hands:'them',handsKey:'them',exists:'built',stage:'1 · arrive',kind:'wait',mark:'…',hasStall:true,stall:'Credentials live in the customer\'s Secrets Manager and we never see them, so a wrong credential and a network fault are indistinguishable from here.'},
+        {t:'Model quota exhausted',d:'under BYOA the quota is theirs. Extraction stops mid-run.',plane:'data',surface:'—',system:'buy · AWS',hands:'them',handsKey:'them',exists:'neither',stage:'2 · read',kind:'branch',mark:'✕',hasStall:true,stall:'Their cloud engineer raises the quota. Nothing in the product detects the ceiling in advance — the model access pre-flight is a one-time onboarding step with no ongoing check.'}
+       ]},
+      {id:'C3', name:'Triage the register', status:'v1', roles:'user', mode:'both',
+       trigger:'A register with more exceptions than one person can act on at once.',
+       exit:'A shortlist the user intends to work, in an order they chose.',
+       steps:[
+        {t:'Filter by facet',d:'a closed set the query already carries. A facet the query cannot express is drawn as a hole rather than invented.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'6 · show'},
+        {t:'Read the count line',d:'it states its scope and its denominator, because a filtered count with neither is a number nobody can check.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'6 · show'},
+        {t:'Sort',d:'a closed enum of four, carried by a word rather than a glyph.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'6 · show'},
+        {t:'Wants a facet that does not exist',d:'assigned to me, older than 30 days, above my authority, touched by a person. Four questions the register looks like it should answer and cannot.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'6 · show',kind:'branch',mark:'✕'}
+       ]},
+      {id:'C4', name:'Resolve an exception', status:'v1', roles:'user', mode:'both',
+       trigger:'An exception the user has decided to act on.',
+       exit:'A proposal awaiting authority, or a resolution posted.',
+       steps:[
+        {t:'Open the evidence',d:'the record and what the agent matched it against. At the ultra tier this is an inline column rather than a drawer.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'4 · judge'},
+        {t:'Read the reasoning',d:'what the model concluded and what it ruled out. The ruled-out candidates are the part that makes a proposal reviewable.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'4 · judge'},
+        {t:'Apply the SOP',d:'the agent proposes; the user accepts, amends or rejects.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'5 · act'},
+        {t:'Needs authority',d:'above the user\'s limit. The work stops here until an approver acts — and the chevron is the only thing that says so.',plane:'data',surface:'/close',system:'build',hands:'them',handsKey:'them',exists:'built',stage:'5 · act',kind:'wait',mark:'…'},
+        {t:'Reject with a required reason',d:'nothing is posted and the records return to the register unresolved. The reason is machinery, not a courtesy.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'5 · act',kind:'branch',mark:'✕'}
+       ]},
+      {id:'C5', name:'Approve or refuse', status:'v1', roles:'approver', mode:'both',
+       trigger:'A proposal above the user\'s authority.',
+       exit:'Posted, or refused with a reason attached to every affected record.',
+       steps:[
+        {t:'Review the proposal',d:'and the evidence behind it, not a summary of it.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'5 · act'},
+        {t:'Post',d:'the journal is written and is reversible for a stated window.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'5 · act'},
+        {t:'Refuse',d:'a required reason, entered once and attached to all affected records.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'5 · act',kind:'branch',mark:'✕'},
+        {t:'Approving own work',d:'refused, and for the first time the refusal bites. The user who triaged the exception is the PROPOSER OF RECORD, so they cannot also approve it.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'5 · act',kind:'branch',mark:'✕',hasStall:true,stall:'The approver. ✅ RESOLVED — the agent is no longer the proposer of record; whoever triaged is. The existing check finally has a name to compare against rather than passing vacuously.'},
+        {t:'A one-person finance team',d:'the same person triages and approves, so under the rule above they cannot close the period at all.',plane:'control',surface:'/setup · policy',system:'build',hands:'both',handsKey:'both',exists:'specified',stage:'5 · act',kind:'branch',mark:'✕',hasStall:true,stall:'The tenant administrator, once. Segregation is a PER-TENANT policy a small tenant may switch off knowingly — and every approval it permits is recorded as self-approved, so the audit trail says which tenants bought speed with the control.'},
+        {t:'Posting failed after leaving',d:'the terminal state of an asynchronous act, reported when the person is no longer looking at it.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'5 · act',kind:'branch',mark:'✕'}
+       ]},
+      {id:'C6', name:'Ask a question', status:'v1', roles:'user · tenant administrator', mode:'both',
+       trigger:'A question about the period that the register does not answer as a list.',
+       exit:'An answer with a confidence and its cost, and optionally a pinned result.',
+       steps:[
+        {t:'Open Ask',d:'as a drawer over the register, not a destination away from it. The register stays behind it and stays operable.',plane:'data',surface:'/ask',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'6 · show'},
+        {t:'Ask',d:'inference runs in the data plane. Under BYOA the cost is on the customer\'s own AWS bill and 1CloudHub never carries per-customer serving cost.',plane:'data',surface:'/ask',system:'buy · Bedrock',hands:'them',handsKey:'them',exists:'built',stage:'—'},
+        {t:'Read the answer',d:'with a confidence meter and the token cost of the turn.',plane:'data',surface:'/ask',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'6 · show'},
+        {t:'Pin the answer',d:'so it survives the session and becomes a report.',plane:'data',surface:'/reports',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'6 · show',kind:'branch',mark:'✕',hasStall:true,stall:'PinnedAnswer exports nothing from the model. The control is drawn and the thing behind it does not exist.'}
+       ]},
+      {id:'C7', name:'Export and schedule delivery', status:'v1', roles:'user · tenant administrator · assurance reader', mode:'both',
+       trigger:'Somebody outside the product needs the period in a file.',
+       exit:'A file, or a delivery that repeats on a schedule to an approved destination.',
+       note:'✅ Scoped to export plus scheduled delivery — the thing finance actually asks for. Report definitions, pinned answers and job history stay out of v1, and the controls for them should stop being drawn.',
+       steps:[
+        {t:'Open Reports',d:'the third destination.',plane:'data',surface:'/reports',system:'build',hands:'us',handsKey:'us',exists:'partial',stage:'6 · show'},
+        {t:'Create an export',d:'the one operation that resolves to a real contract on this route.',plane:'data',surface:'/reports',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'6 · show'},
+        {t:'Schedule it',d:'a runner in the data plane fires the export on a cadence. The tenant administrator owns the schedule; an user may schedule their own.',plane:'data',surface:'/reports',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'6 · show'},
+        {t:'Pick a destination',d:'email, a drop to their own S3, a push to their SFTP, or a webhook into their system. Three of the four leave the customer\'s account.',plane:'data',surface:'/reports',system:'build',hands:'both',handsKey:'both',exists:'specified',stage:'6 · show'},
+        {t:'Destination not allow-listed',d:'an user may only schedule to a destination the tenant administrator has already approved, so an user cannot open an egress path alone.',plane:'data',surface:'/setup · destinations',system:'build',hands:'them',handsKey:'them',exists:'specified',stage:'6 · show',kind:'branch',mark:'✕',hasStall:true,stall:'The tenant administrator adds the destination to the allow-list. ✅ This is the answer to the first question a security review asks about scheduled delivery.'},
+        {t:'Schedule fires with no run behind it',d:'✅ it HOLDS and notifies. Each schedule carries its own precondition and a new one holds by default.',plane:'data',surface:'/reports',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'6 · show',kind:'branch',mark:'✕',hasStall:true,stall:'The user or admin who owns the schedule. Holding by default is the safe end of the choice: an empty file delivered on time reads to finance as a clean period, and a held delivery reads as a question.'},
+        {t:'Report definitions, pins, job history',d:'out of v1. Report, ReportDefinition, PinnedAnswer and ExportJob export nothing from the model, and the controls for them should stop being drawn rather than stay hatched.',plane:'data',surface:'/reports',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'6 · show',kind:'branch',mark:'✕'}
+       ]},
+      {id:'C8', name:'Watch spend against the plan', status:'v1', roles:'tenant administrator', mode:'both',
+       trigger:'A month in progress, and a plan with a ceiling.',
+       exit:'Knowing whether the period will land inside the plan.',
+       steps:[
+        {t:'Read the token meter',d:'in the chrome bar. The one genuinely measured thing there, and the only place the agent hue is allowed.',plane:'data',surface:'chrome',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'—'},
+        {t:'Usage ships upward',d:'to the control plane, where it becomes the invoice.',plane:'control',surface:'—',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'—'},
+        {t:'Wants per-user spend',d:'who in my team is spending this.',plane:'control',surface:'—',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'UsageRecord ships with no UserId. Per-user analytics is impossible by construction, not merely unbuilt — any journey assuming per-seat chargeback is unbuildable.'}
+       ]},
+      {id:'C9', name:'Configure sources and packs', status:'v1', roles:'tenant administrator', mode:'both',
+       trigger:'A new source system, or a change to what the agent is looking for.',
+       exit:'A source bound and a pack installed, both effective on the next run.',
+       steps:[
+        {t:'Declare the source',d:'must execute in the data plane, because it binds credentials that live in their own Secrets Manager.',plane:'data',surface:'/setup · sources',system:'build',hands:'both',handsKey:'both',exists:'partial',stage:'1 · arrive'},
+        {t:'Credentials written',d:'by their cloud engineer, into their Secrets Manager. We never see one.',plane:'data',surface:'AWS console',system:'buy · AWS',hands:'them',handsKey:'them',exists:'built',stage:'1 · arrive',kind:'wait',mark:'…',hasStall:true,stall:'Their cloud engineer. This is handoff 5, and it has no state — the product learns it is done by the source succeeding.'},
+        {t:'Install a blueprint',d:'document types, definitions, rules and SOPs from the catalogue.',plane:'both',surface:'/setup · packs',system:'build',hands:'us',handsKey:'us',exists:'partial',stage:'3 · pair'},
+        {t:'Change a threshold',d:'the extraction confidence floor is FDE-set, read-only on this surface, and pack configuration that refuses on absence.',plane:'control',surface:'/setup · packs',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'2 · read',kind:'branch',mark:'✕',hasStall:true,stall:'Only a 1CloudHub FDE can change it. A tenant administrator who needs a different floor raises it with delivery — there is no self-service path and that is deliberate.'}
+       ]},
+      {id:'C10', name:'Declare the tag policy', status:'v1', roles:'tenant administrator', mode:'both',
+       trigger:'Onboarding, or a change to the customer\'s cost-centre model.',
+       exit:'A vocabulary agreed and one key nominated to drive chargeback.',
+       steps:[
+        {t:'Agree the vocabulary',d:'they own the cost-centre names; we own what the meter does with them.',plane:'both',surface:'/setup',system:'build',hands:'both',handsKey:'both',exists:'neither',stage:'—'},
+        {t:'Nominate the chargeback key',d:'one key, and everything downstream depends on it.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Agreed late',d:'every usage record emitted before the agreement is uncategorised.',plane:'control',surface:'—',system:'build',hands:'both',handsKey:'both',exists:'neither',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'Nobody. This is the one handoff whose lateness cannot be repaired retrospectively — the records exist and cannot be re-tagged.'}
+       ]},
+      {id:'C11', name:'Read the audit trail', status:'v1', roles:'assurance reader', mode:'both',
+       trigger:'A question about what happened, from someone who may not change it.',
+       exit:'A record, reached from the id the status bar was already printing.',
+       note:'✅ Was the clearest hole in the map: every protected surface printed an audit trail id and nothing resolved it. Audit is now a DOOR behind the avatar rather than a fourth destination, so R3 holds — three destinations, and Setup and Audit are both doors. The assurance reader also reads the register and the reports, because a trail with no access to what it describes is a list of hashes.',
+       steps:[
+        {t:'Sign in read-only',d:'roles mapped in the customer\'s IdP.',plane:'data',surface:'/entry',system:'buy · IdP',hands:'them',handsKey:'them',exists:'partial',stage:'—'},
+        {t:'Read the register',d:'and the resolutions on it.',plane:'data',surface:'/close',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'6 · show'},
+        {t:'Read the reports',d:'so the trail can be checked against what was published.',plane:'data',surface:'/reports',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'6 · show'},
+        {t:'Open the audit door',d:'behind the avatar, beside Setup. Not a fourth destination — R3 holds.',plane:'data',surface:'/audit',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—'},
+        {t:'Resolve the audit id',d:'the id the status bar has been printing on every surface resolves to the run, the decisions taken on it, and who took them.',plane:'data',surface:'/audit',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—'},
+        {t:'Tries to change something',d:'every control on the surface is absent rather than disabled, because a control an assurance reader may never use is noise.',plane:'data',surface:'/audit',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—',kind:'branch',mark:'✕'}
+       ]},
+      {id:'C12', name:'Escalate hosted to BYOA', status:'v1', roles:'tenant administrator · cloud engineer', mode:'byoa',
+       trigger:'A customer on hosted whose security review now requires their own account.',
+       exit:'The tenant running in the customer\'s account, with the data migrated.',
+       steps:[
+        {t:'Decide to escalate',d:'commercial and security, not technical.',plane:'control',surface:'staff console',system:'build',hands:'both',handsKey:'both',exists:'neither',stage:'—'},
+        {t:'Provision the new plane',d:'the full BYOA onboarding runs again, steps 02 to 07.',plane:'data',surface:'AWS console',system:'build',hands:'them',handsKey:'them',exists:'neither',stage:'—',kind:'wait',mark:'…'},
+        {t:'Migrate everything',d:'documents, runs, resolutions, approvals and the audit trail. ✅ No loss — a regulated customer will not accept a lost history, and a partial migration is the same thing wearing a better word.',plane:'both',surface:'—',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'1–6'},
+        {t:'Verify the new plane',d:'a seed run and a reconciliation of counts against the old plane before anything is torn down.',plane:'data',surface:'/close',system:'build',hands:'both',handsKey:'both',exists:'specified',stage:'1–6'},
+        {t:'Decommission the old plane',d:'the stack is torn down once the new plane is verified. One source of truth, and no duplicate of regulated data left behind in an account we may no longer be provisioned in.',plane:'data',surface:'AWS console',system:'build',hands:'both',handsKey:'both',exists:'specified',stage:'—'},
+        {t:'Verification fails',d:'counts disagree. ✅ The NEW plane is authoritative from cutover and the old one is read-only immediately, so there is never a moment when two planes both accept work.',plane:'both',surface:'—',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'1CloudHub delivery, forward only. ⚠️ The cost of read-only-immediately is that a failed verification cannot be fixed by falling back — it is fixed by re-migrating into the new plane.'}
+       ]},
+      {id:'C13', name:'Set the tenant policy', status:'v1', roles:'tenant administrator', mode:'both',
+       trigger:'Onboarding, or a change in who is allowed to do what.',
+       exit:'Segregation and the delivery allow-list set, and both recorded.',
+       note:'Created by two of the nine rulings. Both settings are the kind a tenant turns on once and is then measured against, so both are recorded on every action they permit rather than only in a settings page.',
+       steps:[
+        {t:'Set segregation of duties',d:'on by default. The user who triages is the proposer of record and cannot approve their own work.',plane:'control',surface:'/setup · policy',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'5 · act'},
+        {t:'Switch it off knowingly',d:'a tenant too small to staff two people may waive it — and every approval it permits is recorded as self-approved.',plane:'control',surface:'/setup · policy',system:'build',hands:'both',handsKey:'both',exists:'specified',stage:'5 · act'},
+        {t:'Allow-list delivery destinations',d:'email addresses, S3 buckets, SFTP hosts and webhook endpoints. An user may schedule only to one already here.',plane:'data',surface:'/setup · destinations',system:'build',hands:'them',handsKey:'them',exists:'specified',stage:'6 · show'},
+        {t:'Waived segregation, then an audit',d:'the tenant is asked to evidence a control it chose not to run.',plane:'data',surface:'/audit',system:'build',hands:'them',handsKey:'them',exists:'specified',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'Nobody — and that is the point of recording it. The trail says which tenants waived the control and which approvals it permitted, so the answer exists even when it is not the answer they wanted.'}
+       ]}
+    ],
+
+    partner: [
+      {id:'P1', name:'Get registered', status:'v1', roles:'partner administrator · 1CloudHub billing', mode:'both',
+       trigger:'A signed partner agreement.',
+       exit:'A partner record with a billing arrangement, which decides everything below it.',
+       note:'Executed entirely by us. The partner supplies information and signs; no partner user touches a system.',
+       steps:[
+        {t:'Partner registered',d:'and the billing arrangement chosen. This one choice decides visibility, invoicing and who the customer\'s contract is with.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Arrangement determines visibility',d:'visibility derives from the arrangement and is never configured beside it — which is the right construction and has no surface to express it.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Partner waits',d:'there is nothing for the partner to do or see. Every step is ours.',plane:'control',surface:'—',system:'—',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'wait',mark:'…'}
+       ]},
+      {id:'P2', name:'Rate cards and retail price', status:'v1', roles:'partner administrator · 1CloudHub billing', mode:'both',
+       trigger:'A registered partner, before the first resale.',
+       exit:'A wholesale card assigned, and a retail card if the partner sets its own price.',
+       steps:[
+        {t:'Wholesale card assigned',d:'what the partner pays us.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Retail card configured',d:'only if the partner sets its own price. Two billing arrangements, and which one applies changes who invoices the customer.',plane:'control',surface:'staff console',system:'build',hands:'both',handsKey:'both',exists:'neither',stage:'—'},
+        {t:'Partner wants to change its own price',d:'✅ visible in the portal; changing it is still a conversation, because a retail card is part of an arrangement rather than a setting.',plane:'control',surface:'partner portal',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'1CloudHub billing. The portal shows the card and does not edit it — its one write is a deal registration, deliberately.'}
+       ]},
+      {id:'P3', name:'Invite partner administrators', status:'v1', roles:'partner administrator', mode:'both',
+       trigger:'A registered partner with people who need to see their own commercials.',
+       exit:'Admins invited — to a system they cannot sign into.',
+       note:'✅ RESOLVED. The proposal is accepted: G51 governs the DATA plane only, so no partner user ever reaches a tenant host — and the portal is a control-plane surface carrying rate cards, arrangements, tenants sold and commission. The invitation now has somewhere to arrive, and v1 is no longer inconsistent with itself.',
+       steps:[
+        {t:'Admins invited',d:'step 03 of partner onboarding, and it is in v1.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'The admin signs in',d:'against the partner\'s own IdP, into the control-plane portal. Never a tenant host, never a row of tenant data.',plane:'control',surface:'partner portal',system:'build',hands:'them',handsKey:'them',exists:'specified',stage:'—'},
+        {t:'Expects to see a tenant',d:'their customer\'s register is in the data plane and stays out of reach.',plane:'data',surface:'—',system:'—',hands:'us',handsKey:'us',exists:'specified',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'Nobody — and this is the boundary doing its job. What the portal shows is commercial; what it never shows is the work.'}
+       ]},
+      {id:'P4', name:'Scope catalogue access', status:'v1', roles:'1CloudHub catalogue', mode:'both',
+       trigger:'A partner whose resale rights need bounding.',
+       exit:'The set of blueprints this partner may resell.',
+       steps:[
+        {t:'Catalogue scoped',d:'which blueprints this partner may resell.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Partner cannot see the catalogue',d:'so the thing they are selling from is something they have been told about rather than shown.',plane:'control',surface:'partner portal',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'branch',mark:'✕'}
+       ]},
+      {id:'P5', name:'Sell and create a tenant', status:'v1', roles:'partner user · 1CloudHub · customer', mode:'both',
+       trigger:'A partner closes a deal.',
+       exit:'A tenant live under the partner, billed on the agreed arrangement.',
+       note:'Three parties, and ✅ the partner now has a surface — though not for this step. Tenant creation stays ours, because four of its decisions have no defaults. This is handoff 9, and the journey the G51 ruling most affects.',
+       steps:[
+        {t:'Partner sells',d:'outside the product entirely.',plane:'—',surface:'—',system:'—',hands:'them',handsKey:'them',exists:'neither',stage:'—'},
+        {t:'Partner asks us to create the tenant',d:'because no partner user can sign in. Today this is an email.',plane:'control',surface:'—',system:'build',hands:'both',handsKey:'both',exists:'neither',stage:'—',kind:'wait',mark:'…'},
+        {t:'Tenant created under the partner',d:'defaults to hosted. BYOA is a deliberate escalation.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Customer onboarding runs',d:'journeys C9, C10 and the 1CloudHub onboarding pipeline.',plane:'both',surface:'various',system:'build',hands:'both',handsKey:'both',exists:'partial',stage:'—'},
+        {t:'Partner cannot see progress',d:'their customer is onboarding and they have no way to know where it is stuck.',plane:'control',surface:'partner portal',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'wait',mark:'…',hasStall:true,stall:'1CloudHub delivery, by email. The partner\'s customer asks the partner, and the partner asks us.'}
+       ]},
+      {id:'P6', name:'See commission and margin', status:'v1', roles:'partner administrator · partner user', mode:'both',
+       trigger:'The end of a billing period.',
+       exit:'Knowing what is owed and on what basis.',
+       steps:[
+        {t:'Invoices produced',d:'wholesale to the partner, retail to the customer, or both depending on the arrangement.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Partner reads its own position',d:'✅ tenants sold, usage against each, commission owed — all control-plane data the partner has a commercial right to see.',plane:'control',surface:'partner portal',system:'build',hands:'them',handsKey:'them',exists:'specified',stage:'—'},
+        {t:'Disputes a line',d:'the usage total is visible to them; the documents behind it are not. ⚠️ Per-user attribution is impossible either way — UsageRecord ships with no UserId.',plane:'control',surface:'partner portal',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'1CloudHub billing. The portal narrows a dispute from "show me everything" to "explain this total", which is the most it can do without breaching the data plane.'}
+       ]},
+      {id:'P7', name:'Support their own tenant', status:'refused', roles:'partner delivery', mode:'both',
+       trigger:'The partner\'s customer reports a problem.',
+       exit:'— the partner cannot reach it.',
+       note:'Refused rather than deferred, and correctly — this needs data-plane access, which is the invariant G51 exists to protect. ✅ RULED: 1CloudHub is always the support path, and it is priced into the partner deal. Delegated tenant grants are NOT pursued. That turns an unserved role into a costed commercial term — so partner support capacity now has to be planned against resale volume rather than discovered by it.',
+       steps:[
+        {t:'Customer reports to the partner',d:'because the partner is who they bought from.',plane:'—',surface:'—',system:'—',hands:'them',handsKey:'them',exists:'neither',stage:'—'},
+        {t:'Partner cannot see the tenant',d:'no partner user reaches the data plane. A partner cannot support what it sold.',plane:'data',surface:'—',system:'—',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'1CloudHub support, escalated through the partner. Every partner-sold incident routes through us, which is the operational cost of G51 and the reason it keeps being reopened.'}
+       ]},
+      {id:'P8', name:'Escalate a resold tenant to BYOA', status:'v1', roles:'partner user · customer cloud engineer', mode:'byoa',
+       trigger:'A partner-sold customer who requires their own AWS account.',
+       exit:'A BYOA tenant under a partner arrangement.',
+       steps:[
+        {t:'Escalation requested',d:'a deliberate escalation away from the hosted default.',plane:'control',surface:'staff console',system:'build',hands:'both',handsKey:'both',exists:'neither',stage:'—'},
+        {t:'The customer\'s cloud engineer is pulled in',d:'to a deal the partner owns. Three organisations, and the one executing the technical steps has no relationship with us.',plane:'data',surface:'AWS console',system:'build',hands:'them',handsKey:'them',exists:'neither',stage:'—',kind:'wait',mark:'…',hasStall:true,stall:'The end customer\'s own cloud team, who did not buy from us and may not know who we are. This is the longest stall in the map.'}
+       ]},
+      {id:'P9', name:'Register a deal', status:'v1', roles:'partner user · 1CloudHub billing', mode:'both',
+       trigger:'A partner has an opportunity they want credit for.',
+       exit:'An accepted registration a later lead can be matched against.',
+       note:'✅ The portal\'s only WRITE, and it is a request rather than a commitment: partners submit, staff approve. That is what keeps a read-only visibility surface from quietly becoming a system partners can enter facts into. The control plane owns the registration; the CRM holds a copy.',
+       steps:[
+        {t:'Partner submits a registration',d:'company, contact, and what they think the deal is. The portal\'s one write operation.',plane:'control',surface:'partner portal',system:'build',hands:'them',handsKey:'them',exists:'specified',stage:'—'},
+        {t:'Waiting on approval',d:'a registration is a request until staff accept it, so nothing is credited yet.',plane:'control',surface:'—',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—',kind:'wait',mark:'…'},
+        {t:'Staff approve it',d:'and it becomes matchable. The control plane is the system of record; the CRM copy is downstream.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—'},
+        {t:'Two partners register the same deal',d:'and both believe they sourced it.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'1CloudHub sales, by judgement. Nothing specifies precedence — first to register, or first to bring the meeting. NEW question, created by making registration a record.'},
+        {t:'Registration expires',d:'a deal registered and never closed should not hold the account forever.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'Nobody. No expiry is specified, and without one the registry becomes a land-grab.'}
+       ]}
+    ],
+
+    hub: [
+      {id:'H1', name:'Create account, tenant and plan', status:'v1', roles:'billing · FDE', mode:'both',
+       trigger:'A signed customer, direct or through a partner.',
+       exit:'A tenant record with a deployment mode, residency, retention and support access mode.',
+       note:'The control plane owns the tenant row; the data plane holds a narrow projection of it. This reversed on 12 Aug 2026 under G185 — earlier documents say the control plane holds no tenant row.',
+       steps:[
+        {t:'Account and tenant created',d:'with deployment mode, residency, retention and support access mode. Four decisions that cannot be changed later without a migration.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Plan assigned',d:'and the rate card behind it.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'The surface is being specified',d:'✅ administration.openapi.yaml covers tenancy, catalogue, rate cards, plans and onboarding state — the whole console rather than a slice.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—'},
+        {t:'Until it ships',d:'every step here is executed by hand against the database.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'Nobody, in the interim. Specifying all five areas before building any of them is slower to first use than the onboarding-state-first alternative — that is the trade taken, and it is worth saying out loud.'}
+       ]},
+      {id:'H2', name:'Run customer onboarding', status:'v1', roles:'FDE', mode:'both',
+       trigger:'A created tenant that is not yet live.',
+       exit:'A first real reconciliation, and a billable tenant.',
+       note:'Ten steps, of which four are executed inside the customer\'s account by their people. It needs a state per step or "why is this customer not live" has no answer — and the first invoice arrives before the first run.',
+       steps:[
+        {t:'Provision the data plane',d:'a CDK stack into their account, with their mandatory resource tags.',plane:'data',surface:'AWS console',system:'build',hands:'both',handsKey:'both',exists:'partial',stage:'—'},
+        {t:'Key exchange',d:'a KMS pair generated in their account; we register the public half.',plane:'data',surface:'AWS console',system:'buy · KMS',hands:'them',handsKey:'them',exists:'neither',stage:'—',kind:'wait',mark:'…',hasStall:true,stall:'Their cloud engineer. One manual step with no state, and skipping it breaks nothing visible until the first encrypted artefact.'},
+        {t:'Model access pre-flight',d:'which Bedrock models, which region, which quotas, on-demand or provisioned.',plane:'data',surface:'AWS console',system:'buy · Bedrock',hands:'them',handsKey:'them',exists:'neither',stage:'2 · read',kind:'wait',mark:'…',hasStall:true,stall:'Their cloud engineer, and often their procurement. Under BYOA the inference bill is theirs, so this is a commercial conversation wearing a configuration step\'s clothes.'},
+        {t:'Identity federation',d:'their IdP over OIDC or SAML, roles mapped.',plane:'data',surface:'their IdP',system:'buy · IdP',hands:'them',handsKey:'them',exists:'neither',stage:'—',kind:'wait',mark:'…',hasStall:true,stall:'Their IdP admin. A wrong mapping is invisible from our side and surfaces as a missing destination for their user.'},
+        {t:'Connector credentials',d:'into their Secrets Manager. We never see one.',plane:'data',surface:'AWS console',system:'buy · AWS',hands:'them',handsKey:'them',exists:'neither',stage:'1 · arrive',kind:'wait',mark:'…'},
+        {t:'Blueprint installed',d:'document types, definitions, rules and SOPs from the catalogue.',plane:'both',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'partial',stage:'3 · pair'},
+        {t:'First lease issued',d:'heartbeat and usage stream confirmed flowing. This is the moment the tenant becomes billable, and the only correct definition of live.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'—'},
+        {t:'Seed run, then first real reconciliation',d:'synthetic data first, so the first real close is not also the first run.',plane:'data',surface:'/close',system:'build',hands:'both',handsKey:'both',exists:'built',stage:'1–6'},
+        {t:'Stalls at any of four steps',d:'and there is no state to report it against.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'The FDE, against a named step. ✅ Onboarding is now a tracked pipeline with a state per step in the staff console. This is what makes "why is this customer not live" answerable, and what stops the first invoice arriving before the first run.'}
+       ]},
+      {id:'H3', name:'Author and publish a pack', status:'v1', roles:'catalogue / platform', mode:'both',
+       trigger:'A new document type, industry or reconciliation pattern.',
+       exit:'A blueprint in the catalogue, scoped to who may install it.',
+       steps:[
+        {t:'Author the pack',d:'document types, field specs, definitions, match rules, SOPs, policies.',plane:'control',surface:'agent builder',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'2–5'},
+        {t:'Set the floors',d:'pack configuration that refuses on absence — a missing floor is a refusal rather than a default.',plane:'control',surface:'agent builder',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'2 · read'},
+        {t:'Publish downward',d:'the control plane publishes and never reads tenant data — invariant 3.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'partial',stage:'—'},
+        {t:'Scope who may resell it',d:'per partner.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'The agent builder is a new surface',d:'central and tenant-scoped, and it is in v1 — but it is not in the model and not in the three-module vocabulary.',plane:'control',surface:'agent builder',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'branch',mark:'✕'}
+       ]},
+      {id:'H4', name:'Set an extraction floor for a tenant', status:'v1', roles:'FDE', mode:'both',
+       trigger:'A tenant whose documents extract badly at the pack default.',
+       exit:'A floor that is right for this tenant, set off their surface.',
+       note:'The one segregation-of-duties conflict the product chose on purpose: the same party sets the threshold and is measured on the outcome. It buys delivery speed and it should be reviewed knowingly rather than discovered.',
+       steps:[
+        {t:'Diagnose',d:'from the run, not from the tenant\'s report.',plane:'data',surface:'—',system:'build',hands:'us',handsKey:'us',exists:'partial',stage:'2 · read'},
+        {t:'Set the floor',d:'FDE-set, off the tenant surface, read-only where it appears to them.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'2 · read'},
+        {t:'The tenant cannot see the number',d:'the band may exist; the number may not. A facet or a field printing it would be asserting a value the tenant has no access to.',plane:'data',surface:'/setup',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'2 · read',kind:'branch',mark:'✕'}
+       ]},
+      {id:'H5', name:'Respond to an incident', status:'v1', roles:'support', mode:'both',
+       trigger:'A customer reports that something is wrong in their plane.',
+       exit:'A diagnosis, and a record of what was looked at.',
+       steps:[
+        {t:'Check the grant',d:'the support access mode chosen at tenant creation decides what we may see. Their decision, not ours.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Read what the mode allows',d:'inside the customer\'s plane, under their constraints.',plane:'data',surface:'/close · /setup',system:'build',hands:'us',handsKey:'us',exists:'partial',stage:'—'},
+        {t:'Read the trace',d:'✅ a capability is minted for telemetry, so the grant support already holds becomes a token that can actually be issued.',plane:'control',surface:'telemetry',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—'},
+        {t:'The grant is narrower than the incident',d:'the support access mode the customer chose at tenant creation still bounds the read — minting the capability closed the unmintable defect, not the customer\'s ceiling.',plane:'control',surface:'telemetry',system:'build',hands:'them',handsKey:'them',exists:'specified',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'The tenant administrator, by widening the support access mode. Now a real decision with a real owner, rather than a token that could never be issued.'},
+        {t:'Ask the customer to look',d:'the fallback when the grant or the capability is missing.',plane:'data',surface:'—',system:'—',hands:'them',handsKey:'them',exists:'neither',stage:'—',kind:'wait',mark:'…'}
+       ]},
+      {id:'H6', name:'Meter usage and invoice', status:'v1', roles:'billing & commercial', mode:'both',
+       trigger:'The end of a billing period.',
+       exit:'An invoice against a rate card, to a customer or a partner or both.',
+       note:'The spine of the product. Everything in the control plane exists to serve this or to govern it.',
+       steps:[
+        {t:'Usage streams upward',d:'from every data plane to the one control-plane writer in ap-southeast-1. No regional replica; each plane reads its own pulled projection.',plane:'control',surface:'—',system:'build',hands:'us',handsKey:'us',exists:'built',stage:'—'},
+        {t:'Rate the usage',d:'against the plan and rate card.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'partial',stage:'—'},
+        {t:'Invoice',d:'retail to a direct customer; wholesale to a partner; both where the partner sets its own price.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Invoice arrives before the first run',d:'because the lease was issued and onboarding stalled at a step nobody was tracking.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'This is H2\'s missing state, arriving as a commercial problem. The two journeys share one defect.'},
+        {t:'A line is disputed',d:'and the evidence is usage records with no per-user attribution.',plane:'control',surface:'—',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'branch',mark:'✕'}
+       ]},
+      {id:'H7', name:'Reconcile partner billing', status:'v1', roles:'billing & commercial', mode:'both',
+       trigger:'A period closed on tenants sold through partners.',
+       exit:'Partner invoices and commission settled.',
+       steps:[
+        {t:'Group tenants by partner',d:'and by which of the two arrangements applies.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Apply wholesale and retail',d:'and derive commission.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Partner queries it',d:'✅ and can see the basis in the portal — tenants, usage totals, commission owed.',plane:'control',surface:'partner portal',system:'build',hands:'them',handsKey:'them',exists:'specified',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'1CloudHub billing, for anything below the total. ⚠️ Per-user attribution is impossible either way — UsageRecord ships with no UserId — so a dispute can be narrowed but never fully evidenced.'}
+       ]},
+      {id:'H8', name:'Manage the commercial catalogue', status:'v1', roles:'billing · catalogue', mode:'both',
+       trigger:'A price change, a new plan, a new packaged blueprint.',
+       exit:'A catalogue and rate cards that match what is being sold.',
+       steps:[
+        {t:'Edit plans and rate cards',d:'the commercial surface of the control plane.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Give them effective dates',d:'✅ effective dates rather than full versioning, so a change applies forward and an in-flight tenant is not repriced mid-period.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—'},
+        {t:'An invoice was already issued',d:'✅ it stands. Pricing is never retroactive, and a correction is a manual adjustment on the next invoice, carrying a reason.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'1CloudHub billing, forward only. ⚠️ Effective dates without versioning means an old invoice may not be reproducible from the current card — the adjustment reason is the only record of why the two disagree, so it is load-bearing rather than a note.'}
+       ]},
+      {id:'H9', name:'Govern tags and chargeback', status:'v1', roles:'platform · billing', mode:'both',
+       trigger:'Provisioning a plane, and every usage record after it.',
+       exit:'Cost attributable to a cost centre the customer recognises.',
+       steps:[
+        {t:'Require tags at provision',d:'the CDK stack applies the customer\'s mandatory resource tags.',plane:'data',surface:'AWS console',system:'build',hands:'both',handsKey:'both',exists:'partial',stage:'—'},
+        {t:'Nominate the chargeback key',d:'one key drives it, and the vocabulary is theirs.',plane:'control',surface:'staff console',system:'build',hands:'both',handsKey:'both',exists:'neither',stage:'—'},
+        {t:'Stack deployed without tags',d:'a chargeback hole that only surfaces on the first invoice.',plane:'data',surface:'AWS console',system:'build',hands:'them',handsKey:'them',exists:'neither',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'Their cloud engineer redeploys. Nothing in the product checks tag conformance at provision time.'}
+       ]},
+      {id:'H10', name:'Review the licence position', status:'v1', roles:'platform', mode:'byoa',
+       trigger:'Any third-party runtime that lands inside a customer\'s account.',
+       exit:'A defensible answer to the customer\'s security review.',
+       note:'The app is delivered from our CloudFront and the browser calls the customer\'s own API directly — so tenant data never transits a 1CloudHub account. But the code does come from us and executes against their data in their user\'s browser, and a security review will ask about exactly that.',
+       steps:[
+        {t:'Inventory what we ship into their account',d:'every third-party runtime is a licence question as well as a technical one.',plane:'data',surface:'—',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Answer the delivery question',d:'our code, their data, their browser. The data path is clean; the code path is ours.',plane:'—',surface:'—',system:'—',hands:'us',handsKey:'us',exists:'neither',stage:'—'},
+        {t:'Customer refuses the arrangement',d:'and wants the app served from their own account too.',plane:'data',surface:'—',system:'build',hands:'us',handsKey:'us',exists:'neither',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'Nothing specifies a customer-hosted frontend. It is the one BYOA question the current delivery model cannot answer yes to.'}
+       ]},
+      {id:'H11', name:'Run the partner registry and the domain list', status:'v1', roles:'billing & commercial · support', mode:'both',
+       trigger:'A partner submits a registration, or a customer\'s people are on a domain the lookup does not know.',
+       exit:'An approved registration, or a domain that resolves.',
+       note:'Two small control-plane registries the nineteen rulings created, both added to a console that was already being specified whole — which is the argument for having specified it whole.',
+       steps:[
+        {t:'Review a submitted registration',d:'approve, reject, or ask for more. A registration is a request until staff accept it.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—'},
+        {t:'Maintain the domain allow-list',d:'control-plane data, changed by support request. Only listed domains resolve in the public email lookup.',plane:'control',surface:'staff console',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—'},
+        {t:'A contractor cannot sign in',d:'their domain is not the customer\'s, so the lookup gives them a generic reply and no route.',plane:'control',surface:'/lookup',system:'build',hands:'us',handsKey:'us',exists:'specified',stage:'—',kind:'branch',mark:'✕',hasStall:true,stall:'1CloudHub support adds the domain. ⚠️ This is the operational cost of the allow-list and it lands on support rather than on the tenant administrator — worth watching, because it scales with every subsidiary and contractor a customer has.'}
+       ]}
+    ]
+  };
+
+  componentDidMount(){
+    this.onKey = (e)=>{ if(e.key === 'Escape') this.setState({open:{}, allOpen:false}); };
+    window.addEventListener('keydown', this.onKey);
+  }
+  componentWillUnmount(){ window.removeEventListener('keydown', this.onKey); }
+
+  isGap(j){ return j.status === 'unspecified' || j.status === 'refused'; }
+
+  /* THE FLOW LAYOUT. The rail is the sequence the journey actually passes
+     through — happy steps AND waiting states, because a wait is somewhere the
+     journey stands rather than somewhere it leaves. A failure branch drops off
+     the rail and attaches to the last rail node before it.
+     A branch arriving before any rail node would have nothing to hang from; it
+     is promoted onto the rail rather than dropped, so no step is ever lost from
+     the diagram. No journey in the map hits that case today. */
+  flow(steps){
+    const cols = [];
+    steps.forEach((st,i)=>{
+      const node = {
+        no: String(i + 1).padStart(2,'0'),
+        mark: st.mark || '›',
+        t: st.t,
+        kind: st.kind || 'step',
+        stall: st.hasStall ? 'true' : 'false'
+      };
+      if(node.kind === 'branch' && cols.length){
+        cols[cols.length - 1].branches.push(node);
+      } else {
+        cols.push(Object.assign({branches:[]}, node));
+      }
+    });
+    return cols;
+  }
+
+  /* The diagram is decorative only in the sense that the list below repeats
+     every word of it — so it takes one alt sentence rather than a parallel
+     structure a screen reader would have to walk twice. */
+  flowAlt(j, cols){
+    const rail = cols.length;
+    let br = 0;
+    cols.forEach(c=>{ br += c.branches.length; });
+    return j.name + ': ' + rail + ' steps on the path'
+      + (br ? ', ' + br + ' branch' + (br === 1 ? '' : 'es') + ' leaving it' : '')
+      + '. Every step is listed below the diagram.';
+  }
+
+  renderVals(){
+    const s = this.state;
+    /* The tab is unset until the reader picks one, so the prop decides which
+       tab the map opens on rather than fighting a hardcoded default. */
+    const tab = s.tab || this.props.defaultTab || 'customer';
+    const isJourneyTab = tab === 'customer' || tab === 'partner' || tab === 'hub';
+
+    const titles = {
+      customer:'Customer journeys',
+      partner:'Partner journeys',
+      hub:'1CloudHub journeys'
+    };
+    const subs = {
+      customer:'Six roles. One is not a customer yet, one never signs into the product at all, and the rest work inside the customer\'s own data plane — under BYOA that is their AWS account, their Bedrock quota and their bill. The first two journeys happen before any of that exists.',
+      partner:'Three roles, and ✅ two of them now sign in — to a control-plane portal, never to a tenant. Eight of the nine journeys are still executed by us; the ninth, a deal registration, is the one thing a partner writes.',
+      hub:'Four roles, and ✅ the surface they all depend on is now being specified whole — tenancy, catalogue, rate cards, plans, onboarding state, and the two registries the rulings added. Until it ships, most of these eleven journeys are executed by hand.'
+    };
+
+    let all = isJourneyTab ? this.JOURNEYS[tab].slice() : [];
+    /* Gaps-first is a reading order, not a re-ranking: the ids stay put, so a
+       journey cited in conversation is still findable by its id. */
+    if(this.props.showGapsFirst){
+      all.sort((a,b)=> (this.isGap(b) ? 1 : 0) - (this.isGap(a) ? 1 : 0));
+    }
+    const shown = all.filter(j=>{
+      if(s.filter === 'v1') return j.status === 'v1';
+      if(s.filter === 'gap') return this.isGap(j);
+      return true;
+    });
+
+    /* Unspecified and refused are different claims — the legend says so — so
+       they are counted separately even though the filter groups them. */
+    const unspec = all.filter(j=>j.status === 'unspecified').length;
+    const refused = all.filter(j=>j.status === 'refused').length;
+    const deferred = all.filter(j=>j.status === 'v2').length;
+    const gaps = unspec + refused;
+    const v1 = all.filter(j=>j.status === 'v1').length;
+    const tail = [];
+    if(unspec) tail.push(unspec + ' with nothing specifying them');
+    if(refused) tail.push(refused + ' refused');
+    if(deferred) tail.push(deferred + ' deferred');
+    if(!tail.length) tail.push('nothing outstanding');
+    const countLine = shown.length + ' of ' + all.length + ' shown · '
+      + v1 + ' in v1 · ' + tail.join(' · ');
+
+    const statusLabels = {v1:'v1', v2:'v2', unspecified:'unspecified', refused:'refused'};
+
+    return {
+      tabCustomer: tab === 'customer' ? 'page' : undefined,
+      tabPartner:  tab === 'partner'  ? 'page' : undefined,
+      tabHub:      tab === 'hub'      ? 'page' : undefined,
+      tabRoutes:   tab === 'routes'   ? 'page' : undefined,
+      tabHandoffs: tab === 'handoffs' ? 'page' : undefined,
+      tabDecisions: tab === 'decisions' ? 'page' : undefined,
+      goCustomer: ()=> this.setState({tab:'customer', open:{}, allOpen:false}),
+      goPartner:  ()=> this.setState({tab:'partner',  open:{}, allOpen:false}),
+      goHub:      ()=> this.setState({tab:'hub',      open:{}, allOpen:false}),
+      goRoutes:   ()=> this.setState({tab:'routes'}),
+      goHandoffs: ()=> this.setState({tab:'handoffs'}),
+      goDecisions: ()=> this.setState({tab:'decisions'}),
+
+      nCustomer: this.JOURNEYS.customer.length,
+      nPartner:  this.JOURNEYS.partner.length,
+      nHub:      this.JOURNEYS.hub.length,
+
+      showJourneys: isJourneyTab,
+      showRoutes:   tab === 'routes',
+      showHandoffs: tab === 'handoffs',
+      showDecisions: tab === 'decisions',
+
+      actorTitle: titles[tab] || '',
+      actorSub:   subs[tab] || '',
+      roles: isJourneyTab ? this.ROLES[tab] : [],
+
+      fAll: s.filter === 'all' ? 'true' : 'false',
+      fV1:  s.filter === 'v1'  ? 'true' : 'false',
+      fGap: s.filter === 'gap' ? 'true' : 'false',
+      setAll: ()=> this.setState({filter:'all'}),
+      setV1:  ()=> this.setState({filter:'v1'}),
+      setGap: ()=> this.setState({filter:'gap'}),
+      countLine,
+      showEmpty: isJourneyTab && shown.length === 0,
+      emptyTitle: s.filter === 'gap'
+        ? 'Every journey on this tab has been ruled'
+        : 'No journey on this tab is in v1',
+      emptyBody: s.filter === 'gap'
+        ? 'All ' + all.length + ' carry a status, a surface and an owner — there is nothing here with nothing specifying it. That is the filter reporting a clean tab rather than an empty one, and it reads differently from a tab that has not been looked at.'
+        : 'All ' + all.length + ' are deferred or unspecified. Nothing on this tab ships in v1, which is the answer rather than the absence of one.',
+
+      expandLabel: s.allOpen ? 'Collapse all' : 'Expand all',
+      toggleAll: ()=> this.setState(p=>{
+        if(p.allOpen) return {open:{}, allOpen:false};
+        const o = {};
+        (this.JOURNEYS[p.tab || this.props.defaultTab || 'customer'] || [])
+          .forEach(j=>{ o[j.id] = true; });
+        return {open:o, allOpen:true};
+      }),
+
+      journeys: shown.map(j=>{
+        const open = !!s.open[j.id];
+        const cols = this.flow(j.steps);
+        return {
+          spine: j.steps.map(st=>({kind: st.kind || 'step'})),
+          flow: cols,
+          flowAlt: this.flowAlt(j, cols),
+          id:j.id, name:j.name, trigger:j.trigger, exit:j.exit,
+          status:j.status, statusLabel:statusLabels[j.status] || j.status,
+          roleLabel:j.roles,
+          hasNote: !!j.note, note:j.note || '',
+          open, expanded: open ? 'true' : 'false', caret: open ? '−' : '+',
+          toggle: ()=> this.setState(p=>{
+            const o = Object.assign({}, p.open);
+            if(o[j.id]){ delete o[j.id]; } else { o[j.id] = true; }
+            return {open:o};
+          }),
+          steps: j.steps.map((st,i)=>({
+            mark: st.mark || '›',
+            kind: st.kind || 'step',
+            t: st.t, d: st.d,
+            plane: st.plane, surface: st.surface, system: st.system,
+            hands: st.hands, handsKey: st.handsKey || st.hands,
+            exists: st.exists, stage: st.stage,
+            hasStall: !!st.hasStall, stall: st.stall || ''
+          }))
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

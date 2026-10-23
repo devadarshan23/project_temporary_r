@@ -1,0 +1,338 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE THEME BRIDGE — how docs/handoff-pack/tokens.css supplies Tailwind.
+
+   THE KERNEL REMAINS THE ONLY PLACE A VALUE IS DECLARED. Nothing below states a
+   colour, a spacing unit or a type size. Every line here is a REFERENCE —
+   `var(--agent)`, never `#00866a` — so a token moved in the kernel moves the
+   utility with it. tests/design/frontend-bridge.test.ts §6 is the proof and it
+   is not a formality: it moves `--agent` at RUNTIME and requires both the ported
+   meter and a Tailwind utility to follow. A bridge that RESTATED the palette
+   would hold its own copy, pass every visual review, and fail that assertion.
+
+   ─── 1 · THE ARRANGEMENT, AND IT IS THE WHOLE RISK OF G198 ─────────────────
+
+   THE KERNEL IS IMPORTED UNLAYERED, AFTER TAILWIND. That is a decision with a
+   measured cost, not a default, and the measurement is in
+   tests/design/kernel-under-tailwind.test.ts:
+
+     arrangement   .nb + a bg-* utility        .nb + a local unlayered `background:`
+     unlayered     hatch KEPT                  hatch KEPT
+     inBase        hatch LOST                  hatch LOST
+     ownLayer      hatch KEPT                  hatch LOST
+
+   Exactly one of the three survives both attackers. THE REASON THE OTHER TWO
+   FAIL IS NOT TAILWIND — it is that `.nb.nb` is a SPECIFICITY defence (0,2,0)
+   and CASCADE LAYERS ARE RESOLVED BEFORE SPECIFICITY IS EVER CONSULTED. The
+   kernel's own note at NOT-BUILT says the doubled class means "no single-class
+   rule can reach it whatever the order". That is true WITHIN one layer and
+   false ACROSS layers. Put the kernel in a layer and a 0,1,0 utility beats it;
+   and because UNLAYERED rules outrank EVERY layer, the mere act of layering the
+   kernel also re-opens the 16 Aug 2026 defect against ordinary component CSS —
+   a plain `<style>.route{background:var(--x)}</style>` in any component.
+
+   🛑 THE COST, STATED RATHER THAN DISCOVERED. An unlayered kernel BEATS EVERY
+   TAILWIND UTILITY IT COLLIDES WITH. This is precisely the competition G198
+   records the owner accepting — "Tailwind's utility classes compete with the
+   kernel's semantic ones" — and the resolution is that the kernel wins.
+
+   THE COLLISION IS NARROW, and it is worth naming exactly rather than in general:
+   it occurs ONLY where the kernel declares the SAME PROPERTY on the SAME ELEMENT.
+   MEASURED against this build rather than reasoned about —
+     class="conn p-4"     padding 16px   the UTILITY wins; the kernel sets none
+     class="conn gap-4"   gap 8px        the KERNEL wins; `.conn` declares gap
+     class="nb p-4"       padding 16px   the UTILITY wins
+   So layout utilities reach these primitives normally, and only the handful of
+   properties a kernel class actually names are closed to them.
+
+   ⚠️ THIS BLOCK CITED `class="conn p-2"` AS THE EXAMPLE OF THE KERNEL WINNING,
+   AND THAT WAS FALSE — `.conn` declares `display`, `align-items`, `gap`,
+   `font-size` and `color`, and NO padding, so padding was the one property in
+   the rule that a utility does reach. The claim was written from the shape of the
+   argument instead of from the file, which is the defect this repository keeps
+   catching in its own citations. Corrected against a rendered page, not re-read.
+
+   THE ALTERNATIVE WAS CONSIDERED AND REFUSED. `ownLayer` — the kernel in its own
+   layer after `utilities` — lets Tailwind override the kernel and still beats
+   every utility. It loses the hatch to an unlayered local `background:`, and the
+   only repairs available are `!important` on the hatch or a convention that
+   forbids unlayered component CSS. A convention is a review habit, and a review
+   habit is what failed three times already at this exact site.
+
+   ─── 2 · THE FENCES ────────────────────────────────────────────────────────
+
+   Six of DESIGN.md's named rules are enforced here MECHANICALLY, by deleting
+   the utilities that would breach them, rather than by review. A rule with a
+   compiler behind it is a control; a rule in a document is a hope. Each `*:
+   initial` below clears a Tailwind default namespace; what follows re-declares
+   only what the kernel already owns.
+
+   ⚠️ THE FENCES ARE NOT COMPLETE AND THE GAPS ARE NAMED AT EACH SITE. Clearing a
+   theme namespace only removes THEME-DRIVEN utilities. A static utility carries
+   its value in the engine and survives — `rounded-full` is the live example, and
+   after the six fences below it is the ONLY named gap left.
+
+   ⚠️ THIS SAID "FOUR OF DESIGN.md's NAMED RULES" AND LISTED FOUR FENCES, AND THE
+   OMISSION IS CORRECTED HERE RATHER THAN SWEPT, because the paragraph above
+   claims the gaps are named and two of them were not. `--animate-*` and
+   `--shadow-*` were left uncleared while colour, type, shape and face were
+   fenced — so `animate-spin` and `shadow-md` compiled, held back only by the
+   `@source inline` list, which this file's own §"THE UTILITY SURFACE" argues is
+   the weaker of the two controls (a two-file edit, and nothing checks it for
+   drift). Measured before the repair with each class forced into the list:
+   `animate-spin` 1, `shadow-md` 1. Both are 0 after it. `rounded-full` is 1
+   before and 1 after, which is what tells the two kinds of gap apart.
+
+   ─── 3 · WHAT IS EMITTED ───────────────────────────────────────────────────
+
+   Tailwind TREE-SHAKES theme variables: a mapping no utility uses emits nothing.
+   Verified against this build —
+     grep -c 'color-recede' frontend/dist/assets/*.css        # 0, unused today
+     sed -n '/@layer theme/,/^}/p' frontend/dist/assets/*.css # only what is used
+   So the map below is complete on purpose and costs nothing in the artefact.
+   That matters here: the kernel's REPAIR #3 records `@keyframes settle` as a
+   defect for being "declared, applied to nothing", and a full map would be that
+   defect if the declarations shipped. They do not.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@import "tailwindcss" source(none);
+
+/* ─── THE UTILITY SURFACE IS DECLARED, NOT DETECTED ────────────────────────
+
+   🛑 THIS WAS `@source "./"` — SCANNING frontend/src — FOR ONE BUILD, AND THE
+   MEASUREMENT THAT ENDED IT IS RECORDED HERE RATHER THAN SWEPT, because the
+   reasoning generalises. That build shipped FIVE utilities no component uses:
+   `.underline`, `.opacity-0`, `.ring`, `.h-1` and `.w-1\/2`. All five came from
+   PROSE IN THIS SLICE'S OWN DOC COMMENTS — Tailwind's scanner reads a comment
+   exactly as it reads markup. The sharpest of the five: Meter.tsx carries a
+   comment warning that `class="h-1 w-1/2 bg-agent"` DRAWS A SECOND LINE, and the
+   warning is what emitted the utilities to draw one.
+
+   Two consequences, and the second is the one that decided it:
+     · DEAD DECLARATIONS SHIP. The kernel's REPAIR #3 records `@keyframes settle`
+       — "declared, applied to nothing" — as a defect worth naming. Five of them
+       arrived in one build without anyone typing a class.
+     · THE FENCES BELOW LEAK. `rounded-full` is the one class that would build A
+       SECOND DOT and the one the `--radius-*` fence cannot reach. Under scanning
+       it re-enters the shipped sheet the moment any component's PROSE mentions
+       it — including a comment explaining why it must not be used. A fence a
+       comment can open is not a fence.
+
+   So the surface is a LIST. Every utility this frontend may use is below; a class
+   not named here compiles to nothing, which is the same fail-closed posture as
+   `--color-*: initial`. tests/design/render.ts reached the same conclusion for
+   the same reason and says so in its own header — "no scanning of a source tree,
+   no dependence on what a component happens to spell today".
+
+   ⚠️ THE COST, AND IT IS NOT SMALL. A new utility is a TWO-FILE EDIT: the
+   component and this list. And nothing checks the list against usage, so an entry
+   that outlives its last call site becomes the dead declaration this change was
+   made to prevent, arriving through the other door. That is a real open edge, it
+   is cheap only while the surface is this small, and it should be re-argued —
+   with the sheet measured both ways — when routes land. */
+/* ⚠️ WRITTEN `{p,gap}-{1,2,4,6}` FOR ONE BUILD. The brace expansion is shorter
+   and it emitted `.p-1` and `.p-2`, which no component uses — the dead
+   declaration this whole block was written to prevent, arriving in the same file
+   that argues against it, one build later. Spell the multiples that are used.
+
+   Reproduce the surface at any time and compare it against the components:
+     grep -o '@layer utilities.*:root' frontend/dist/assets/-.css \
+       | tr '{}' '\n\n' | grep -oE '^[.][a-zA-Z0-9/_.-]+' | sort -u       # 18
+   ⚠️ THAT FIGURE READ 17 UNTIL `items-start` WAS ADDED, one edit later in the
+   same slice, which is how fast a stated count goes stale. Derive it; and note
+   `sort -u`, because `.bg-linear-to-r` is emitted TWICE — once inside an
+   `@supports` block — so a `grep -c` over the same stream counts 19 LINES for 18
+   utilities.
+   (read the `-.css` as a glob — see the note below on why it cannot be written
+   here literally.)
+
+   🛑 AND A TRAP WORTH THE THREE LINES IT COSTS TO RECORD. The first version of
+   that command used `sed` and contained the two characters that CLOSE A CSS
+   COMMENT. It terminated this comment mid-sentence, and the rest of the prose
+   was parsed as CSS: `Missing opening {`, the build failed, and the error named
+   the file rather than the line. A REPRODUCE COMMAND INSIDE A CSS COMMENT MAY
+   NOT CONTAIN A STAR FOLLOWED BY A SLASH — which rules out a glob before an
+   extension, and every `s/.../.../` whose left side ends in one. */
+@source inline("p-{4,6} gap-{1,2,4,6} flex flex-col items-start block");
+@source inline("text-{micro,label,title} text-muted");
+@source inline("bg-{white,none,linear-to-r}");
+
+/* 🛑 `bg-agent` IS PUBLISHED AND NO COMPONENT MAY USE IT, WHICH IS ODD ENOUGH TO
+   ARGUE. THE AGENT RULE confines --agent to "a bar, a tick or a fill whose
+   length or position states a NUMBER the machine produced", and the only such
+   thing in the system is the meter — which takes the colour from the kernel, not
+   from a utility. So the utility has no legitimate call site.
+   It exists so the bridge is PROVABLE. tests/design/frontend-bridge.test.ts §6
+   appends `<div class="bg-agent">` at runtime and moves --agent; if the utility
+   were absent the element would paint nothing and the assertion would pass while
+   witnessing nothing — the §5.6 shape. A utility that exists only to be measured
+   is the honest cost of a bridge whose single-source claim is testable rather
+   than asserted. It is listed separately from the surface above, once, so the
+   exception stays visible rather than hiding in a list of ordinary classes. */
+@source inline("bg-agent");
+
+/* THE KERNEL, UNLAYERED — see §1. This line is load-bearing in two ways at once:
+   it is what makes the tokens available to the `@theme` block below, and its
+   POSITION outside every layer is what keeps the hatch. Adding `layer(base)` to
+   it, or moving it above the Tailwind import, silently erases the treatment on
+   every refused feature in the product while the ::after word still reads NOT
+   BUILT. That is the worst shape a defect takes here. */
+@import "../../docs/handoff-pack/tokens.css";
+
+@theme {
+  /* ── COLOUR · fenced ────────────────────────────────────────────────────
+     THE NO-HUE-STATE RULE, mechanically. `--color-*: initial` deletes Tailwind's
+     entire default palette, so `text-red-500` and `bg-amber-400` DO NOT EXIST —
+     they compile to nothing rather than to a verdict a reader can decode.
+     Fail-closed, and the same posture as the model's DENY_ALL: what is not
+     declared is unreachable, rather than reachable-with-a-high-bar.
+     Verified:  grep -c 'text-red-500' frontend/dist/assets/*.css   # 0
+
+     ⚠️ ONE NAME IS TAILWIND'S AND NOT THE KERNEL'S: `white`. The kernel's ground
+     is `--paper` and `--paper` IS #ffffff, so `--color-white: var(--paper)` binds
+     Tailwind's vocabulary to the kernel's value. A `--color-paper` is NOT also
+     declared: two Tailwind names for one kernel value is the second-spelling
+     defect the kernel refused `--u-half` to avoid. One value, one source, one
+     utility. It is kept alive rather than cleared because the near-miss control
+     in the bridge test turns on `bg-white` writing background-COLOR and therefore
+     NOT reaching the hatch — clear it and that control passes while asserting
+     nothing. */
+  --color-*: initial;
+  --color-white:        var(--paper);
+  --color-sheet:        var(--sheet);
+  --color-ink:          var(--ink);
+  --color-on-ink:       var(--on-ink);
+  --color-on-ink-2:     var(--on-ink-2);
+  --color-muted:        var(--muted);
+  --color-recede:       var(--recede);
+  --color-rule:         var(--rule);
+  --color-rule-strong:  var(--rule-strong);
+  --color-agent:        var(--agent);
+  --color-agent-deep:   var(--agent-deep);
+
+  /* ── SPACE ──────────────────────────────────────────────────────────────
+     THE FOUR-UNIT RHYTHM RULE, mechanically. Tailwind v4 derives every spacing
+     utility from ONE base — `p-2` is `calc(var(--spacing) * 2)` — so pointing
+     that base at the kernel's `--u` makes EVERY spacing utility a multiple of
+     4px by construction. `p-2` is 8px because `--u` is 4px, and if `--u` ever
+     moves, every utility moves with it.
+     ⚠️ AND THIS ADMITS THE HALF-UNIT WITHOUT MINTING A TOKEN, which is what the
+     kernel's SPACE ruling wanted: `p-0.5` is calc(--u * .5) = 2px, the floor the
+     kernel declares. `p-0.25` is also spellable and is a finding, not a value. */
+  --spacing: var(--u);
+
+  /* ── TYPE ───────────────────────────────────────────────────────────────
+     `--text-*: initial` deletes text-xs … text-9xl, so the rem-based scale
+     Tailwind ships cannot be reached and the six sizes below are the only ones
+     there are. Named by JOB, as the kernel names them, not by size. */
+  --text-*: initial;
+  --text-micro:   var(--s1);
+  --text-label:   var(--s2);
+  --text-body:    var(--s3);
+  --text-title:   var(--s4);
+  --text-figure:  var(--s6);
+  --text-display: var(--s7);
+
+  /* ── SHAPE · fenced ─────────────────────────────────────────────────────
+     THE SQUARE CORNER RULE, mechanically. `rounded`, `rounded-md`, `rounded-lg`
+     and `rounded-xl` cease to exist.
+     🛑 AND THE FENCE IS INCOMPLETE — `rounded-full` SURVIVES IT. It is a STATIC
+     utility, `border-radius: calc(infinity * 1px)`, and carries no theme
+     variable to clear. So the one Tailwind class that would build A SECOND DOT
+     is the one class this fence cannot reach. Measured, not assumed:
+       grep -c 'rounded-full' frontend/dist/assets/*.css   # 1 if ever used
+     What catches it instead is the ONE DOT assertion in the bridge test, which
+     counts circular marks on the rendered page and fails on a fifth. A fence and
+     a detector, because neither alone covers it. */
+  --radius-*: initial;
+
+  /* ── FACE ───────────────────────────────────────────────────────────────
+     🛑 CORRECTED 3 Oct 2026 (RV-05, G3393) RATHER THAN DELETED. This read:
+     "There is NO font token for the body face: the kernel spells
+     `'IBM Plex Sans',system-ui,sans-serif` inline in `body{}` … Minting a
+     `--font-body` token is a KERNEL edit and is deliberately not made here."
+     THAT WAS TRUE OF THE OLD KERNEL AND IS FALSE OF THIS ONE: the pack's
+     `tokens.css` declares `--face-sans` and `--face-mono` ("TWO FACES AND NO
+     THIRD") and its `body{}` reads `var(--face-sans)`. The stale licence is
+     what let five `'IBM Plex Mono', ui-monospace, monospace` literals into
+     shell.css and overlays.css; all five are `var(--face-mono)` now, and
+     `tests/app/css-raw-values.test.ts` fails on the next one.
+     THE BRIDGE STILL DELETES THE TAILWIND UTILITIES, and the argument for that
+     half is unchanged: `font-sans` and `font-mono` do not exist, so nothing
+     can opt out of the kernel's face by accident — the body face comes from
+     the kernel's own `body{}` rule (unlayered, so it beats preflight), and
+     monospace stays where the kernel puts it, the `.mono` class, under THE
+     TABULAR FIGURE RULE. A component that needs a face writes
+     `var(--face-sans)` / `var(--face-mono)`.
+     ⚠️ AND THE FACES ARE NOW LOADED: `frontend/fonts/plex.css` (RV-01, G3391)
+     self-hosts both, imported from `main.tsx` before this file. Until it the
+     declaration above named a face nothing shipped. */
+  --font-*: initial;
+
+  /* ── MOTION · fenced ────────────────────────────────────────────────────
+     🛑 ONE CLASS BREACHES TWO NAMED RULES AT ONCE, AND THIS FENCE WAS MISSING
+     UNTIL 16 Aug 2026. DESIGN.md:1019 reads "Never: a spinner, a loading state,
+     a progress indicator" — ⚠️ A TAG PATH SINCE G264 DELETED `DESIGN.md`:
+     `git show archive/pre-handoff-pack:DESIGN.md`, and the line number is
+     subject to the resolving-but-wrong class, so derive it. The rule's PACK
+     home is `docs/handoff-pack/Handoff Specification.dc.html`'s `<Shell>`
+     never-row and the Design System's R3, "No second line, and no second dot"
+     — a progress bar is a second line. Cite by content:
+     `grep -n 'no second dot' docs/handoff-pack/*.dc.html`.
+     Tailwind's spin and pulse keyframes carry no
+     `prefers-reduced-motion` guard of their own — so `animate-spin` would breach
+     the no-spinner rule and the reduced-motion rule in one class.
+     `--animate-*: initial` deletes `animate-spin`, `animate-pulse`,
+     `animate-bounce` and `animate-ping` outright.
+     ⚠️ WHY THE REDUCED-MOTION ASSERTION WOULD NOT HAVE CAUGHT IT: that test
+     reads the SPECIMEN, and a spinner on a route nobody rendered is invisible to
+     it. A fence is not a detector, and this is the case where only the fence
+     covers the surface.
+     THE COST: no Tailwind animation utility is reachable.
+     🛑 THIS SENTENCE READ "The system has exactly two animations, `alive` and
+     `sweep`; both are the kernel's own keyframes" AND IT WENT FALSE WHEN G274
+     SWAPPED THE KERNEL ON 18 Sep 2026. It is corrected rather than deleted
+     because this is a FENCE STATING ITS OWN COST — the cost is what makes the
+     fence defensible, and an understated cost is a fence nobody can audit.
+     The kernel this file imports declared FOUR keyframes, not two — and since
+     3 Oct 2026 (RM-08/RM-09) it declares EIGHT. Derive it, never read it:
+
+       grep -oE '@keyframes [a-z-]+' docs/handoff-pack/tokens.css | sort -u
+       #   alive · drawer-in · fade-in · mascot-cascade · mascot-cascade-mid
+       #   · modal-in · sweep · toast-in
+
+     THE COST RESTATED CORRECTLY, and it is now two costs rather than one:
+     (a) the two PRODUCT animations `alive` and `sweep` are the kernel's own
+     keyframes, applied by its own rules — which is where the guard that stops
+     them under `reduce` also lives, and a utility could not have carried that
+     guard with it; (b) `mascot-cascade` and `mascot-cascade-mid` are BRAND
+     animations the kernel counts separately and fences to `.mascot` and
+     nowhere else, so they are unreachable from this bridge by design and not
+     by omission.
+     ⚠️ AND THE KERNEL'S OWN LEDGER NAMED FOUR **PRODUCT** ANIMATIONS —
+     `sweep`, `alive`, `lv`, `toast-in` — of which only two had a keyframe in
+     `tokens.css`. ✅ RESOLVED 3 Oct 2026 BY THE OWNER (RM-08, RM-09; G3396,
+     G3397): `toast-in` and the overlay entrances `fade-in`, `drawer-in`,
+     `modal-in` MOVED INTO THE KERNEL, applied through `--enter-*` tokens its
+     reduced-motion block sets to `none`; `lv` is STRUCK from the inventory
+     until a surface draws level bars. The kernel now declares EIGHT keyframes
+     (six product, two brand) and this fence still reaches none of them. */
+  --animate-*: initial;
+
+  /* ── DEPTH · fenced ─────────────────────────────────────────────────────
+     THE FLAT SHEET RULE, mechanically. DESIGN.md:832 — "No shadow ever conveys
+     elevation, hover, or state" — and owner ruling R4 on the system index, "No
+     shadow, and no elevation scale."
+     There is no elevation scale, no card shadow and no token
+     that could source one, so `--shadow-*: initial` deletes `shadow-sm` through
+     `shadow-2xl` rather than binding them to a value that does not exist. A drop
+     shadow is the usual way a utility framework re-introduces the depth a flat
+     system spent its rules removing, and it is theme-backed, so one line reaches
+     all of it.
+     ⚠️ WHAT SURVIVES, STATED SO THE FENCE IS NOT OVER-READ: `shadow-none` is
+     static and unreachable by any clear — harmless, since it asserts the
+     flatness the kernel already has — and the `ring-*` and `inset-shadow-*`
+     namespaces are separate and are NOT fenced here. A ban on the PROPERTY would
+     be wrong: the connection light's halo IS a box-shadow. What is fenced is the
+     utility vocabulary that spells elevation. */
+  --shadow-*: initial;
+}

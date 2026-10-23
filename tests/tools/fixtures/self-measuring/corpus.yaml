@@ -1,0 +1,11 @@
+# THE CAPTURED RED. Derive the count, never read it:
+#     grep -c 'widgetId:' corpus.yaml
+# That command answers 3 and there are TWO widgets. The third match is the
+# line above — this comment IS one of the things it counts.
+paths:
+  /alpha:
+    get:
+      widgetId: alpha
+  /beta:
+    get:
+      widgetId: beta

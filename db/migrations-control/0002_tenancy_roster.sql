@@ -1,0 +1,306 @@
+-- =====================================================================
+-- CONTROL PLANE 0002 — THE TENANCY ROSTER. G831 (20 Sep 2026).
+--
+-- **WHICH TENANTS EXIST, AND WHAT THE PLATFORM SOLD THEM. NOTHING THAT IS IN
+--   THEM.**
+--
+-- `CLAUDE.md`, verbatim, because a paraphrased invariant is a changed
+-- invariant:
+--
+--     "3. **The control plane publishes downward and never reads tenant
+--      data.**"
+--
+-- THE OWNER'S RULING OF 20 Sep 2026, which this file applies:
+--
+--     "A control-plane roster table. The tenancy roster is a CONTROL-OWNED
+--      FACT and lives in the CONTROL DATABASE, which the consoles read.
+--      Invariant 3 is satisfied by construction — and a roster of which
+--      tenants exist is not tenant data."
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- THE MEASURED PROBLEM THIS ANSWERS, AND IT WAS MEASURED RATHER THAN
+-- PREDICTED.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- `tests/http/administration-tier-unmounted.test.ts` §4b:
+--
+--     "A staff console that lists every tenant cannot read the DATA plane's
+--      `tenant.tenant` — RLS there is
+--      `nullif(current_setting('app.tenant_id', true), '')`, one tenant per
+--      transaction by construction (G100), so a roster across all tenants is
+--      not expressible in that database at all."
+--
+-- And one step further, which is the half that is specific to a CONSOLE act:
+-- `server/data-plane/authorisation-record.ts` runs a platform grant's body
+-- inside `withSessionScope()`, not `withTenantScope()`. `app.tenant_id` is
+-- **unset** for the whole of that transaction, so under G100's deny-on-NULL
+-- every tenant-scoped table reads EMPTY. A `listTenants` mounted against
+-- `tenant.tenant` would answer **`200 {"tenants":[]}`** — which G296 and G300
+-- both call worse than an honest 404, because it is indistinguishable from a
+-- fleet with no customers in it.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 THE THREE PLACES THIS COULD HAVE GONE, AND THE TWO THAT ARE REFUSED.
+--    PRESERVED RATHER THAN SUMMARISED, BECAUSE THE NEXT READER WILL REACH
+--    FOR ONE OF THEM.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+--   (a) A SECOND POLICY ON `tenant.tenant` IN THE DATA DATABASE, admitting a
+--       console session that holds a platform assignment. **REFUSED, and it
+--       is the only one of the three refused on an INVARIANT rather than on
+--       cost.** `CLAUDE.md` invariant 2, verbatim: *"Exactly one cross-tenant
+--       read path — `partner_admin(P)` may read tenant `T` iff
+--       `T.partnerId = P`, and only within a live `PartnerAccessGrant` beyond
+--       commercial metadata."* A policy admitting a platform principal to
+--       every row of `tenant.tenant` is a SECOND cross-tenant read path, and
+--       minting one is an owner's ruling that nobody has taken. The owner's
+--       ruling above takes the other direction instead.
+--
+--   (b) THE ROSTER PUBLISHED DOWNWARD INTO THE DATA DATABASE — which is
+--       literally the verb invariant 3 uses. **REFUSED on two costs.**
+--       First, the data database ALREADY HOLDS THE FACT: `tenant.tenant`
+--       (0001) and its `partner_id` (0039). A published copy beside it is
+--       §5.3 — *"two implementations of one order, and the one that drifts is
+--       always the copy"* — and the copy would be the one the console reads.
+--       Second, a published copy is only readable by a console session under
+--       a policy that is not keyed on `app.tenant_id`, which lands straight
+--       back on (a). **There is also nothing to publish WITH**: derive it,
+--       `grep -rn 'fetch(' server/` returns nothing, so the "published" copy
+--       would in fact be migrator-seeded and stale by construction.
+--
+--   (c) A CONTROL-PLANE ROSTER TABLE. **TAKEN — the owner's ruling.** The
+--       control database holds no tenant-scoped table and no `app.tenant_id`
+--       is ever set in it, so a roster here is readable in one statement
+--       without a cross-tenant read path existing anywhere.
+--
+-- ⚠️ AND THE PART (c) DOES NOT ANSWER IS THE PART THE OWNER NAMED IN
+--    ADVANCE: *"the consoles must be served by a plane that can reach it —
+--    which the deployed topology does not currently do."* **NOTHING IN THIS
+--    COMMIT CHANGES THAT**, and `tests/http/console-roster-unreachable.test.ts`
+--    is the measurement rather than this comment.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 WHY THERE IS NO ROW-LEVEL SECURITY HERE, WHEN THIS IS THE FIRST TABLE
+--    IN THIS DATABASE WITH A `tenant_id` COLUMN IN IT.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- `0001_catalogue.sql` wrote the warning this file has to answer, and it
+-- named this exact arrival:
+--
+--     "Adding an empty policy here would be worse than adding none: it would
+--      make a reader believe this database has a tenant boundary to enforce,
+--      and THE DAY SOMEBODY PUTS A TENANT-SCOPED TABLE IN IT, the absence of
+--      a policy on THAT table would look like the existing pattern."
+--
+-- 🛑 THIS TABLE IS *ABOUT* TENANTS AND IS NOT TENANT-SCOPED, AND THE
+--    DISTINCTION IS MECHANICAL RATHER THAN RHETORICAL. Row-level security
+--    keeps one tenant's rows away from ANOTHER TENANT'S SESSION. There is no
+--    tenant session in this database and there cannot be one:
+--    `server/control-plane/start.ts`'s `ChannelPrincipal` is
+--    `{ channel: 'local-development' }` and carries NO TENANT AT ALL —
+--    *"This plane discards it at the seam and never puts it on a principal"* —
+--    and nothing in `server/control-plane/` imports `db/tenant-scope.ts`, so
+--    `app.tenant_id` is never set in any transaction that reaches this table.
+--    Derive both, and MIND THE ANCHORS — G2175, 28 Sep 2026:
+--      grep -rnE "^import .*tenant-scope" server/control-plane/
+--      grep -rnE "^[^-]*app\.tenant_id" db/migrations-control/
+--    Both return nothing.
+--
+-- 🛑 THE ANCHORS ARE NEW AND THE UNANCHORED PAIR THIS LINE CARRIED ANSWERED
+--    ELEVEN AND SIX AGAINST A STATED NOTHING. Every false hit was a COMMENT,
+--    and five of the six were in THIS FILE -- the paragraphs above explaining
+--    why the GUC is never set. `^[^-]` excludes a SQL comment line and admits
+--    every statement, because a statement never opens with a dash. The false
+--    forms are described rather than restated, for the reason they were wrong.
+--
+--    A policy here would therefore have to be `USING (true)`, which is not a
+--    control, or keyed on a GUC nothing sets, which under G100 denies
+--    unconditionally and makes the roster unreadable by the only process that
+--    may read it. **Both are worse than none, and 0001's argument is that
+--    "worse than none" is exactly what makes a reader believe there is a
+--    boundary here.**
+--
+-- ⚠️ SO THE ASSURANCE IS MOVED SOMEWHERE A FUTURE TABLE CANNOT SLIP PAST,
+--    RATHER THAN RESTATED IN A COMMENT. `tests/db/control-plane-census.test.ts`
+--    ENUMERATES every table in this database from the catalogue and requires
+--    (i) that the application role holds no `INSERT`, `UPDATE` or `DELETE` on
+--    any of them, and (ii) that a table carrying a `tenant_id` column appears
+--    on an ARGUED list. `tests/db/rls-census.test.ts` (G446) cannot see this
+--    database — it enumerates schema `tenant` in the DATA database — and that
+--    gap is the reason this census exists. **G832.**
+--
+-- RULINGS THIS APPLIES (docs/HANDOFF.md §3):
+--   G831  the roster is a control-owned fact in the control database. THE
+--         OWNER'S.
+--   G832  the control database gets its own enumerating census, because the
+--         RLS census is keyed on a schema in the other database.
+--   G833  `stage` is REFUSED, and the refusal is a BLOCKER on mounting
+--         `listTenants` rather than a gap in this table. See below.
+--   G193  two processes, two databases; this is the second table in the
+--         second one.
+--   G97   every branded id is `text`. **THERE IS NO `uuid` IN THIS FILE.**
+--   G88   forward-only. There is no `down`, and `0001_catalogue.sql` IS NOT
+--         EDITED BY THIS FILE — no `ALTER TABLE`, no `ALTER POLICY`, no
+--         `REVOKE`.
+--
+-- ⚠️ NOT SCHEMA-QUALIFIED, and that is 0001's convention rather than an
+--    oversight: this database has no `tenant` schema and `0003_tenant_schema`
+--    is a DATA-set migration. Everything here is `public`.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 THE COLUMNS THAT ARE REFUSED, EACH BY NAME, AND THE ONE TEST THAT
+--    DECIDES: **WHAT WOULD HAVE TO READ A TENANT'S DATA TO POPULATE IT?**
+--    If anything would, the column breaks invariant 3 at its PRODUCER even
+--    though it looks harmless at its READER — and a column whose only
+--    possible producer is a violation is worse than a column ahead of its
+--    reader, which is all `0004_subject_ledger.sql` refuses.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+--   NO `stage` AND NO `stage_note`.  **THE SHARPEST OF THE REFUSALS, BECAUSE
+--       `TenantSummary` MARKS `stage` `required` AND THEREFORE THIS ONE
+--       REFUSAL IS WHAT STOPS `listTenants` SHIPPING A COMPLETE 200.** G833.
+--       `stage` is not a column anywhere: `model/onboarding.ts`'s
+--       `onboardingStage()` DERIVES it from an `OnboardingRecord`, and
+--       **nothing persists an `OnboardingRecord`** — G535 left that absence
+--       deliberately (*"NO TABLE, NO HANDLER, NO CLOCK … The absence is a
+--       tripwire, not an oversight"*) and
+--       `tests/http/administration-tier-unmounted.test.ts` §4a asserts it
+--       over both migration sets. A `stage` column here would be a SECOND
+--       HOME for onboarding state, in a different database from the one H2's
+--       six steps will eventually be written in — §5.3, with the copy in the
+--       place a console reads. **G656's finding is why this is a blocker and
+--       not a gap: `fast-json-stringify` serialises without validating, so an
+--       operation with an almost-complete table ships a 200 missing
+--       `required` fields SILENTLY.** `tests/db/tenancy-roster.test.ts` §4
+--       is the tripwire, and the commit that gives a stage a producer has to
+--       delete an assertion rather than discover this.
+--       `stage_note` falls with it, and would fall anyway: it is the one
+--       column on this table whose content would be UNBOUNDED FREE TEXT, and
+--       every other column below is an identifier or a closed vocabulary —
+--       which is what lets the census assert invariant 3 over the COLUMN SET
+--       mechanically instead of by reading prose.
+--
+--   NO `sold_via_partner_id`.  **REFUSED EVEN THOUGH IT IS A CONTROL-OWNED
+--       COMMERCIAL FACT AND `TenantSummary.soldVia` PUBLISHES IT**, because
+--       it is the one candidate column that is ALSO ENFORCED SOMEWHERE ELSE.
+--       `db/migrations/0039_partner_access_grant.sql` put `partner_id` on
+--       `tenant.tenant` in the DATA database and made invariant 2's first
+--       conjunct UNREPRESENTABLE rather than checked, through a composite
+--       `FOREIGN KEY (tenant_id, partner_id)`. A second copy here is in
+--       another database, so **no constraint either database can express
+--       joins the two** — a roster naming a partner that `0039` disagrees
+--       with would be a display contradicting the enforcement, silently, and
+--       the display is the one a human reads. `soldVia` is NOT `required`, so
+--       omitting it ships no incomplete field. The commit that wants it owes
+--       a reconciliation, not a column.
+--
+--   NO `open_exception_count`, `document_count`, `run_count`, `last_run_at`.
+--       Each needs a read of `tenant.exception`, `tenant.source_document` or
+--       `public.run`. **Invariant 3 at the PRODUCER.** These are the four a
+--       roster screen most obviously wants, which is why they are named here
+--       rather than merely absent.
+--
+--   NO `value_at_risk_minor`, `spend_minor`, `usage_units`.  Invariant 3 AND
+--       invariant 5 — *"Money is always derived. `UsageRecord` is immutable
+--       and unpriced."* `db/migrations/0014_invariant_10_event_streams.sql`
+--       puts `usage_record` in the DATA database, tenant-scoped, and 0014's
+--       own grants block refuses a price column on it. A total here would be
+--       a price derived from rows this plane may not read.
+--
+--   NO `user_count`, `last_sign_in_at`.  `tenant."user"` and `tenant.session`
+--       are `db/migrations/0009`'s, keyed on the SESSION. Reading them from
+--       here is invariant 3 and would additionally need a credential this
+--       process does not hold.
+--
+--   NO `health`, NO `status`.  **THE SNEAKIEST, BECAUSE IT READS AS AN
+--       OPERATIONAL FACT ABOUT OUR OWN DELIVERY.** Any rollup worth showing
+--       is derived from the counts above, so the column is every refusal
+--       above wearing one name.
+--
+--   NO `created_at`, NO `retention`.  Both are genuinely control-owned and
+--       both are refused on the narrower rule: `TenantSummary` declares
+--       neither, so each is `0004_subject_ledger.sql`'s *"a column ahead of
+--       its reader is a column nothing checks"*.
+--
+-- ⚠️ AND NO `CHECK` ON ANY VOCABULARY COLUMN — `0007_run_engine_account.sql`'s
+--    decision, and `0069_run_admission.sql` states the deciding half: *"an
+--    UNKNOWN value must reach the model as an `*_unreadable` refusal, not be
+--    rejected at write time by a list somebody forgot to extend."* A `CHECK`
+--    here would additionally be a THIRD copy of `DEPLOYMENT_MODES` and of
+--    `Tenant.supportAccessMode`, in a database no wire-mirror pair addresses.
+-- =====================================================================
+
+
+-- ---------------------------------------------------------------------
+-- TENANCY_ROSTER — six columns, and every one of them is a fact the platform
+-- decided or agreed. Mirrors the subset of `TenantSummary` in
+-- `platform-console.openapi.yaml` (`components.schemas.TenantSummary`) that
+-- survives the refusals above:
+--
+--   tenantId           -> tenant_id            (PK)
+--   name               -> name
+--   deploymentMode     -> deployment_mode      permanent; H1.1's first choice
+--   residency          -> residency            permanent; H1.1's second
+--   supportAccessMode  -> support_access_mode  the customer's choice, recorded
+--   plan               -> plan                 nullable; commercial, and it is
+--                                              not known at creation
+--
+--   stage              -> REFUSED (G833)       see above
+--   stageNote          -> REFUSED              see above
+--   soldVia            -> REFUSED              see above
+--
+-- 🛑 `tenant_id` IS A PRIMARY KEY AND NOT A FOREIGN KEY, AND IT CANNOT BE
+--    ONE. `tenant.tenant` lives in the OTHER database; PostgreSQL has no
+--    cross-database reference. So a roster row can name a tenant that does
+--    not exist, and nothing in either database will say so. **That is the
+--    cost of (c) above, stated where somebody will read it rather than
+--    discovered by a reconciliation that returns a ghost.** It is the same
+--    shape `0010_authorisation_record.sql` names for `assignment_id` — *"a
+--    reader must discriminate before dereferencing, and nothing here will
+--    remind them"* — one database boundary further out.
+--
+-- ⚠️ NO INDEX, AND THE ABSENCE IS THE `stage` REFUSAL ARRIVING A SECOND TIME.
+--    `0001_catalogue.sql` carries `pack_catalogue_loadable_idx` because
+--    `listEntitledPacks` filters on that column. The only filter `listTenants`
+--    declares is `components.parameters.OnboardingStage` — *"Narrow the roster
+--    to one onboarding stage"* — and that column is refused, so an index here
+--    would be an index on a query nothing can ask.
+-- ---------------------------------------------------------------------
+
+CREATE TABLE tenancy_roster (
+  tenant_id           text NOT NULL,
+  name                text NOT NULL,
+  deployment_mode     text NOT NULL,
+  residency           text NOT NULL,
+  support_access_mode text NOT NULL,
+  -- NULLABLE, and the null is the ordinary case rather than the exception:
+  -- `platform-console.openapi.yaml`'s `TenantSummary` does not mark `plan`
+  -- `required`, and H1.1's four creation decisions do not include one.
+  plan                text,
+
+  PRIMARY KEY (tenant_id)
+);
+
+
+-- ---------------------------------------------------------------------
+-- GRANTS. `SELECT` and nothing else, which is `0001_catalogue.sql`'s sentence
+-- applied to a second table and is stronger here than it was there:
+--
+--     "a serving process that cannot write the thing it serves is one fewer
+--      way for a published artefact to change under a plane that is pulling
+--      it."
+--
+-- 🛑 THE WRITER IS `createTenant` AND IT IS NOT MOUNTED. That operation is
+--    `platform-console.openapi.yaml`'s, gated on `provision_substrate`, and
+--    `db/migrations/0004_subject_ledger.sql`'s rule is the whole reason this
+--    line says `SELECT`: *a write privilege ahead of a writer*. Granting
+--    `INSERT` today would let a request path MINT A TENANT — which is the
+--    single most consequential act in the product, since `deploymentMode` and
+--    `residency` are permanent by H1.1 and a wrong residency is invariant 7
+--    failing at the only moment it can be set.
+--
+-- ⚠️ `GRANT USAGE ON SCHEMA public` IS NOT REPEATED. 0001 granted it and G88
+--    makes that grant this database's, not that file's.
+-- ---------------------------------------------------------------------
+
+GRANT SELECT ON tenancy_roster TO reconcile_control_app;

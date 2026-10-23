@@ -1,0 +1,243 @@
+{
+  "_README": [
+    "SINGLE SOURCE OF TRUTH for the Level 1 and Level 2 labels that carry a topology",
+    "decision or a ruling. Hand-curated — these cannot be derived from a tree with no",
+    "deployed containers — but written ONCE and substituted everywhere by",
+    "render-c4-page.mjs, so one ruling updates every instance.",
+    "",
+    "WHY THIS FILE EXISTS. On 12 Aug 2026 ruling G185 was applied to the C4 page by",
+    "hand. Level 1's data-plane label was corrected and Level 2's twin was left",
+    "standing; the control database was described four ways on one page, one of them",
+    "implying N writers against the ruling's one. Four of an adversarial pass's seven",
+    "blockers were a hand-typed label disagreeing with another hand-typed label about",
+    "the same object. Levels 3-4 have check-c4-freshness.mjs and have never drifted;",
+    "Levels 1-2 had nothing.",
+    "",
+    "RULES.",
+    "  - Every entry needs a `status` from the page legend: BUILT | PARTLY |",
+    "    DESIGNED | UNDECIDED | DROPPED | BLOCKED. A container with no status is how",
+    "    an unbuilt thing gets read as live.",
+    "  - `ruling` names the G row that decided it, or null. render-c4-page.mjs",
+    "    verifies every named ruling exists in docs/HANDOFF.md §3 and fails if it",
+    "    does not — a badge citing a ruling nobody took is worse than no badge.",
+    "  - Say UNDECIDED out loud. It is a status, not an omission.",
+    "",
+    "NOT IN SCOPE. Prose captions stay in the template: forcing an argument into a",
+    "data file makes it read worse and buys nothing, because a paragraph is not",
+    "repeated in six places. This file is for the labels that ARE.",
+    "",
+    "PREDICATES — G4419, 5 Oct 2026. An entry may carry a `predicate`, evaluated over the",
+    "tree by c4-verify.mjs (servedTiers · files · controlTables · dataTables · screens · all).",
+    "render-c4-page.mjs and check-c4-freshness.mjs both REFUSE an entry whose `status`",
+    "disagrees with its predicate, and `{{status.KEY}}` / `{{badge.KEY}}` / `{{evidence.KEY}}`",
+    "print the verified status, its badge class and the predicate's own evidence — so a",
+    "Level 2 badge is the same entry the checker tested. Until this date every badge on",
+    "the page was typed, and four of them said DESIGNED over containers that were serving.",
+    "",
+    "CORRECTED 5 Oct 2026 RATHER THAN REWRITTEN. Texts below that went false while the",
+    "tree moved under them keep their old sentence in `wasUntil5Oct2026`, which the page",
+    "renders in its history block."
+  ],
+  "controlPlaneZone": {
+    "text": "CONTROL PLANE — 1CLOUDHUB ACCOUNT · us-west-2 · ONE WRITER · NO REGIONAL REPLICA · PUBLISHES DOWNWARD, NEVER READS TENANT DATA",
+    "status": "PARTLY",
+    "ruling": "G185",
+    "wasUntil5Oct2026": "CONTROL PLANE — 1CLOUDHUB ACCOUNT · ONE WRITER, ap-southeast-1 · NO REGIONAL REPLICA · EACH PLANE READS ITS OWN PULLED PROJECTION"
+  },
+  "controlDatabase": {
+    "text": "control database — no RLS, because no tenant lives in it · one writer · the data plane holds NO credential for it (G4320) and reaches it only through the control plane's signed internal tier · no regional replica",
+    "status": "BUILT",
+    "ruling": "G185",
+    "predicate": {
+      "kind": "controlTables"
+    },
+    "wasUntil5Oct2026": "control schema · ONE WRITER (control_rw) · no regional replica",
+    "wasUntil6Oct2026": "control database — no RLS, because no tenant lives in it · one writer · read DOWNWARD by the data plane's read-only role (G1161) · no regional replica"
+  },
+  "tenantDatabase": {
+    "text": "tenant schema + RLS built · one Aurora cluster, us-west-2 · per-region clusters NOT built",
+    "status": "PARTLY",
+    "ruling": "G185",
+    "wasUntil5Oct2026": "tenant schema + tenant_rw + RLS are built · narrow id/status/residency projection · one cluster per residency region is not built"
+  },
+  "dataPlaneZone": {
+    "text": "DATA PLANE — MULTI-TENANT HOSTED · TENANT, CONSOLE, PARTNER HOSTS (G726, G4411) · PER-TENANT UNDER BYOA (G36) · PLANES PER REGION UNDECIDED",
+    "status": "PARTLY",
+    "ruling": "G185",
+    "wasUntil5Oct2026": "DATA PLANE — MULTI-TENANT WHEN HOSTED (model/deployment.ts:171) · ONE PER TENANT UNDER BYOA (v1+1, G36) · PLANE COUNT PER REGION: UNDECIDED"
+  },
+  "downwardCrossing": {
+    "text": "signed control-plane endpoints: BUILT (S1–S4, G4301) — the tenant name is a pulled local projection (G4311), roster and onboarding go through the signed internal tier · the read-only pool (G1161) and the column-level write role (R9) are RETIRED (G4320) · pack/policy pull into a local projection: not built",
+    "status": "PARTLY",
+    "ruling": "G185",
+    "wasUntil5Oct2026": "the data plane pulls published packs and policy over signed HTTPS into a local projection — control_ro is RETIRED; no role holds grants on both schemas",
+    "wasUntil6Oct2026": "signed pull into a local projection: DESIGNED, unbuilt · BUILT: a read-only pool (G1161) + a column-level write role (R9) · to-be: signed control-plane endpoints, not built"
+  },
+  "tenantRowHome": {
+    "text": "the tenancy ROSTER is control-owned and built (tenancy_roster, G831); the data plane holds the narrow id/status/residency projection (tenant.tenant) — the tenant_contact re-point G185(e) names has no migration",
+    "status": "PARTLY",
+    "ruling": "G185",
+    "wasUntil5Oct2026": "the tenant row is CONTROL-OWNED and lives in the single writer's region for every tenant; the data plane holds a narrow id/status/residency projection"
+  },
+  "frontendKernel": {
+    "text": "design/system/tokens.css — DELETED 18 Sep 2026 under G264; the kernel is now docs/handoff-pack/tokens.css (the old one is at archive/pre-handoff-pack)",
+    "status": "DROPPED",
+    "ruling": "G72",
+    "wasUntil5Oct2026": "design/system/tokens.css — 40 custom properties, and the ONLY place a colour, a type size or a spacing unit is declared; every specimen and every route says so on itself"
+  },
+  "frontendSpecimens": {
+    "text": "the five design/system specimens — DELETED 18 Sep 2026 under G264, retrievable at archive/pre-handoff-pack",
+    "status": "DROPPED",
+    "ruling": "G72",
+    "wasUntil5Oct2026": "5 specimens carrying 14 primitives, plus a contact sheet — design/system/{shell,wayfinding,filtering,overlays,states}.html, indexed by design/system/index.html"
+  },
+  "frontendRoutes": {
+    "text": "the twelve static routes drawn in design/routes/ — DELETED 18 Sep 2026 under G264; the routes the application serves are frontend/src/routes/table.ts, listed above and derived",
+    "status": "DROPPED",
+    "ruling": "G72",
+    "wasUntil5Oct2026": "12 routes drawn across 5 files plus a contact sheet — 29 planned, 12 drawn, 17 deliberately not drawn; static HTML specimens, not an application"
+  },
+  "frontendStandsOn": {
+    "text": "SUPERSEDED — the application stands on served operations now; the join above is derived, and its used-but-unserved list must be empty",
+    "status": "DROPPED",
+    "ruling": null,
+    "wasUntil5Oct2026": "NO route reaches an executable seam: no session type exists (MG1), the drawn surfaces cite three contract operations in total, and model/held-work.ts is cited four times while not existing at all (MG6)"
+  },
+  "reportsDestination": {
+    "text": "/reports reaches no served operation; getDispositionMix is served and no client reaches it (acknowledged above)",
+    "status": "BLOCKED",
+    "ruling": null,
+    "wasUntil5Oct2026": "Report, ReportDefinition, ScheduledReport, PinnedAnswer, ExportJob and ReportSchedule return ZERO exports between them — the destination is an export desk plus one report, and the pack has no noun"
+  },
+  "webApp": {
+    "text": "React + Vite · frontend/src · one bundle for the tenant, console and partner hosts",
+    "status": "BUILT",
+    "ruling": "G198",
+    "predicate": {
+      "kind": "screens"
+    }
+  },
+  "apexSite": {
+    "text": "frontend/site · Amplify at the apex reconcileai.app",
+    "status": "BUILT",
+    "ruling": "G1961",
+    "predicate": {
+      "kind": "files",
+      "paths": [
+        "frontend/site/vite.config.ts",
+        "infra/lib/amplify-stack.ts"
+      ]
+    }
+  },
+  "dataPlaneApi": {
+    "text": "Fastify · capability · session · foundation · administration · platform-console · local tiers",
+    "status": "BUILT",
+    "ruling": "G191",
+    "predicate": {
+      "kind": "servedTiers",
+      "tiers": [
+        "capability",
+        "session",
+        "foundation",
+        "administration",
+        "platform-console",
+        "data-plane-local"
+      ]
+    }
+  },
+  "capabilityApi": {
+    "text": "capability.openapi.yaml",
+    "status": "BUILT",
+    "ruling": "G191",
+    "predicate": {
+      "kind": "servedTiers",
+      "tiers": [
+        "capability"
+      ]
+    }
+  },
+  "localApi": {
+    "text": "data-plane-local.openapi.yaml",
+    "status": "BUILT",
+    "ruling": "G191",
+    "predicate": {
+      "kind": "servedTiers",
+      "tiers": [
+        "data-plane-local"
+      ]
+    }
+  },
+  "controlPlaneApi": {
+    "text": "Fastify · control-plane.openapi.yaml",
+    "status": "BUILT",
+    "ruling": "G193",
+    "predicate": {
+      "kind": "servedTiers",
+      "tiers": [
+        "control-plane"
+      ]
+    }
+  },
+  "runQueue": {
+    "text": "SQS run queue + scheduled ECS worker — not Temporal, not Step Functions",
+    "status": "BUILT",
+    "ruling": "G1201",
+    "predicate": {
+      "kind": "files",
+      "paths": [
+        "server/data-plane/run-queue.ts",
+        "server/data-plane/sqs-run-queue.ts",
+        "server/data-plane/run-worker-main.ts",
+        "server/data-plane/run-executor.ts",
+        "infra/lib/run-queue-stack.ts"
+      ]
+    }
+  },
+  "staffConsole": {
+    "text": "S1 · served by the data plane on the console host (G726)",
+    "status": "BUILT",
+    "ruling": "G726",
+    "predicate": {
+      "kind": "all",
+      "of": [
+        {
+          "kind": "servedTiers",
+          "tiers": [
+            "platform-console"
+          ]
+        },
+        {
+          "kind": "files",
+          "paths": [
+            "frontend/src/components/StaffConsole.tsx",
+            "server/data-plane/console-roster.ts",
+            "server/data-plane/onboarding.ts"
+          ]
+        }
+      ]
+    }
+  },
+  "partnerPortal": {
+    "text": "P1 · served by the data plane on the partner host (G4411, amending G269)",
+    "status": "BUILT",
+    "ruling": "G4411",
+    "predicate": {
+      "kind": "all",
+      "of": [
+        {
+          "kind": "servedTiers",
+          "tiers": [
+            "administration"
+          ]
+        },
+        {
+          "kind": "files",
+          "paths": [
+            "frontend/src/components/PartnerPortal.tsx",
+            "server/data-plane/partner-portal.ts"
+          ]
+        }
+      ]
+    }
+  }
+}

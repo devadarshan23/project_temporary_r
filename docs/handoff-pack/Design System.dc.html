@@ -1,0 +1,3202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@200;300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./system-page.css">
+</helmet>
+
+<a class="skip" href="#ramp">Skip to the token ramp</a>
+
+<main class="pg" id="top">
+
+  <div class="masthead">
+    <span class="logo"><span>Reconcile</span><span class="badge">AI</span></span>
+    <span class="who">
+      <b>The design system</b>
+      one kernel · fourteen primitives · nineteen rules
+    </span>
+  </div>
+
+  <div class="themebar">
+    <span class="lab" style="margin:0">Theme</span>
+    <button class="btn" type="button" aria-pressed="{{ themeLight }}" onClick="{{ goLight }}">Light</button>
+    <button class="btn" type="button" aria-pressed="{{ themeDark }}" onClick="{{ goDark }}">Dark</button>
+    <span class="note" style="margin:0">Every ratio on this page is measured
+    against the theme you are in. <b>The product follows the operating
+    system</b> — this switch exists so both can be inspected.</span>
+  </div>
+
+  <h1>the system</h1>
+  <p class="lede">One kernel and fourteen primitives. Every state of every
+  primitive is drawn and labelled below, most of them live. The kernel is the
+  only place a colour, a type size, a spacing unit, a duration or a layer is
+  declared; this page declares none of the five.</p>
+
+  <p class="note"><b>This is not the product.</b> It is the vocabulary the
+  product is drawn in. Nothing here is deployed and every figure is
+  illustrative. Where a primitive draws something a decision refused or left
+  unbuilt, it is hatched, it carries the word, and it names what refused it.</p>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       THE RAMP
+       ════════════════════════════════════════════════════════════════════ -->
+  <h2 id="ramp">The ink ramp, with measured contrast</h2>
+  <p class="sub">Every ratio was computed from the token's own hex against the
+  named ground. <b>Pick a step by its job, never by how it looks.</b> Both
+  light grounds are stated, because a panel renders against
+  <span class="spec">--sheet</span> and two steps fall below AA there.</p>
+
+  <div class="wrap">
+    <table>
+      <caption>Eight steps. <span class="spec">--refused</span> is new: it
+      closes the gap where a refused control had no step of its own and every
+      file reached for <span class="spec">--muted</span> because it was the
+      only one that stayed above AA on the ground a disabled control is drawn
+      on.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Swatch</th>
+          <th scope="col">Token</th>
+          <th scope="col">Hex</th>
+          <th scope="col">The one job it has</th>
+          <th scope="col" class="num">on --paper</th>
+          <th scope="col" class="num">on --sheet</th>
+          <th scope="col">Body text at 14px</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="sw" style="background-color:var(--ink)"></span></td>
+          <th scope="row" class="tok">--ink</th>
+          <td class="num">#00303f</td>
+          <td class="job">Everything that must be read. The wordmark navy.</td>
+          <td class="num">14.05</td><td class="num">12.97</td>
+          <td><span class="verdict">Passes AAA</span></td>
+        </tr>
+        <tr>
+          <td><span class="sw" style="background-color:var(--refused)"></span></td>
+          <th scope="row" class="tok">--refused</th>
+          <td class="num">#4a6166</td>
+          <td class="job"><b>Refused, or never built.</b> A control that was
+          never usable, and the sentence naming what refused it.</td>
+          <td class="num">6.57</td><td class="num">6.07</td>
+          <td><span class="verdict">Passes AA</span></td>
+        </tr>
+        <tr>
+          <td><span class="sw" style="background-color:var(--muted)"></span></td>
+          <th scope="row" class="tok">--muted</th>
+          <td class="num">#566d72</td>
+          <td class="job">Supporting text. Nothing else — it is no longer
+          standing in for the step above.</td>
+          <td class="num">5.49</td><td class="num">5.07</td>
+          <td><span class="verdict">Passes AA</span></td>
+        </tr>
+        <tr>
+          <td><span class="sw" style="background-color:var(--recede)"></span></td>
+          <th scope="row" class="tok">--recede</th>
+          <td class="num">#607478</td>
+          <td class="job">Cleared work, deliberately quieted. <b>Never</b>
+          refused work.</td>
+          <td class="num">4.92</td><td class="num">4.54</td>
+          <td><span class="verdict" data-aa="below">Below AA on --sheet</span></td>
+        </tr>
+        <tr>
+          <td><span class="sw" style="background-color:var(--rule-strong)"></span></td>
+          <th scope="row" class="tok">--rule-strong</th>
+          <td class="num">#a4b8bb</td>
+          <td class="job">The hairline between sections. Never text.</td>
+          <td class="num">2.07</td><td class="num">1.91</td>
+          <td><span class="verdict">Not for text</span></td>
+        </tr>
+        <tr>
+          <td><span class="sw" style="background-color:var(--rule)"></span></td>
+          <th scope="row" class="tok">--rule</th>
+          <td class="num">#cfdedf</td>
+          <td class="job">The hairline between rows. Never text. <b>The
+          visible floor</b> — nothing in the system is deliberately fainter.</td>
+          <td class="num">1.38</td><td class="num">1.28</td>
+          <td><span class="verdict">Not for text</span></td>
+        </tr>
+        <tr>
+          <td><span class="sw" style="background-color:var(--agent)"></span></td>
+          <th scope="row" class="tok">--agent</th>
+          <td class="num">#00866a</td>
+          <td class="job">The mark. <b>The machine measured something, and
+          nothing else.</b> Not matched, good, passed or safe.</td>
+          <td class="num">4.55</td><td class="num">4.20</td>
+          <td><span class="verdict" data-aa="below">Below AA on --sheet</span></td>
+        </tr>
+        <tr>
+          <td><span class="sw" style="background-color:var(--agent-deep)"></span></td>
+          <th scope="row" class="tok">--agent-deep</th>
+          <td class="num">#014751</td>
+          <td class="job">Agent <i>text</i>, and the committing button's hover.
+          Reached almost nowhere, on purpose.</td>
+          <td class="num">10.39</td><td class="num">9.59</td>
+          <td><span class="verdict">Passes AAA</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="wrap">
+    <table>
+      <caption>The three grounds, the hover grounds, and the two ink steps that
+      live on an ink ground. <b>A fourth ground is a finding, not a
+      decision.</b></caption>
+      <thead>
+        <tr>
+          <th scope="col">Swatch</th>
+          <th scope="col">Token</th>
+          <th scope="col">Hex</th>
+          <th scope="col">The one job it has</th>
+          <th scope="col" class="num">Ratio</th>
+          <th scope="col">Against</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="sw" style="background-color:var(--paper)"></span></td>
+          <th scope="row" class="tok">--paper</th>
+          <td class="num">#ffffff</td>
+          <td class="job">The sheet everything sits on.</td>
+          <td class="num">—</td><td class="job">the ground itself</td>
+        </tr>
+        <tr>
+          <td><span class="sw" style="background-color:var(--sheet)"></span></td>
+          <th scope="row" class="tok">--sheet</th>
+          <td class="num">#f1f7f7</td>
+          <td class="job">A panel <i>on</i> the sheet — barely there, and meant
+          to be.</td>
+          <td class="num">1.08</td><td class="job">--paper</td>
+        </tr>
+        <tr>
+          <td><span class="sw" style="background-color:var(--tile-hover)"></span></td>
+          <th scope="row" class="tok">--tile-hover</th>
+          <td class="num">#e7f0f0</td>
+          <td class="job">A pointer is over a tile. A ground change, never a
+          hue change.</td>
+          <td class="num">1.16</td><td class="job">--paper</td>
+        </tr>
+        <tr>
+          <td><span class="sw" style="background-color:var(--row-hover)"></span></td>
+          <th scope="row" class="tok">--row-hover</th>
+          <td class="num">#f8fbfb</td>
+          <td class="job">A pointer is over a register row.</td>
+          <td class="num">1.04</td><td class="job">--paper</td>
+        </tr>
+        <tr>
+          <td><span class="sw sw--type" style="background-color:var(--ink);color:var(--on-ink)">Aa</span></td>
+          <th scope="row" class="tok">--on-ink</th>
+          <td class="num">#ffffff</td>
+          <td class="job">Text on an ink ground.</td>
+          <td class="num">14.05</td><td class="job">--ink</td>
+        </tr>
+        <tr>
+          <td><span class="sw sw--type" style="background-color:var(--ink);color:var(--on-ink-2)">Aa</span></td>
+          <th scope="row" class="tok">--on-ink-2</th>
+          <td class="num">#bcccd0</td>
+          <td class="job">Secondary text on an ink ground.</td>
+          <td class="num">8.49</td><td class="job">--ink</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="note"><b>A ratio stated against one ground is a ratio that will be
+  read against another.</b> <span class="spec">--recede</span> was
+  <span class="spec">#63787c</span>, which is 4.66:1 on
+  <span class="spec">--paper</span> and <b>4.30:1 on --sheet</b> — correct
+  arithmetic, below AA on half the surfaces it was used on, and it reached the
+  run strip's state line at 11px. <b>Repaired on 15 Sep 2026</b> by darkening
+  the step to <span class="spec">#607478</span>: 4.92:1 on paper, 4.54:1 on
+  sheet, so it now passes wherever it lands and still sits clearly quieter than
+  <span class="spec">--muted</span> at 5.07:1. <span class="spec">--agent</span>
+  at 4.20:1 is the same shape of trap and is <em>not</em> repaired the same way
+  — the hue stays reserved to the meter, the mark and
+  <span class="spec">.lit</span> rather than spent on text.</p>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       TYPE, SPACE, LAYER
+       ════════════════════════════════════════════════════════════════════ -->
+  <!-- ════════════════════════════════════════════════════════════════════
+       TYPOGRAPHY
+       ════════════════════════════════════════════════════════════════════ -->
+  <h2 id="type">Typography</h2>
+  <p class="sub">Two faces, six steps, six weights, four tracking values,
+  three leadings and three text measures. <b>Every one of them has exactly one
+  job</b>, and the job is what you pick by — not the look.</p>
+
+  <h3>The two faces, and no third</h3>
+  <div class="two">
+    <figure>
+      <figcaption>--face-sans · IBM Plex Sans · carries language</figcaption>
+      <div class="frame">
+        <p style="margin:0;font-size:var(--s4)">Three proposals need authority
+        before the period can close.</p>
+        <p class="note">Every sentence, label, control and heading. It is a
+        grotesque with humanist detail — the single-storey <b>g</b> and the flat
+        terminals hold at 11px uppercase, which is the smallest thing the system
+        asks of it.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>--face-mono · IBM Plex Mono · carries figures</figcaption>
+      <div class="frame">
+        <p class="mono" style="margin:0;font-size:var(--s4)">GR 88214 · 184,200
+        · 0.81 · a7f3c2</p>
+        <p class="note">Anything a person compares against another instance of
+        itself: a figure, a reference, a hash, a key-cap. <b>This is R9, not
+        taste.</b> There is no display face, because a third family would have
+        to say what it is for and both jobs are taken.</p>
+      </div>
+    </figure>
+  </div>
+
+  <h3>The six steps</h3>
+  <div class="wrap">
+    <table>
+      <caption><b>--s5 does not exist.</b> Nothing in the system is between a
+      title and a figure, and minting the step is how a fifth heading level
+      arrives without anybody deciding to add one. Every step is
+      <span class="spec">rem</span>, so all six scale with the reader's browser
+      setting; the px figures are what they resolve to at a 16px root.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Token</th>
+          <th scope="col">Value</th>
+          <th scope="col">Specimen, at size</th>
+          <th scope="col">Pairs with</th>
+          <th scope="col">The one job it has</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row" class="tok">--s7</th>
+          <td class="num">2.25 → 6rem</td>
+          <td style="font-size:var(--s7);font-weight:var(--w-display);line-height:var(--lh-display);letter-spacing:var(--tr-display);text-transform:lowercase">the system</td>
+          <td class="job"><span class="spec">--w-display</span><br><span class="spec">--tr-display</span><br><span class="spec">--lh-display</span></td>
+          <td class="job">Display. <b>One per page</b>, lowercase, and fluid —
+          a 96px headline on a 360px screen is not a headline, it is an
+          obstruction.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--s6</th>
+          <td class="num">1.75 → 2.5rem</td>
+          <td class="mono" style="font-size:var(--s6);font-weight:var(--w-lede);line-height:1">0.81</td>
+          <td class="job"><span class="spec">--w-lede</span><br>mono, tabular</td>
+          <td class="job">Figure. The one number a screen is <i>about</i>.
+          Monospaced under R9, and fluid.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--s4</th>
+          <td class="num">1 → 1.0625rem</td>
+          <td style="font-size:var(--s4);font-weight:var(--w-emph);letter-spacing:var(--tr-title)">Post the journal?</td>
+          <td class="job"><span class="spec">--w-emph</span><br><span class="spec">--tr-title</span><br><span class="spec">--lh-body</span></td>
+          <td class="job">Title. An overlay head, a route state, a lede. Barely
+          fluid — it has 1px of travel, which is enough to stop it crowding a
+          phone.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--s3</th>
+          <td class="num">0.875rem</td>
+          <td style="font-size:var(--s3)">Duplicate candidate · INV 4471</td>
+          <td class="job"><span class="spec">--w-body</span><br><span class="spec">--lh-body</span><br>tracking 0</td>
+          <td class="job">Body. The document default. <b>Fixed</b> — see
+          below.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--s2</th>
+          <td class="num">0.78125rem</td>
+          <td style="font-size:var(--s2)">Needs authority › — a person is the exception</td>
+          <td class="job"><span class="spec">--w-body</span><br><span class="spec">--lh-note</span><br>tracking 0</td>
+          <td class="job">Label, caption, table cell, control, note. The
+          workhorse. <b>Fixed.</b></td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--s1</th>
+          <td class="num">0.6875rem</td>
+          <td style="font-size:var(--s1);letter-spacing:var(--tr-micro);text-transform:uppercase;font-weight:var(--w-emph)">Not built</td>
+          <td class="job"><span class="spec">--w-emph</span><br><span class="spec">--tr-micro</span><br>uppercase, always</td>
+          <td class="job">Micro. A section label, a state name, the not-built
+          word. <b>Fixed</b>, and never lowercase — at this size the uppercase
+          form is what makes it read as a label rather than as small text.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="note"><b>The three small steps do not scale with the viewport, and
+  that is the rule rather than an omission.</b> A 14px body is 14px on a phone
+  and on a 32-inch display, because it is already at the readable floor and a
+  viewport-scaled body text shrinks below it on exactly the device where
+  reading is hardest. Only the three steps above body are fluid.
+  ⚠️ <b>The fluid steps clamp with a <span class="spec">rem</span> floor, never
+  a <span class="spec">vw</span> floor.</b> A pure vw value ignores the
+  reader's font-size setting entirely, which fails 1.4.4 Resize Text while
+  looking responsive.</p>
+
+  <h3>The six weights</h3>
+  <div class="wrap">
+    <table>
+      <caption>Six was not chosen — it was <b>measured</b>. The tree already
+      used all six, and five of them were spelled as bare numbers at dozens of
+      sites while the system claimed to have no weight scale.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Token</th>
+          <th scope="col" class="num">Value</th>
+          <th scope="col">Specimen</th>
+          <th scope="col">The one job it has</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row" class="tok">--w-display</th><td class="num">200</td>
+          <td style="font-size:var(--s4);font-weight:var(--w-display)">the system</td>
+          <td class="job"><span class="spec">--s7</span> only. Nothing else is
+          ever this light.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--w-lede</th><td class="num">300</td>
+          <td style="font-size:var(--s4);font-weight:var(--w-lede)">One kernel and fourteen primitives</td>
+          <td class="job">The one lede paragraph, and the
+          <span class="spec">--s6</span> figure.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--w-body</th><td class="num">400</td>
+          <td style="font-size:var(--s3);font-weight:var(--w-body)">Everything that is a sentence</td>
+          <td class="job">Every sentence. The default.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--w-figure</th><td class="num">500</td>
+          <td class="mono" style="font-size:var(--s3);font-weight:var(--w-figure)">a7f3c2 · ⌘K · --measure</td>
+          <td class="job">A monospaced thing that must not look bold — a
+          key-cap, a token name, a reference.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--w-emph</th><td class="num">600</td>
+          <td style="font-size:var(--s3);font-weight:var(--w-emph)">completed 03:12</td>
+          <td class="job">Emphasis, and <b>every</b> uppercase micro label.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--w-mark</th><td class="num">700</td>
+          <td><span class="logo" style="--logo-size:1.0625rem"><span>Reconcile</span><span class="badge">AI</span></span></td>
+          <td class="job">The wordmark and the glyph. Nothing else.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">🛑 <b>A weight is never used for emphasis outside its job.</b>
+  500 on a sentence of prose is not "slightly bold" — it is the figure weight
+  appearing where no figure is, and it reads as a rendering accident.</p>
+
+  <h3>Tracking is paired with the step, not chosen at the call site</h3>
+  <figure>
+    <div class="frame">
+      <div class="trdemo">
+        <div>
+          <span class="tag">--tr-micro · .1em</span>
+          <span style="font-size:var(--s1);text-transform:uppercase;font-weight:var(--w-emph);letter-spacing:var(--tr-micro)">Needs authority</span>
+          <span class="note" style="margin:0">with</span>
+        </div>
+        <div>
+          <span class="tag">tracking 0</span>
+          <span style="font-size:var(--s1);text-transform:uppercase;font-weight:var(--w-emph)">Needs authority</span>
+          <span class="note" style="margin:0">without — the letters close up
+          and the label starts reading as a word</span>
+        </div>
+        <div>
+          <span class="tag">--tr-display · −.035em</span>
+          <span style="font-size:var(--s6);font-weight:var(--w-display);letter-spacing:var(--tr-display)">the system</span>
+        </div>
+        <div>
+          <span class="tag">tracking 0</span>
+          <span style="font-size:var(--s6);font-weight:var(--w-display)">the system</span>
+          <span class="note" style="margin:0">without — gaps open between
+          letterforms at display size</span>
+        </div>
+      </div>
+      <p class="note"><b>Both are optical corrections, which is why neither is
+      available to a step that did not ask for one.</b> 11px uppercase closes up
+      to the point of illegibility without +.1em; a 96px display opens into gaps
+      without −.035em. ⚠️ Tracking is in <span class="spec">em</span>, not
+      <span class="spec">rem</span>, deliberately — it must scale with the type
+      it is tracking, and a rem value would stay put while the step around it
+      moved.</p>
+    </div>
+  </figure>
+
+  <h3>Leading: the smallest type gets the loosest leading</h3>
+  <div class="three">
+    <figure>
+      <figcaption>--lh-display · .95</figcaption>
+      <div class="frame"><span style="display:block;font-size:var(--s4);font-weight:var(--w-display);line-height:var(--lh-display);letter-spacing:var(--tr-display)">a display line that wraps onto three lines of its own</span></div>
+    </figure>
+    <figure>
+      <figcaption>--lh-body · 1.45</figcaption>
+      <div class="frame"><span style="display:block;font-size:var(--s3);line-height:var(--lh-body)">Body text at fourteen pixels, set at the leading the document default uses everywhere it appears.</span></div>
+    </figure>
+    <figure>
+      <figcaption>--lh-note · 1.55</figcaption>
+      <div class="frame"><span style="display:block;font-size:var(--s2);line-height:var(--lh-note)">A note at twelve and a half, set looser than the body above it, because at this size a line is easier to lose than it is to read.</span></div>
+    </figure>
+  </div>
+  <p class="note">That is the reverse of the instinct, and it is the whole rule.
+  ⚠️ <b>All three are unitless multipliers</b>, so they multiply the element's
+  own size — and so a reader's 1.5× override under 1.4.12 Text Spacing
+  multiplies rather than replaces them. A line-height in
+  <span class="spec">rem</span> breaks the moment a step changes under it.</p>
+
+  <h3>Three text measures, and they are not the page measure</h3>
+  <figure>
+    <div class="frame">
+      <div class="mrow mrow--text">
+        <span class="cap">--measure-text · 80ch</span>
+        <p class="note" style="margin:0;max-width:none">Body and note prose, and
+        it is the ceiling. Past about eighty characters the eye loses the start
+        of the next line, and the reader re-reads the one they were on.</p>
+      </div>
+      <div class="mrow mrow--lede">
+        <span class="cap">--measure-lede · 64ch</span>
+        <p style="margin:0;font-size:var(--s4);font-weight:var(--w-lede);color:var(--muted)">The
+        one lede paragraph. Shorter, because it is bigger — a measure is a count
+        of characters, not a width.</p>
+      </div>
+      <div class="mrow mrow--act">
+        <span class="cap">--measure-act · 56ch</span>
+        <p class="note" style="margin:0;max-width:none">A sentence a person must
+        <b>act</b> on: a route state, a dialog's consequence, an error. Short
+        enough to be read once.</p>
+      </div>
+      <p class="note">🛑 <b>Never set a text measure in px or rem.</b> A
+      <span class="spec">ch</span> measure holds when the step changes; a fixed
+      measure silently becomes 120 characters at <span class="spec">--s2</span>
+      and 50 at <span class="spec">--s4</span>.
+      <span class="spec">--measure</span> is a different thing entirely — a
+      page, in rem — and the two must never be written in terms of each
+      other.</p>
+    </div>
+  </figure>
+
+  <h3>The tabular figure rule, demonstrated</h3>
+  <figure>
+    <div class="frame">
+      <button class="btn" type="button" onClick="{{ swapFigures }}">Re-render the same column</button>
+      <div class="two" style="margin-top:calc(var(--u)*4)">
+        <div>
+          <span class="lab">Proportional — the wrong way</span>
+          <div style="font-size:var(--s4);font-variant-numeric:normal">
+            <sc-for list="{{ figRows }}" as="f" hint-placeholder-count="3">
+              <div style="text-align:right">{{ f.v }}</div>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <span class="lab">--face-mono, tabular-nums</span>
+          <div class="mono" style="font-size:var(--s4)">
+            <sc-for list="{{ figRows }}" as="f" hint-placeholder-count="3">
+              <div style="text-align:right">{{ f.v }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <p class="note">Press it twice. In the left column the digits change
+      width, so the decimal point walks and the column stops being a column. In
+      the right column <b>a digit never changes width between two renders of the
+      same number</b>, which is the whole of R9 — and it is why every figure a
+      person compares against another figure is monospaced.</p>
+    </div>
+  </figure>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       SPACE, LAYER, MOTION TOKENS
+       ════════════════════════════════════════════════════════════════════ -->
+  <h2 id="spacelayer">Space, layer, motion</h2>
+  <p class="sub">One spacing unit in <span class="spec">rem</span> with a
+  stated floor. Four layers, spaced by ten so a component can sit between two
+  without reopening the scale. One spring and one fade.</p>
+
+  <div class="wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Token</th>
+          <th scope="col">Value</th>
+          <th scope="col">Specimen</th>
+          <th scope="col">Where it goes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row" class="tok">--u</th><td class="num">4px</td>
+          <td>
+            <span style="display:inline-flex;gap:calc(var(--u)*.5);align-items:flex-end">
+              <i style="display:block;width:calc(var(--u)*2);height:calc(var(--u)*2);background-color:var(--ink)"></i>
+              <i style="display:block;width:calc(var(--u)*4);height:calc(var(--u)*4);background-color:var(--ink)"></i>
+              <i style="display:block;width:calc(var(--u)*8);height:calc(var(--u)*8);background-color:var(--ink)"></i>
+            </span>
+          </td>
+          <td class="job">Every gap. <b>The half-unit is the floor</b> — 2px,
+          written <span class="spec">calc(var(--u)*.5)</span>, nothing finer.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--target-min</th><td class="num">1.5rem</td>
+          <td class="job"><span class="chip">24 × 24</span></td>
+          <td class="job"><b>WCAG 2.2 AA 2.5.8.</b> The floor every interactive
+          target clears. In rem, so a reader who raises their font size gets a
+          bigger target rather than the same one.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--target</th><td class="num">2rem</td>
+          <td class="job"><button class="btn" type="button">32 × 32</button></td>
+          <td class="job">What the system's controls actually are. <b>24 is a
+          floor, not a design target</b> — nothing is designed at 24.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--measure</th><td class="num">73.75rem</td>
+          <td class="job">1180px at a 16px root</td>
+          <td class="job">A page of content. Not a form column and not a text
+          measure.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--col-min</th><td class="num">15.5rem</td>
+          <td class="job">248px at a 16px root</td>
+          <td class="job">The floor of an auto-fit grid column.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--bp-narrow</th><td class="num">720px</td>
+          <td class="job">narrow → mid</td>
+          <td class="job" rowspan="3">Three constants, <b>not usable
+          tokens</b>: a custom property cannot be read inside
+          <span class="spec">@media</span>, so every breakpoint is still
+          written literally at its site. Declared so each number has one home
+          and a fourth has to argue with them.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--bp-mid</th><td class="num">1080px</td>
+          <td class="job">mid → wide</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--bp-wide</th><td class="num">1440px</td>
+          <td class="job">wide → ultra</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--z-popover</th><td class="num">20</td>
+          <td class="job">tooltip · menu</td>
+          <td class="job">Anchored to something.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--z-overlay</th><td class="num">30</td>
+          <td class="job">drawer</td>
+          <td class="job">Over the register, never away from it.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--z-modal</th><td class="num">40</td>
+          <td class="job">dialog · scrim · toast</td>
+          <td class="job">Blocks what is under it.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--z-skip</th><td class="num">99</td>
+          <td class="job">the skip link</td>
+          <td class="job">Highest, because it is the control that must be
+          reachable when something else has gone wrong.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--spring</th><td class="num">linear(…)</td>
+          <td class="job">ζ 0.6 · ωn 18 · 9% overshoot</td>
+          <td class="job">A real spring sampled into eleven easing stops.
+          Anything that <b>moves</b>.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--t-spring</th><td class="num">420ms</td>
+          <td class="job">one duration, for moves</td>
+          <td class="job">The spring's settle time. <b>On the way in only</b> —
+          a leaving element does not bounce.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">--t-fade</th><td class="num">120ms</td>
+          <td class="job">linear</td>
+          <td class="job">Opacity and colour. <b>Not a move</b>, so not on the
+          spring scale — an opacity change has no distance to ease across.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       THE SIX INDICATORS
+       ════════════════════════════════════════════════════════════════════ -->
+  <h2 id="six">The six indicators</h2>
+  <p class="sub">Six, each a distinct <b>form</b>, so none can be mistaken for
+  another. Two are marks and four are grammar. <b>The count is load-bearing:</b>
+  a seventh indicator is a design change, not an addition.</p>
+
+  <div class="six">
+
+    <div class="ind">
+      <span class="no">Mark one</span>
+      <span class="nm">The meter — one line</span>
+      <div class="stage">
+        <span class="meter" style="--score:72%;--floor:60%">
+          <span class="v mono">0.72</span>
+          <span class="tick" data-t="floor 0.60"></span>
+        </span>
+      </div>
+      <p class="why">Only where a <b>real score</b> exists, and the tick is the
+      floor it had to clear. Never for progress, never for completion, never
+      for anything unmeasured. <b>A progress bar is a second line</b> and there
+      is not one anywhere in the system.</p>
+    </div>
+
+    <div class="ind">
+      <span class="no">Mark two</span>
+      <span class="nm">The connection light — one dot</span>
+      <div class="stage">
+        <span class="conn"><i></i>ERP <b>reachable</b></span>
+        <span class="conn" data-state="down"><i></i>Bank feed <b>unreachable</b></span>
+      </div>
+      <p class="why">Ink, never the agent green: this is infrastructure. A live
+      connection <b>breathes</b>; an unreachable one is hollow and still —
+      <b>absence of life is the signal</b>, so no hazard colour exists and none
+      is needed. The words say the same thing, because a state may never depend
+      on a light alone. The only radius in the system besides the mark.</p>
+    </div>
+
+    <div class="ind">
+      <span class="no">Grammar one</span>
+      <span class="nm">Tilde hedges a forecast</span>
+      <div class="stage">
+        <span class="gram"><span class="mk">~</span>4 hours to clear
+        <span class="qt">— an estimate, and it says so</span></span>
+      </div>
+      <p class="why">A figure the system is <b>guessing at</b> wears the hedge.
+      Nothing else does, so a number without one is a number somebody can rely
+      on.</p>
+    </div>
+
+    <div class="ind">
+      <span class="no">Grammar two</span>
+      <span class="nm">Past tense states a fact</span>
+      <div class="stage">
+        <span class="gram">Run <b>completed</b> 03:12
+        <span class="qt">— it happened, and here is when</span></span>
+      </div>
+      <p class="why">The tense carries the certainty. <b>"Completed at
+      03:12"</b> is a fact with a time on it; "completing" would be a claim
+      about now that the page cannot make.</p>
+    </div>
+
+    <div class="ind">
+      <span class="no">Grammar three</span>
+      <span class="nm">Chevron means your move</span>
+      <div class="stage">
+        <span class="gram">Needs authority <span class="mk">›</span>
+        <span class="qt">— a person is the exception, so a person gets named</span></span>
+      </div>
+      <p class="why">The agent ran every row, so naming it says nothing. A
+      <b>person in the loop</b> is the exception, and the chevron is where the
+      work stops until one acts. Ink, not agent green.</p>
+    </div>
+
+    <div class="ind">
+      <span class="no">Grammar four</span>
+      <span class="nm">Ellipsis means elsewhere</span>
+      <div class="stage">
+        <span class="gram">Waiting on the bank feed <span class="mk">…</span>
+        <span class="qt">— blocked on something outside this system</span></span>
+      </div>
+      <p class="why">Not "loading". <b>Elsewhere</b> — the work is real, it is
+      moving, and it is not moving here. A reader who sees this knows there is
+      nothing for them to do yet.</p>
+    </div>
+
+  </div>
+
+  <h3>And two treatments that are not indicators, so the six stay six</h3>
+  <div class="two">
+    <figure>
+      <figcaption>.lit — the luminous touch, live</figcaption>
+      <div class="lit lit--running" style="padding:calc(var(--u)*5)">
+        <span class="lab">Agent-authored</span>
+        <b style="font-size:var(--s3)">INV 4471 · matching against 3 candidates</b>
+        <p class="note" style="margin-top:calc(var(--u)*2)">A source with
+        falloff, never a flat fill. One slow pass per 17s with 88% of the cycle
+        at rest — <b>a faster pass was built, read as a marquee, and was slowed
+        deliberately.</b> Never more than one lit thing per view: one light is
+        legible, six lights are wallpaper.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>.nb — the not-built hatch, and its reason</figcaption>
+      <div class="nb frame" data-nb="not built">
+        <span class="lab">Dashboard of summary tiles</span>
+        <p class="note" style="margin-top:0">Nine controls and nothing else.</p>
+        <span class="nbwhy"><b>Refused.</b> A tile that summarises the register
+        becomes a second register, and the one that is authoritative stops being
+        obvious. The hatch says <i>that</i>; this sentence says <i>which
+        decision</i>, and a reviewer cannot act on the first without the
+        second.</span>
+      </div>
+    </figure>
+  </div>
+  <p class="note">Neither reports a state of the work, which is what keeps them
+  out of the count. <b>The hatch alpha is .18, not .055.</b> At .055 the stripe
+  composited to 1.11:1 on every ground — fainter than
+  <span class="spec">--rule</span>, the faintest line the system deliberately
+  declares, so the hatch sat below the visible floor on the ground it was
+  calibrated for. At .18 it is 1.42:1 on both light grounds: visible in a
+  screenshot, still unmistakably a hatch rather than a fill. The alpha form is
+  what makes it ground-independent — an alpha composite scales the ground
+  rather than displacing it.</p>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       MOTION
+       ════════════════════════════════════════════════════════════════════ -->
+  <h2 id="microcopy">Microcopy</h2>
+  <p class="sub">The product's sentences are part of the system, not decoration
+  on top of it. <b>Two rules carry most of it:</b> the reader is addressed when
+  something is theirs to do, and the product never says a thing it cannot
+  evidence.</p>
+
+  <h3>Second person for consequences, neutral for facts</h3>
+  <p class="note">The close read neutrally and the partner portal read as
+  <em>you</em>, and nobody had decided that. The rule now: <b>a fact about the
+  world is stated neutrally; a consequence for the reader is addressed to
+  them.</b> It is the difference between reporting and instructing, and mixing
+  them is what makes software sound either cold or pushy.</p>
+  <div class="wrap">
+    <table>
+      <caption>The same sentence, on the right side of the line and the wrong one.</caption>
+      <thead><tr><th scope="col">Write</th><th scope="col">Not</th><th scope="col">Because</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">The run stopped early. The intercompany mailbox has not delivered since 05 Mar.</th><td>Your run stopped early.</td><td>The run is not the reader's; it is a fact about the period.</td></tr>
+        <tr><th scope="row">You cannot post this — it is above your limit of SGD 5,000.</th><td>This cannot be posted.</td><td>The limit is the reader's, so the sentence is theirs.</td></tr>
+        <tr><th scope="row">Segregation of duties is on for this tenant, so the person who proposed a resolution cannot approve it.</th><td>You are not allowed to approve this.</td><td>The rule is a fact; the reader happens to be standing in it.</td></tr>
+        <tr><th scope="row">Nothing here is yours to change. Your role is set by an administrator.</th><td>This is read-only.</td><td>Read-only says what the screen does; the rule says whose decision it was.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>British spelling, in copy and in code</h3>
+  <p class="note">🛑 <b>Decided, and it is not a preference.</b> The records
+  already carry the cost of leaving it unruled: one model holds
+  <span class="spec">costCenter</span> and another holds
+  <span class="spec">costCentres</span>, and the join between them is an
+  authorisation decision — so a spelling divergence is a scope dimension that
+  silently matches nothing. <b>A field name that diverges from the copy is a
+  finding</b>, on the same standing as a hard-coded colour.</p>
+
+  <h3>A failure is a sentence, then a code</h3>
+  <p class="note">Every failure path emits a code from a closed vocabulary,
+  because under a restrictive telemetry profile <b>the class of the error is the
+  only diagnostic channel that survives</b>. So the reader gets the sentence and
+  the code gets the last word: a support call starts with the code, and nobody
+  should have to describe a screen to find it.</p>
+  <figure>
+    <div class="frame">
+      <p style="margin:0;max-width:var(--measure-text)">The bank feed did not
+      answer. Nothing has been posted, and the register is unchanged from
+      03:12. <span class="mono" style="color:var(--muted)">source_unreachable</span></p>
+      <p style="margin-top:calc(var(--u)*4);max-width:var(--measure-text)">Whether
+      the credential is wrong or the host is unreachable cannot be told apart
+      from here, and both look like this.
+      <span class="mono" style="color:var(--muted)">source_unreachable</span></p>
+    </div>
+    <figcaption><b>Three parts and no fourth:</b> what happened, what it means
+    for the work in front of them, and the code. No apology, no
+    reassurance, and no guess at the cause where two causes are
+    indistinguishable.</figcaption>
+  </figure>
+
+  <h3>Five things this product never writes</h3>
+  <div class="wrap">
+    <table>
+      <caption>Each with the reason, because a word list without one gets argued
+      with at the call site.</caption>
+      <thead><tr><th scope="col">Banned</th><th scope="col">Why</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Hedges — <span class="spec">simply</span>, <span class="spec">just</span>, <span class="spec">easily</span>, <span class="spec">quickly</span></th><td>They tell the reader the thing they are struggling with is easy. Every one of them is deletable with no loss, which is the test.</td></tr>
+        <tr><th scope="row">Cheer — <span class="spec">Great!</span>, <span class="spec">All set!</span>, <span class="spec">You're all caught up</span></th><td>This is a finance close. Congratulating someone on a clean night reads as a product that does not know what is at stake — and a clean night is <em>reported</em>, with its denominator.</td></tr>
+        <tr><th scope="row">Vagueness — <span class="spec">something went wrong</span>, <span class="spec">an error occurred</span></th><td>It is the sentence that makes a code necessary and then withholds it. If the cause genuinely cannot be determined, say which two causes look alike.</td></tr>
+        <tr><th scope="row">Anthropomorphism — the agent <span class="spec">thinks</span>, <span class="spec">believes</span>, <span class="spec">wants</span>, <span class="spec">feels</span></th><td>It claims a state of mind in place of evidence. The agent read, matched, cited and priced; those are checkable and a belief is not.</td></tr>
+        <tr><th scope="row">Emoji, in product copy</th><td>The system has six glyphs and no icon set, for the same reason: a second semantic channel competing with the grammar. Emoji in this record are editorial marks on a design document, not product copy.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>When the product apologises</h3>
+  <p class="note">Not banned, and narrow: <b>only where the fault is ours and it
+  cost the reader something.</b> A posting that failed after they left, a period
+  that has to be re-run, a delivery that went to the wrong place. Not for a
+  refusal — a refusal is the control working — and not for a source the customer
+  owns going quiet. <b>An apology everywhere is an apology nowhere</b>, and the
+  places above are exactly where one is owed.</p>
+
+  <h3>The agent speaks in the first person, about acts and confidence only</h3>
+  <p class="note">🛑 <b>The line, because "I think this is a duplicate" sits
+  exactly on it.</b> <span class="spec">I</span> is available for what the agent
+  <em>did</em> and for how sure it is. It is never available for a state of
+  mind.</p>
+  <div class="wrap">
+    <table>
+      <thead><tr><th scope="col">Write</th><th scope="col">Not</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">I read 1,284 documents across three sources.</th><td>I looked at everything I could find.</td></tr>
+        <tr><th scope="row">I am 71% confident, which is below this tenant's floor, so a person is needed.</th><td>I think a person should check this.</td></tr>
+        <tr><th scope="row">I matched these on supplier, amount and date. The purchase order disagrees by SGD 2,000.</th><td>I believe these are the same invoice.</td></tr>
+        <tr><th scope="row">I could not reach the bank feed. <span class="mono">source_unreachable</span></th><td>I wasn't able to find what I needed, sorry!</td></tr>
+        <tr><th scope="row">Confirming the five receipts would clear nine lines.</th><td>I want to confirm the receipts first.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Two consequences worth stating. <b>A confidence figure always
+  carries what it is measured against</b> — a floor, a denominator, a
+  threshold — because a bare percentage is a number nobody can act on. And
+  <b>every billable sentence carries the mark</b>: ∴ trailing the spend, in the
+  agent's own ink, so a person reading a cost never has to ask whether it was
+  charged.</p>
+
+  <h3>Figures, dates and the small conventions</h3>
+  <ul class="find">
+    <li><span class="kind">Rule</span><b>Currency is a prefix in a quieter step</b> — <span class="spec">SGD</span> then the figure — because the unit is constant down a column and the number is not.</li>
+    <li><span class="kind">Rule</span><b>Every figure that is compared is tabular.</b> Proportional figures in a column are a rendering accident that reads as a data error.</li>
+    <li><span class="kind">Rule</span><b>Dates as <span class="spec">06 Mar</span>, times with their zone.</b> A close crosses three time zones and a bare clock time is a question.</li>
+    <li><span class="kind">Rule</span><b>A button names the act, and the confirmation repeats it.</b> <span class="spec">Post it</span> then <span class="spec">Posted.</span> — never <span class="spec">Submit</span> then <span class="spec">Success</span>.</li>
+    <li><span class="kind">Rule</span><b>A refusal states what, why, and whose decision it was.</b> Three parts; the third is the one people leave out and the one that stops an argument.</li>
+    <li><span class="kind">Rule</span><b>No metadiscourse.</b> Not <span class="spec">here's why this matters</span> — say the thing that matters.</li>
+  </ul>
+
+  <h2 id="motion">Motion</h2>
+  <p class="sub"><b>One spring, four product animations, and one brand animation.</b>
+  Everything that moves runs the spring; everything that only changes opacity or
+  colour runs the fade. A fifth <em>product</em> animation is a finding, not an
+  addition — the brand one is <a href="#mascot">the mascot's</a>, scoped to a
+  single selector and counted apart because it reports nothing.</p>
+
+  <h3>The spring, and what it replaced</h3>
+  <figure>
+    <div class="frame">
+      <div class="mdemo" data-go="{{ mvOn }}" style="container-type:inline-size">
+        <div class="track" data-t="spring">
+          <i></i><span class="edge"></span>
+          <span class="tg">--spring · 420ms · overshoots 9% and settles</span>
+        </div>
+        <div class="track" data-t="none">
+          <i></i><span class="edge"></span>
+          <span class="tg">the same 420ms on a plain ease — arrives and stops</span>
+        </div>
+        <div class="track" data-t="fade">
+          <i></i><span class="edge"></span>
+          <span class="tg">--t-fade · 120ms linear — what a fade is timed at</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:calc(var(--u)*3);margin-top:calc(var(--u)*4);flex-wrap:wrap">
+        <button class="btn" type="button" data-commit onClick="{{ replay }}">Replay all three</button>
+        <button class="btn" type="button" onClick="{{ resetMotion }}">Send them back</button>
+      </div>
+      <p class="note"><b>The spring carries the asymmetry the two durations used
+      to carry in their numbers.</b> The scale it replaced said <i>enter is
+      slower than exit</i>; the spring says it in the curve instead — it arrives
+      fast, overshoots, and settles, so the overshoot is what tells you it
+      landed. Watch the middle track: the same duration on an ordinary ease
+      arrives and stops, and reads as a slide rather than as an arrival.</p>
+      <p class="note">🛑 <b>A leaving element does not bounce.</b> Run the
+      spring on the way in and a plain <span class="spec">--t-fade</span> on the
+      way out. The overshoot means "this landed here", and an element on its way
+      off screen has nothing to land on — a bounce on exit reads as a failure to
+      leave. The drawer and the modal in the overlays section below are built
+      exactly this way; open and close them and watch which direction
+      bounces.</p>
+    </div>
+  </figure>
+
+  <p class="note"><b>Why <span class="spec">linear()</span> and not a JS
+  spring.</b> This is a real damped spring — ζ 0.6, ωn 18 rad/s — sampled at
+  eleven points over 420ms and written as an easing function. It runs on the
+  compositor as an ordinary CSS transition, needs no runtime, survives the
+  reduced-motion guard, and cannot disagree with itself between two components
+  the way two spring configs in two files would. <b>What it gives up is
+  interruptibility:</b> a JS spring retargets mid-flight from its current
+  velocity, and this one restarts. That trade is the reason it is one token and
+  not a library, and it is recorded as an open finding rather than as a
+  win.</p>
+
+  <h3>The four product animations, and nothing else</h3>
+  <div class="wrap">
+    <table>
+      <caption>Everything else that moves is a <b>transition on a property</b>,
+      timed by <span class="spec">--t-spring</span> or
+      <span class="spec">--t-fade</span>. <b>Amended 3 Oct 2026 (RM-08, RM-09):</b>
+      every keyframe is declared in the kernel; a component may apply one and
+      may not declare one. <span class="spec">lv</span> is struck until a
+      surface draws level bars, and the three overlay entrances joined.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Animation</th>
+          <th scope="col">Duration</th>
+          <th scope="col">Budget</th>
+          <th scope="col">Live</th>
+          <th scope="col">What it means, and what reduced motion does</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row" class="tok">sweep</th>
+          <td class="num">17s</td>
+          <td class="job">ambient</td>
+          <td><span class="lit lit--running" style="display:block;padding:calc(var(--u)*3);min-width:calc(var(--u)*24)"><span class="spec">running</span></span></td>
+          <td class="job">Light passing across a running job — not a spinner.
+          <b>88% of the cycle is at rest</b>, and the rest fraction rather than
+          the duration is what makes it read as ambient. Reduced motion:
+          <span class="spec">display:none</span>, and the
+          <span class="spec">.lit</span> ground stays.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">alive</th>
+          <td class="num">3.6s</td>
+          <td class="job">ambient</td>
+          <td><span class="conn"><i></i>reachable</span></td>
+          <td class="job">The connection light breathing. Reduced motion: the
+          halo settles at <b>.3, not 0</b> — a down light has an opacity-0 halo
+          <i>and</i> a hollow centre, and stopping a live halo at 0 collapses
+          two differences into one.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">lv</th>
+          <td class="num">1.4s</td>
+          <td class="job">ambient</td>
+          <td><span class="agent"><i class="lv"></i><i class="lv"></i><i class="lv"></i></span></td>
+          <td class="job"><b>Struck 3 Oct 2026 (RM-08)</b> — a specimen on
+          this page only; no product surface draws level bars. Was: the agent's
+          level bars. Reduced motion: held at the
+          reading height, and <b>the idle bars are held separately</b> so the
+          difference between working and idle survives the setting.</td>
+        </tr>
+        <tr>
+          <th scope="row" class="tok">toast-in</th>
+          <td class="job">--t-spring</td>
+          <td class="job">feedback</td>
+          <td class="job">see overlays</td>
+          <td class="job">An outcome arriving. The only one of the four on the
+          feedback budget, and the only one whose absence costs nothing at all —
+          the toast still says what happened.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="note"><b>The ambient tempo rule.</b> Motion measured in
+  <b>seconds</b> means "this is live". Motion measured in
+  <b>milliseconds</b> means "you did that". The two budgets never mix:
+  retiming the sweep to the spring would make it mean "this just happened", and
+  stretching a drawer to 17s would make an overlay claim to be an ongoing
+  process. 🛑 <b>Nothing animates that carries information a still frame does
+  not</b> — which is what makes the reduced-motion guard a complete answer
+  rather than a degradation.</p>
+
+  <figure style="margin-top:calc(var(--u)*5)">
+    <figcaption>the guard, and the trap inside it</figcaption>
+    <div class="frame">
+      <p class="note" style="margin-top:0">🛑 <b><span class="spec">*</span>
+      alone is not enough, and that is the whole trap.</b> The universal
+      selector does not match pseudo-elements, and both kernel animations run on
+      one — <span class="spec">.lit--running::after</span> and
+      <span class="spec">.conn i::after</span>. A guard written
+      <span class="spec">*{}</span> looks complete, passes review, and stops
+      neither. <span class="spec">*,*::before,*::after</span> is load-bearing,
+      not defensive.</p>
+      <p class="note">🛑 <b>And the spring is covered by
+      <span class="spec">transition-duration</span>, not by removing the
+      easing.</b> A spring's overshoot is the part a motion-sensitive reader
+      objects to, and at .001ms there is no overshoot to see — the element is
+      simply where it was going. A second rule swapping the spring for
+      <span class="spec">linear</span> under the query would change nothing.</p>
+    </div>
+  </figure>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       THE MASCOT
+       ════════════════════════════════════════════════════════════════════ -->
+  <h3>Reduced motion, and the four things that hold still</h3>
+  <p class="note">🛑 <b>Under <span class="spec">prefers-reduced-motion</span> the
+  spring still runs.</b> It is not switched off and nothing is swapped for a
+  crossfade — the <b>distance is clamped to a few pixels</b> and the spring
+  settles wherever that lands it. A state change still reads as a change rather
+  than a jump, and nobody gets a second, worse animation written for them.</p>
+  <p class="note">The reason for clamping distance rather than cutting duration
+  is that <b>travel is what causes the problem</b>. A long transition that moves
+  nothing is comfortable; a short one that throws an element across the viewport
+  is not.</p>
+
+  <div class="wrap">
+    <table>
+      <caption>What may never move, and why each one is on the list.</caption>
+      <thead><tr><th scope="col">Never moves</th><th scope="col">Why</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Anything carrying a number that matters</th><td>A figure in motion is a figure being read wrong. A count, an amount, a confidence or a spend appears in place and changes in place \u2014 and if it must change while somebody is looking at it, it changes without travelling.</td></tr>
+        <tr><th scope="row">Rows entering or leaving the register</th><td>The register is the work. Rows that slide in on a filter make the list feel like a feed, and a reader loses their place in something they were counting.</td></tr>
+        <tr><th scope="row">A refusal appearing</th><td>A refusal is a fact, not an event. Animating it in makes it look like something that happened rather than something that was always true, and it delays the sentence a person is waiting to read.</td></tr>
+        <tr><th scope="row">The status bar</th><td>Its grammar never rearranges, which is the whole feature. Motion in a fixed grammar is a change in a thing whose value is that it does not change.</td></tr>
+        <tr><th scope="row">A skeleton resolving into content</th><td>The skeleton promised the shape. If the real content fades or slides over it, the promise was not kept \u2014 it should be a straight swap into the same box.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Which leaves the four product animations and the one brand
+  animation named above, and nothing else. <b>Anything that wants to move and is
+  not on that list is a finding</b>, not a local exception.</p>
+
+  <h2 id="mascot">The mascot</h2>
+  <p class="sub">∴ — three dots in a triangle. It belongs with the wordmark and
+  the badge, <b>not with the glyphs</b>, and that placement is the whole ruling:
+  a glyph may not move and may not carry state, because it is part of the
+  product's language and it is counted. The mascot may move, because it reports
+  nothing. It sits outside the seven glyphs and outside the six indicators for
+  the same reason the logo does.</p>
+
+  <div class="two">
+    <figure>
+      <figcaption>the mark, and the light around it</figcaption>
+      <div class="frame">
+        <div style="display:flex;align-items:flex-end;gap:calc(var(--u)*8);flex-wrap:wrap">
+          <span class="mascot" data-energy="thinking" style="--mascot-size:4rem"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span>
+          <span class="mascot" data-energy="thinking" style="--mascot-size:1.75rem"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span>
+          <span class="logo" style="--logo-size:1.1875rem;gap:.5em"><span class="mascot" data-energy="thinking" style="--mascot-size:1.1875rem"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span><span>Reconcile</span><span class="badge">AI</span></span>
+        </div>
+        <p class="note"><b>The dots are agent ink; the light is lime and cyan.</b>
+        The kernel already says lime and cyan are unusable as marks — 1.25:1 and
+        1.99:1 — and excellent as light, so they are cast <em>around</em> the
+        dots and never colour them. The mark holds its own contrast with the
+        light switched off.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>the energy ladder — motion follows what the product is doing</figcaption>
+      <div class="frame">
+        <table>
+          <thead><tr><th scope="col">Energy</th><th scope="col">Mark</th><th scope="col">When</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Still</th>
+              <td><span class="mascot" style="--mascot-size:1.5rem"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span></td>
+              <td>The favicon, the sign-in lockup, print, and anywhere a person is reading rather than waiting.</td></tr>
+            <tr><th scope="row">Working · 4.8s</th>
+              <td><span class="mascot" data-energy="working" style="--mascot-size:1.5rem"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span></td>
+              <td>A run is reading and nobody is watching this spot. Ambient, on the same argument the sweep makes at 17 seconds.</td></tr>
+            <tr><th scope="row">Thinking · 2s</th>
+              <td><span class="mascot" data-energy="thinking" style="--mascot-size:1.5rem"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span></td>
+              <td>Ask is composing and the person is watching it happen.</td></tr>
+            <tr><th scope="row">Listening · 1.25s</th>
+              <td><span class="mascot" data-energy="listening" style="--mascot-size:1.5rem"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span></td>
+              <td>The question field has focus. Nothing else in the system is this quick, because nothing else is answering a <em>person</em>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </figure>
+  </div>
+
+  <h3>The two lines it may not cross</h3>
+  <div class="two">
+    <figure>
+      <figcaption>right — the mascot beside words that carry the state</figcaption>
+      <div class="frame">
+        <div style="display:flex;align-items:center;gap:calc(var(--u)*3);flex-wrap:wrap">
+          <span class="mascot" data-energy="thinking" style="--mascot-size:1.5rem"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span>
+          <span style="font-size:var(--s3)">Reading the DBS file · 62%</span>
+        </div>
+        <p class="note">Strip the mascot and the sentence still says what is
+        happening. <b>That is the test</b> — the same one the affordance glyphs
+        pass, and the reason the mascot never enters the indicator count.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>wrong — the mascot alone, and in a register cell</figcaption>
+      <div class="nb frame" data-nb="never">
+        <div style="display:flex;align-items:center;gap:calc(var(--u)*3);padding-top:calc(var(--u)*5)">
+          <span class="mascot" data-energy="listening" style="--mascot-size:1.5rem"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span>
+          <span class="mono" style="font-size:var(--s2)">412,900.00</span>
+        </div>
+        <span class="nbwhy"><b>Two failures at once.</b> With no words beside it
+        the mascot has become the only thing reporting that the machine is
+        working, which makes it an indicator and puts it under the hue rule and
+        the count. And a moving mark in a register cell competes with the
+        reading it sits next to. The mark's own STILL form — the character
+        <b>∴</b>, which is what the metered mark is — is what belongs in a
+        cell, and it cannot move.</span>
+      </div>
+    </figure>
+  </div>
+
+  <p class="note"><b>One brand animation, declared in the inventory and scoped
+  to one selector.</b> <span class="spec">mascot-cascade</span> may run on
+  <span class="spec">.mascot</span> and nowhere else; a product surface reaching
+  for it is a finding, exactly as a fifth product animation would be. Under
+  <span class="spec">prefers-reduced-motion</span> the mascot goes still and
+  stays a complete mark — unlike the connection light, it holds nothing back,
+  because its resting state was never carrying anything.</p>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       ICONOGRAPHY
+       ════════════════════════════════════════════════════════════════════ -->
+  <h2 id="icons">Iconography</h2>
+  <p class="sub">🛑 <b>There is no icon set, and that is a decision rather than
+  an absence.</b> The system has six glyphs. All six are typographic — set in
+  the text face at the parent's size, never drawn, never an SVG, never a
+  font-icon. <b>The metered mark is not among them</b> — it is
+  <a href="#mascot">the mascot's</a> still form, and it is documented with the
+  mark.</p>
+
+  <div class="glyphs">
+    <div class="gl">
+      <span class="ch mono">~</span>
+      <span class="kind">Grammar · carries meaning</span>
+      <span class="job">Hedges a forecast. <b>~4 hours to clear</b> is an
+      estimate and says so, which is what makes a number without one reliable.
+      Counted as one of the six indicators.</span>
+    </div>
+    <div class="gl">
+      <span class="ch mono">›</span>
+      <span class="kind">Grammar · carries meaning</span>
+      <span class="job">Your move. Where the work stops until a person acts.
+      Also opens an invalid field's reason, which is why the field needs no hue.
+      Counted.</span>
+    </div>
+    <div class="gl">
+      <span class="ch mono">…</span>
+      <span class="kind">Grammar · carries meaning</span>
+      <span class="job">Elsewhere. Not "loading" — the work is real, it is
+      moving, and it is not moving here. Counted.</span>
+    </div>
+    <div class="gl">
+      <span class="ch" style="font-size:var(--s4);font-weight:var(--w-emph)">completed</span>
+      <span class="kind">Grammar · no glyph at all</span>
+      <span class="job">Past tense states a fact. The fourth grammar indicator
+      is a <b>tense</b>, not a mark — which is the clearest evidence that this
+      system carries meaning in language rather than in shapes.</span>
+    </div>
+    <div class="gl">
+      <span class="ch">✕</span>
+      <span class="kind">Affordance · carries nothing</span>
+      <span class="job">This panel closes. <b>Always aria-hidden</b>, always
+      inside a control that already has an accessible name. Not counted, because
+      it reports no state.</span>
+    </div>
+    <div class="gl">
+      <span class="ch">▾</span>
+      <span class="kind">Affordance · carries nothing</span>
+      <span class="job">A menu follows. Same contract: aria-hidden, and the
+      control beside it is what the screen reader announces. Not
+      counted.</span>
+    </div>
+  </div>
+
+  <h3>The affordance contract, demonstrated</h3>
+  <div class="two">
+    <figure>
+      <figcaption>right — the glyph is decoration on a named control</figcaption>
+      <div class="frame">
+        <div style="display:flex;gap:calc(var(--u)*3);align-items:center;flex-wrap:wrap">
+          <button class="btn" type="button">Nordic Holdings AB <span aria-hidden="true">▾</span></button>
+          <button class="x" type="button" aria-label="Close the drawer"><span aria-hidden="true">✕</span></button>
+        </div>
+        <p class="note">Strip both glyphs and both controls still work and still
+        announce. <b>That is the test:</b> the glyph must be removable without
+        the control losing anything a person needs.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>wrong — the glyph is the only name</figcaption>
+      <div class="nb frame" data-nb="never">
+        <div style="display:flex;gap:calc(var(--u)*3);align-items:center;flex-wrap:wrap;padding-top:calc(var(--u)*5)">
+          <button class="btn" type="button" style="font-size:var(--s4)">▾</button>
+          <button class="btn" type="button" style="font-size:var(--s4)">✕</button>
+        </div>
+        <span class="nbwhy"><b>A glyph that is the only thing naming a control
+        is a defect, not an icon.</b> These two announce as "▾" and "✕" — or as
+        nothing at all, depending on the screen reader — and they fail 4.1.2
+        Name, Role, Value. Drawn hatched because a reviewer will otherwise read
+        the pattern as available.</span>
+      </div>
+    </figure>
+  </div>
+
+  <h3>The metered mark, demonstrated</h3>
+  <div class="two">
+    <figure>
+      <figcaption>right — the still mark trails a figure and follows words</figcaption>
+      <div class="frame">
+        <div style="display:flex;gap:calc(var(--u)*5);align-items:center;flex-wrap:wrap">
+          <span style="font-family:var(--face-mono);font-variant-numeric:tabular-nums">128,440 <span class="met" aria-hidden="true">∴</span></span>
+          <button class="btn" type="button">Run the match again · billable <span class="met" aria-hidden="true">∴</span></button>
+        </div>
+        <p class="note">Strip the mark from both and nothing is lost: the
+        figure is still a figure under a heading that says what was counted,
+        and the control still says it spends. <b>That is the test</b> — the
+        same one the affordance glyphs pass. No unit word is needed beside it,
+        because the figure's own qualifier carries that.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>wrong — the mark is the only warning</figcaption>
+      <div class="nb frame" data-nb="never">
+        <div style="display:flex;gap:calc(var(--u)*5);align-items:center;flex-wrap:wrap;padding-top:calc(var(--u)*5)">
+          <button class="btn" type="button">Run the match again <span aria-hidden="true">∴</span></button>
+        </div>
+        <span class="nbwhy"><b>A mark that is the only thing telling you an act
+        costs money is an indicator, not decoration.</b> It reports state, so it
+        falls under the six-indicator count and under R1 — and it is
+        aria-hidden, which means the one reader who most needs the warning never
+        receives it. The words have to say "billable"; the mark may only
+        follow them.</span>
+      </div>
+    </figure>
+  </div>
+
+  <h3>Why there is no set</h3>
+  <p class="note">An icon vocabulary is a <b>second semantic channel</b>, and it
+  would compete with the grammar for the same job — a mail glyph beside "waiting
+  on the bank feed …" does not add information, it splits it. An icon set also
+  grows by <b>resemblance</b> rather than by decision: the next icon arrives
+  because a shape existed, which is precisely the pressure the six-indicator
+  count exists to hold. And under R1 an icon cannot carry state anyway, so
+  every icon the system could add would be decoration on a word that is already
+  doing the work. <b>The one mark this system does spend on a figure is its
+  own:</b> ∴ still, documented with the mark rather than here, and carrying the
+  same line — the moment it is the only thing reporting something, it has
+  become an indicator.</p>
+
+  <sc-if value="{{ showNotBuilt }}" hint-placeholder-val="{{ true }}">
+    <figure style="margin-top:calc(var(--u)*5)">
+      <figcaption>refused · an icon set</figcaption>
+      <div class="nb frame" data-nb="not built">
+        <div style="display:flex;gap:calc(var(--u)*5);align-items:center;flex-wrap:wrap;padding-top:calc(var(--u)*5);font-size:var(--s4);color:var(--refused)">
+          <span>document</span><span>filter</span><span>alert</span>
+          <span>refresh</span><span>download</span><span>settings</span>
+        </div>
+        <span class="nbwhy"><b>Refused, and the refusal has a test attached.</b>
+        An eighth glyph — like a seventh indicator — is a design change and
+        needs a decision on the record — and the last candidate for one was
+        withdrawn in favour of the brand's own mark, which is the more likely
+        answer than a new glyph. The test for any proposed icon: state what it
+        carries that the word beside it does not. If the answer is "it is
+        faster to scan", the answer is a better label.</span>
+      </div>
+    </figure>
+  </sc-if>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       PRIMITIVES 1–2 · THE SHELL
+       ════════════════════════════════════════════════════════════════════ -->
+  <h2 id="shell">Primitives 1–2 · The shell</h2>
+  <p class="sub">The route model and the bar that carries it. Three
+  destinations, Setup as a <b>door</b> rather than a fourth, and nine controls
+  that earned their place. The bar below is live: the destinations switch, the
+  entity switcher and the account menu open, and the refused control answers
+  on focus or tap.</p>
+
+  <figure>
+    <figcaption>the shell in place — live</figcaption>
+    <div style="box-shadow:inset 0 0 0 1px var(--rule-strong)">
+      <div class="chrome">
+        <span class="logo" style="--logo-size:17px"><span>Reconcile</span><span class="badge">AI</span></span>
+
+        <div class="anchor">
+          <button class="btn btn--quiet" type="button" onClick="{{ toggleEntity }}" aria-haspopup="true" aria-expanded="{{ entityExpanded }}">
+            <span class="mono">NORDIC HOLDINGS AB</span>
+            <span aria-hidden="true">▾</span>
+          </button>
+          <sc-if value="{{ menuEntity }}" hint-placeholder-val="{{ false }}">
+            <ul class="menu" data-side="left" role="menu">
+              <li class="gp">Entity</li>
+              <li role="none"><button class="mi" type="button" role="menuitemradio" aria-checked="true" onClick="{{ closeMenu }}">Nordic Holdings AB<span class="rt">current</span></button></li>
+              <li role="none"><button class="mi" type="button" role="menuitemradio" aria-checked="false" onClick="{{ closeMenu }}">Nordic Retail Oy<span class="rt">3 open</span></button></li>
+              <li role="none"><button class="mi" type="button" role="menuitemradio" aria-checked="false" onClick="{{ closeMenu }}">Nordic Logistics A/S<span class="rt">clear</span></button></li>
+              <li class="gp">Period</li>
+              <li role="none"><button class="mi" type="button" role="menuitemradio" aria-checked="true" onClick="{{ closeMenu }}">Aug 2026<span class="rt">open</span></button></li>
+            </ul>
+          </sc-if>
+        </div>
+
+        <nav aria-label="Destinations">
+          <ul class="dests">
+            <li><button class="dest" type="button" aria-current="{{ curClose }}" onClick="{{ goClose }}">Close</button></li>
+            <li><button class="dest" type="button" aria-current="{{ curAsk }}" onClick="{{ goAsk }}">Ask</button></li>
+            <li><button class="dest" type="button" aria-current="{{ curReports }}" onClick="{{ goReports }}">Reports</button></li>
+          </ul>
+        </nav>
+
+        <span class="sp"></span>
+
+        <span class="conn"><i></i>ERP <b>reachable</b></span>
+
+        <span class="meter" style="--score:41%;--floor:80%" title="tokens against the monthly plan">
+          <span class="v mono" style="font-size:var(--s2)">41% of plan</span>
+          <span class="tick" data-t="alert 80%"></span>
+        </span>
+
+        <span class="agent" aria-label="the agent is working"><i class="lv"></i><i class="lv"></i><i class="lv"></i></span>
+
+        <button class="btn btn--quiet" type="button" onClick="{{ openPalette }}">
+          Search <span class="kb">⌘</span><span class="kb">K</span>
+        </button>
+
+        <span class="tw"
+          onPointerDown="{{ tipDemo.onPointerDown }}"
+          onPointerEnter="{{ tipDemo.onPointerEnter }}"
+          onPointerLeave="{{ tipDemo.onPointerLeave }}"
+          data-open="{{ tipDemo.on }}">
+          <button class="btn" type="button" aria-disabled="true" aria-describedby="tip-demo"
+            onFocus="{{ tipDemo.onFocus }}" onBlur="{{ tipDemo.onBlur }}"
+            onClick="{{ tipDemo.onClick }}" onKeyDown="{{ tipDemo.onKeyDown }}">Demonstration mode</button>
+          <span class="tip" id="tip-demo" role="tooltip">Refused as a capability, not as a control.
+            <i>Press Escape to dismiss. The reason is stated beside the control too — the tooltip is additive.</i></span>
+        </span>
+
+        <div class="anchor">
+          <button class="avatar" type="button" onClick="{{ toggleAccount }}" aria-haspopup="true" aria-expanded="{{ accountExpanded }}" aria-label="Account and Setup">MK</button>
+          <sc-if value="{{ menuAccount }}" hint-placeholder-val="{{ false }}">
+            <ul class="menu" role="menu">
+              <li class="gp">Marta Køhler</li>
+              <li role="none"><button class="mi" type="button" role="menuitem" onClick="{{ closeMenu }}">Profile</button></li>
+              <li role="none"><button class="mi" type="button" role="menuitem" onClick="{{ closeMenu }}">Preferences</button></li>
+              <li role="none"><button class="mi" type="button" role="menuitem" onClick="{{ closeMenu }}">My notifications</button></li>
+              <li class="gp">The door</li>
+              <li role="none"><button class="mi" type="button" role="menuitem" onClick="{{ closeMenu }}">Setup<span class="rt">11 sections</span></button></li>
+              <li role="none"><button class="mi" type="button" role="menuitem" onClick="{{ closeMenu }}">Support &amp; defects</button></li>
+              <li class="gp">Session</li>
+              <li role="none"><button class="mi" type="button" role="menuitem" onClick="{{ closeMenu }}">Sign out<span class="rt">⇧⌘Q</span></button></li>
+            </ul>
+          </sc-if>
+        </div>
+      </div>
+
+      <div style="padding:calc(var(--u)*5)">
+        <span class="lab">Register · {{ destLabel }}</span>
+        <p class="note" style="margin-top:0">Re-clicking the active destination
+        dismisses overlays, clears filters and returns the register to the top.
+        A route change survives the entity and the period; it does not survive
+        a filter.</p>
+      </div>
+
+      <div class="statusbar">
+        <span><span class="kb">⌘</span><span class="kb">K</span> search</span>
+        <span class="mid">Provenance · <b>run 2026-08-31 03:12</b>, 1,284 documents, 3 sources</span>
+        <span>Audit trail <span class="mono">a7f3c2</span></span>
+      </div>
+    </div>
+  </figure>
+
+  <h3>Navigation shell — the states</h3>
+  <div class="three">
+    <figure>
+      <figcaption>active destination</figcaption>
+      <div class="frame">
+        <ul class="dests"><li><button class="dest" type="button" aria-current="page">Close</button></li><li><button class="dest" type="button">Ask</button></li><li><button class="dest" type="button">Reports</button></li></ul>
+        <p class="note">Underline plus weight, never hue.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>inside Setup — nothing underlined</figcaption>
+      <div class="frame">
+        <ul class="dests"><li><button class="dest" type="button">Close</button></li><li><button class="dest" type="button">Ask</button></li><li><button class="dest" type="button">Reports</button></li></ul>
+        <p class="note">Setup is a door, not a fourth destination, so no
+        destination claims you.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>permission-shortened tree</figcaption>
+      <div class="frame">
+        <ul class="dests"><li><button class="dest" type="button" aria-current="page">Close</button></li><li><button class="dest" type="button">Ask</button></li></ul>
+        <p class="note">Reports is absent, not disabled. A control you may never
+        use is noise.</p>
+      </div>
+    </figure>
+  </div>
+
+  <h3>Chrome bar — the nine, and the two kept out</h3>
+  <div class="wrap">
+    <table>
+      <thead><tr><th scope="col">#</th><th scope="col">Control</th><th scope="col">What it owns</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><th scope="row">The mark</th><td class="job">Home, and the only gradient in the system.</td></tr>
+        <tr><td class="num">2</td><th scope="row">Entity + period switcher</th><td class="job">What the register is <i>of</i>. Survives a route change.</td></tr>
+        <tr><td class="num">3</td><th scope="row">Three destinations</th><td class="job">Close · Ask · Reports. Never a fourth.</td></tr>
+        <tr><td class="num">4</td><th scope="row">Connection light</th><td class="job">MARK TWO. Infrastructure, in ink.</td></tr>
+        <tr><td class="num">5</td><th scope="row">Token meter</th><td class="job">MARK ONE. The one genuinely measured thing in the bar.</td></tr>
+        <tr><td class="num">6</td><th scope="row">Agent state</th><td class="job">Three level bars in <b>ink</b> — captioned as measuring nothing, so the agent hue is not theirs.</td></tr>
+        <tr><td class="num">7</td><th scope="row">Search</th><td class="job">The palette. The reason the nav needs no fourth item.</td></tr>
+        <tr><td class="num">8</td><th scope="row">Notifications</th><td class="job">What happened while you were looking somewhere else. <b>No unread dot</b> — that is a second dot.</td></tr>
+        <tr><td class="num">9</td><th scope="row">Avatar</th><td class="job">The account menu, and the Setup door behind it.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <sc-if value="{{ showNotBuilt }}" hint-placeholder-val="{{ true }}">
+    <div class="two">
+      <figure>
+        <figcaption>kept out · summary tiles</figcaption>
+        <div class="nb frame" data-nb="not built">
+          <div style="display:flex;gap:calc(var(--u)*4);padding-top:calc(var(--u)*5)">
+            <span class="frame frame--sheet" style="flex:1"><span class="lab">Open</span><b class="mono" style="font-size:var(--s4)">32</b></span>
+            <span class="frame frame--sheet" style="flex:1"><span class="lab">At risk</span><b class="mono" style="font-size:var(--s4)">1.4M</b></span>
+          </div>
+          <span class="nbwhy"><b>Argued out on the record.</b> A tile that
+          summarises the register becomes a second register, and the one that is
+          authoritative stops being obvious. Drawn here as a refusal so nobody
+          re-proposes it from an absence.</span>
+        </div>
+      </figure>
+      <figure>
+        <figcaption>kept out · left sidebar</figcaption>
+        <div class="nb frame" data-nb="not built">
+          <div style="display:flex;gap:calc(var(--u)*4);padding-top:calc(var(--u)*5)">
+            <span class="frame frame--sheet" style="width:calc(var(--u)*24)"><span class="lab">Nav</span></span>
+            <span class="frame frame--sheet" style="flex:1"><span class="lab">Register</span></span>
+          </div>
+          <span class="nbwhy"><b>Argued out on the record.</b> Three
+          destinations do not need a column, and a sidebar is where a fourth,
+          fifth and sixth arrive without anybody deciding to add them.</span>
+        </div>
+      </figure>
+    </div>
+  </sc-if>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       PRIMITIVES 3–5 · WAYFINDING
+       ════════════════════════════════════════════════════════════════════ -->
+  <h2 id="wayfinding">Primitives 3–5 · Wayfinding</h2>
+  <p class="sub">The command palette, the breadcrumb, and the account menu with
+  the Setup door behind it. The palette is live — type in it, or press
+  <span class="kb">⌘</span><span class="kb">K</span> anywhere on this
+  page.</p>
+
+  <figure>
+    <figcaption>3 · command palette — live</figcaption>
+    <div class="pal">
+      <div class="pal-in">
+        <span class="spec" aria-hidden="true">›</span>
+        <input type="text" value="{{ palQuery }}" onInput="{{ onPaletteInput }}" placeholder="Find a record, go somewhere, do something, or ask" aria-label="Command palette">
+        <button class="btn btn--quiet" type="button" onClick="{{ clearQuery }}">Clear</button>
+      </div>
+      <sc-for list="{{ palSections }}" as="sec" hint-placeholder-count="3">
+        <div>
+          <div class="pal-sec">{{ sec.name }}</div>
+          <sc-for list="{{ sec.rows }}" as="row" hint-placeholder-count="2">
+            <button class="pal-row" type="button" data-sel="{{ row.sel }}" onClick="{{ row.go }}">
+              <span>{{ row.label }}</span>
+              <span class="k">{{ row.hint }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-for>
+      <sc-if value="{{ palEmpty }}" hint-placeholder-val="{{ false }}">
+        <div class="pal-empty">Nothing matches <b>{{ palQuery }}</b> in Find, Go
+        or Do. <b>Ask is still offered</b> — it is the section that does not
+        need a match.</div>
+      </sc-if>
+      <div class="pal-ft">
+        <span><span class="kb">↑</span><span class="kb">↓</span> move</span>
+        <span><span class="kb">↵</span> run</span>
+        <span><span class="kb">esc</span> dismiss</span>
+        <span style="margin-left:auto">Ask is ranked last until nothing else fits</span>
+      </div>
+    </div>
+  </figure>
+  <p class="note">Five sections ranked by what a typed string most likely
+  <i>is</i>: <b>Find</b> a record, <b>Go</b> to a destination, <b>Do</b> an act,
+  <b>Ask</b> last. Ask is last because a string that matches a document
+  reference is a lookup, not a question — and it is never absent, because a
+  question needs no match to be valid.</p>
+
+  <div class="two">
+    <figure>
+      <figcaption>4 · breadcrumb — live</figcaption>
+      <div class="frame">
+        <sc-if value="{{ deep }}" hint-placeholder-val="{{ false }}">
+          <nav class="trail" aria-label="Breadcrumb">
+            <button class="crumb" type="button" onClick="{{ shallow }}">Close</button>
+            <span class="sep" aria-hidden="true">/</span>
+            <button class="crumb" type="button" onClick="{{ shallow }}">Duplicate candidates</button>
+            <span class="sep" aria-hidden="true">/</span>
+            <span aria-current="page">INV 4471</span>
+          </nav>
+        </sc-if>
+        <sc-if value="{{ shallowState }}" hint-placeholder-val="{{ true }}">
+          <p class="note" style="margin-top:0">No breadcrumb: you are <i>at</i> a
+          destination, not deeper than one.</p>
+        </sc-if>
+        <div style="margin-top:calc(var(--u)*4)">
+          <button class="btn" type="button" onClick="{{ toggleDeep }}">{{ deepLabel }}</button>
+        </div>
+        <p class="note">It appears only when you are deeper than a destination,
+        and it is the way <b>out</b> as well as the trail. The last crumb is not
+        a link — it is where you are.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>5 · the account menu, static</figcaption>
+      <div class="frame" style="position:relative;min-height:calc(var(--u)*64)">
+        <ul class="menu" data-side="left" role="menu" style="position:static;margin-top:calc(var(--u)*2)">
+          <li class="gp">Marta Køhler</li>
+          <li role="none"><button class="mi" type="button" role="menuitem">Profile</button></li>
+          <li role="none"><button class="mi" type="button" role="menuitem">Preferences</button></li>
+          <li role="none"><button class="mi" type="button" role="menuitem">My notifications</button></li>
+          <li class="gp">The door</li>
+          <li role="none"><button class="mi" type="button" role="menuitem">Setup<span class="rt">11 sections</span></button></li>
+          <li role="none"><button class="mi" type="button" role="menuitem">Support &amp; defects</button></li>
+        </ul>
+        <p class="note">Both columns listed in full, so nothing in Setup is
+        reachable only by search. <b>The door exists for the person who does not
+        yet know what the thing is called.</b></p>
+      </div>
+    </figure>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       PRIMITIVES 6–7 · FILTERING AND THE TABLE
+       ════════════════════════════════════════════════════════════════════ -->
+  <h2 id="filtering">Primitives 6–7 · Filtering and table navigation</h2>
+  <p class="sub">Live. Toggle a facet and the chips, the count line and the
+  register all answer; the count line states its <b>scope</b> and its
+  <b>denominator</b>, because a filtered count with neither is a number nobody
+  can check.</p>
+
+  <figure>
+    <figcaption>6–7 · the builder and the register — live</figcaption>
+    <div class="frame" style="display:grid;gap:calc(var(--u)*5);grid-template-columns:minmax(0,calc(var(--u)*58)) minmax(0,1fr)">
+      <div>
+        <span class="lab">Exception type</span>
+        <ul class="facets">
+          <sc-for list="{{ facets }}" as="f" hint-placeholder-count="5">
+            <li>
+              <button class="facet" type="button" aria-pressed="{{ f.on }}" onClick="{{ f.toggle }}">
+                <span>{{ f.label }}</span>
+                <span class="ct">{{ f.count }}</span>
+              </button>
+            </li>
+          </sc-for>
+        </ul>
+        <p class="note">The facet list is not a design choice — it is the closed
+        set the contract already carries. A facet the query cannot express is
+        drawn as a hole, not invented.</p>
+      </div>
+
+      <div style="min-width:0">
+        <div style="display:flex;align-items:center;gap:calc(var(--u)*4);flex-wrap:wrap;padding-bottom:calc(var(--u)*3);border-bottom:1px solid var(--rule-strong)">
+          <div class="chips">
+            <sc-for list="{{ chips }}" as="c" hint-placeholder-count="0">
+              <button class="chip" type="button" onClick="{{ c.remove }}" aria-label="{{ c.aria }}">
+                {{ c.label }}<span class="x" aria-hidden="true">✕</span>
+              </button>
+            </sc-for>
+            <sc-if value="{{ noChips }}" hint-placeholder-val="{{ true }}">
+              <span class="note" style="margin:0">No filter — the whole register.</span>
+            </sc-if>
+          </div>
+          <span class="sp" style="flex:1"></span>
+          <button class="btn btn--quiet" type="button" onClick="{{ clearAll }}" aria-disabled="{{ clearDisabled }}">Clear all</button>
+        </div>
+
+        <p class="note" style="margin-top:calc(var(--u)*3)">{{ countLine }}</p>
+
+        <div class="scroller" style="margin-top:calc(var(--u)*3)">
+          <table class="reg">
+            <thead>
+              <tr>
+                <th scope="col">Reference</th>
+                <th scope="col">Exception</th>
+                <th scope="col" class="num">
+                  <button class="sorter" type="button" onClick="{{ cycleSort }}" aria-label="Change the sort">
+                    Value at risk · <span class="word">{{ sortWord }}</span>
+                  </button>
+                </th>
+                <th scope="col" class="num">Score</th>
+                <th scope="col">Whose move</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+                <tr>
+                  <th scope="row" class="mono" style="font-weight:400">{{ r.ref }}</th>
+                  <td>{{ r.kindLabel }}</td>
+                  <td class="num">{{ r.value }}</td>
+                  <td class="num">{{ r.score }}</td>
+                  <td><span class="who">{{ r.who }}</span></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:calc(var(--u)*4);margin-top:calc(var(--u)*4);flex-wrap:wrap">
+          <button class="btn" type="button" onClick="{{ loadMore }}" aria-disabled="{{ moreDisabled }}">{{ moreLabel }}</button>
+          <span class="note" style="margin:0">No page numbers: the register
+          grows while you read it, so page three is not a stable place.</span>
+        </div>
+      </div>
+    </div>
+  </figure>
+
+  <h3>Four different nothings — and they must not look alike</h3>
+  <div class="two">
+    <figure>
+      <figcaption>the filter's fault</figcaption>
+      <div class="frame frame--sheet">
+        <b style="font-size:var(--s3)">No row matches this filter</b>
+        <p class="note">32 rows in the register, all 32 held out. <b>Clear all</b>
+        is the way back, and it is right here.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>a clean night</figcaption>
+      <div class="frame frame--sheet">
+        <b style="font-size:var(--s3)">Nothing to resolve</b>
+        <p class="note">Run <b>completed</b> 03:12 · 1,284 documents · 0
+        exceptions. <b>A run that found nothing still reports</b>, and it reads
+        nothing like a run that did not happen.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>the run produced nothing at all</figcaption>
+      <div class="frame frame--sheet">
+        <b style="font-size:var(--s3)">No run for this period</b>
+        <p class="note">The last run was 2026-07-31. Nothing has been measured
+        since, so there is nothing to be clean about.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>not a nothing — waiting elsewhere</figcaption>
+      <div class="frame frame--sheet">
+        <b style="font-size:var(--s3)">Waiting on the bank feed <span class="mono">…</span></b>
+        <p class="note">The work is real, it is moving, and it is not moving
+        here. <b>Nothing for you to do yet</b> — which is why this is not an
+        empty state.</p>
+      </div>
+    </figure>
+  </div>
+
+  <sc-if value="{{ showNotBuilt }}" hint-placeholder-val="{{ true }}">
+    <figure style="margin-top:calc(var(--u)*5)">
+      <figcaption>facets that do not exist</figcaption>
+      <div class="nb frame" data-nb="not built">
+        <div style="display:flex;gap:calc(var(--u)*3);flex-wrap:wrap;padding-top:calc(var(--u)*5)">
+          <span class="chip">Assigned to me</span>
+          <span class="chip">Older than 30 days</span>
+          <span class="chip">Above my authority</span>
+          <span class="chip">Touched by a person</span>
+        </div>
+        <span class="nbwhy"><b>The query cannot express any of the four.</b>
+        Each is drawn so a reviewer can see the shape of the hole rather than
+        assume the register answers a question it does not. Inventing the facet
+        in the UI would mean filtering a page of rows instead of the
+        register — a filter that lies about its denominator.</span>
+      </div>
+    </figure>
+  </sc-if>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       PRIMITIVES 8–11 · OVERLAYS
+       ════════════════════════════════════════════════════════════════════ -->
+  <h2 id="overlays">Primitives 8–11 · Overlays</h2>
+  <p class="sub">Four ways of putting something in front of the register
+  without taking the register away. <b>An overlay separates by rule or by
+  ground, never by shadow.</b> All four are live in the stage below; Escape
+  dismisses whichever is topmost.</p>
+
+  <figure>
+    <figcaption>8–11 · drawer, modal, tooltip, toast — live</figcaption>
+    <div class="stagebox">
+      <div style="padding:calc(var(--u)*5)">
+        <span class="lab">Register · Close</span>
+        <p class="note" style="margin-top:0;max-width:56ch">The register stays
+        behind every one of the four. A drawer opens <i>over</i> it and never
+        away from it — which is the mechanism behind the bet that Ask is a
+        capability first and a destination second.</p>
+        <div style="display:flex;gap:calc(var(--u)*3);margin-top:calc(var(--u)*5);flex-wrap:wrap">
+          <button class="btn" type="button" onClick="{{ openDrawer }}">Open the drawer</button>
+          <button class="btn" type="button" onClick="{{ openModal }}">Reject three proposals</button>
+          <button class="btn" type="button" onClick="{{ fireToast }}">Post the journal</button>
+        </div>
+        <table class="reg" style="margin-top:calc(var(--u)*6)">
+          <thead><tr><th scope="col">Reference</th><th scope="col">Exception</th><th scope="col" class="num">Score</th></tr></thead>
+          <tbody>
+            <tr><th scope="row" class="mono" style="font-weight:400">GR 88214</th><td>Unaccounted charge</td><td class="num">0.81</td></tr>
+            <tr><th scope="row" class="mono" style="font-weight:400">INV 4471</th><td>Duplicate candidate</td><td class="num">0.72</td></tr>
+            <tr><th scope="row" class="mono" style="font-weight:400">INV 4508</th><td>FX variance</td><td class="num">0.64</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <sc-if value="{{ drawerOn }}" hint-placeholder-val="{{ false }}">
+        <div class="scrim" onClick="{{ closeDrawer }}"></div>
+      </sc-if>
+      <sc-if value="{{ drawerOn }}" hint-placeholder-val="{{ false }}">
+        <div class="drawer" role="dialog" aria-modal="false" aria-labelledby="dr-t">
+          <div class="ov-head">
+            <h3 class="ov-title" id="dr-t">Ask</h3>
+            <span class="note" style="margin:0">2,910 tok this session</span>
+            <button class="x" type="button" onClick="{{ closeDrawer }}" aria-label="Close the drawer">✕</button>
+          </div>
+          <div class="ov-body">
+            <p class="note" style="margin-top:0"><b>Which of these charges was
+            never accounted for?</b></p>
+            <div class="lit" style="padding:calc(var(--u)*4);margin-top:calc(var(--u)*4)">
+              <span class="lab">Answer · 4 items</span>
+              <p class="note" style="margin-top:0">GR 88214 · GR 88301 ·
+              INV 4508 · INV 4622. Three were matched to a receipt that was
+              later reversed; the fourth has no receipt at all.</p>
+              <span class="meter" style="--score:81%;--floor:60%;margin-top:calc(var(--u)*4)">
+                <span class="v mono" style="font-size:var(--s2)">0.81 confidence</span>
+                <span class="tick" data-t="floor 0.60"></span>
+              </span>
+            </div>
+            <p class="note">The register is still behind this panel, unchanged.
+            Closing the drawer does not undo anything, because asking is not an
+            act.</p>
+          </div>
+          <div class="ov-foot">
+            <span class="sp"></span>
+            <button class="btn" type="button" onClick="{{ closeDrawer }}">Close</button>
+            <button class="btn" type="button" data-commit onClick="{{ closeDrawer }}">Send to the register</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ modalOn }}" hint-placeholder-val="{{ false }}">
+        <div class="scrim" data-for="modal"></div>
+      </sc-if>
+      <sc-if value="{{ modalOn }}" hint-placeholder-val="{{ false }}">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="md-t">
+          <div class="ov-head">
+            <h3 class="ov-title" id="md-t">Reject three proposals and post nothing?</h3>
+            <button class="x" type="button" onClick="{{ closeModal }}" aria-label="Close this dialog">✕</button>
+          </div>
+          <div class="ov-body">
+            <p class="note" style="margin-top:0">GR 88214 · INV 4471 · INV 4508.
+            Nothing is posted and the three return to the register unresolved.</p>
+            <label style="display:block;margin-top:calc(var(--u)*5)">
+              <span class="lab">Reason · required</span>
+              <textarea style="width:100%" value="{{ reason }}" onInput="{{ onReason }}" aria-invalid="{{ reasonInvalid }}" aria-describedby="md-why"></textarea>
+            </label>
+            <p class="note" id="md-why" style="margin-top:calc(var(--u)*2)">{{ reasonNote }}</p>
+            <p class="note"><b>The reason is machinery, not a courtesy.</b> It
+            is what an SOP amendment would be drafted from, which is why the act
+            cannot commit without it.</p>
+          </div>
+          <div class="ov-foot">
+            <span class="sp"><span class="note" style="margin:0"><span class="kb">esc</span> dismisses · focus returns to the control that opened this</span></span>
+            <button class="btn" type="button" onClick="{{ closeModal }}">Keep them open</button>
+            <button class="btn" type="button" data-commit onClick="{{ submitModal }}" aria-disabled="{{ commitDisabled }}">Reject three</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <div class="toasts">
+        <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
+          <div class="toast" role="status">
+            <span class="tb"><b>{{ t.title }}</b><i>{{ t.detail }}</i></span>
+            <button class="x" type="button" onClick="{{ t.dismiss }}" aria-label="Dismiss">✕</button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </figure>
+
+  <h3>What the four share, and where they differ</h3>
+  <div class="wrap">
+    <table>
+      <thead><tr><th scope="col">Primitive</th><th scope="col">Layer</th><th scope="col">Edge</th><th scope="col">Dismiss</th><th scope="col">What it is for</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">8 · Drawer</th><td class="job">--z-overlay</td><td class="job">1px --rule-strong, entry side only</td><td class="job">Escape · scrim · close</td><td class="job">A capability over the register.</td></tr>
+        <tr><th scope="row">9 · Modal + scrim</th><td class="job">--z-modal</td><td class="job">1px --rule-strong, all four sides</td><td class="job">Escape · cancel. <b>Not the scrim</b></td><td class="job">A destructive act with a required reason.</td></tr>
+        <tr><th scope="row">10 · Tooltip</th><td class="job">--z-popover</td><td class="job">none — the ink ground separates it</td><td class="job">Escape · blur</td><td class="job">The additive half of a reason stated beside a control.</td></tr>
+        <tr><th scope="row">11 · Toast</th><td class="job">--z-modal</td><td class="job">1px, plus a 2px ink left edge (EMPHASIS)</td><td class="job">dismiss · time</td><td class="job">The terminal state of an asynchronous act.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note"><b>The tooltip's open state has exactly one writer, and it is
+  the script.</b> No selector may open it — not <span class="spec">:hover</span>,
+  not <span class="spec">:focus-visible</span>, not
+  <span class="spec">:focus-within</span> — because a script can clear an
+  attribute and cannot clear a pseudo-class, and pressing Escape does not move
+  focus. Keyed on a selector, the attribute said dismissed while the pixels said
+  open. It is hidden by <b>opacity</b>, never
+  <span class="spec">display:none</span> or
+  <span class="spec">visibility:hidden</span>, so the panel never leaves the
+  accessibility tree and every <span class="spec">aria-describedby</span>
+  resolves. <b>The bell is not the toast:</b> a notification is for what
+  happened while you were looking somewhere else.</p>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       PRIMITIVES 12–14 · STATES
+       ════════════════════════════════════════════════════════════════════ -->
+  <h2 id="states">Primitives 12–14 · States</h2>
+  <p class="sub">The status bar's fixed grammar, the route-level states, and one
+  way to state a key.</p>
+
+  <h3>12 · Status bar — one grammar, and it never rearranges</h3>
+  <div style="display:flex;flex-direction:column;gap:calc(var(--u)*5);margin-top:calc(var(--u)*4)">
+    <figure>
+      <figcaption>ready · a run behind it</figcaption>
+      <div class="statusbar" style="border-top:1px solid var(--rule-strong);box-shadow:inset 0 0 0 1px var(--rule-strong)">
+        <span><span class="kb">⌘</span><span class="kb">K</span> search</span>
+        <span class="mid">Provenance · <b>run 2026-08-31 03:12</b>, 1,284 documents, 3 sources</span>
+        <span>Audit trail <span class="mono">a7f3c2</span></span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>degraded · one source unreachable, and it says which</figcaption>
+      <div class="statusbar" style="border-top:1px solid var(--rule-strong);box-shadow:inset 0 0 0 1px var(--rule-strong)">
+        <span><span class="kb">⌘</span><span class="kb">K</span> search</span>
+        <span class="mid">Provenance · <b>run 2026-08-31 03:12</b>, 1,284 documents, <b>2 of 3 sources</b> — bank feed <span class="mono">…</span></span>
+        <span>Audit trail <span class="mono">a7f3c2</span></span>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>no run · the provenance slot states its own absence</figcaption>
+      <div class="statusbar" style="border-top:1px solid var(--rule-strong);box-shadow:inset 0 0 0 1px var(--rule-strong)">
+        <span><span class="kb">⌘</span><span class="kb">K</span> search</span>
+        <span class="mid">Provenance · <b>no run for Aug 2026</b>. Last run 2026-07-31 03:09</span>
+        <span>Audit trail <span class="mono">—</span></span>
+      </div>
+    </figure>
+  </div>
+  <p class="note"><b>Keys left · provenance middle · the audit trail last</b>,
+  on every protected surface, so a screenshot of any screen describes itself.
+  The slot is never omitted: a surface with nothing to report says so in the
+  slot where the report would have been.</p>
+
+  <h3>13 · Route-level states — live</h3>
+  <figure>
+    <div style="display:flex;gap:calc(var(--u)*3);flex-wrap:wrap;margin-bottom:calc(var(--u)*4)">
+      <button class="btn" type="button" onClick="{{ setReady }}" aria-pressed="{{ isReady }}">Ready</button>
+      <button class="btn" type="button" onClick="{{ setLoading }}" aria-pressed="{{ isLoading }}">Loading</button>
+      <button class="btn" type="button" onClick="{{ setEmpty }}" aria-pressed="{{ isEmpty }}">Empty</button>
+      <button class="btn" type="button" onClick="{{ setError }}" aria-pressed="{{ isError }}">Error</button>
+    </div>
+    <div class="frame" style="min-height:calc(var(--u)*56)">
+      <sc-if value="{{ isReady }}" hint-placeholder-val="{{ true }}">
+        <div class="route">
+          <h3>32 exceptions</h3>
+          <p>Run <b>completed</b> 03:12 · 1,284 documents · 3 sources. The
+          register is below.</p>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+        <div class="route">
+          <h3>Reading the register <span class="mono">…</span></h3>
+          <p>Aug 2026 · Nordic Holdings AB. <b>The scope is stated while it
+          loads</b>, so a slow page is still a page about something.</p>
+          <div class="skel" style="margin-top:calc(var(--u)*5);max-width:calc(var(--u)*110)">
+            <i style="width:72%"></i><i style="width:94%"></i><i style="width:58%"></i><i style="width:86%"></i>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+        <div class="route">
+          <h3>Nothing to resolve</h3>
+          <p>Run <b>completed</b> 03:12 · 1,284 documents · 0 exceptions. <b>A
+          run that found nothing still reports.</b> This is a clean night, and it
+          must not be drawn like a run that never happened.</p>
+          <div class="acts"><button class="btn" type="button">Open the period pack</button></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+        <div class="route">
+          <h3>The register could not be read</h3>
+          <p>Aug 2026 · Nordic Holdings AB · <span class="mono">03:14</span>.
+          The ERP answered and the bank feed did not. <b>Nothing has been
+          changed</b> — a failed read is not a failed run.</p>
+          <div class="acts">
+            <button class="btn" type="button" data-commit onClick="{{ setLoading }}">Try again</button>
+            <button class="btn" type="button">Report this · <span class="mono">a7f3c2</span></button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </figure>
+  <p class="note">Each state carries a <b>scope</b> and a <b>time</b>. A run
+  that found nothing reads differently from a run that did not happen, and both
+  read differently from a read that failed — three states one word apart, and
+  the words are the whole difference.</p>
+
+  <h3>Loading skeletons — and the three places they are the wrong answer</h3>
+  <p class="note">Missing from this system until now, which is why every slow
+  surface in the product either says nothing or says <span class="spec">…</span>.
+  <b>Use <span class="spec">shadcn/ui · Skeleton</span></b> rather than
+  hand-rolling one: it is a div with a pulse and the pulse is the part people
+  get wrong.</p>
+  <p class="note"><b>A skeleton is a promise about shape.</b> Draw one only where
+  the shape that arrives is the shape you drew — a register row is 6 columns
+  whatever the run found, a figure block is four figures, a case thread is
+  message-shaped. Draw one where the shape is a guess and the page rearranges
+  under the reader, which is worse than a wait.</p>
+
+  <figure>
+    <div class="frame">
+      <div style="display:flex;flex-direction:column;gap:calc(var(--u)*3)">
+        <div style="display:flex;gap:calc(var(--u)*8)">
+          <div>
+            <div style="width:calc(var(--u)*24);height:calc(var(--u)*3);background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule)"></div>
+            <div style="width:calc(var(--u)*14);height:calc(var(--u)*6);background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule);margin-top:calc(var(--u)*2)"></div>
+          </div>
+          <div>
+            <div style="width:calc(var(--u)*24);height:calc(var(--u)*3);background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule)"></div>
+            <div style="width:calc(var(--u)*14);height:calc(var(--u)*6);background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule);margin-top:calc(var(--u)*2)"></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:calc(var(--u)*2);margin-top:calc(var(--u)*2)">
+          <div style="height:calc(var(--u)*4);background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule)"></div>
+          <div style="height:calc(var(--u)*4);background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule)"></div>
+          <div style="height:calc(var(--u)*4);width:72%;background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule)"></div>
+        </div>
+      </div>
+    </div>
+    <figcaption><b>Two figures and three rows, at the size they will be.</b>
+    Sheet ground, one hairline, no radius and no shimmer sweep — the pulse is an
+    opacity change on the kernel's own spring, and under
+    <span class="spec">prefers-reduced-motion</span> it does not pulse at all.
+    The last row is short because the real one will be: a skeleton that is
+    uniformly full-width reads as a table that loaded empty.</figcaption>
+  </figure>
+
+  <div class="wrap">
+    <table>
+      <caption>When a skeleton, when words, and when neither.</caption>
+      <thead><tr><th scope="col">Situation</th><th scope="col">What to draw</th><th scope="col">Why</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Shape known, wait under ~2s</th><td><b>Skeleton</b></td><td>The layout does not move when the data lands, which is the only thing a skeleton buys.</td></tr>
+        <tr><th scope="row">Shape unknown</th><td>The scope, in words</td><td><span class="spec">Reading the register …</span> with the period and the tenant named. A slow page is still a page <em>about something</em>, and that sentence is more use than a shape that turns out wrong.</td></tr>
+        <tr><th scope="row">Wait over a few seconds</th><td>Words, plus what is happening</td><td>A skeleton pulsing for thirty seconds reads as a broken page. Name the step — extraction, matching — because a long wait people understand is tolerable and a long wait they cannot see is not.</td></tr>
+        <tr><th scope="row">An act you triggered</th><td>The control says so</td><td>The button that started it carries the state; a skeleton where the answer will appear leaves the reader unsure whether their press registered.</td></tr>
+        <tr><th scope="row">A billable act</th><td>Words, with the mark</td><td>A run costs money. <span class="spec">Re-matching ∴</span> states the spend as it happens; a skeleton hides that anything is being spent.</td></tr>
+        <tr><th scope="row">Nothing came back</th><td>One of the four nothings</td><td><b>Never a skeleton that stays.</b> Empty, filtered-to-empty, refused and failed must keep looking different from each other — a persistent skeleton is a fifth nothing that means "we do not know", and it is the one nobody can act on.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ul class="find">
+    <li><span class="kind">Rule</span><b>A skeleton is announced, not just drawn.</b> The region carries <span class="spec">aria-busy="true"</span> and the thing that replaces it is in a <span class="spec">role="status"</span> block, so a reader who cannot see the pulse is told when the wait ended.</li>
+    <li><span class="kind">Rule</span><b>No shimmer sweep.</b> A travelling gradient is a second motion vocabulary and this kernel has one spring. Opacity only.</li>
+    <li><span class="kind">Rule</span><b>Skeletons use <span class="spec">--sheet</span> and <span class="spec">--rule</span>, never a grey of their own.</b> Same token mandate as everything else: shadcn's <span class="spec">bg-muted</span> resolves to our sheet through the bridge.</li>
+    <li><span class="kind">Rule</span><b>Count what you know.</b> Draw the row count the surface already states — the run's denominator, the page size — and where you do not know it, draw three and say the scope in words above them.</li>
+    <li><span class="kind">Open</span><b>Nothing in the drawn product uses one yet.</b> The four route-level states are built and the skeleton is specified here; the register, the case thread, the invoice and the tenancy are the four places it belongs, and none of them has it.</li>
+  </ul>
+
+  <h3>14 · Key-caps and the shortcut legend</h3>
+  <div class="two">
+    <figure>
+      <figcaption>the legend</figcaption>
+      <div class="frame">
+        <div class="legend">
+          <span><span class="kb">⌘</span><span class="kb">K</span> search</span>
+          <span><span class="kb">esc</span> dismiss</span>
+          <span><span class="kb">↵</span> run</span>
+          <span><span class="kb">↑</span><span class="kb">↓</span> move</span>
+          <span><span class="kb">⇧</span><span class="kb">⌘</span><span class="kb">Q</span> sign out</span>
+        </div>
+        <p class="note">One way to state a key, at one size — in a status bar, a
+        menu row, a dialog and the palette footer. It replaces four ad-hoc mono
+        spans at four different sizes.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>on an ink ground</figcaption>
+      <div class="frame on-ink" style="background-color:var(--ink)">
+        <div class="legend" style="color:var(--on-ink-2)">
+          <span style="color:var(--on-ink)"><span class="kb kb--on-ink">esc</span> dismiss</span>
+          <span style="color:var(--on-ink)"><span class="kb kb--on-ink">↵</span> confirm</span>
+        </div>
+        <p class="note" style="color:var(--on-ink-2)">The cap inverts to a
+        hairline in <span class="spec" style="color:var(--on-ink-2)">--on-ink-2</span>.
+        <b style="color:var(--on-ink)">The focus ring inverts with it</b> —
+        <span class="spec" style="color:var(--on-ink-2)">.on-ink</span> is the
+        marker, and it is stated in the kernel rather than left to the first file
+        that meets the case.</p>
+      </div>
+    </figure>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       RESPONSIVE
+       ════════════════════════════════════════════════════════════════════ -->
+  <h2 id="responsive">Responsive</h2>
+  <p class="sub">Four tiers, and <b>the tier names are jobs rather than
+  devices</b>. A 900px browser window on a desktop is the mid tier; calling it
+  "tablet" is how a layout ends up keyed on a guess about hardware.</p>
+
+  <div class="tierbar" aria-hidden="true">
+    <i data-fill style="flex:0 0 18%"></i>
+    <i style="flex:0 0 22%"></i>
+    <i data-fill style="flex:0 0 27%"></i>
+    <i style="flex:1"></i>
+  </div>
+
+  <div class="wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Tier</th>
+          <th scope="col">Range</th>
+          <th scope="col">Columns</th>
+          <th scope="col">What changes, and why</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Narrow</th>
+          <td class="num">320 – 719</td>
+          <td class="job">one</td>
+          <td class="job">The phone shell: three chrome controls, destinations
+          in a bottom tab bar, the status bar as a tappable row. Every grid
+          collapses to one column, the register triages to three columns, and a
+          drawer becomes a full-height sheet.</td>
+        </tr>
+        <tr>
+          <th scope="row">Mid</th>
+          <td class="num">720 – 1079</td>
+          <td class="job">two</td>
+          <td class="job">The desktop shell returns — one bar, nine controls,
+          destinations inline. The register keeps all five columns inside its
+          scroller. Three-up grids drop to two.</td>
+        </tr>
+        <tr>
+          <th scope="row">Wide</th>
+          <td class="num">1080 – 1439</td>
+          <td class="job">two + overlay</td>
+          <td class="job">The reference layout — everything in this sheet is
+          drawn here. A drawer opens <i>over</i> the register.</td>
+        </tr>
+        <tr>
+          <th scope="row">Ultra</th>
+          <td class="num">1440 +</td>
+          <td class="job">two + inline third</td>
+          <td class="job"><span class="spec">--measure</span> holds and the page
+          centres; the content does not grow to fill the display.
+          <b>The evidence panel moves inline beside the register</b> instead of
+          opening as a drawer over it — the one tier where there is room for
+          the record and its evidence at once.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="note">🛑 <b>320px is the floor, and it is a conformance requirement
+  rather than a choice.</b> 1.4.10 Reflow requires the whole interface to work
+  at 320 CSS px with no two-dimensional scrolling. Every table in this system is
+  therefore inside a <b>single-axis</b> scroller, and no layout may set a
+  min-width that exceeds 320px at the narrow tier. ⚠️ And
+  <span class="spec">--measure</span> does not grow above Ultra: a line of text
+  that keeps widening with the window eventually exceeds every measure the type
+  section declares.</p>
+
+  <h3>The phone shell — live, at its real width</h3>
+  <div class="devices">
+    <div class="device device--phone">
+      <div class="chrome" style="gap:calc(var(--u)*3);padding:calc(var(--u)*3)">
+        <span class="logo" style="--logo-size:1rem"><span>Reconcile</span><span class="badge">AI</span></span>
+        <span class="sp"></span>
+        <button class="btn btn--quiet" type="button" onClick="{{ openPalette }}" aria-label="Search">⌕</button>
+        <button class="avatar" type="button" onClick="{{ toggleAccount }}" aria-label="Account and Setup">MK</button>
+      </div>
+      <div class="body">
+        <span class="lab">Register · {{ destLabel }}</span>
+        <table class="reg">
+          <thead>
+            <tr>
+              <th scope="col">Reference</th>
+              <th scope="col">Exception</th>
+              <th scope="col" class="drop num">Value</th>
+              <th scope="col" class="drop num">Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row" class="mono" style="font-weight:400">GR 88214</th><td>Unaccounted charge<span class="who" style="display:block">184,200 · 0.81 · needs authority ›</span></td><td class="drop num">184,200</td><td class="drop num">0.81</td></tr>
+            <tr><th scope="row" class="mono" style="font-weight:400">INV 4471</th><td>Duplicate candidate<span class="who" style="display:block">96,480 · 0.72 · agent proposed</span></td><td class="drop num">96,480</td><td class="drop num">0.72</td></tr>
+            <tr><th scope="row" class="mono" style="font-weight:400">GR 88301</th><td>Unaccounted charge<span class="who" style="display:block">64,110 · 0.77 · needs authority ›</span></td><td class="drop num">64,110</td><td class="drop num">0.77</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="statusrow" type="button" onClick="{{ openDrawer }}">
+        <span>Provenance · <b>run 03:12</b> · 1,284 docs</span>
+        <span class="more" aria-hidden="true">›</span>
+        <span class="sr-only">Open the full status grammar</span>
+      </button>
+      <nav class="tabbar" aria-label="Destinations">
+        <button class="tab" type="button" aria-current="{{ curClose }}" onClick="{{ goClose }}">Close</button>
+        <button class="tab" type="button" aria-current="{{ curAsk }}" onClick="{{ goAsk }}">Ask</button>
+        <button class="tab" type="button" aria-current="{{ curReports }}" onClick="{{ goReports }}">Reports</button>
+      </nav>
+    </div>
+
+    <div style="flex:1;min-width:calc(var(--u)*60)">
+      <h4>What moved, and what did not</h4>
+      <p class="note" style="margin-top:0"><b>Three destinations, three tabs,
+      and never a fourth</b> — the same rule the desktop bar keeps, which is why
+      the phone shell needs no overflow affordance. A tab bar that can hold
+      exactly the destinations that exist is the strongest argument the
+      three-destination rule has.</p>
+      <p class="note"><b>Six of the nine chrome controls are not dropped, they
+      are relocated.</b> The entity switcher, notifications, Setup and sign-out
+      go behind the avatar; search stays because it is the route to everything
+      else; the connection light, the token meter and the agent state move into
+      the status sheet, because all three are <i>reports</i> rather than
+      controls.</p>
+      <p class="note"><b>The status bar becomes one tappable row.</b> Its
+      grammar is "one grammar on every protected surface", so it may not be
+      truncated and may not be dropped — it opens the full keys / provenance /
+      audit trail as a sheet. The row shows the provenance slot because that is
+      the half a person checks without being asked.</p>
+      <p class="note">⚠️ <b>The tabs are 44px tall even though the floor is
+      24.</b> 2.5.8 is a conformance minimum, not a design target, and a primary
+      destination reached with a thumb at the bottom edge of a phone is the one
+      control in the system that genuinely wants the larger touch size.</p>
+      <p class="note"><b>The register triages rather than scrolls.</b> Below
+      720px it drops to the three columns a person triages on and folds value,
+      score and whose-move into the row's second line. It is the one table that
+      reflows instead of scrolling, because it is the one surface a person reads
+      for hours.</p>
+    </div>
+  </div>
+
+  <h3>Per-primitive responsive behaviour</h3>
+  <div class="wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Primitive</th>
+          <th scope="col">Narrow</th>
+          <th scope="col">Mid / Wide</th>
+          <th scope="col">Ultra</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">1 · Navigation shell</th><td class="job">Bottom tab bar, 3 tabs</td><td class="job">Inline in the chrome bar</td><td class="job">unchanged</td></tr>
+        <tr><th scope="row">2 · Chrome bar</th><td class="job">3 controls; 6 relocated</td><td class="job">all 9</td><td class="job">unchanged</td></tr>
+        <tr><th scope="row">3 · Command palette</th><td class="job">Full-screen sheet</td><td class="job">Centred panel, max 560px</td><td class="job">unchanged</td></tr>
+        <tr><th scope="row">4 · Breadcrumb</th><td class="job">Last two crumbs only, with a leading …</td><td class="job">Full trail</td><td class="job">unchanged</td></tr>
+        <tr><th scope="row">5 · Account menu</th><td class="job">Bottom sheet, full width</td><td class="job">Anchored menu</td><td class="job">unchanged</td></tr>
+        <tr><th scope="row">6 · Filter mechanism</th><td class="job">Facets in a sheet; chips stay visible</td><td class="job">Facet column beside the register</td><td class="job">unchanged</td></tr>
+        <tr><th scope="row">7 · Table navigation</th><td class="job">Triage collapse to 3 columns</td><td class="job">5 columns in a single-axis scroller</td><td class="job">unchanged</td></tr>
+        <tr><th scope="row">8 · Drawer</th><td class="job">Full-height sheet, no left edge</td><td class="job">Over the register, 440px</td><td class="job"><b>Inline third column</b></td></tr>
+        <tr><th scope="row">9 · Modal</th><td class="job">Full width less the gutter; footer buttons stack</td><td class="job">Centred, max 520px</td><td class="job">unchanged</td></tr>
+        <tr><th scope="row">10 · Tooltip</th><td class="job">Same panel; opened by tap, dismissed by tap-away or Escape</td><td class="job">Focus or hover</td><td class="job">unchanged</td></tr>
+        <tr><th scope="row">11 · Toast</th><td class="job">Full width above the tab bar</td><td class="job">Bottom right, 352px</td><td class="job">unchanged</td></tr>
+        <tr><th scope="row">12 · Status bar</th><td class="job">One tappable row → sheet</td><td class="job">Three slots inline</td><td class="job">unchanged</td></tr>
+        <tr><th scope="row">13 · Route states</th><td class="job">Actions stack full width</td><td class="job">Actions inline</td><td class="job">unchanged</td></tr>
+        <tr><th scope="row">14 · Key-caps</th><td class="job"><b>Hidden</b> — see below</td><td class="job">Shown in every slot</td><td class="job">unchanged</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note"><b>Key-caps are hidden at the narrow tier and the shortcut
+  still works.</b> A phone has no ⌘, so a cap that names one is an instruction a
+  reader cannot follow — but a Bluetooth keyboard on a tablet can, which is why
+  the shortcut is never removed, only its label. <b>This is the one place the
+  system hides information rather than moving it</b>, and it is stated here so
+  it is not mistaken for the pattern.</p>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       ACCESSIBILITY
+       ════════════════════════════════════════════════════════════════════ -->
+  <h2 id="a11y">Accessibility · WCAG 2.2 Level AA</h2>
+  <p class="sub">The target is <b>2.2 AA</b>, and most of it is satisfied by
+  construction rather than by review — which is the point of the rules. Below:
+  every criterion the system takes a position on, how it is met, and the three
+  that are still open.</p>
+
+  <div class="wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Criterion</th>
+          <th scope="col">Level</th>
+          <th scope="col">How this system meets it</th>
+          <th scope="col">Where</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">1.4.1 Use of Colour</th><td class="job">A</td>
+          <td class="job"><b>By construction.</b> R1: no state may depend on
+          hue. There is no red, no amber and no traffic-light green; every state
+          carries a word and colour only reinforces one.</td>
+          <td class="job">THE HUE RULE</td>
+        </tr>
+        <tr>
+          <th scope="row">1.4.3 Contrast (Minimum)</th><td class="job">AA</td>
+          <td class="job">Every ink step is measured against <b>both</b> light
+          grounds and both dark ones. The two steps that fall below AA on
+          <span class="spec">--sheet</span> are marked in the ramp and are not
+          used for text on it.</td>
+          <td class="job">the ramp</td>
+        </tr>
+        <tr>
+          <th scope="row">1.4.4 Resize Text</th><td class="job">AA</td>
+          <td class="job">Every step, unit, gutter, measure and target is in
+          <span class="spec">rem</span>. Nothing sets a root font-size, so the
+          base is whatever the reader chose.</td>
+          <td class="job">TYPE · SPACE</td>
+        </tr>
+        <tr>
+          <th scope="row">1.4.10 Reflow</th><td class="job">AA</td>
+          <td class="job">320px floor. Every table is in a
+          <b>single-axis</b> scroller; every grid collapses to one column; the
+          register triages. Form controls are 16px minimum so iOS does not zoom
+          the viewport.</td>
+          <td class="job">Responsive</td>
+        </tr>
+        <tr>
+          <th scope="row">1.4.11 Non-text Contrast</th><td class="job">AA</td>
+          <td class="job">The 3px meter bar is measured as a graphic object at
+          exactly its declared weight — which is why the bar, the tick and the
+          level bars stay in <span class="spec">px</span> rather than scaling.
+          Control edges are <span class="spec">--rule-strong</span>.</td>
+          <td class="job">MARK ONE</td>
+        </tr>
+        <tr>
+          <th scope="row">1.4.12 Text Spacing</th><td class="job">AA</td>
+          <td class="job">All three leadings are <b>unitless multipliers</b>, so
+          a reader's override multiplies rather than replaces them. Two habits
+          are banned outright: no fixed height on anything holding text, and no
+          <span class="spec">overflow:hidden</span> to make a layout hold.</td>
+          <td class="job">TEXT SPACING</td>
+        </tr>
+        <tr>
+          <th scope="row">1.4.13 Content on Hover or Focus</th><td class="job">AA</td>
+          <td class="job"><b>The tooltip's whole design.</b> Dismissible by
+          Escape — which is why no CSS selector may open it — hoverable, and
+          persistent. Hidden by opacity, never
+          <span class="spec">display:none</span>, so it never leaves the
+          accessibility tree.</td>
+          <td class="job">THE TOOLTIP SURFACE</td>
+        </tr>
+        <tr>
+          <th scope="row">2.1.1 / 2.1.2 Keyboard</th><td class="job">A</td>
+          <td class="job">Everything operable is reachable and operable by
+          keyboard. Modals and the palette trap focus and restore it to the
+          control that opened them.</td>
+          <td class="job">R10</td>
+        </tr>
+        <tr>
+          <th scope="row">2.2.2 Pause, Stop, Hide</th><td class="job">A</td>
+          <td class="job">All three ambient animations are decorative by
+          construction — none carries information a still frame does not — and
+          all three stop under
+          <span class="spec">prefers-reduced-motion</span>.</td>
+          <td class="job">THE MOTION INVENTORY</td>
+        </tr>
+        <tr>
+          <th scope="row">2.4.3 Focus Order</th><td class="job">A</td>
+          <td class="job">DOM order is reading order everywhere; no
+          <span class="spec">tabindex</span> above 0 exists in the system. The
+          skip link is the first focusable element on every surface.</td>
+          <td class="job">.skip</td>
+        </tr>
+        <tr>
+          <th scope="row">2.4.7 Focus Visible</th><td class="job">AA</td>
+          <td class="job"><b>By construction.</b> One ring, declared once, and
+          it is an <span class="spec">outline</span> — a component's box-shadow
+          cannot replace a different property at any specificity or source
+          order. The erasability is not defended against, it is
+          unavailable.</td>
+          <td class="job">ONE FOCUS RING</td>
+        </tr>
+        <tr>
+          <th scope="row">2.4.11 Focus Not Obscured</th><td class="job">AA</td>
+          <td class="job"><b>New in 2.2.</b> The register's sticky head is the
+          only sticky element in the system, and a focused row scrolls clear of
+          it. There is no sticky footer on any scrollable surface.</td>
+          <td class="job">.reg thead</td>
+        </tr>
+        <tr>
+          <th scope="row">2.5.8 Target Size (Minimum)</th><td class="job">AA</td>
+          <td class="job"><b>New in 2.2.</b> 24×24 floor declared once as a
+          rule, in rem, so a new control cannot be born under it.
+          <b>None of the three exceptions is used anywhere</b> — each is an
+          argument a reviewer has to accept rather than a measurement.</td>
+          <td class="job">THE TARGET FLOOR</td>
+        </tr>
+        <tr>
+          <th scope="row">3.2.6 Consistent Help</th><td class="job">A</td>
+          <td class="job"><b>New in 2.2.</b> Support &amp; defects sits in the
+          same position in the account menu on every surface, and the palette
+          reaches it from anywhere.</td>
+          <td class="job">primitive 5</td>
+        </tr>
+        <tr>
+          <th scope="row">3.3.1 Error Identification</th><td class="job">A</td>
+          <td class="job">An invalid field states its reason in words, beginning
+          with › for "your move". The 2px ink border is the EMPHASIS rule
+          reinforcing the word, never replacing it.</td>
+          <td class="job">THE CONTROL</td>
+        </tr>
+        <tr>
+          <th scope="row">3.3.7 Redundant Entry</th><td class="job">A</td>
+          <td class="job"><b>New in 2.2.</b> The rejection reason is entered
+          once and attached to all three proposals; the entity and period
+          survive a route change.</td>
+          <td class="job">primitive 9</td>
+        </tr>
+        <tr>
+          <th scope="row">4.1.2 Name, Role, Value</th><td class="job">A</td>
+          <td class="job">Affordance glyphs are always
+          <span class="spec">aria-hidden</span> inside a control that already
+          has an accessible name. A disabled control carries
+          <span class="spec">aria-disabled</span>, never the
+          <span class="spec">disabled</span> attribute, so a keyboard user can
+          still reach its reason.</td>
+          <td class="job">ICONOGRAPHY · R8</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>The four interactive states, for every control</h3>
+  <div class="wrap">
+    <table class="statematrix">
+      <caption><b>None of the four is a hue change.</b> Hover moves the ground,
+      focus adds the ring, active inverts, disabled recedes to the refused
+      step — and each is declared once in the kernel rather than per
+      component.</caption>
+      <thead>
+        <tr>
+          <th scope="col">State</th>
+          <th scope="col">What changes</th>
+          <th scope="col">Specimen</th>
+          <th scope="col">The rule behind it</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">rest</th>
+          <td class="job">--paper ground, 1px --rule-strong edge</td>
+          <td><button class="btn" type="button">Open the drawer</button></td>
+          <td class="job">THE CONTROL</td>
+        </tr>
+        <tr>
+          <th scope="row">hover</th>
+          <td class="job">Ground → --tile-hover. <b>A ground change, never a
+          hue change.</b></td>
+          <td><button class="btn" type="button" style="background-color:var(--tile-hover)">Open the drawer</button></td>
+          <td class="job">GROUND</td>
+        </tr>
+        <tr>
+          <th scope="row">focus-visible</th>
+          <td class="job">2px --ink outline at 2px offset. Never suppressed,
+          never restyled.</td>
+          <td><button class="btn" type="button" style="outline:2px solid var(--ink);outline-offset:2px">Open the drawer</button></td>
+          <td class="job">ONE FOCUS RING</td>
+        </tr>
+        <tr>
+          <th scope="row">active</th>
+          <td class="job">Inverts to the ink ground with --on-ink text.</td>
+          <td><button class="btn" type="button" style="background-color:var(--ink);color:var(--on-ink);border-color:var(--ink)">Open the drawer</button></td>
+          <td class="job">THE CONTROL</td>
+        </tr>
+        <tr>
+          <th scope="row">disabled</th>
+          <td class="job">--refused on --sheet, with
+          <span class="spec">aria-disabled</span> and a stated reason.
+          <b>Never a dimmed opacity.</b></td>
+          <td><button class="btn" type="button" aria-disabled="true">Open the drawer</button></td>
+          <td class="job">R12 · THE CONTROL</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">🛑 <b>Never a dimmed opacity for disabled.</b> Opacity
+  composites against whatever is behind it, so it fails contrast silently and by
+  a different amount on each of the four grounds — and it would fail differently
+  again in the dark theme.</p>
+
+  <h3>The keyboard contract</h3>
+  <div class="wrap">
+    <table>
+      <thead>
+        <tr><th scope="col">Surface</th><th scope="col">Keys</th><th scope="col">Focus behaviour</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">Any</th><td><span class="kb">⌘</span><span class="kb">K</span> palette · <span class="kb">esc</span> dismiss topmost</td><td class="job">The skip link is the first focusable element.</td></tr>
+        <tr><th scope="row">Palette</th><td><span class="kb">↑</span><span class="kb">↓</span> move · <span class="kb">↵</span> run · <span class="kb">esc</span> close</td><td class="job">Traps focus. Restores to the control that opened it.</td></tr>
+        <tr><th scope="row">Menu</th><td><span class="kb">↑</span><span class="kb">↓</span><span class="kb">home</span><span class="kb">end</span> · <span class="kb">↵</span> choose · <span class="kb">esc</span> close</td><td class="job">Opens on Enter or Space; restores to the trigger.</td></tr>
+        <tr><th scope="row">Modal</th><td><span class="kb">tab</span> cycles within · <span class="kb">esc</span> cancels</td><td class="job">Traps focus. <b>Escape cancels, the scrim does not</b> — a destructive act is not dismissed by a misclick.</td></tr>
+        <tr><th scope="row">Drawer</th><td><span class="kb">esc</span> closes</td><td class="job">Does <b>not</b> trap — the register behind it stays operable, which is the whole point of a drawer.</td></tr>
+        <tr><th scope="row">Tooltip</th><td><span class="kb">esc</span> dismisses</td><td class="job">Opens on focus or tap. Escape clears the attribute; no selector can hold it open.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>What is not covered</h3>
+  <ul class="find">
+    <li><span class="kind">Open</span><b>No AAA position.</b> The target is AA
+    and the system does not claim otherwise. <span class="spec">--ink</span> and
+    <span class="spec">--agent-deep</span> clear AAA incidentally; the rest of
+    the ramp does not, and raising it would collapse the distinction between
+    <span class="spec">--muted</span>, <span class="spec">--refused</span> and
+    <span class="spec">--recede</span>, which carry three different meanings.</li>
+    <li><span class="kind">Open</span><b>2.4.11 is asserted, not tested.</b>
+    Focus Not Obscured depends on scroll behaviour that cannot be verified from
+    a specimen sheet — it needs the real register at the real length, on a real
+    keyboard.</li>
+    <li><span class="kind">Open</span><b>No screen-reader transcript.</b> The
+    ARIA contract per primitive is specified below, and what a given reader
+    actually announces is not the same claim. Three readers on three platforms
+    is the test, and it has not been run.</li>
+    <li><span class="kind">Open</span><b>No reduced-transparency or
+    forced-colors position.</b> The system has almost no transparency to reduce
+    — the scrim, the hatch and the luminous touch — but <b>forced-colors
+    mode</b> would flatten the luminous touch and the hatch to nothing, and the
+    not-built treatment would lose both its halves. That is a real gap and a
+    decision rather than a value.</li>
+  </ul>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       COMPONENT STRUCTURE
+       ════════════════════════════════════════════════════════════════════ -->
+  <h2 id="structure">Component structure, and the theming contract</h2>
+  <p class="sub">Three layers, and the vocabulary is the system's own — kernel,
+  primitive, composition. It maps cleanly onto atomic design without adopting
+  its names: our <b>primitives</b> span its atoms and molecules, because the
+  useful line here is whether a thing has states of its own, not how many parts
+  it has.</p>
+
+  <div class="three">
+    <figure>
+      <figcaption>1 · the kernel</figcaption>
+      <div class="frame">
+        <p class="note" style="margin-top:0"><span class="spec">tokens.css</span>
+        — every colour, step, unit, duration, layer and breakpoint, plus the
+        rules that are cheaper to state once than to enforce per component: the
+        focus ring, the target floor, the control surface, the hatch, the
+        reduced-motion guard.</p>
+        <p class="note"><b>A component may not declare a value the kernel
+        owns.</b> If it needs one that is not there, that is a finding.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>2 · the fourteen primitives</figcaption>
+      <div class="frame">
+        <p class="note" style="margin-top:0">Each owns its own states, its own
+        ARIA contract and its own responsive behaviour. <b>Every one is
+        specified below</b> and drawn in this sheet.</p>
+        <p class="note">A primitive consumes tokens and composes other
+        primitives; it never reaches into another primitive's internals.</p>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>3 · compositions</figcaption>
+      <div class="frame">
+        <p class="note" style="margin-top:0">Routes — Close, Ask, Reports,
+        Setup, and the entry tier. They arrange primitives and <b>own no visual
+        decisions at all</b>.</p>
+        <p class="note">A composition that needs a new visual treatment is
+        asking for a primitive, and that is a design change.</p>
+      </div>
+    </figure>
+  </div>
+
+  <h3>The fourteen, as a component map</h3>
+  <div class="wrap">
+    <table class="spectable">
+      <caption>Names are suggestions the specification can carry; the
+      <b>props and ARIA contract are not</b>. A React implementation that
+      renames <span class="spec">Drawer</span> is fine; one that drops
+      <span class="spec">onDismiss</span> is a different component.</caption>
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Primitive</th>
+          <th scope="col">Component</th>
+          <th scope="col">Props that carry a decision</th>
+          <th scope="col">Root ARIA</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="num">1</td><th scope="row">Navigation shell</th><td class="anat">&lt;Shell&gt;</td><td class="job"><span class="spec">active</span> · <span class="spec">destinations</span> (max 3) · <span class="spec">onReselect</span></td><td class="job">nav + aria-label</td></tr>
+        <tr><td class="num">2</td><th scope="row">Chrome bar</th><td class="anat">&lt;Chrome&gt;</td><td class="job"><span class="spec">entity</span> · <span class="spec">period</span> · <span class="spec">connection</span> · <span class="spec">spend</span> · <span class="spec">agentState</span></td><td class="job">banner</td></tr>
+        <tr><td class="num">3</td><th scope="row">Command palette</th><td class="anat">&lt;Palette&gt;</td><td class="job"><span class="spec">query</span> · <span class="spec">sections</span> (ranked) · <span class="spec">onRun</span> · <span class="spec">onDismiss</span></td><td class="job">dialog + aria-modal</td></tr>
+        <tr><td class="num">4</td><th scope="row">Breadcrumb</th><td class="anat">&lt;Trail&gt;</td><td class="job"><span class="spec">crumbs</span> · last is never a link</td><td class="job">nav + aria-label</td></tr>
+        <tr><td class="num">5</td><th scope="row">Account menu</th><td class="anat">&lt;AccountMenu&gt;</td><td class="job"><span class="spec">open</span> · <span class="spec">groups</span> · <span class="spec">onDismiss</span></td><td class="job">menu + menuitem</td></tr>
+        <tr><td class="num">6</td><th scope="row">Filter mechanism</th><td class="anat">&lt;Filters&gt;</td><td class="job"><span class="spec">facets</span> (closed set) · <span class="spec">picked</span> · <span class="spec">onClearAll</span></td><td class="job">group + aria-label</td></tr>
+        <tr><td class="num">7</td><th scope="row">Table navigation</th><td class="anat">&lt;Register&gt;</td><td class="job"><span class="spec">sort</span> (enum of 4) · <span class="spec">onLoadMore</span> · <span class="spec">scope</span> · <span class="spec">denominator</span></td><td class="job">table + aria-sort</td></tr>
+        <tr><td class="num">8</td><th scope="row">Drawer</th><td class="anat">&lt;Drawer&gt;</td><td class="job"><span class="spec">open</span> · <span class="spec">onDismiss</span> · never traps focus</td><td class="job">dialog, aria-modal false</td></tr>
+        <tr><td class="num">9</td><th scope="row">Modal</th><td class="anat">&lt;Dialog&gt;</td><td class="job"><span class="spec">open</span> · <span class="spec">reason</span> (required) · <span class="spec">onCommit</span> · <span class="spec">onCancel</span></td><td class="job">dialog + aria-modal</td></tr>
+        <tr><td class="num">10</td><th scope="row">Tooltip</th><td class="anat">&lt;Tip&gt;</td><td class="job"><span class="spec">open</span> — <b>script-written only</b> · <span class="spec">describedBy</span></td><td class="job">tooltip</td></tr>
+        <tr><td class="num">11</td><th scope="row">Toast</th><td class="anat">&lt;Toast&gt;</td><td class="job"><span class="spec">title</span> · <span class="spec">detail</span> · <span class="spec">onDismiss</span></td><td class="job">status</td></tr>
+        <tr><td class="num">12</td><th scope="row">Status bar</th><td class="anat">&lt;StatusBar&gt;</td><td class="job"><span class="spec">keys</span> · <span class="spec">provenance</span> · <span class="spec">audit</span> — slots never reorder</td><td class="job">contentinfo</td></tr>
+        <tr><td class="num">13</td><th scope="row">Route states</th><td class="anat">&lt;RouteState&gt;</td><td class="job"><span class="spec">kind</span> (ready·loading·empty·error) · <span class="spec">scope</span> · <span class="spec">at</span></td><td class="job">region + aria-live</td></tr>
+        <tr><td class="num">14</td><th scope="row">Key-caps</th><td class="anat">&lt;Keys&gt;</td><td class="job"><span class="spec">combo</span> — a label, never a target</td><td class="job">kbd</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Three primitives specified in full</h3>
+  <p class="sub">The pattern for the other eleven is the same, and the printable
+  specification document carries all fourteen at this depth.</p>
+
+  <div class="wrap">
+    <table class="spectable">
+      <caption><b>10 · Tooltip.</b> Specified first because it is the primitive
+      with the most rules attached and the least visible surface.</caption>
+      <thead><tr><th scope="col">Aspect</th><th scope="col">Specification</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Anatomy</th><td class="job"><span class="anat">.tw</span> positioning wrapper → the trigger control → <span class="anat">.tip</span> panel. The panel is a sibling of the trigger, never a child.</td></tr>
+        <tr><th scope="row">Surface</th><td class="job"><span class="spec">--ink</span> ground · <span class="spec">--on-ink</span> text · <span class="spec">--on-ink-2</span> second line · radius 0 · <b>no edge</b>, because 14.05:1 against paper already separates it.</td></tr>
+        <tr><th scope="row">Geometry</th><td class="job">Above the trigger, offset <span class="spec">calc(var(--u)*2)</span>, left-aligned to it. Max width <span class="spec">calc(var(--u)*64)</span>. Padding <span class="spec">calc(var(--u)*2) calc(var(--u)*3)</span>.</td></tr>
+        <tr><th scope="row">States</th><td class="job">Two only: <span class="spec">[data-open]</span> absent or <span class="spec">"true"</span>. There is no hover state, no loading state and no placement variant.</td></tr>
+        <tr><th scope="row">Motion</th><td class="job"><span class="spec">opacity var(--t-fade) linear</span>. Not the spring — an opacity change has no distance to ease across.</td></tr>
+        <tr><th scope="row">ARIA</th><td class="job">Panel is <span class="spec">role="tooltip"</span> with an id; trigger carries <span class="spec">aria-describedby</span> pointing at it. A disabled trigger uses <span class="spec">aria-disabled="true"</span>, never <span class="spec">disabled</span>.</td></tr>
+        <tr><th scope="row">Behaviour</th><td class="job"><b>The open state has exactly one writer, and it is the script.</b> Focus opens it; tap opens it; pointerenter may open it only by calling the same function. Escape clears it and <span class="spec">stopPropagation</span>s so an enclosing overlay does not also close.</td></tr>
+        <tr><th scope="row">Two guards</th><td class="job">A tap focuses <i>then</i> clicks — without a pointer guard the pair opens on focus and closes on click and the tap user sees nothing. And a browser restores focus on reload — without an interaction guard the panel opens before anyone has touched the page.</td></tr>
+        <tr><th scope="row">🛑 Never</th><td class="job"><span class="spec">display:none</span> · <span class="spec">visibility:hidden</span> · any CSS selector keyed on <span class="spec">:hover</span>, <span class="spec">:focus-visible</span> or <span class="spec">:focus-within</span> · hover as the only way in.</td></tr>
+        <tr><th scope="row">Responsive</th><td class="job">Unchanged across tiers. At the narrow tier it is opened by tap and dismissed by tap-away or Escape.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="wrap">
+    <table class="spectable">
+      <caption><b>8 · Drawer.</b></caption>
+      <thead><tr><th scope="col">Aspect</th><th scope="col">Specification</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Anatomy</th><td class="job">scrim → panel · <span class="anat">.ov-head</span> (title, context, close) → <span class="anat">.ov-body</span> (scrolls) → <span class="anat">.ov-foot</span> (actions, right-aligned).</td></tr>
+        <tr><th scope="row">Surface</th><td class="job">THE OVERLAY SURFACE: <span class="spec">--paper</span> ground, <b>1px <span class="spec">--rule-strong</span> on the entry side only</b>, radius 0, no shadow.</td></tr>
+        <tr><th scope="row">Geometry</th><td class="job">Right edge, full height. <span class="spec">min(92%, calc(var(--u)*110))</span> — 440px at a 16px root. Layer <span class="spec">--z-overlay</span>.</td></tr>
+        <tr><th scope="row">Motion</th><td class="job">In on <span class="spec">--spring</span> at <span class="spec">--t-spring</span>. <b>Out on --t-fade</b> — a leaving element does not bounce.</td></tr>
+        <tr><th scope="row">ARIA</th><td class="job"><span class="spec">role="dialog"</span>, <span class="spec">aria-modal="false"</span>, <span class="spec">aria-labelledby</span> the title.</td></tr>
+        <tr><th scope="row">Behaviour</th><td class="job"><b>Does not trap focus</b> — the register behind it stays operable, which is the whole point. Escape closes; the scrim closes. Closing undoes nothing, because asking is not an act.</td></tr>
+        <tr><th scope="row">🛑 Never</th><td class="job">A shadow · an edge on more than one side · a focus trap · replacing the register rather than sitting over it.</td></tr>
+        <tr><th scope="row">Responsive</th><td class="job">Narrow: full width, no left edge — 92% of 360px leaves a 28px strip of register that shows nothing and reads as a mistake. Ultra: <b>becomes an inline third column</b> and stops being an overlay at all.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="wrap">
+    <table class="spectable">
+      <caption><b>1 · Navigation shell.</b></caption>
+      <thead><tr><th scope="col">Aspect</th><th scope="col">Specification</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Anatomy</th><td class="job"><span class="anat">nav</span> → <span class="anat">ul.dests</span> → one <span class="anat">button.dest</span> per destination. <b>Three, and never a fourth.</b> Setup is a door behind the avatar, not a destination.</td></tr>
+        <tr><th scope="row">States</th><td class="job">rest · hover · focus-visible · <span class="spec">aria-current="page"</span> · absent. <b>Absent, not disabled</b> — a destination a person may never use is noise, so a permission-shortened tree is shorter, not greyer.</td></tr>
+        <tr><th scope="row">Active</th><td class="job">Three channels: <span class="spec">--w-emph</span> weight, a 2px bottom edge, and <span class="spec">--accent</span> on that edge. The first two work without the third.</td></tr>
+        <tr><th scope="row">ARIA</th><td class="job"><span class="spec">nav</span> with <span class="spec">aria-label="Destinations"</span>; the active control carries <span class="spec">aria-current="page"</span>. Inside Setup <b>no destination is current</b>.</td></tr>
+        <tr><th scope="row">Behaviour</th><td class="job">Re-clicking the active destination dismisses overlays, clears filters and returns the register to the top. A route change survives the entity and the period; it does not survive a filter.</td></tr>
+        <tr><th scope="row">Responsive</th><td class="job">Narrow: a bottom tab bar, one tab per destination, 44px tall. <b>A tab bar that holds exactly the destinations that exist is the strongest argument the three-destination rule has.</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>The theming contract</h3>
+  <p class="note">The kernel is the source of truth and the exports are
+  generated from it, never hand-maintained. Three formats ship, and the reason
+  there are three is that they answer three different questions:</p>
+  <div class="wrap">
+    <table>
+      <thead><tr><th scope="col">File</th><th scope="col">Format</th><th scope="col">What it is for</th></tr></thead>
+      <tbody>
+        <tr><th scope="row" class="tok">tokens.tokens.json</th><td class="job">W3C Design Tokens (DTCG)</td><td class="job">The interchange format. What a design tool reads and what any future generator should consume. <b>Canonical.</b></td></tr>
+        <tr><th scope="row" class="tok">tokens.sd.json</th><td class="job">Style Dictionary source</td><td class="job">The build input, for teams that already run Style Dictionary to emit platform files.</td></tr>
+        <tr><th scope="row" class="tok">tailwind.preset.js</th><td class="job">Tailwind theme preset</td><td class="job">What the React app imports. <b>Every value is <span class="spec">var(--token)</span>, not a literal</b> — so the dark theme keeps working and there is still exactly one place a colour is declared.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">🛑 <b>The Tailwind preset must never inline a hex.</b> A preset
+  that copies <span class="spec">#00303f</span> into its palette forks the
+  kernel: the dark theme stops applying, and there are two places a colour is
+  declared. Every entry points at the custom property, which is why
+  <span class="spec">tokens.css</span> still has to be loaded.</p>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       RULES
+       ════════════════════════════════════════════════════════════════════ -->
+  <h3>Built on shadcn/ui · what we take, what we re-skin, and what we refuse</h3>
+  <p class="note"><b>The position: take the behaviour, replace the look, and
+  never fork the token layer.</b> shadcn is not a dependency that ships a
+  stylesheet — it is source you own, built on Radix primitives, styled through
+  variables. That is the only shape of component library this kernel can use,
+  because the kernel <em>is</em> the variables and it does not negotiate.</p>
+  <p class="note">So the rule for anyone building a new surface is: <b>reach for
+  the shadcn component first, and hand-roll only where the table below says
+  there is nothing to reach for.</b> A hand-rolled select, dialog, popover or
+  combobox is a focus trap, a roving tabindex and six ARIA attributes somebody
+  has to get right twice — and this system already has one of those written by
+  hand in each console.</p>
+
+  <div class="wrap">
+    <table class="spectable">
+      <caption>The fourteen primitives against shadcn/ui. <b>Re-skin</b> means
+      the component ships as-is and the tokens do the rest.</caption>
+      <thead><tr><th scope="col">Our primitive</th><th scope="col">shadcn/ui</th><th scope="col">Verdict</th><th scope="col">What changes, and why</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">1 · Navigation shell</th><td><span class="spec">NavigationMenu</span> · <span class="spec">Tabs</span></td><td>re-skin</td><td>Take the keyboard model and <span class="spec">aria-current</span>; drop the indicator animation. Our destination is underlined by the ink, not by a sliding pill.</td></tr>
+        <tr><th scope="row">2 · Chrome bar</th><td>—</td><td>hand-rolled</td><td>A composition, not a component. It holds shadcn parts and is itself ours.</td></tr>
+        <tr><th scope="row">3 · Command palette</th><td><span class="spec">Command</span> (cmdk)</td><td><b>adopt</b></td><td>The single largest win. cmdk gives the listbox semantics, the filtering and the roving selection we wrote three times by hand. Our fixed section order, the refused-row treatment and the focus chip stay as configuration.</td></tr>
+        <tr><th scope="row">4 · Breadcrumb</th><td><span class="spec">Breadcrumb</span></td><td>re-skin</td><td>Take it whole. The separator becomes our glyph.</td></tr>
+        <tr><th scope="row">5 · Account menu</th><td><span class="spec">DropdownMenu</span></td><td><b>adopt</b></td><td>Replaces our hand-written trap-and-restore. Radix owns Esc, outside-click, typeahead and focus return; we own the item list and the rule above Sign out.</td></tr>
+        <tr><th scope="row">6 · Facet filtering</th><td><span class="spec">Toggle&nbsp;Group</span> · <span class="spec">Select</span> · <span class="spec">Input</span></td><td>re-skin</td><td>Our column filters become <span class="spec">Select</span> where a column has seven or fewer values and <span class="spec">Input</span> above that. The seven-value rule is ours; the control is theirs.</td></tr>
+        <tr><th scope="row">7 · Table navigation</th><td><span class="spec">Table</span> + TanStack Table</td><td><b>adopt</b></td><td><span class="spec">table.js</span> is our sort, filter, search and page model. TanStack is the same model with server-side paging already solved — which is the one thing ours cannot do. Keep our three positions: the computed count, the stated narrowing, and sort as a view.</td></tr>
+        <tr><th scope="row">8 · Dialog</th><td><span class="spec">Dialog</span> · <span class="spec">AlertDialog</span></td><td><b>adopt</b></td><td><span class="spec">AlertDialog</span> for the two-step commits — creating a tenant, raising an adjustment — because it is the one that refuses to close by accident.</td></tr>
+        <tr><th scope="row">9 · Drawer</th><td><span class="spec">Sheet</span></td><td>re-skin</td><td>Same behaviour; our rule separates it from the register rather than a shadow.</td></tr>
+        <tr><th scope="row">10 · Popover</th><td><span class="spec">Popover</span> · <span class="spec">HoverCard</span></td><td>re-skin</td><td>Collision handling and the anchored position for free.</td></tr>
+        <tr><th scope="row">11 · Toast</th><td><span class="spec">Sonner</span></td><td>re-skin, with a refusal</td><td>Adopt the mechanism, <b>not the habit</b>. A result this product must not lose goes on the surface as a <span class="spec">role="status"</span> block, never into something that disappears.</td></tr>
+        <tr><th scope="row">12 · Status bar</th><td>—</td><td>hand-rolled</td><td>Nothing in any library is a fixed-grammar status line. Ours never rearranges, which is the whole feature.</td></tr>
+        <tr><th scope="row">13 · Route-level states</th><td><span class="spec">Skeleton</span> · <span class="spec">Alert</span></td><td>re-skin</td><td><span class="spec">Skeleton</span> only where a shape is genuinely known; our four nothings must keep looking different from each other.</td></tr>
+        <tr><th scope="row">14 · Key-caps</th><td><span class="spec">Kbd</span></td><td>re-skin</td><td>Typographic either way.</td></tr>
+        <tr><th scope="row">The metered mark</th><td>—</td><td><b>refuse</b></td><td>∴ is ours. There is no library component for "this cost money", and a <span class="spec">Badge</span> would make a measurement look like a status.</td></tr>
+        <tr><th scope="row">The six indicators</th><td><span class="spec">Badge</span> · <span class="spec">Alert</span></td><td><b>refuse</b></td><td>The six are distinct <em>forms</em> so none can be mistaken for another. Rendering them all as <span class="spec">Badge</span> variants collapses six forms into one with six colours, which is the failure the count exists to prevent.</td></tr>
+        <tr><th scope="row">Iconography</th><td><span class="spec">lucide-react</span></td><td><b>refuse</b></td><td>shadcn assumes Lucide. We have no icon set by decision — an icon vocabulary is a second semantic channel competing with the grammar. Adopting shadcn does <b>not</b> adopt its icons.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Tokens are mandatory, and this is the mechanism</h3>
+  <p class="note"><b>No component may carry a literal value.</b> Not a hex, not
+  a pixel radius, not a duration. shadcn's own convention is already this —
+  <span class="spec">bg-background</span>, <span class="spec">text-foreground</span>,
+  <span class="spec">border-input</span> — so adopting it costs one mapping file
+  and buys the enforcement.</p>
+  <div class="wrap">
+    <table>
+      <caption>The bridge. shadcn's variable names are aliases onto our kernel;
+      the kernel stays the source of truth and the aliases are generated.</caption>
+      <thead><tr><th scope="col">shadcn variable</th><th scope="col">Our token</th><th scope="col">Note</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><span class="spec">--background</span></th><td><span class="spec">--paper</span></td><td>the ground a route sits on</td></tr>
+        <tr><th scope="row"><span class="spec">--foreground</span></th><td><span class="spec">--ink</span></td><td>step 1 of the ramp, never a near-black of its own</td></tr>
+        <tr><th scope="row"><span class="spec">--muted</span> · <span class="spec">--muted-foreground</span></th><td><span class="spec">--sheet</span> · <span class="spec">--muted</span></td><td>the two are a ground and an ink and must not be swapped</td></tr>
+        <tr><th scope="row"><span class="spec">--primary</span> · <span class="spec">--primary-foreground</span></th><td><span class="spec">--ink</span> · <span class="spec">--on-ink</span></td><td>a commit is ink on paper, not a brand colour</td></tr>
+        <tr><th scope="row"><span class="spec">--accent</span></th><td><span class="spec">--accent</span> · <span class="spec">--accent-quiet</span></td><td>wayfinding only. The accent never means "good".</td></tr>
+        <tr><th scope="row"><span class="spec">--destructive</span></th><td><span class="spec">--refused</span></td><td>refusal, not danger — and it never carries an icon</td></tr>
+        <tr><th scope="row"><span class="spec">--border</span> · <span class="spec">--input</span></th><td><span class="spec">--rule</span> · <span class="spec">--rule-strong</span></td><td>two weights, and the strong one separates surfaces</td></tr>
+        <tr><th scope="row"><span class="spec">--ring</span></th><td><span class="spec">--ink</span></td><td>⚠️ There is no focus <em>colour</em> token, deliberately: the ring is an <span class="spec">outline</span> in ink at a 2px offset, because an outline cannot be replaced by a component’s own box-shadow at any specificity. So the bridge maps the colour and <b>the offset is not negotiable</b>.</td></tr>
+        <tr><th scope="row"><span class="spec">--radius</span></th><td><span class="spec">0</span></td><td>the system has no radius. Set it once, at the bridge, and no component needs to remember.</td></tr>
+        <tr><th scope="row"><span class="spec">--font-sans</span> · <span class="spec">--font-mono</span></th><td><span class="spec">--face-sans</span> · <span class="spec">--face-mono</span></td><td>two faces and no third</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="find">
+    <li><span class="kind">Rule</span><b>A literal value in a component is a finding.</b> The same standing as any other kernel breach: it is repaired in the kernel or the token is added, never patched at the call site.</li>
+    <li><span class="kind">Rule</span><b>The bridge is generated, not hand-maintained.</b> Same discipline as the three theme exports — a hand-edited alias file drifts from the kernel silently, and the drift shows up as one component that is nearly right.</li>
+    <li><span class="kind">Rule</span><b>Adopting a component does not adopt its defaults.</b> Radius, shadow, icon set and motion are the kernel's. shadcn ships opinions in all four and every one of them is overridden at the bridge rather than per component.</li>
+    <li><span class="kind">Open</span><b>Tailwind is the assumption underneath shadcn, and this kernel is not built on it.</b> The utilities and our tokens can coexist through the same variables, but nothing here has tested that, and it is the decision to take before the first component is copied in.</li>
+  </ul>
+
+  <h2 id="rules">Rules in force</h2>
+  <p class="sub">Nineteen. They bind the kernel and everything drawn against it.
+  <b>A rule broken locally is a finding, never a local exception.</b></p>
+
+  <ol class="rules">
+    <li><span class="r">R1</span><span class="t"><b>No state may depend on hue.</b>
+      <i>There is no red, no amber and no traffic-light green, and --agent is deep
+      precisely so it cannot be read as "matched". Every state carries a word;
+      colour only ever reinforces one.</i></span></li>
+    <li><span class="r">R2</span><span class="t"><b>Radius is 0 everywhere except
+      the connection light.</b>
+      <i>The badge is square too — --badge-radius is the single revert
+      point.</i></span></li>
+    <li><span class="r">R3</span><span class="t"><b>No second line, and no second
+      dot.</b>
+      <i>A progress bar is a second line. An unread dot is a second dot. Both were
+      built once and both were deliberately removed.</i></span></li>
+    <li><span class="r">R4</span><span class="t"><b>No shadow, and no elevation
+      scale.</b>
+      <i>A surface separates by rule or by ground. The two scrims are the only
+      exception, and they exist because a modal must dim what it
+      blocks.</i></span></li>
+    <li><span class="r">R5</span><span class="t"><b>Six indicators. A seventh is a
+      design change.</b>
+      <i>Not an addition, and not a thing one component may mint on its
+      own.</i></span></li>
+    <li><span class="r">R6</span><span class="t"><b>The agent hue means the machine
+      measured something, and nothing else.</b>
+      <i>Not matched, good, passed or safe. Not a hover state, not a citation, and
+      not whose turn it is. "The machine is working" is carried by ink at mark
+      scale and by .lit at surface scale.</i></span></li>
+    <li><span class="r">R7</span><span class="t"><b>Not-built is mandatory, and it
+      names what refused it.</b>
+      <i>Hatch, word, and reason. A refused control drawn as an ordinary one
+      becomes evidence of a shipped control. A hatch without a reason is half the
+      treatment.</i></span></li>
+    <li><span class="r">R8</span><span class="t"><b>Tooltips are allowed, including
+      for a disabled reason — reachable by focus <em>and</em> by tap, never
+      hover-only.</b>
+      <i>The reason is still stated beside the control; the tooltip is additive. A
+      disabled control carries aria-disabled, never the disabled attribute, so a
+      keyboard user can still reach the reason. The open state has exactly one
+      writer, and it is the script.</i></span></li>
+    <li><span class="r">R9</span><span class="t"><b>Every figure a person compares
+      against another figure is monospaced with tabular numerals.</b>
+      <i>So columns align and a digit never changes width between two renders of
+      the same number.</i></span></li>
+    <li><span class="r">R10</span><span class="t"><b>Keyboard first, and the focus
+      ring is never optional.</b>
+      <i>The ring is an outline, declared once. A component's own box-shadow edge
+      cannot replace a different property at any specificity or source order, so
+      the erasability is not defended against — it is unavailable.</i></span></li>
+    <li><span class="r">R11</span><span class="t"><b>prefers-reduced-motion stops
+      the sweep and the halo.</b>
+      <i>Both kernel animations are ambient — they mean "this is live" — and
+      neither carries information a still frame does not. The halo settles at .3
+      rather than 0, so a down light keeps two differences from a live one
+      instead of one.</i></span></li>
+    <li><span class="r">R12</span><span class="t"><b>Refused is its own ink step.</b>
+      <i>--refused for a control that was never usable and for the sentence naming
+      what refused it; --recede for cleared work; --muted for supporting text.
+      Never a dimmed opacity — opacity composites against whatever is behind it,
+      so it fails contrast silently and by a different amount on every
+      ground.</i></span></li>
+    <li><span class="r">R13</span><span class="t"><b>Type is paired, not
+      chosen.</b>
+      <i>Every step arrives with its weight, tracking and leading already
+      decided. The three small steps are fixed; only the three above body are
+      fluid, and they clamp with a rem floor rather than a vw one. Text measures
+      are in ch and never in px.</i></span></li>
+    <li><span class="r">R14</span><span class="t"><b>Four product animations, one
+      spring, and a fifth is a finding.</b>
+      <i>Anything that moves runs the spring on the way in and a plain fade on
+      the way out — a leaving element does not bounce. Anything that only
+      changes opacity or colour runs the fade, because it has no distance to
+      ease across. Seconds mean "this is live"; milliseconds mean "you did
+      that", and the two budgets never mix. The mascot's brand animation is
+      counted separately under R19 and may run on nothing else.</i></span></li>
+    <li><span class="r">R15</span><span class="t"><b>There is no icon set. Six
+      glyphs, and a seventh is a design change.</b>
+      <i>All six are typographic. Four carry meaning and are counted as
+      indicators; two are affordance and are always aria-hidden inside a
+      control that already has an accessible name. A glyph that is the only
+      thing naming a control is a defect, not an icon. The metered mark is not
+      a glyph — it is the mascot's still form, ruled under R19.</i></span></li>
+    <li><span class="r">R16</span><span class="t"><b>The accent means
+      wayfinding, and it reinforces rather than carries.</b>
+      <i>Where you are, and what Enter would run. Not a status, not a severity,
+      not a hover, not a measurement. Remove the accent and wayfinding still
+      works — that is the test for whether a colour is carrying something it
+      should not.</i></span></li>
+    <li><span class="r">R17</span><span class="t"><b>Every interactive target
+      clears 24 × 24, and the whole interface works at 320px.</b>
+      <i>2.5.8 and 1.4.10. The floor is declared once as a rule so a new control
+      cannot be born under it, and it is in rem so a reader who raises their font
+      size gets a bigger target. None of 2.5.8's three exceptions is used
+      anywhere.</i></span></li>
+    <li><span class="r">R18</span><span class="t"><b>Two themes, and no
+      component knows which one it is in.</b>
+      <i>The dark theme is a recompute, not an inversion or a filter: every step
+      keeps its name and its job and takes a measured value of its own. A
+      component that branches on the theme is a component with two
+      designs.</i></span></li>
+      <li><span class="r">R19</span><span class="t"><b>The mascot is brand, and
+      brand may move.</b>
+      <i>∴ belongs with the wordmark, not with the glyphs, and it has two
+      registers. STILL — the character, at text size — is the metered mark: it
+      trails a spend figure and follows words that say an act is billable, and
+      it needs no unit word beside it. MOVING is identity scale only, and its
+      energy follows what the product is doing: working, thinking, listening.
+      The mark never moves in a dense context, and in neither register is it
+      the only thing reporting anything.</i></span></li>
+</ol>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       FINDINGS
+       ════════════════════════════════════════════════════════════════════ -->
+  <sc-if value="{{ showFindings }}" hint-placeholder-val="{{ true }}">
+    <div>
+      <h2 id="findings">Findings — five closed, three open</h2>
+      <p class="sub">A value a component needed and the kernel did not carry is a
+      <b>finding</b>, never a local invention. Five that were carried open are
+      closed in this kernel; three cannot be closed from it.</p>
+
+      <ul class="find">
+        <li><span class="kind" data-k="closed">Closed</span><b>There was no ink
+        step meaning refused.</b> <span class="spec">--recede</span> means cleared
+        work and <span class="spec">--muted</span> means supporting text; a
+        control that was never usable is neither, and every file reached for
+        <span class="spec">--muted</span> because it was the only step that stayed
+        above AA on the ground a disabled control is drawn on — a contrast
+        argument standing in for a semantic. <b>Minted as
+        <span class="spec">--refused</span>, #4a6166</b>, 6.57:1 on --paper and
+        6.07:1 on --sheet, with the disabled control and the not-built reason as
+        its first two call sites.</li>
+
+        <li><span class="kind" data-k="closed">Closed</span><b>There was no
+        z-index scale.</b> The kernel wrote a bare
+        <span class="spec">z-index:99</span> on the skip link and named no others,
+        so the bundle carried 2, 3, 4, 5 and 30 on comparable layers and kept them
+        consistent with that 99 by hand. <b>Four layers</b> —
+        <span class="spec">--z-popover 20 · --z-overlay 30 · --z-modal 40 ·
+        --z-skip 99</span>. The order is the decision rather than the numbers;
+        they are spaced by ten so a component can sit between two without
+        reopening the scale.</li>
+
+        <li><span class="kind" data-k="closed">Closed</span><b>There was no page
+        measure, no grid floor and no breakpoint.</b> Every file was
+        <span class="spec">calc(var(--u)*295)</span> wide by hand, and the same was
+        true of every grid column minimum and of the 720px breakpoint.
+        <b><span class="spec">--measure · --col-min · --bp-narrow</span></b>.
+        ⚠️ <span class="spec">--bp-narrow</span> is declared as a <b>constant, not
+        a usable token</b> — a custom property cannot be read inside
+        <span class="spec">@media</span>, so every breakpoint is still written
+        literally. It is declared so the number has one home and a second
+        breakpoint has to argue with it.</li>
+
+        <li><span class="kind" data-k="closed">Closed</span><b>The not-built hatch
+        was fainter than the faintest line in the system.</b> Measured at
+        alpha .055 the stripe composited to <b>1.11:1 on all four grounds</b> —
+        below <span class="spec">--rule</span> at 1.38:1 — so a refused control
+        rendered as an ordinary one with only the corner word surviving, on every
+        ground including the one the alpha was calibrated for. <b>Raised to .18:
+        1.42:1 on both light grounds.</b> The reported premise that it was
+        <i>--sheet-specific</i> was exactly inverted: an alpha composite scales
+        the ground rather than displacing it, which is what makes an alpha stripe
+        ground-independent, and the solid stripe the finding implied would have
+        introduced the defect it named.</li>
+
+        <li><span class="kind" data-k="closed">Closed</span><b>The not-built
+        reason had no home.</b> The hatch says a thing is not built; the sentence
+        naming the decision that refused it is what makes the hatch actionable,
+        and five files invented five names for it —
+        <span class="spec">.nbwhy · .why-nb · .nb-why · .nbnote · .cap</span>.
+        <b>One name, <span class="spec">.nbwhy</span>, beside
+        <span class="spec">.nb</span></b>, in the refused step.</li>
+
+        <li><span class="kind">Open</span><b>The state label has no agreed
+        markup.</b> Three sheets labelled a specimen with
+        <span class="spec">&lt;figure&gt;/&lt;figcaption&gt;</span> — the only form
+        that associates a label with the thing it labels programmatically — and two
+        used a plain span above a div. <b>This page uses the figure everywhere,
+        which is a vote rather than a ruling.</b> It is a markup convention, not a
+        token, so it cannot be closed from the kernel.</li>
+
+        <li><span class="kind">Open</span><b>No container-query strategy.</b>
+        <span class="spec">--bp-narrow</span> is declared and unusable inside
+        <span class="spec">@media</span>. Whether components should respond to
+        their container rather than the viewport is a design decision, and taking
+        it would change how every grid in the system reflows.</li>
+
+        <li><span class="kind">Open</span><b>The fourth ground.</b> Three grounds
+        only, and a fourth is a finding. Nothing needs one yet — the entry tier
+        came closest, wanting a --sheet page with a --paper card, and was refused
+        because that makes --sheet a page ground under an existing name.</li>
+      </ul>
+    </div>
+  </sc-if>
+
+  <p class="synthetic">Every figure on this page is illustrative. No customer,
+  logo, testimonial, price, SLA or benchmark is named, because none has been
+  established. Nothing here is deployed.</p>
+
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;showNotBuilt&quot;: {&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;The record&quot;,&quot;label&quot;:&quot;Draw the not-built refusals&quot;},
+  &quot;showFindings&quot;: {&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;The record&quot;,&quot;label&quot;:&quot;Show the findings list&quot;},
+  &quot;squareBadge&quot;: {&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;The mark&quot;,&quot;label&quot;:&quot;Square badge corner (R2)&quot;}
+}">
+class Component extends DCLogic {
+  state = {
+    dest:'close', menu:null, palQ:'', deep:false,
+    tips:{}, drawer:false, modal:false, reason:'', toasts:[], tseq:0,
+    picked:[], sort:0, shown:6, route:'ready',
+    mv:false, big:false, theme:'light', palSel:0
+  };
+
+  FACETS = [
+    {id:'dup',   label:'Duplicate candidate', count:12},
+    {id:'unacc', label:'Unaccounted charge',  count:7},
+    {id:'fx',    label:'FX variance',         count:4},
+    {id:'resid', label:'Ingestion residue',   count:9},
+    {id:'auth',  label:'Needs authority',     count:3}
+  ];
+
+  ROWS = [
+    {ref:'GR 88214', kind:'unacc', value:'184,200', score:'0.81', who:'NEEDS AUTHORITY ›', age:2},
+    {ref:'INV 4471', kind:'dup',   value:'96,480',  score:'0.72', who:'AGENT PROPOSED',    age:1},
+    {ref:'INV 4508', kind:'fx',    value:'71,905',  score:'0.64', who:'AGENT PROPOSED',    age:4},
+    {ref:'GR 88301', kind:'unacc', value:'64,110',  score:'0.77', who:'NEEDS AUTHORITY ›', age:3},
+    {ref:'DOC 11902',kind:'resid', value:'—',       score:'0.31', who:'UNREAD',            age:9},
+    {ref:'INV 4622', kind:'dup',   value:'48,300',  score:'0.69', who:'AGENT PROPOSED',    age:6},
+    {ref:'INV 4655', kind:'fx',    value:'31,740',  score:'0.58', who:'CLEARED',           age:12},
+    {ref:'DOC 11944',kind:'resid', value:'—',       score:'0.22', who:'UNREAD',            age:14},
+    {ref:'GR 88420', kind:'auth',  value:'29,015',  score:'0.88', who:'NEEDS AUTHORITY ›', age:1},
+    {ref:'INV 4703', kind:'dup',   value:'18,220',  score:'0.66', who:'AGENT PROPOSED',    age:8},
+    {ref:'DOC 12008',kind:'resid', value:'—',       score:'0.19', who:'UNREAD',            age:21},
+    {ref:'GR 88511', kind:'auth',  value:'12,640',  score:'0.84', who:'NEEDS AUTHORITY ›', age:5},
+    {ref:'INV 4788', kind:'unacc', value:'9,405',   score:'0.74', who:'AGENT PROPOSED',    age:11},
+    {ref:'INV 4801', kind:'fx',    value:'4,110',   score:'0.52', who:'CLEARED',           age:17}
+  ];
+
+  SORTS = [
+    {word:'severity then value', key:(a,b)=> (b.score-a.score) || (this.n(b.value)-this.n(a.value))},
+    {word:'high first',          key:(a,b)=> this.n(b.value)-this.n(a.value)},
+    {word:'oldest first',        key:(a,b)=> b.age-a.age}
+  ];
+
+  n(v){ return v === '—' ? -1 : Number(String(v).replace(/,/g,'')); }
+  kindLabel(id){ const f = this.FACETS.find(x=>x.id===id); return f ? f.label : id; }
+
+  componentDidMount(){
+    this.onKey = (e)=>{
+      this._acted = true;
+      const k = (e.key || '').toLowerCase();
+      if((e.metaKey || e.ctrlKey) && k === 'k'){
+        e.preventDefault();
+        const el = document.querySelector('.pal-in input');
+        if(el) el.focus();
+        return;
+      }
+      if(e.key === 'Escape'){
+        this.setState(s=>{
+          if(s.modal) return {modal:false};
+          if(s.drawer) return {drawer:false};
+          if(s.menu) return {menu:null};
+          if(Object.keys(s.tips).length) return {tips:{}};
+          return null;
+        });
+      }
+    };
+    this.onDown = ()=>{ this._acted = true; };
+    window.addEventListener('keydown', this.onKey);
+    window.addEventListener('pointerdown', this.onDown, true);
+    this.syncBadge();
+  }
+  componentDidUpdate(){ this.syncBadge(); }
+  componentWillUnmount(){
+    window.removeEventListener('keydown', this.onKey);
+    window.removeEventListener('pointerdown', this.onDown, true);
+  }
+
+  /* --badge-radius is the single revert point for the Square Corner Rule, so
+     the tweak writes the token rather than a local style. */
+  syncBadge(){
+    const square = this.props.squareBadge !== false;
+    document.documentElement.style.setProperty('--badge-radius', square ? '0' : '.09em');
+  }
+
+  /* THE TOOLTIP FORM, with both guards. A tap focuses and THEN clicks, so an
+     unguarded pair opens on focus and closes on click and the tap user sees
+     nothing. A browser restores focus on reload, and a restored focus is not a
+     user — without _acted a specimen opens a tooltip before anyone has touched
+     the page. Nothing but this script writes the open state. */
+  tip(id){
+    const on = !!this.state.tips[id];
+    const set = (v)=> this.setState(s=>{
+      const t = Object.assign({}, s.tips);
+      if(v){ t[id] = true; } else { delete t[id]; }
+      return {tips:t};
+    });
+    return {
+      on: on ? 'true' : undefined,
+      onPointerDown: ()=>{ this._ptr = true; this._acted = true; },
+      onPointerEnter: ()=> set(true),
+      onPointerLeave: ()=> set(false),
+      onFocus: ()=>{ if(this._acted && !this._ptr) set(true); },
+      onBlur: ()=>{ set(false); this._ptr = false; },
+      onClick: ()=> set(true),
+      onKeyDown: (e)=>{ if(e.key === 'Escape'){ e.stopPropagation(); set(false); } }
+    };
+  }
+
+  palette(){
+    const q = this.state.palQ.trim().toLowerCase();
+    const hit = (s)=> !q || s.toLowerCase().indexOf(q) !== -1;
+    const noop = ()=> this.setState({palQ:''});
+    const find = [
+      {label:'GR 88214 · goods receipt · unaccounted charge', hint:'record'},
+      {label:'INV 4471 · duplicate candidate', hint:'record'},
+      {label:'DOC 11902 · ingestion residue', hint:'record'}
+    ].filter(r=>hit(r.label));
+    const go = [
+      {label:'Close', hint:'destination'},
+      {label:'Ask', hint:'destination'},
+      {label:'Reports', hint:'destination'},
+      {label:'Setup · Thresholds', hint:'through the door'}
+    ].filter(r=>hit(r.label));
+    const doo = [
+      {label:'Run the close for Aug 2026', hint:'act'},
+      {label:'Export the period pack', hint:'act'},
+      {label:'Clear all filters', hint:'act'}
+    ].filter(r=>hit(r.label));
+    const ask = [{label: q ? ('Ask · "' + this.state.palQ.trim() + '"') : 'Ask a question about this period', hint:'⏎'}];
+    const secs = [];
+    if(find.length) secs.push({name:'Find', rows:find});
+    if(go.length)   secs.push({name:'Go',   rows:go});
+    if(doo.length)  secs.push({name:'Do',   rows:doo});
+    secs.push({name:'Ask', rows:ask});
+    /* THE ACCENT'S SECOND CALL SITE: what Enter would run. It is the first row
+       of the first section, because the sections are ranked by what a typed
+       string most likely IS. */
+    let i = 0;
+    return secs.map(sec=>({
+      name:sec.name,
+      rows:sec.rows.map(r=>{
+        const sel = (i++ === 0) ? 'true' : 'false';
+        return {label:r.label, hint:r.hint, sel, go:noop};
+      })
+    }));
+  }
+
+  /* The theme is written on <html lang="en">, not on a wrapper, because [data-theme] in
+     the kernel overrides :root and a wrapper would leave the page ground
+     behind. The product's theme follows the operating system; this switch
+     exists so both can be inspected side by side. */
+  applyTheme(t){
+    const el = document.documentElement;
+    if(t === 'dark'){ el.setAttribute('data-theme','dark'); }
+    else { el.removeAttribute('data-theme'); }
+  }
+
+  renderVals(){
+    const s = this.state;
+    const destLabel = {close:'Close', ask:'Ask', reports:'Reports'}[s.dest];
+
+    const picked = s.picked;
+    const filtered = picked.length ? this.ROWS.filter(r=>picked.indexOf(r.kind) !== -1) : this.ROWS.slice();
+    filtered.sort(this.SORTS[s.sort].key);
+    const visible = filtered.slice(0, s.shown);
+    const held = this.ROWS.length - filtered.length;
+    const countLine = visible.length + ' of ' + filtered.length + ' shown · '
+      + this.ROWS.length + ' in the register'
+      + (held ? ' · ' + held + ' held out by the current filter' : ' · no filter');
+    const more = filtered.length - visible.length;
+
+    const secs = this.palette();
+    const hasMatch = secs.length > 1;
+
+    return {
+      showNotBuilt: this.props.showNotBuilt !== false,
+      showFindings: this.props.showFindings !== false,
+
+      themeLight: s.theme === 'light' ? 'true' : 'false',
+      themeDark:  s.theme === 'dark'  ? 'true' : 'false',
+      goLight: ()=>{ this.applyTheme('light'); this.setState({theme:'light'}); },
+      goDark:  ()=>{ this.applyTheme('dark');  this.setState({theme:'dark'}); },
+
+      mvOn: s.mv ? 'true' : 'false',
+      replay: ()=>{
+        this.setState({mv:false});
+        clearTimeout(this._mvt);
+        this._mvt = setTimeout(()=> this.setState({mv:true}), 60);
+      },
+      resetMotion: ()=> this.setState({mv:false}),
+
+      /* Two renders of the same column. The point is the WIDTH change, so the
+         two sets differ only in which digits they use. */
+      figRows: (s.big
+        ? ['1,000,000','8,888,888','11,111']
+        : ['9,999,999','1,111,111','88,888']).map(v=>({v})),
+      swapFigures: ()=> this.setState(p=>({big:!p.big})),
+
+      destLabel,
+      curClose:   s.dest === 'close'   ? 'page' : undefined,
+      curAsk:     s.dest === 'ask'     ? 'page' : undefined,
+      curReports: s.dest === 'reports' ? 'page' : undefined,
+      goClose:   ()=> this.setState({dest:'close', menu:null}),
+      goAsk:     ()=> this.setState({dest:'ask', menu:null}),
+      goReports: ()=> this.setState({dest:'reports', menu:null}),
+
+      menuEntity:  s.menu === 'entity',
+      menuAccount: s.menu === 'account',
+      entityExpanded:  s.menu === 'entity'  ? 'true' : 'false',
+      accountExpanded: s.menu === 'account' ? 'true' : 'false',
+      toggleEntity:  ()=> this.setState(p=>({menu: p.menu === 'entity'  ? null : 'entity'})),
+      toggleAccount: ()=> this.setState(p=>({menu: p.menu === 'account' ? null : 'account'})),
+      closeMenu: ()=> this.setState({menu:null}),
+
+      tipDemo: this.tip('demo'),
+
+      palQuery: s.palQ,
+      palSections: secs,
+      palEmpty: !hasMatch && s.palQ.trim().length > 0,
+      onPaletteInput: (e)=> this.setState({palQ: e.target.value}),
+      clearQuery: ()=> this.setState({palQ:''}),
+      openPalette: ()=>{
+        const el = document.querySelector('.pal-in input');
+        if(el){ el.focus(); }
+        this.setState({menu:null});
+      },
+
+      deep: s.deep,
+      shallowState: !s.deep,
+      deepLabel: s.deep ? 'Return to the destination' : 'Go deeper than a destination',
+      toggleDeep: ()=> this.setState(p=>({deep: !p.deep})),
+      shallow: ()=> this.setState({deep:false}),
+
+      facets: this.FACETS.map(f=>({
+        label:f.label, count:f.count,
+        on: picked.indexOf(f.id) !== -1 ? 'true' : 'false',
+        toggle: ()=> this.setState(p=>({
+          picked: p.picked.indexOf(f.id) !== -1 ? p.picked.filter(x=>x !== f.id) : p.picked.concat([f.id]),
+          shown: 6
+        }))
+      })),
+      chips: picked.map(id=>({
+        label: this.kindLabel(id),
+        aria: 'Remove the ' + this.kindLabel(id) + ' filter',
+        remove: ()=> this.setState(p=>({picked: p.picked.filter(x=>x !== id), shown:6}))
+      })),
+      noChips: picked.length === 0,
+      clearDisabled: picked.length === 0 ? 'true' : undefined,
+      clearAll: ()=>{ if(this.state.picked.length) this.setState({picked:[], shown:6}); },
+
+      countLine,
+      rows: visible.map(r=>({
+        ref:r.ref, kindLabel:this.kindLabel(r.kind), value:r.value, score:r.score, who:r.who
+      })),
+      sortWord: this.SORTS[s.sort].word,
+      cycleSort: ()=> this.setState(p=>({sort:(p.sort + 1) % 3})),
+      moreLabel: more > 0 ? ('Load ' + Math.min(6, more) + ' more') : 'Everything matching is shown',
+      moreDisabled: more > 0 ? undefined : 'true',
+      loadMore: ()=>{ if(more > 0) this.setState(p=>({shown:p.shown + 6})); },
+
+      drawerOn: s.drawer,
+      openDrawer:  ()=> this.setState({drawer:true, menu:null}),
+      closeDrawer: ()=> this.setState({drawer:false}),
+
+      modalOn: s.modal,
+      openModal:  ()=> this.setState({modal:true, reason:'', menu:null}),
+      closeModal: ()=> this.setState({modal:false}),
+      reason: s.reason,
+      onReason: (e)=> this.setState({reason: e.target.value}),
+      reasonInvalid: s.reason.trim().length === 0 ? 'true' : undefined,
+      reasonNote: s.reason.trim().length === 0
+        ? '› State why. The act cannot commit without it.'
+        : 'Recorded against run a7f3c2 and attached to all three.',
+      commitDisabled: s.reason.trim().length === 0 ? 'true' : undefined,
+      submitModal: ()=>{
+        if(this.state.reason.trim().length === 0) return;
+        this.setState(p=>({
+          modal:false, tseq:p.tseq + 1,
+          toasts: p.toasts.concat([{id:p.tseq + 1, title:'Three proposals rejected', detail:'Nothing posted · reason recorded against run a7f3c2'}])
+        }));
+      },
+      fireToast: ()=> this.setState(p=>({
+        tseq:p.tseq + 1,
+        toasts: p.toasts.concat([{id:p.tseq + 1, title:'Journal posted', detail:'JE 20260831-04 · 3 lines · reversible until 09:00'}])
+      })),
+      toasts: s.toasts.map(t=>({
+        title:t.title, detail:t.detail,
+        dismiss: ()=> this.setState(p=>({toasts:p.toasts.filter(x=>x.id !== t.id)}))
+      })),
+
+      isReady:   s.route === 'ready',
+      isLoading: s.route === 'loading',
+      isEmpty:   s.route === 'empty',
+      isError:   s.route === 'error',
+      setReady:   ()=> this.setState({route:'ready'}),
+      setLoading: ()=> this.setState({route:'loading'}),
+      setEmpty:   ()=> this.setState({route:'empty'}),
+      setError:   ()=> this.setState({route:'error'})
+    };
+  }
+}
+</script>
+</body>
+</html>

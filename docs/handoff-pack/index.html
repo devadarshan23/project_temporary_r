@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reconcile AI — build pack</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@200;300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  body{margin:0;background-color:var(--paper);color:var(--ink);
+    font-family:var(--face-sans);-webkit-font-smoothing:antialiased}
+  .w{max-width:calc(var(--u)*230);margin:0 auto;
+    padding:calc(var(--u)*12) calc(var(--u)*8) calc(var(--u)*16)}
+  h1{font-size:var(--s5);font-weight:var(--w-emph);letter-spacing:var(--tr-title);
+    line-height:var(--lh-title);margin:calc(var(--u)*5) 0 0;max-width:30ch}
+  h2{font-family:var(--face-mono);font-size:var(--s1);font-weight:var(--w-emph);
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+    margin:calc(var(--u)*12) 0 calc(var(--u)*4);padding-bottom:calc(var(--u)*2);
+    border-bottom:1px solid var(--rule-strong)}
+  p{font-size:var(--s3);line-height:var(--lh-body);max-width:var(--measure-text);
+    margin:calc(var(--u)*4) 0 0;text-wrap:pretty}
+  .sub{color:var(--muted)}
+  .grid{display:grid;gap:calc(var(--u)*3);
+    grid-template-columns:repeat(auto-fill,minmax(min(100%,calc(var(--u)*66)),1fr));
+    margin-top:calc(var(--u)*4)}
+  a.card{display:grid;gap:calc(var(--u)*2);text-decoration:none;color:var(--ink);
+    background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong);
+    padding:calc(var(--u)*4)}
+  a.card:hover{background-color:var(--tile-hover)}
+  .k{font-family:var(--face-mono);font-size:var(--s1);letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted)}
+  .n{font-size:var(--s3);font-weight:var(--w-emph)}
+  .b{font-size:var(--s2);line-height:var(--lh-note);color:var(--muted)}
+  ul{margin:calc(var(--u)*4) 0 0;padding-left:calc(var(--u)*5);
+    max-width:var(--measure-text)}
+  li{font-size:var(--s2);line-height:var(--lh-note);color:var(--muted);
+    margin-bottom:calc(var(--u)*2)}
+  li b{color:var(--ink);font-weight:var(--w-emph)}
+  code{font-family:var(--face-mono);font-size:.92em;color:var(--ink)}
+  .foot{margin-top:calc(var(--u)*14);padding-top:calc(var(--u)*4);
+    border-top:1px solid var(--rule);font-size:var(--s1);
+    line-height:var(--lh-note);color:var(--muted);max-width:var(--measure-text)}
+</style>
+</head>
+<body>
+<div class="w">
+
+  <span class="k">Reconcile AI · build pack · 18 Sep 2026</span>
+  <h1>Every surface, and the three records that govern them.</h1>
+  <p>Open any file in a browser. Each one is self-contained apart from
+  <code>support.js</code>, <code>tokens.css</code> and the stylesheet beside
+  it, which must stay in this folder. Fonts load from the network, so the pack
+  reads correctly online and stays legible offline.</p>
+  <p class="sub">Start with the three records. The surfaces are illustrative —
+  every tenant, partner, figure and case in them is synthetic — and their job is
+  to fix behaviour, not to be copied pixel for pixel.</p>
+
+  <h2>Read these first</h2>
+  <div class="grid">
+    <a class="card" href="./Functional Specification.dc.html">
+      <span class="k">the contract</span>
+      <span class="n">Functional specification</span>
+      <span class="b">What the product does, feature by feature, with one of four status words against each: built, specified, partial, not built. <b>Where a status word disagrees with a surface, the surface wins and this file is wrong until corrected.</b></span>
+    </a>
+    <a class="card" href="./User Journeys.dc.html">
+      <span class="k">the map</span>
+      <span class="n">User journeys</span>
+      <span class="b">Every journey the three actor classes can take — C1–C13, P1–P9, H1–H11 — marked for whether v1 supports it and where it stalls because the next step is not ours to execute. Carries the reconciliation record and the one disagreement left open.</span>
+    </a>
+    <a class="card" href="./Design System.dc.html">
+      <span class="k">the kernel</span>
+      <span class="n">Design system</span>
+      <span class="b">Tokens, type, the six indicators, motion, microcopy, the fourteen primitives, and the shadcn/ui mapping with the token bridge. <b>A rule broken locally is a finding, never a local exception.</b></span>
+    </a>
+    <a class="card" href="./Handoff Specification.dc.html">
+      <span class="k">the sequence</span>
+      <span class="n">Handoff specification</span>
+      <span class="b">What to build, in what order, and what each piece depends on.</span>
+    </a>
+  </div>
+
+  <h2>The public plane</h2>
+  <div class="grid">
+    <a class="card" href="./V1 Landing.dc.html">
+      <span class="k">V1</span><span class="n">Landing</span>
+      <span class="b">The claim, the cost, how it reads, the six stages, the deployments and the refusals. No price, because rate cards are per-arrangement.</span>
+    </a>
+    <a class="card" href="./V2 Book a Demo.dc.html">
+      <span class="k">V2</span><span class="n">Book a demo</span>
+      <span class="b">Qualification rather than a lead form: exception type, volume, landscape. The lead goes to the CRM and the console never sees one.</span>
+    </a>
+    <a class="card" href="./V3 Sign In.dc.html">
+      <span class="k">V3</span><span class="n">Sign in</span>
+      <span class="b">Passkey first, federation beside it, and a one-use emailed link as the fallback. <b>Nothing asks who you are</b> — the credential carries the organisation and the role, and the route is derived from it.</span>
+    </a>
+    <a class="card" href="./V4 Success Story.dc.html">
+      <span class="k">V4</span><span class="n">Success story</span>
+      <span class="b">One customer, one period, and what changed.</span>
+    </a>
+    <a class="card" href="./E1 Errors.dc.html">
+      <span class="k">E1</span><span class="n">Error pages</span>
+      <span class="b">401, 403, 404, 429, 500, 503 — on the public shell, because that is the shell that survives when the application does not.</span>
+    </a>
+  </div>
+
+  <h2>The three consoles</h2>
+  <div class="grid">
+    <a class="card" href="./C1 Close.dc.html">
+      <span class="k">C1 · data plane</span><span class="n">The close</span>
+      <span class="b">The register, triage, evidence, resolution, the approver's queue, Ask as a session, reports as a canvas, the plan and its entitlement, setup, governance, and the audit trail. Four roles behind the avatar; <code>?who=mark</code> arrives as the approver.</span>
+    </a>
+    <a class="card" href="./P1 Partner.dc.html">
+      <span class="k">P1 · control plane</span><span class="n">Partner portal</span>
+      <span class="b">Deals, tenants sold, commission, cases, the sandbox, the arrangement, rate cards, catalogue and people. <b>No partner user reaches a customer tenant</b>, and the one grant that could open that door is drawn with nobody holding it.</span>
+    </a>
+    <a class="card" href="./S1 Staff.dc.html">
+      <span class="k">S1 · control plane</span><span class="n">Staff console</span>
+      <span class="b">Tenancy, one tenant in full, the catalogue, the agent builder, billing, partners and support — all eleven H journeys. Three roles, each landing on its own work, and a destination a role does not need is absent rather than disabled.</span>
+    </a>
+  </div>
+
+  <h2>What ships beside them</h2>
+  <ul>
+    <li><b><code>tokens.css</code></b> — the kernel. Colour, type, space, layer, motion, the focus ring and the target floor. Everything else reads from it and <b>no component may carry a literal value</b>.</li>
+    <li><b><code>app.css</code></b> — the protected shell: chrome, destinations, register, palette, tables, account menu.</li>
+    <li><b><code>public.css</code></b> — the public plane and the error pages.</li>
+    <li><b><code>journeys.css</code> · <code>handoff.css</code> · <code>system-page.css</code></b> — the three records. Not product code.</li>
+    <li><b><code>table.js</code></b> — one table mechanism: sort and filter on the column header, text search, pagination. The count is computed from the rows that survived, a filter states what it removed, and sort is a view rather than a fact.</li>
+    <li><b><code>support.js</code></b> — the runtime these files render through. Keep it beside them; a page without it renders blank.</li>
+    <li><b><code>doc-page.js</code></b> — paged-document shell for the two printable records.</li>
+    <li><b><code>tokens.sd.json</code> · <code>tokens.tokens.json</code> · <code>tailwind.preset.js</code></b> — the kernel exported three ways. <b>Generated from the kernel, never hand-maintained</b>: a hand-edited alias file drifts silently and shows up as one component that is nearly right.</li>
+  </ul>
+
+  <h2>Three things to know before estimating</h2>
+  <ul>
+    <li><b>The status words are the scope.</b> <code>built</code> means drawn and operable in these files. <code>specified</code> means decided with no surface yet. <code>partial</code> names which half is missing. <code>not built</code> means knowingly absent — and where a surface shows that state at all it is drawn hatched with the reason attached, never as though it were handled.</li>
+    <li><b>The hatched blocks are the backlog.</b> Every one of them names a thing that does not exist and why. They are the most useful pages in the pack for planning, and they are deliberately not sketches of a solution.</li>
+    <li><b>One disagreement is open and recorded rather than resolved.</b> G36 slips bring-your-own-account to v1+1; the journey map keeps it in v1 by ruling. C12, P8, the partner sandbox and half the tenants in the staff console assume a customer-owned plane. Read the last section of the journey map before planning the deployment work.</li>
+  </ul>
+
+  <p class="foot">Surfaces are designed at 1300px and above. Open at that width
+  or wider. If a page appears blank, check that <code>support.js</code> is
+  beside it in this folder.</p>
+
+</div>
+</body>
+</html>

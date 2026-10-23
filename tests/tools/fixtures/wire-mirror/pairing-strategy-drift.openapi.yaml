@@ -1,0 +1,40 @@
+openapi: 3.1.0
+info:
+  title: wire-mirror fixture — PAIRING STRATEGY DRIFT (the red witness for `pairing_strategy_kinds`)
+  version: 0.0.0
+  description: |
+    Fixture for tools/check-wire-mirror.mjs. NOT a real contract, and
+    DELIBERATELY WRONG.
+
+    It exists because G109's amendment (11 Aug 2026) is not optional: a pair is
+    verified RED against a drifted fixture BEFORE it is pointed at the tree. A
+    pair registered green-first is a pair nobody has watched fail, and a checker
+    that has never failed is `docs/HANDOFF.md` §5.6 wearing the uniform of the
+    tools written to catch it.
+
+    DRIFT IN BOTH DIRECTIONS AT ONCE:
+      • MISSING — `amount_sum` is absent. That is the N:M subset-sum strategy,
+                  and it is the ONLY strategy that produces an oversized or an
+                  exhausted bucket — so a wire that dropped it would publish an
+                  `AmbiguityFinding` whose `strategyKind` no client could name
+                  for exactly the searches G217's boundary channel reports on.
+      • EXTRA   — `ml_similarity` is present. A strategy the model does not
+                  declare, which is what a hand-maintained enum drifts into: a
+                  client would offer a pairing mode nothing implements.
+
+    ⚠️ THE MEMBER ORDER IS ALSO DISTURBED AND THAT IS NOT WHAT THIS FIXTURE
+    WITNESSES. The sets differ, so missing/extra dominate and the ordering never
+    becomes the reason for the finding. An order-only drift on this pair is
+    witnessed by `pairing-strategy-reordered.openapi.yaml`, because a fixture
+    that claims a property its own red run does not exercise is worse than no
+    fixture — the lesson `pack-key-drift.openapi.yaml` states about itself.
+paths: {}
+components:
+  schemas:
+    PairingStrategyKind:
+      type: string
+      enum:
+        - fuzzy_reference
+        - exact_identifier
+        - amount_and_date
+        - ml_similarity

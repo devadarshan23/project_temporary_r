@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@200;300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./handoff.css">
+<style>doc-page:not(:defined){visibility:hidden}</style>
+<script src="./doc-page.js"></script>
+</helmet>
+
+<doc-page margin="0.8in">
+  <div class="runhead" slot="header">
+    <span>ReconcileAI · functional specification</span>
+    <span>living document</span>
+  </div>
+  <div class="runfoot" slot="footer">
+    <span>Status words are the authority: built · specified · not built.</span>
+    <span>Illustrative figures throughout</span>
+  </div>
+
+  <div class="doc">
+
+  <h1>functional specification</h1>
+  <p class="lede">What the product does, feature by feature, with a status word
+  against each one. The design system says how a thing should look and behave;
+  this says what exists, what is only specified, and what is deliberately
+  refused.</p>
+
+  <div class="h-meta">
+    <span><b>Scope</b> v1 · the close</span>
+    <span><b>Surfaces</b> 4 public · 1 tenant · 1 partner · 1 staff</span>
+    <span><b>Journeys</b> C1–C13 and governance, P1–P9, H1–H11 · V1–V4 at surface level</span>
+    <span><b>Updated</b> 18 Sep 2026 · reconciled against the design records</span>
+  </div>
+
+  <h2>How to read and update this</h2>
+  <p>Every feature carries one of four status words, and they are not
+  interchangeable.</p>
+  <ul class="kv">
+    <li><b>built</b><span>Drawn on a surface in this project and operable there. A reader can click it.</span></li>
+    <li><b>specified</b><span>Decided and written down — here or in the journeys — with no surface yet. Safe to build without a second conversation. A rule settled in review lands here, not in a status of its own: a decision with no surface is a specification.</span></li>
+    <li><b>partial</b><span>Some of it is operable and a named part of it is not. The row says which part, because "partial" on its own is the status word that hides the most.</span></li>
+    <li><b>not built</b><span>Known to be needed and knowingly absent. Where a surface shows the state at all, it is drawn hatched with the reason attached, never as though it were handled.</span></li>
+  </ul>
+  <p class="note">A feature moves status by being edited here in the same change
+  that moves it on a surface. <b>A status word that disagrees with the surface is
+  the defect this document exists to prevent</b> — so when the two differ, the
+  surface wins and this file is wrong until corrected.</p>
+
+  <h2>Who uses it</h2>
+  <table>
+    <caption>Four roles, and the plane each one signs into.</caption>
+    <thead><tr><th scope="col">Role</th><th scope="col">Plane</th><th scope="col">What they do</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Visitor</th><td>public web</td><td>Reads the claim, books a demo. No account.</td><td>built</td></tr>
+      <tr><th scope="row">User</th><td>data · per tenant</td><td>Triages the register, resolves exceptions against SOPs, asks questions. The actor the product is built around.</td><td>built</td></tr>
+      <tr><th scope="row">Approver</th><td>data · per tenant</td><td>Approves or refuses what was proposed, with a required reason. A <b>second person</b> with their own passkey — Mark Teo in the drawn surface — not a mode of the user.</td><td>built</td></tr>
+      <tr><th scope="row">Tenant administrator</th><td>control</td><td>Sources, roles, floors, segregation policy. Set at onboarding, off the close surface.</td><td>specified</td></tr>
+      <tr><th scope="row">Partner administrator</th><td>control · partner portal</td><td>The arrangement, rate cards, commission, and who at the partner may sign in. Reaches no tenant.</td><td>built</td></tr>
+      <tr><th scope="row">Partner user</th><td>control · partner portal</td><td>Registers deals, watches tenants they sold reach live, raises cases. The same surface minus the commercials.</td><td>built</td></tr>
+      <tr><th scope="row">Partner delivery</th><td>none</td><td><b>Nothing.</b> P7 is refused, so the role exists in the partner's org chart and has no access here.</td><td>refused</td></tr>
+      <tr><th scope="row">Assurance</th><td>data · per tenant, read-only</td><td>Reads and changes nothing: the audit trail, the governance console, <b>closed periods</b> of the register, and policy with its amendment history. Live work is not theirs to watch. Every control that would change something is absent rather than disabled.</td><td>built</td></tr>
+      <tr><th scope="row">Sponsor</th><td>data · per tenant</td><td>Owns the close without working it. One act: <b>acknowledging a period's pack</b>.</td><td>specified</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Surfaces</h2>
+  <table>
+    <caption>What has been drawn, and which file holds it.</caption>
+    <thead><tr><th scope="col">Surface</th><th scope="col">File</th><th scope="col">Covers</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">V1 · Landing</th><td><span class="spec">V1 Landing.dc.html</span></td><td>The claim, the cost, how it reads, the six stages, deployments, refusals.</td><td>built</td></tr>
+      <tr><th scope="row">V2 · Book a demo</th><td><span class="spec">V2 Book a Demo.dc.html</span></td><td>Qualification, not a lead form: exception type, volume, landscape.</td><td>built</td></tr>
+      <tr><th scope="row">V3 · Sign in</th><td><span class="spec">V3 Sign In.dc.html</span></td><td>Passkey first, with federated sign-in beside it. The fallback is a one-use emailed link that expires in fifteen minutes and then enrols a passkey, so it is needed once per device. <b>Nothing asks who you are:</b> the passkey carries which organisation it belongs to, and the route is derived from that — customer to their own tenant host, partner to the partner portal, 1CloudHub to the staff console. <b>The role rides with it too:</b> the user lands at the register and the approver at what waits on his authority, so two people at the same customer land on different surfaces from the same screen. No passphrase, no tenant picker, no role picker.</td><td>built</td></tr>
+      <tr><th scope="row">C1 · Close</th><td><span class="spec">C1 Close.dc.html</span></td><td>Arrival, the run strip, intake and delivery records, triage, the register, evidence, resolution, the approver's queue, Ask as a session, export and scheduled delivery, the plan, the palette, the audit trail. Signed in as an user by default; <span class="spec">?who=mark</span> is the approver, as the sign-in screen routes him.</td><td>built</td></tr>
+      <tr><th scope="row">V4 · Success story</th><td><span class="spec">V4 Success Story.dc.html</span></td><td>One customer, one period, and what changed — reached from the landing page. Figures are illustrative and said to be.</td><td>built</td></tr>
+      <tr><th scope="row">P1 · Partner portal</th><td><span class="spec">P1 Partner.dc.html</span></td><td>Deals, tenants sold, commission, cases, the sandbox, the arrangement, rate cards, catalogue and people. <b>Control plane only:</b> no partner user reaches a customer tenant, and the one surface a partner can sign a tenant into is a sandbox in their own AWS account. Signed in as partner user by default; the whoami switch is partner administrator, who additionally sees the arrangement and the cards.</td><td>built</td></tr>
+      <!-- ⚠️ MARKUP REPAIRED 21 Sep 2026 — G1333. THIS ROW WAS MALFORMED AND CARRIED TWO STATUSES.
+           The row below ended `…disabled.&lt;/td&gt;&lt;td&gt;built&lt;/td&gt;&lt;/tr&gt;` and was IMMEDIATELY FOLLOWED, on the
+           same line and with no opening `<tr>`, by this orphan fragment (its tags HTML-escaped here so
+           that no grep-based reader counts a phantom status cell, and its words otherwise verbatim):
+
+             ing into a customer tenant is a separate step, bounded by the support access mode that
+             customer chose.&lt;/td&gt;&lt;td&gt;specified&lt;/td&gt;&lt;/tr&gt;
+
+           WHAT IT COST. A browser foster-parents an orphan out of the table, so a HUMAN saw exactly one
+           status (`built`) and the stray sentence floating above the table. Every GREP-BASED reader saw
+           two. That one phantom cell is the whole of the difference between the naive
+           `grep -ohE '<td[^>]*>(built|specified|partial|not built)</td>' … | wc -l` → 359 and a
+           `<table>`→`<tr>` walk → 358. `specified` is 50, not 51, and CLAUDE.md quoted the ghost.
+
+           🛑 WHAT NOBODY CAN DETERMINE, AND IT IS NOT GUESSED HERE. Whether S1's TRUE status is `built`
+           or `specified` is known only to whoever made the splice, and THAT PERSON IS NOT IN THIS
+           REPOSITORY'S HISTORY: the malformation is present in the pack's FIRST commit here,
+           `77f2ef1cd` (`design/handoff-pack/Functional Specification.dc.html`, same line 87), so
+           `git log`/`git blame` cannot answer it. Reproduce:
+             git show 77f2ef1cd:'design/handoff-pack/Functional Specification.dc.html' | sed -n '87p'
+
+           WHY `built` IS KEPT, ON THE SURROUNDING EVIDENCE AND NOT ON A PREFERENCE. (1) This table is
+           captioned *"What has been drawn, and which file holds it"* — a row is in it BECAUSE it was
+           drawn. (2) Its File cell names `S1 Staff.dc.html`, and that file EXISTS in this directory
+           (136,065 bytes). (3) All EIGHT rows of this table are `built`; a `specified` row naming an
+           existing drawn file would contradict the pack's own legend, which defines `specified` as
+           *"Decided and written down … with NO SURFACE YET."* (4) The orphan is the TAIL of a
+           superseded draft, and its subject — signing into a CUSTOMER tenant, bounded by the support
+           access mode — is a sub-feature claim, not a claim about whether the S1 surface was drawn.
+           ⚠️ THE ORPHAN'S OWN CLAIM IS THEREFORE NOT DISCHARGED BY THIS REPAIR, only un-stuck from this
+           row. If it was a row in its own right, it has been lost since `77f2ef1cd` and nothing here
+           can restore its heading. Naming it is the honest half; inventing a row for it would not be. -->
+      <tr><th scope="row">S1 · Staff console</th><td><span class="spec">S1 Staff.dc.html</span></td><td>Tenancy, one tenant in full, the catalogue, the agent builder, billing, partners and support — all eleven H journeys. <b>Three roles, and each sees only the destinations its work needs:</b> FDE lands on tenancy, billing on the period, support on the case queue. A destination a role does not need is absent rather than disabled.</td><td>built</td></tr>
+      <tr><th scope="row">E1 · Error pages</th><td><span class="spec">E1 Errors.dc.html</span></td><td>Six states on the public shell — 401 session ended, 403 refused, 404 nothing here, 429 the quota that is not ours, 500 ours, 503 the plane did not answer. Each states what happened neutrally, what it means for the reader in the second person, and <b>the code last, in mono</b>, with a reference that resolves to a record. <b>The 5xx pair are the only two that apologise</b>, because the fault is ours and it cost the reader something.</td><td>built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Error pages</h2>
+  <p class="note">Drawn on the <b>public shell</b>, because that is the shell
+  that survives when the application does not. The position that shapes them:
+  <b>a page like this is what the server returns when there is no application to
+  draw into</b> — inside the product a refusal is never a page, since a
+  destination a role does not hold is absent from the navigation and a control it
+  may not use carries its reason beside it.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Three parts, no fourth</th><td>What happened, what it means for the work in front of them, and the code. No reassurance, and <b>no guess at a cause where two causes are indistinguishable</b> — a wrong credential and an unreachable host look identical from here, and the page says so.</td><td>built</td></tr>
+      <tr><th scope="row">The code is on the page</th><td>Last, in mono, because a support call starts with it and nobody should have to describe a screen to find it. Every failure path emits one from a closed vocabulary — under a restrictive telemetry profile the class of the error is the only diagnostic channel that survives.</td><td>built</td></tr>
+      <tr><th scope="row">A reference that resolves</th><td>A session, a request, a run or a failure id beside the code, with a line saying <b>what kind of thing it names</b>. The 404 has no record reference to give, which is the whole content of a 404.</td><td>built</td></tr>
+      <tr><th scope="row">404 answers identically for three cases</th><td>Purged under retention, held in a tenant you do not reach, or never existed. <b>A page that distinguished them would tell a stranger which customers we hold</b> — the same enumeration argument as the sign-in reply.</td><td>built</td></tr>
+      <tr><th scope="row">403 does not name what was refused</th><td>It records that a refusal happened and under which authority it was evaluated. It also says who can widen it, which is somebody at the reader's own organisation and never us.</td><td>built</td></tr>
+      <tr><th scope="row">429 is the customer's own ceiling</th><td>The model quota belongs to the account the tenant runs in. The page says what was read is kept, that re-running is safe, and that it will stop in the same place until the quota is raised — so raising it first is the cheaper order.</td><td>built</td></tr>
+      <tr><th scope="row">The 5xx pair apologise, and nothing else does</th><td>The fault is ours and it cost the reader something. 500 states that <b>nothing was written</b> — an act either completed and is on the trail or did not happen — and names the real cost, which is the half-typed form. 503 states that documents have not moved and a due run will be <b>held rather than skipped</b>.</td><td>built</td></tr>
+      <tr><th scope="row">The way back exists</th><td>Two routes, the safe one carrying the commit weight: the register, the sign-in route, or the site. <b>Never a reload of the thing that just refused</b>, and never a retry that cannot help.</td><td>built</td></tr>
+      <!-- ⚠️ ONE CLAUSE OF THIS ROW IS FALSE AND THE REST OF IT STANDS. ANNOTATED 21 Sep 2026 — G1337.
+           THE STATUS WORD IS NOT CHANGED (vocabulary note on `Onboarding state in the model`), and here
+           `not built` is very nearly right, which is why only the one clause is corrected.
+
+           🛑 FALSE: *"No error taxonomy is written."* `docs/contracts/errors.yaml` declares an
+           `ErrorCode` enum of EIGHTY EIGHT members. Derive it, never read it:
+             node tools/check-doc-counts.mjs
+             node -e "const y=require('yaml'),fs=require('fs');console.log(y.parse(fs.readFileSync('docs/contracts/errors.yaml','utf8')).components.schemas.ErrorCode.enum.length)"
+           It is a CLOSED enum and the closure is load bearing elsewhere in the record: `db/migrations/0150`
+           reports an unjudged admission arm precisely because *"`errors.yaml`'s closed enum has no member
+           for it"*, and `server/contract/routes.ts` refuses to invent one for a declared but unbuilt
+           operation. A reader taking this clause at face value would write a second taxonomy beside a
+           closed one, which is the two vocabularies for one concept that CLAUDE.md files as §5.3.
+
+           ✅ WHAT STANDS, AND IT IS MOST OF THE ROW. *"the codes are illustrative"* — of the SIX codes
+           drawn on `E1 Errors.dc.html`, nothing joins them to the enum, and no control anywhere requires
+           the drawn code to be a member. *"no reference resolves"* — stands. *"the 503 case names a plane
+           reference we do not hold"* — stands.
+           ⚠️ AND THE TAXONOMY NAMES NO HTTP STATUS, which is the fact most likely to be misread off this
+           annotation. No error CODE is mapped to a status anywhere in that file; the only `status` in it
+           is the RFC 7807 envelope's `status: { type: integer }` FIELD DECLARATION on `Problem`, whose
+           value the server sets. Derive:
+             grep -inE 'http|status' docs/contracts/errors.yaml
+           So *"88 members"* does not mean the drawn error pages can be wired by reading this file. -->
+      <tr><th scope="row">Nothing behind them</th><td>No error taxonomy is written, so the codes are illustrative; no reference resolves; and the 503 case names a plane reference we do not hold, which is a consequence of the data being the customer's.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>C1 · Reach work</h2>
+  <p class="note">The user opens the per-tenant host and stands in
+  <span class="spec">/close</span> with the register loaded and the status bar
+  naming the run behind it.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Arrival claim</th><td>One sentence stating how much of the period needs a person, with the run it came from named above it and the period beside it.</td><td>built</td></tr>
+      <tr><th scope="row">Figures</th><td>Matched, in variance, coverage, and what the machine read. Money prints its unit; a count and a percentage do not.</td><td>built</td></tr>
+      <tr><th scope="row">Period navigation</th><td>Previous and next, with the period's own state as a note. Changing period clears any open evidence.</td><td>built</td></tr>
+      <tr><th scope="row">Run strip</th><td>One cell per reconciliation, each stating what it says and when. Selecting one reloads the work below it. Equal width at the wide tier.</td><td>built</td></tr>
+      <tr><th scope="row">Rename a run</th><td>The label is the user's own name for the reconciliation, edited in place. Enter keeps it, escape leaves it, blur keeps it.</td><td>built</td></tr>
+      <tr><th scope="row">New reconciliation</th><td>Sources, match rule, tolerance — three decisions the user makes. Sits in the strip with the things it creates.</td><td>specified</td></tr>
+      <tr><th scope="row">Status bar</th><td>Tenant and period, the run, which sources answered, the key legend, and the audit id of the last act.</td><td>built</td></tr>
+      <tr><th scope="row">Role mapping wrong</th><td>Sign-in succeeds and a destination is missing. A permission-shortened tree is drawn as absent rather than disabled, which makes the two indistinguishable.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>C2 · Run the close</h2>
+  <p class="note">Trigger: a period opens, or documents arrive for one already
+  open. Exit: a register of exceptions with a scope, a time and a denominator —
+  or a stated clean night.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Documents arrive</th><td>Upload, S3, SFTP, email or a connector. Every route in is listed with its own time and count, <b>including a route that delivered nothing</b> — "the sources answered" is not a claim a reader can check.</td><td>built</td></tr>
+      <tr><th scope="row">The delivery record</th><td>The source name in the intake list opens the delivery behind it: arrival time, containers, lines read, the location it was fetched from, and a record id. A source that delivered nothing states when it last answered. <b>Not the source configuration</b> — that is the tenant administrator's, and the route is absent for an user rather than drawn and refused. <b>Not the file</b> — it stays in the tenant's own account.</td><td>built</td></tr>
+      <tr><th scope="row">Hand-attached documents</th><td>A document attached by an user joins the same intake list, named with who attached it and to which line. Capture is not a second inbox.</td><td>built</td></tr>
+      <tr><th scope="row">Extraction</th><td>Typed values with a confidence per field. The reading is shown field by field in the evidence panel, each against the tenant's floor.</td><td>built</td></tr>
+      <tr><th scope="row">Below the floor</th><td>A field under the floor is parked for a person to confirm rather than guessed. The floor is set at onboarding and is not editable from this surface.</td><td>built</td></tr>
+      <tr><th scope="row">Matching</th><td>Definitions and rules produce match groups. Not shown as a step — its output is the register.</td><td>built</td></tr>
+      <tr><th scope="row">Exceptions judged</th><td>Predicates, severity, and an explanation the user can read, including what was ruled out and why.</td><td>built</td></tr>
+      <tr><th scope="row">Triage · facets</th><td>A closed set the query already carries: all lines, needs you, cleared, parked, each with its own count. A facet the query cannot express is drawn as a hatched hole naming the four questions — assigned to me, older than 30 days, above my authority, touched by a person — rather than offered and answered wrongly.</td><td>built</td></tr>
+      <tr><th scope="row">Triage · count line</th><td>States its scope and its denominator, plus the run behind it. A filtered count with neither is a number nobody can check.</td><td>built</td></tr>
+      <tr><th scope="row">Triage · order</th><td>A closed enum of four — line order, value, variance, status — carried by a word rather than a glyph.</td><td>built</td></tr>
+      <tr><th scope="row">Above the user's limit</th><td>A line whose value exceeds the user's limit carries the limit in words under its status, with a chevron. Accepting sends the proposal to an approver and posts nothing; the panel says so before the act, not after it.</td><td>built</td></tr>
+      <tr><th scope="row">No run yet</th><td>The period is open and nothing has measured it. Stated in words, with the next scheduled run — an empty register is not the same as a clean one.</td><td>built</td></tr>
+      <tr><th scope="row">Run reading</th><td>Progress with a denominator, and no partial register: a partial picture presented as a full one is how a period gets closed on numbers nobody checked.</td><td>built</td></tr>
+      <tr><th scope="row">Waiting on a source</th><td>Names the source and the last delivery. The credential is custodied in Secrets Manager under the tenant's own KMS key and no request path reads it back, so until a connection test exists a wrong credential and an unreachable network are indistinguishable from here — and the surface says so.</td><td>built</td></tr>
+      <tr><th scope="row">Model quota exhausted</th><td>Under bring-your-own-account the quota is the tenant's. Extraction stops mid-run, nothing is matched, and only their cloud engineer can lift it. Drawn hatched: model access is a one-time onboarding pre-flight with no ongoing check, so nothing sees the ceiling coming.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>C3 · Triage the register</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">The register</th><td>A real table with fixed column widths: reference, line, value, variance, confidence, status, action. Prose reads from the left, money from the right.</td><td>built</td></tr>
+      <tr><th scope="row">Confidence column</th><td>Its own column, because the score repeats on every row and is the one quantity directly comparable down one. A bar whose length is the score against a tick that is the floor; below the floor the fill stops short and the tick names itself.</td><td>built</td></tr>
+      <tr><th scope="row">Nothing to score</th><td>An absence, stated as words rather than as a short bar.</td><td>built</td></tr>
+      <tr><th scope="row">Keyboard</th><td>J and K move, Enter opens, A accepts, ⌘Z undoes, ⌘K opens the palette. Every row is operable without a pointer.</td><td>built</td></tr>
+      <tr><th scope="row">Totals</th><td>A foot row that agrees with the column above it.</td><td>built</td></tr>
+      <tr><th scope="row">Filter by facet</th><td>A closed set the query already carries. A facet the query cannot express is drawn as a hole rather than invented.</td><td>specified</td></tr>
+      <tr><th scope="row">Count line</th><td>States its scope and its denominator, because a filtered count with neither is a number nobody can check.</td><td>specified</td></tr>
+      <tr><th scope="row">Sort</th><td>A closed enum of four, carried by a word rather than a glyph.</td><td>specified</td></tr>
+      <tr><th scope="row">Facets that do not exist</th><td>Assigned to me, older than 30 days, above my authority, touched by a person. Four questions the register looks like it should answer and cannot.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>C4 · Resolve an exception</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Evidence, inline</th><td>Opens in place below its row, bound to it by a left rule and spanning every column. Not a side panel — the row and its reasoning are one block.</td><td>built</td></tr>
+      <tr><th scope="row">What was ruled out</th><td>Every candidate the machine considered, with the reason for each. The ruled-out list is what makes a proposal reviewable instead of a verdict.</td><td>built</td></tr>
+      <tr><th scope="row">Field readings</th><td>Per-field confidence against the floor, with the parked fields named. Two columns at the mid tier, three at the wide one.</td><td>built</td></tr>
+      <tr><th scope="row">Row actions</th><td>Accept commits directly; Attach opens the panel on the capture step; anything else opens the evidence. The action column holds the control and the click does not reach the row.</td><td>built</td></tr>
+      <tr><th scope="row">Accept</th><td>The journal is drafted and balanced, and it posts only when somebody other than the preparer approves it.</td><td>built</td></tr>
+      <tr><th scope="row">Reject with a reason</th><td>A required reason from a closed list, with where it goes. Nothing posts and the records return to the register unresolved. The reason is machinery, not a courtesy.</td><td>built</td></tr>
+      <tr><th scope="row">Park it</th><td>Stays in the register with the user's name against it. The period cannot close while anything is parked.</td><td>built</td></tr>
+      <tr><th scope="row">Attach a document</th><td>The document enters capture and is read. <b>Matching does not re-run on its own</b> — a run costs tokens and is recorded, so the user triggers it.</td><td>built</td></tr>
+      <!-- 🛑 THE TREE HAS BUILT THIS. ANNOTATED 21 Sep 2026 — G1338.
+           THE STATUS WORD IS NOT CHANGED (vocabulary note on `Onboarding state in the model`).
+
+           THE ROW: *"Above the user's limit. The work stops until an approver acts, and the chevron is
+           what says so."* The limit, the stop and the approver's act are all built and all MOUNTED.
+           Derive, never read:
+             grep -n 'ApprovalGate\|mandatoryAtOrAbove\|approvalRequiredFor\|approvalState' model/approval.ts
+             grep -n 'CREATE TABLE tenant.approval_config' db/migrations/0059_resolution_chain.sql
+             grep -rn 'handlers:' server/*/start.ts
+           `ApprovalGate` carries `mandatoryAtOrAbove` (a `Severity`) and `mandatoryAtOrAboveValue` (a
+           `Money`), `tenant.approval_config` stores them, and the chain `proposeResolution` ->
+           `decideApproval` -> `executeProposal` is served on three DISTINCT capabilities, so a viewer
+           reads and proposes nothing and a partner under the strongest operating scope is refused the
+           approving verb by `PARTNER_CAPABILITY_MASK`.
+           ⚠️ A REFUSAL HERE IS A 409 AND NEVER A 403 — the caller is permitted and the THING is not
+           ready — which is the distinction the chevron in this row is drawing, and it is the one a
+           reader is most likely to collapse into the capability gate.
+
+           ⚠️ WHAT IS NOT BUILT IS THE CHEVRON. This row's claim is a SURFACE claim as much as a rule
+           claim, and no frontend route renders an approver's queue: three of twelve routes have a screen.
+           Derive: grep -cE "^    '/[^']*': \(" frontend/src/main.tsx -->
+      <tr><th scope="row">Needs authority</th><td>Above the user's limit. The work stops until an approver acts, and the chevron is what says so.</td><td>specified</td></tr>
+    </tbody>
+  </table>
+
+  <h2>C5 · Approve or refuse</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Who reaches it</th><td>The approver is a <b>second person</b>, not a mode of the first: the passkey carries the role, so the split happens at sign-in and neither person picks a role from a list. Approvals is absent for an user; triage is absent for an approver.</td><td>built</td></tr>
+      <tr><th scope="row">Review the proposal</th><td>One block per proposal holding the whole argument — what is proposed, who proposed it and when, and the evidence including the user's own act. An approver who leaves the block to see the evidence is approving a summary.</td><td>built</td></tr>
+      <tr><th scope="row">Post</th><td>Writes the journal against the named records and states the reversal window: <b>24 hours from the post</b>. After it, a correction is a new entry with its own approval — an unlimited undo is not an audit trail.</td><td>built</td></tr>
+      <tr><th scope="row">Reverse, inside the window</th><td>Backs the journal out and returns the records to the register unresolved. Both entries stay on the trail; a reversal that erases what it reversed is a rewrite.</td><td>built</td></tr>
+      <tr><th scope="row">Refuse</th><td>A required reason, entered once and attached to every affected record, with where it goes named beside it.</td><td>built</td></tr>
+      <tr><th scope="row">One decision per proposal</th><td>Once posted or refused the controls go; what remains is what happened, its entry id, and — for a post — the window still open.</td><td>built</td></tr>
+      <!-- 🛑 THE TREE HAS BUILT THIS, AND THIS NAME IS FILED TWICE. ANNOTATED 21 Sep 2026 — G1335.
+           THE STATUS WORD IS NOT CHANGED, for the vocabulary reason set out in full on the
+           `Onboarding state in the model` row above.
+
+           ⚠️ `Segregation of duties` IS THE ONLY ROW NAME IN THIS FILE CARRYING TWO DIFFERENT STATUSES.
+           This copy is `specified`; a second copy further down is `built`. Derive both, never read them:
+             grep -n '<th scope="row">Segregation of duties</th>' 'docs/handoff-pack/Functional Specification.dc.html'
+           (A naive duplicate scan also finds `Who reaches it` twice, but those agree with each other, so
+           this is the only name where the file contradicts ITSELF.)
+
+           THE TREE: the four eyes rule is built and mounted. `model/approval.ts` holds the evaluator and
+           `tenant.approval_decision` holds the same predicate as a RESTRICTIVE POLICY, which is a mirror
+           and not a second gate. Derive:
+             grep -n 'segregationViolated\|ProposerRef\|segregationVacuous' model/approval.ts
+             grep -n 'proposeResolution\|decideApproval\|executeProposal' server/data-plane/start.ts
+           ⚠️ AND NEITHER IS A SECOND `decide()`: `model/approval.ts` takes no principal, never sees a
+           role or a capability, and is asked STRICTLY AFTER the gate, so its refusal is a 409 and never
+           a 403 — the caller is permitted and the THING is not ready.
+
+           🛑 READ THE `built` COPY'S OVERSTATEMENT BEFORE TRUSTING EITHER — IT IS THE MORE DANGEROUS OF
+           THE TWO. It claims *"the check no longer passes vacuously"*. The tree says the opposite for the
+           agent arm, in its own voice at `model/approval.ts`: *"`approver !== proposer` is trivially true
+           against `{ kind: 'agent' }`, so the flag reads as satisfied while asserting nothing at all."*
+           `ProposerRef`'s agent arm CARRIES NO ID on purpose, so `segregationViolated()` cannot compare
+           and cannot accidentally pass — IT ANSWERS `false` AND THE CALLER MUST READ
+           `ApprovalVerdict.segregationVacuous`. A caller that reads only the boolean has a control that
+           always passes, and `model/policy.ts` names the cost: *"A control that always passes is a false
+           assurance, and a false assurance is the one thing worse than a missing control."*
+           ⚠️ ALSO STILL UNEVALUATED, and the blocker is measured rather than pending: `ApprovalConfig
+           .approvers` and `CapabilityRequirement.distinctHolders`. `db/migrations/0009`'s
+           `user_visible_to_session` keys on the SESSION, so a request path reads exactly one person's
+           assignments — its own — and cannot ask what an approver holds. -->
+      <tr><th scope="row">Segregation of duties</th><td>Whoever triaged the exception is the proposer of record and cannot also approve it. The agent is never the proposer. The proposal the approver raised himself carries no post and no refuse control at all.</td><td>specified</td></tr>
+      <tr><th scope="row">Finding a second approver</th><td>What the check needs and does not have: when the only available approver is the proposer, the proposal simply waits. Drawn hatched, with the control for it hatched too.</td><td>specified</td></tr>
+      <!-- 🛑 THIS ROW IS A RULING, NOT A TASK, AND IT IS FILED TWICE UNDER TWO STATUSES. FLAGGED
+           21 Sep 2026 — G1344. NOTHING HERE DECIDES IT; IT IS THE OWNER'S.
+
+           ⚠️ IT SHIPS A SWITCH THAT DISABLES FOUR EYES. The legend promises `specified` is *"Safe to
+           build without a second conversation"*; building a control that can be turned off is the one
+           case where that promise should never be taken, and `model/policy.ts` states the cost in the
+           tree's own voice: *"A control that always passes is a false assurance, and a false assurance is
+           the one thing worse than a missing control."*
+
+           ⚠️ AND THE SAME DECISION IS FILED AGAIN, ELSEWHERE IN THIS FILE, AS `Waived knowingly` AND WITH
+           A DIFFERENT STATUS (`not built`). Derive:
+             grep -n '<th scope="row">Waived knowingly</th>' 'docs/handoff-pack/Functional Specification.dc.html'
+           TWO ROWS, ONE DECISION, TWO STATUSES — so a reader can answer *"is this decided?"* either way
+           depending on which row they land on. That is the same defect shape as the `Segregation of
+           duties` duplication this file also carries, and neither is resolved here.
+
+           🟢 WHAT BOTH ROWS ALREADY GET RIGHT, AND IT IS THE PART A BUILDER MUST NOT DROP: every approval
+           the waiver permits is *"recorded as SELF APPROVED"*, so the trail says which tenants bought
+           speed with the control. A switch without that marking is unauditable, and the tree has neither
+           the switch nor the marking today. -->
+      <!-- REFUSED 1 Oct 2026 — R16, THE OWNER'S RULING (docs/HANDOFF.md G2442). This row was `specified`. Declined because it ships a switch that DISABLES FOUR EYES, and model/policy.ts: "A control that always passes is a false assurance, and a false assurance is the one thing worse than a missing control." A decline is not a prohibition for ever: it returns only with a new ruling. -->
+      <tr><th scope="row">One-person finance team</th><td>Segregation is a per-tenant policy a small tenant may switch off knowingly, and every approval it permits is recorded as self-approved. Neither the switch nor the marking exists.</td><td>refused</td></tr>
+      <tr><th scope="row">Posting failed after leaving</th><td>The terminal state of an asynchronous act, reported on the first surface that could tell the person: what the ledger returned, at what time, that nothing was written, and that the records are unresolved again. Retrying is a control here.</td><td>built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>C6 · Ask a question</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Ask</th><td>A question about the period the register does not answer as a list. The answer states what it read, what it cost, and which rows it used.</td><td>built</td></tr>
+      <tr><th scope="row">Citations</th><td>Every claim traces to rows the reader can open. An answer without them is not shippable.</td><td>built</td></tr>
+      <tr><th scope="row">Cost of the answer</th><td>Printed with the answer, in the same grammar as every other spend figure.</td><td>built</td></tr>
+      <tr><th scope="row">The session</th><td>Turns stack oldest first and stay for the session, with a line stating how many turns and what they have cost together. A transcript that reorders itself is not one.</td><td>built</td></tr>
+      <tr><th scope="row">Confidence in the answer</th><td>Stated per turn as a figure and a phrase — what it is confident about, not a bare number.</td><td>built</td></tr>
+      <tr><th scope="row">What Ask cannot do</th><td>It reads the reconciled ledger and cannot post, approve or change anything. Said on the surface, not only in the model.</td><td>built</td></tr>
+      <tr><th scope="row">The rail sets the scope</th><td>Selecting a reconciliation makes it Ask's <b>default scope, stated and switchable</b> — one control widens to everything the tenant holds. Never a silent narrowing: an answer that was scoped and does not say so reads as the tenant's number, and a hard scope would forbid the cross-reconciliation questions finance actually asks.</td><td>built</td></tr>
+      <tr><th scope="row">Every turn keeps its scope</th><td>Recorded on the turn and printed beside the rows read and the cost, so a session that changed scope halfway is still readable afterwards.</td><td>built</td></tr>
+      <tr><th scope="row">New reconciliation is not a scope</th><td>The <span class="spec">＋ New reconciliation</span> cell leaves the rail outside Close. In Ask and Reports the rail is a scope selector, and a cell that creates something does not belong in one.</td><td>built</td></tr>
+      <tr><th scope="row">It reads as a session</th><td>Turns stack oldest first and stay for the session, with a line stating how many turns and what they cost together. A transcript that reorders itself is not one.</td><td>built</td></tr>
+      <tr><th scope="row">Nothing asked yet</th><td>Three questions offered that the ledger can actually answer, filling the field rather than sending — a turn costs tokens, so the reader commits to it.</td><td>built</td></tr>
+      <tr><th scope="row">Earlier sessions</th><td><b>Nothing persists a session.</b> The turns live in the tab and are gone on reload, so there is no history to open. It matters more than it sounds: a turn costs tokens, and a session nobody can reopen is a question the tenant pays to ask twice.</td><td>not built</td></tr>
+      <tr><th scope="row">Two columns</th><td>Sessions on the left, thread and composer on the right. The composer stays at the bottom; the question is set right on the sheet and the answer stays at full measure on paper. <b>That asymmetry is what makes it read as a conversation</b> — no bubbles and no radii, so R2 holds.</td><td>built</td></tr>
+      <tr><th scope="row">Provenance on every answer</th><td>A chip row above the prose stating what was read and when — <span class="spec">reconciled · run 03:12</span>, <span class="spec">SAP S/4HANA · last read 03:12</span> — with the turn's cost at the end of the same line. In this product the provenance of a sentence is the sentence.</td><td>built</td></tr>
+      <tr><th scope="row">A source can be the scope</th><td>The rail's reconciliation, <b>each source it reads</b>, or everything. Asking SAP rather than the ledger is a chip, not a different feature.</td><td>built</td></tr>
+      <tr><th scope="row">Asking a source returns its last delivery</th><td>Marked <span class="spec">not a live read</span> in refused ink, with the as-at time. Anything entered in the source since is not there, and the answer says it cannot tell you what it is.</td><td>built</td></tr>
+      <tr><th scope="row">A live query through the connector</th><td>Needs three things that do not exist: a <b>synchronous read</b> through the BTP destination or oData service rather than the scheduled pull, a read authorisation scoped to the entity sets the pack names, and a cost the meter can attribute to the turn rather than to the run. The pack names the entity sets; nothing queries them.</td><td>not built</td></tr>
+      <tr><th scope="row">Answers carry a table where the answer is a table</th><td>Counts with an as-at and a <b>read-from</b> column per row — reconciled, capture queue, computed — so a figure the machine derived is never mistaken for one a source stated.</td><td>built</td></tr>
+      <tr><th scope="row">The insight offers to act</th><td>The machine's reading of its own answer, on the sheet, with the actions it implies. An action it cannot perform is refused with the reason — chasing a supplier needs a mail source, and none is connected.</td><td>built</td></tr>
+      <tr><th scope="row">I cannot answer that</th><td>A refusal, not a low-confidence answer: <b>no meter, no citations</b>, refused ink, and the reason named. A chase sent from inside Reconcile AI would be on the record; one sent from Outlook is not. It still costs a little, and says so.</td><td>built</td></tr>
+      <tr><th scope="row">Sessions list</th><td>Drawn and not openable. Each is titled by its first question; the current one is marked. Intent: a session is deleted after 90 days unless attached to a finding.</td><td>not built</td></tr>
+      <tr><th scope="row">Attach to a finding</th><td>What makes a session outlive the 90 days. Refused for now, so the retention rule has nothing to except.</td><td>not built</td></tr>
+      <tr><th scope="row">Pin to a report</th><td>An answer worth keeping becomes part of the period handoff. Drawn hatched: PinnedAnswer exports nothing from the model.</td><td>specified</td></tr>
+    </tbody>
+  </table>
+
+  <h2>C7 · Reports as a canvas</h2>
+  <p class="note"><b>A scope change, decided in review.</b> Report definitions
+  were out of v1 and nothing for them was drawn. Reports is now a canvas the
+  user composes: panels are dragged onto a pack from Close or Ask, ordered
+  by hand, and refreshed on a cycle. That puts ReportDefinition back in scope,
+  and the pane says so rather than implying the arrangement is kept.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Two trays and a canvas</th><td>Generated close packs above, panels people built below, the pack itself on the right. A pack is picked from the left; a panel is dragged or clicked onto the right.</td><td>built</td></tr>
+      <tr><th scope="row">Drag, and also click</th><td>Every tray item is a drag source <b>and</b> a button. A canvas reachable only by dragging is a canvas some people cannot use.</td><td>built</td></tr>
+      <tr><th scope="row">A panel already on the pack</th><td>Refused in the tray rather than hidden, so the tray states what the pack is made of and what is left.</td><td>built</td></tr>
+      <tr><th scope="row">Every panel keeps its source</th><td>A chip on each panel naming where it came from — <span class="spec">Close · three-way match</span>, <span class="spec">Ask · 04 Mar · pinned</span>, <span class="spec">the plan</span>. <b>A figure in a finished pack whose provenance is lost is a figure nobody can defend in a review.</b></td><td>built</td></tr>
+      <tr><th scope="row">Sheet numbers are computed</th><td><span class="spec">export sheet 2 · 4 rows</span> is derived from the panel's position, because that is what the export produces. A sheet number typed beside a panel drifts the first time somebody reorders.</td><td>built</td></tr>
+      <tr><th scope="row">Order is the user's</th><td>Move up, move down, take off. The order on the canvas is the order the sheets come out in.</td><td>built</td></tr>
+      <tr><th scope="row">The cover is generated</th><td>The ninety-second read and three figures, marked <span class="spec">generated, not composed</span> — it is the one panel nobody arranges, and it cannot be taken off.</td><td>built</td></tr>
+      <tr><th scope="row">Refresh cycle</th><td>Weekly, monthly, quarterly, yearly, or on every run that raises an exception. <b>The panels keep their order and their sources; only the data under them moves.</b></td><td>built</td></tr>
+      <tr><th scope="row">A custom cycle is refused</th><td>Every second Tuesday, the third working day, the day after the bank file lands — those are rules, and the model holds a cadence. Accepting one and refreshing weekly instead would be worse than refusing: <b>the pack would look current and be wrong</b>.</td><td>not built</td></tr>
+      <tr><th scope="row">Each pack has its own composition</th><td>Switching packs switches the canvas. A pack labelled February showing an arrangement built for March seconds earlier is the same defect as an export that does not state its scope.</td><td>built</td></tr>
+      <tr><th scope="row">Composing is the user's</th><td>An approver, an admin and an assurance reader all read a pack; none arranges it. The tray, the panel controls, the cycle and Acknowledge are <b>absent</b> for them, and the pane says which side of that line the reader is on. PDF and Excel stay — they read.</td><td>built</td></tr>
+      <tr><th scope="row">The acknowledgement names who did it</th><td>Whoever clicks, with the time they clicked. <b>Crediting a person who did not perform the act is worse than showing nothing</b> on a surface whose argument is that provenance is stated exactly.</td><td>built</td></tr>
+      <tr><th scope="row">A refresh lapses the acknowledgement</th><td>Setting a cycle on an acknowledged pack is allowed — and the next refresh returns it to <b>not acknowledged</b>, keeping the old signature against the period it covered. <b>A signature belongs to a period, not to a layout</b>, so new figures under an existing one is the same failure as reordering the panels under it. The cadence panel says this before the commit, and the result says it after.</td><td>built</td></tr>
+      <tr><th scope="row">An acknowledged pack is read-only</th><td>The panel controls are <b>absent</b> and every tray item is refused: a pack somebody signed cannot be recomposed under their name. Reopening it is itself an act somebody has to own, and there is nothing to record that with — so the control refuses and says why.</td><td>partial</td></tr>
+      <tr><th scope="row">Acknowledge</th><td>A pack is acknowledged by a person, with a name and a time, and reads <span class="spec">not acknowledged</span> until then. The control toggles and records nothing yet.</td><td>partial</td></tr>
+      <tr><th scope="row">Nothing keeps the composition</th><td>There is no ReportDefinition in the model, so an arrangement is gone on reload and cannot be scheduled, shared or compared with last month's. A stored pack needs: the panel list and its order, each panel's source and query, the cycle it refreshes on, and an acknowledgement with a name and a time.</td><td>not built</td></tr>
+      <tr><th scope="row">The panels from Ask are fixtures</th><td>They depend on PinnedAnswer, which exports nothing from the model, so they are drawn from fixtures rather than from a turn somebody actually pinned. Stated on the canvas.</td><td>not built</td></tr>
+      <tr><th scope="row">Files built from a pack</th><td>PDF and Excel: one sheet per panel, numbered as the canvas numbers them, with the source line in each sheet's header rather than in a covering note nobody keeps. The first page states the run time and the scope.</td><td>built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>C7 · Export and scheduled delivery</h2>
+  <p class="note">Scoped to the two things finance actually asks for. Job
+  history is out of this version, so nothing for it is drawn — a hatched
+  control for a feature nobody committed to is still a control on the screen.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Create an export</th><td>What to export and in which format, built for the period on screen. The file states its run time on the first page: an export with no run time on it is a number without a date.</td><td>built</td></tr>
+      <tr><th scope="row">The export states its scope</th><td>The rail <b>preselects</b> which reconciliation the file covers and never narrows it behind the reader's back — the choice is visible and changeable, and the scope is written on the first page beside the run time. A file that covers one reconciliation and does not say so will be read as the period.</td><td>built</td></tr>
+      <tr><th scope="row">Schedule it</th><td>A cadence — weekly, monthly, quarterly, yearly, or on every run that raises an exception — and a destination. <b>The user owns the cycle; the tenant administrator owns where it may go.</b> That is the split the refusal already enforces: an user may set a cycle freely and may only point it at a destination the admin has allow-listed.</td><td>built</td></tr>
+      <tr><th scope="row">The destination allow-list</th><td>The control offers only destinations the tenant administrator has approved, and offers the one that is not on the list too, because refusing it is the only way to show the boundary exists.</td><td>built</td></tr>
+      <tr><th scope="row">Destination not allow-listed</th><td>Refused, naming who can add it and where — setup · destinations, the admin's. An user cannot open an egress path alone, which is the first question a security review asks about scheduled delivery.</td><td>built</td></tr>
+      <tr><th scope="row">A schedule with no run behind it</th><td><b>Holds and notifies</b>, and a new schedule holds by default. An empty file delivered on time reads to finance as a clean period; a held delivery reads as a question.</td><td>built</td></tr>
+      <tr><th scope="row">Job history</th><td>Out of this version. Not drawn.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>C8 · Watch spend against the plan</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">The meter is the door</th><td>The spend figure in the chrome is the control that opens the plan, rather than a fifth nav item competing with four destinations.</td><td>built</td></tr>
+      <tr><th scope="row">Spend against the ceiling</th><td>Month to date, the ceiling, what is left and how much of the month remains — with the ceiling as the tick on the bar, not as a second bar.</td><td>built</td></tr>
+      <tr><th scope="row">At the ceiling</th><td>A run already reading finishes; <b>new runs hold</b> and the register says so. Stopping a run mid-extraction would leave a period measured on part of its documents, which is worse than a period not yet measured.</td><td>specified</td></tr>
+      <tr><th scope="row">Who lifts it</th><td>The tenant administrator, on the plan. Nobody on this surface can raise it, and the pane says so rather than drawing a control that refuses.</td><td>specified</td></tr>
+      <tr><th scope="row">Not the same as the model quota</th><td>The quota is in the tenant's own AWS account and stops extraction mid-run. Two different stops, drawn where each happens.</td><td>built</td></tr>
+      <tr><th scope="row">Per-user spend</th><td><b>Impossible by construction.</b> A usage record ships upward with no user on it, so per-person spend is not an unwritten report — it is a number the data cannot produce. Any plan assuming per-seat chargeback is unbuildable until that record changes.</td><td>not built</td></tr>
+      <tr><th scope="row">The entitlement, and its renewal</th><td>A signed entitlement issued for <b>thirty days</b>, drawn down locally so a period closes normally through an outage at our end, with a <b>seven-day grace</b> after expiry. Shown to the tenant with its dates, because an undisclosed lease is the story that ends a relationship.</td><td>built</td></tr>
+      <tr><th scope="row">The ceiling is not the plan</th><td>Two numbers. Passing the <b>plan</b> warns and bills overage; passing the <b>ceiling</b> means something is wrong and stops. Setting them equal would block a month-end close over a commercial limit.</td><td>built</td></tr>
+      <tr><th scope="row">The non-payment ladder</th><td>Warned in the product, then new runs refused, then read-only by arrangement. <b>A run in flight always completes</b> — stopping one wastes spend already incurred and entitlement already drawn. <b>Export and the trail are never blocked</b>: in the customer's own account it is their database, and anywhere else it would be indefensible.</td><td>built</td></tr>
+      <tr><th scope="row">Nothing behind any of it</th><td>No lease is issued, drawn down or renewed, and no step of the ladder fires.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>C9 · Configure sources and packs</h2>
+  <p class="note">The tenant administrator's surface, and the only one where a
+  control's answer arrives from outside the product. Reached from Setup, which
+  exists in the nav only for an admin.</p>
+
+  <h3>Onboarding is an ordered sequence, and the order is load-bearing</h3>
+  <p class="note">Every step is blocked by the one above it. Nothing here is a
+  preference; each gate exists because skipping it produces a period measured
+  on documents nobody declared.</p>
+  <ul class="kv">
+    <li><b>1 · Declare the source</b><span>Kind, entity, and the connection its
+    kind needs. The binding is ours; the credential inside it is theirs.</span></li>
+    <li><b>2 · The test passes first</b><span>A source cannot be declared until
+    its connection test passes. Declaring an untested source means nobody learns
+    it is wrong until a run needs it.</span></li>
+    <li><b>3 · A delivery arrives, and parks</b><span>It matches no pair yet, so
+    it is <b>parked as unclassified</b> — the same bucket an unmatched pattern
+    lands in. Nothing is extracted.</span></li>
+    <li><b>4 · That parked document is the sample</b><span>The first real
+    delivery, held unextracted, is what the admin declares against — their
+    paper, not a specimen of somebody else's.</span></li>
+    <li><b>5 · Declare the pair</b><span>Source × pattern → document type, plus
+    the <b>field mapping</b> and the type's floor. Declared up front: nothing
+    extracts until both exist.</span></li>
+    <li><b>6 · The parked pile drains</b><span>Automatically, on declaration, so
+    the first period can close on documents that arrived before the pair
+    existed. It is extraction, so <b>the meter moves and the register says
+    why</b>.</span></li>
+  </ul>
+
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Declare a source</th><td>How it arrives and whose documents, then a binding. Executes in the data plane, because it binds a credential we custody in Secrets Manager under the tenant's own KMS key.</td><td>partial</td></tr>
+      <tr><th scope="row">Test before declare</th><td><b>A source cannot be declared until its connection test passes.</b> The commit is refused, with the failure named, rather than recording a binding nobody has exercised.</td><td>specified</td></tr>
+      <tr><th scope="row">Connection configuration</th><td>Per kind, and it is the largest gap on the surface. SFTP needs host, path and a pinned host key; S3 a bucket, a role to assume and an external id, with the <b>trust and read policies drafted for their engineer</b>; email an issued intake address and a sender list; SAP a BTP destination or a direct oData service binding. Each kind also needs a <b>connection test</b> — without one, a source is declared and nobody knows it works until a run needs it.</td><td>not built</td></tr>
+      <!-- REFUSED 1 Oct 2026 — R16, THE OWNER'S RULING (docs/HANDOFF.md G2442). This row was `specified`. Declined because it ends in a credential and an egress allow-list on the customer's side and a standing connection on ours — secret reach is governed by THREE constants, not two — so it is a ruling, not a task. Credential custody is ruled separately (G2447) and does not revive this row. A decline is not a prohibition for ever: it returns only with a new ruling. -->
+      <tr><th scope="row">SAP is oData, and read-only</th><td>A destination in their BTP subaccount or a direct service binding, ending in an OAuth client we never see. Their prerequisites: the service exposed, a technical user with read authorisation on the entity sets, our egress allow-listed. We pull; we never post to SAP.</td><td>refused</td></tr>
+      <!-- REFUSED 1 Oct 2026 — R16, THE OWNER'S RULING (docs/HANDOFF.md G2442). This row was `specified`. Declined because it ends in an inbound mail domain WE would operate and a sender allow-list at our edge, which is a ruling about what this product runs, not a task. A decline is not a prohibition for ever: it returns only with a new ruling. -->
+      <tr><th scope="row">Email is forwarded, not read</th><td>We hold no mail credential and never sign into their mailbox. We issue an address in our receiving domain; their mail admin forwards to it. A sender not on the list is rejected at the edge and recorded as rejected, never dropped quietly.</td><td>refused</td></tr>
+      <tr><th scope="row">Source × document type</th><td><b>One source carries several types.</b> The type is not a property of the source, so it cannot be picked once at declaration. The identifier is the pair — <b>this source, and a pattern within it</b> (prefix, filename, subject or sender) — each pair naming one type. Today a source inherits its types from the installed pack, which holds only while it carries exactly one.</td><td>not built</td></tr>
+      <tr><th scope="row">Unmatched deliveries</th><td><b>Parked as unclassified</b>, never guessed into the nearest type. A document that arrived before its type was declared parks in the same bucket — one state, not two.</td><td>specified</td></tr>
+      <tr><th scope="row">Declared up front</th><td>Mapping and floor are declared before anything extracts. The alternative — a first run treated as calibration, with the system proposing both — was <b>rejected</b>: it costs a run nobody can close, and a period would rest on a mapping accepted in a hurry.</td><td>specified</td></tr>
+      <tr><th scope="row">The sample is their first delivery</th><td>Held unextracted, and it is what the admin declares the pair against. A pack specimen would be somebody else's paper; an uploaded file is not what the source actually sends.</td><td>specified</td></tr>
+      <tr><th scope="row">Help, per source and document type</th><td>The sample is shown beside the declaration with what was read off it — <span class="spec">scanned image · no text layer</span> — so the OCR question is answerable at declaration rather than after a period.</td><td>not built</td></tr>
+      <tr><th scope="row">OCR is the pack's declaration</th><td>Per <b>document type</b>, not per source and not detected per document. So a type either reads OCR or does not, and every source paired to it inherits that.</td><td>specified</td></tr>
+      <tr><th scope="row">Sample disagrees with the type</th><td>A scanned sample against a digital-only type <b>refuses the pair</b> — the sample is evidence the wrong type was chosen. The way out is not an admin setting: a type that needs OCR and has no OCR variant is a <b>pack change</b>.</td><td>specified</td></tr>
+      <tr><th scope="row">Raising it with the FDE</th><td>A control on this pane, carrying the pack, the type and the sample. The pair <b>stays parked pending</b>, and the source's other pairs are unaffected — a source goes <b>partly live</b>, with the pending pair counted separately.</td><td>not built</td></tr>
+      <tr><th scope="row">Field mapping</th><td>What the page calls a field against what the type calls it, per source-and-pattern pair, because one supplier's layout is not another's. Required before extraction, so an incomplete mapping refuses the declaration.</td><td>not built</td></tr>
+      <!-- 🛑 THE TREE HAS BUILT THIS, AND FINER THAN THIS ROW SPECIFIES. ANNOTATED 21 Sep 2026 — G1336.
+           THE STATUS WORD IS NOT CHANGED (vocabulary note on `Onboarding state in the model`).
+
+           THE ROW ASKS FOR *"a floor per document type"*. The tree keys the floor on THREE things, not
+           one: per TENANT, per DOCUMENT TYPE, per FIELD PATH. `db/migrations/0160_definition_engine_spec.sql`
+           adds `confidence_floor` to `tenant.document_field_spec`, whose primary key is
+           `(tenant_id, document_type_id, path_key)`. Derive both, never read them:
+             grep -n 'confidence_floor' db/migrations/0160_definition_engine_spec.sql
+             grep -n 'PRIMARY KEY' db/migrations/0012_payload_and_subject_index.sql
+           So the row's own argument — *"a handwritten advice cannot be held to a generated PDF's
+           confidence"* — is satisfied, and one step past: two FIELDS of the same document type may carry
+           different floors, which a per type floor could not express.
+
+           ⚠️ WHAT IS GENUINELY ABSENT IS THE SURFACE, NOT THE FLOOR, and that is a DIFFERENT ROW's claim
+           (`Amending either amendable field`: *"No surface, and no record of an amendment."*). Nothing on
+           any of the seven contract tiers authors a `FieldSpec`: `tenant.document_field_spec` takes
+           `SELECT` and nothing else, deliberately, because *"a request path that could write a `FieldSpec`
+           could DECLARE A CLASSIFICATION"*. So a floor reaches a tenant by MIGRATOR today, and G110's
+           publication seam is still owed. Do not read this annotation as *the feature is done*. -->
+      <tr><th scope="row">A floor per document type</th><td>One tenant-wide floor is too blunt once OCR is in the mix — a handwritten advice cannot be held to a generated PDF's confidence. The floor belongs to the type, and is stated on every pair.</td><td>not built</td></tr>
+      <tr><th scope="row">The drain</th><td>Declaring a pair extracts the documents already parked against it, automatically, so the first period can close. It is extraction: <b>it counts</b>, the meter moves, and the register states why rather than leaving an unexplained jump.</td><td>specified</td></tr>
+      <tr><th scope="row">A drain at the ceiling</th><td>Treated as a <b>continuation, not a new run</b> — it finishes. A half-drained pile is a period measured two ways, which is the same reasoning that lets a reading run finish at the ceiling.</td><td>specified</td></tr>
+      <tr><th scope="row">Where the parked pile shows</th><td>Both places. The register names them as <b>awaiting setup</b> with the person who unblocks it named, because during onboarding a parked pile is expected rather than a fault — and counted apart from exceptions so the denominator stays honest.</td><td>not built</td></tr>
+      <tr><th scope="row">The register's line always links</th><td>An user who cannot act still follows it, and lands on <b>one pane about that pair only</b> — the sample, why it is parked, and who unblocks it. Not a read-only copy of Setup, and never a dead sentence.</td><td>specified</td></tr>
+      <tr><th scope="row">Changing or stopping a source</th><td>Neither is a row action. A source that has delivered cannot be deleted — the documents and the periods measured on them stay. Stopping is a dated <b>disable</b>; changing a path or key is a <b>rebinding</b>, and a period spanning the change must say which binding read it.</td><td>not built</td></tr>
+      <tr><th scope="row">Cancel</th><td>Both the source and the pack panel can be left without committing.</td><td>built</td></tr>
+      <tr><th scope="row">Admin is a capability, not a person</th><td>Setup exists in the nav for an admin only. Close, Ask, Reports and the register rail belong to the <b>user role</b>, and an admin who does not hold it does not see them — in a small finance team one person holds both, and then everything is present. The role decides the surface; the person may hold more than one.</td><td>specified</td></tr>
+      <tr><th scope="row">We custody the credential, and never read it back</th><td>Bound through the product by the tenant's administrator or by an FDE under a live delivery grant, and held in <b>our Secrets Manager under the tenant's own KMS key</b> — one secret per source, with only a reference in our database. <b>No request path can read it back</b>: the serving role may write a credential and may never decrypt one. Until a connection test exists, a wrong credential and an unreachable host still look identical from this surface.</td><td>built</td></tr>
+      <tr><th scope="row">The handoff has no state</th><td>Handoff 5. A declared source reads <b>waiting on a credential</b> and stays there; the product learns it is done by the source delivering, not by being told.</td><td>specified</td></tr>
+      <tr><th scope="row">What a pack is</th><td>Five parts: <b>the sources it needs</b> (named as roles, bound at install to a real source and its config), <b>the document types and how each is read</b> including whether it needs OCR, <b>the matching arity</b> (1:N statement lines to ledger entries, or a three-way match across invoice, PO and receipt), <b>the SOPs</b> for default exception handling, and <b>the rules</b> for extraction and matching.</td><td>specified</td></tr>
+      <tr><th scope="row">A pack names source roles</th><td>The catalogue entry names the roles it needs filled; the install is where a role becomes a bucket, a path and a credential. Declaring a source on its own is for a source added later or shared across packs — <b>for a tenant being onboarded the two are one act</b>, with the source declared from inside the install and its role already attached.</td><td>specified</td></tr>
+      <tr><th scope="row">Variables before install</th><td>An install with an unfilled role is refused, rather than installed and idle. The pack table states what each install is <b>bound to</b>, so an install bound to nothing is visible rather than plausible.</td><td>not built</td></tr>
+      <tr><th scope="row">A dry run before installing</th><td>Reads a sample of what the bound sources already hold and reports what it would extract, match and raise — changing nothing and writing no journal. It is extraction, so <b>it costs tokens and moves the meter</b>, and the count and cost are stated before it runs.</td><td>not built</td></tr>
+      <tr><th scope="row">Editing an installed pack</th><td><b>Tenant-editable:</b> the variables, the SOPs, the tolerances a rule reads. <b>Pack-owned:</b> document types, the rules themselves, the matching arity — changing those is a new pack version and comes from 1CloudHub. A tenant-edited rule would make its findings incomparable with every other tenant's.</td><td>not built</td></tr>
+      <tr><th scope="row">Changes are overlays</th><td>Every tenant change carries the pack version it was written against, so an upgrade can say which overlays still apply instead of dropping them silently. Effective next run, never mid-period.</td><td>not built</td></tr>
+      <tr><th scope="row">Install a blueprint</th><td>Document types, definitions, rules and SOPs from the catalogue, as one pack with all four counts stated. A pack that installs types without the rules that read them looks installed and does nothing.</td><td>partial</td></tr>
+      <tr><th scope="row">Effective next run</th><td>Never mid-period. Changing what the agent looks for halfway through a close leaves the period measured two ways.</td><td>specified</td></tr>
+      <tr><th scope="row">Refuses on absence</th><td>A pack that reads an input no bound source delivers refuses to install rather than installing and finding nothing — which would read as a clean period.</td><td>specified</td></tr>
+      <tr><th scope="row">The confidence floor</th><td>FDE-set, read-only on this surface, and <b>drawn refused rather than hidden</b> — an admin who cannot find the control assumes it is elsewhere. No self-service path, deliberately: the floor decides which fields are parked for a human instead of guessed.</td><td>built</td></tr>
+      <tr><th scope="row">Changing or stopping a source, in detail</th><td><b>Disable</b> is dated and reversible, and the deliveries stay where they are. <b>Rebinding</b> a path or a key is a new binding, not an edit: the binding history keeps both, and a period spanning the change states which binding read it. Neither is a delete — a source that has delivered cannot be removed.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>C10 · Declare the tag policy</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Whose vocabulary</th><td>Theirs. The customer owns the cost-centre names; we own what the meter does with them.</td><td>specified</td></tr>
+      <tr><th scope="row">One chargeback key</th><td>Nominated from the 1CloudHub side, because it changes how usage is reported rather than what the tenant sees. Everything downstream depends on that one choice.</td><td>not built</td></tr>
+      <tr><th scope="row">Agreed late, and unrepairable</th><td><b>The one handoff whose lateness has no remedy.</b> Usage records emitted before the agreement carry no tag and cannot be re-tagged — they are the records the invoice rests on. A tenant that agrees in month three has two months of uncategorised spend permanently, which is why this belongs in onboarding and not in a settings page reached eventually.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>C11 · Read the audit trail</h2>
+  <p class="note">Was the clearest hole in the map: every protected surface
+  printed an audit id and nothing resolved it.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">A door, not a destination</th><td>Audit sits behind the avatar beside Setup, so the three destinations hold. A fourth nav item would make the register compete with its own record.</td><td>built</td></tr>
+      <tr><th scope="row">The id resolves</th><td>The id the status bar prints on every surface resolves to the run behind it, the decisions taken on it, and who took them.</td><td>built</td></tr>
+      <tr><th scope="row">Read-only sign-in</th><td>The assurance reader role is mapped in the customer's own IdP, not granted here.</td><td>partial</td></tr>
+      <tr><th scope="row">An assurance reader reads the work too</th><td>The register and the reports, not only the trail — <b>a trail with no access to what it describes is a list of hashes</b>.</td><td>built</td></tr>
+      <tr><th scope="row">Reading one run's trail</th><td>A text search over the id, the actor and the entry; facets for the machine and the run, people, and entries that cost something; and the order reversible. The count line states what is shown of what, and that it is one page — rather than drawing paging over four rows.</td><td>built</td></tr>
+      <tr><th scope="row">The tenant's whole trail</th><td>A year across runs and periods is what runs to many pages, and it needs a search that reaches <b>every</b> entry rather than the loaded ones, a date range, server-side paging, and an export of the trail itself. <b>An assurance reader who can only search the page in front of them is searching the sample we chose for them.</b> The Reports export covers the register, not the record of who did what to it.</td><td>not built</td></tr>
+      <tr><th scope="row">Scheduling is not reading</th><td>Absent for an assurance reader. A recurring delivery to an outside address is <b>egress configuration</b> — written once, acted on every week with nobody present — by the same argument that removes Ask. The schedules table stays readable.</td><td>built</td></tr>
+      <tr><th scope="row">An export stays</th><td>Deliberate. It produces a file of what the assurance reader may already read, writes no configuration and delivers nowhere, and <b>an assurance reader who cannot take the evidence away is not auditing</b>.</td><td>built</td></tr>
+      <tr><th scope="row">Ask is not read-only</th><td>Absent for an assurance reader. Every turn prints what it cost, on the same usage stream that becomes the invoice, so Ask <b>spends the tenant's plan</b> — which makes it a control that changes something, not a way of reading.</td><td>built</td></tr>
+      <tr><th scope="row">Tries to change something</th><td>Every control that would change anything is <b>absent rather than disabled</b>. A control an assurance reader may never use is noise, and this is the one place the refused-control rule inverts.</td><td>built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>C12 · Escalate hosted to BYOA</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <!-- REFUSED 1 Oct 2026 — R16, THE OWNER'S RULING (docs/HANDOFF.md G2442). This row was `specified`. Declined because its own text says the decision is "commercial and security, not technical, and run by 1CloudHub" — a ruling, not a task. BYOA escalation is also slipped to v1+1 by G36. A decline is not a prohibition for ever: it returns only with a new ruling. -->
+      <tr><th scope="row">The decision</th><td>Commercial and security, not technical, and run by 1CloudHub. The tenant's mode is readable on Setup and not changeable there.</td><td>refused</td></tr>
+      <!-- REFUSED 1 Oct 2026 — R16, THE OWNER'S RULING (docs/HANDOFF.md G2442). This row was `specified`. Declined because part of C12's BYOA escalation, a commercial and security decision run by 1CloudHub, and BYOA is slipped to v1+1 by G36. A decline is not a prohibition for ever: it returns only with a new ruling. -->
+      <tr><th scope="row">Everything migrates</th><td>Documents, runs, resolutions, approvals and the audit trail. Not a subset: a regulated customer will not accept a lost history, and <b>a partial migration is the same thing wearing a better word</b>.</td><td>refused</td></tr>
+      <!-- REFUSED 1 Oct 2026 — R16, THE OWNER'S RULING (docs/HANDOFF.md G2442). This row was `specified`. Declined because part of C12's BYOA escalation, a commercial and security decision run by 1CloudHub, and BYOA is slipped to v1+1 by G36. A decline is not a prohibition for ever: it returns only with a new ruling. -->
+      <tr><th scope="row">Verify before teardown</th><td>A seed run and a reconciliation of counts against the old plane before anything is decommissioned — then the old stack goes, so no duplicate of regulated data is left in an account we may no longer be provisioned in.</td><td>refused</td></tr>
+      <!-- REFUSED 1 Oct 2026 — R16, THE OWNER'S RULING (docs/HANDOFF.md G2442). This row was `specified`. Declined because part of C12's BYOA escalation, a commercial and security decision run by 1CloudHub, and BYOA is slipped to v1+1 by G36. A decline is not a prohibition for ever: it returns only with a new ruling. -->
+      <tr><th scope="row">Cutover is forward only</th><td>The new plane is authoritative from cutover and the old one is read-only immediately, so <b>two planes never both accept work</b>. The cost: a failed verification cannot be fixed by falling back — it is fixed by re-migrating forward.</td><td>refused</td></tr>
+    </tbody>
+  </table>
+
+  <h2>C13 · Set the tenant policy</h2>
+  <p class="note">Created by two of the nine rulings. Both settings are the kind
+  a tenant turns on once and is then measured against, so both are recorded on
+  every action they permit rather than only in a settings page.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <!-- 🛑 THIS IS THE SECOND COPY OF `Segregation of duties`, AND ITS LAST CLAUSE OVERSTATES THE
+           CONTROL. ANNOTATED 21 Sep 2026 — G1335. The first copy, filed `specified`, carries the full
+           note; find it with:
+             grep -n '<th scope="row">Segregation of duties</th>' 'docs/handoff-pack/Functional Specification.dc.html'
+
+           ⚠️ *"the check no longer passes vacuously"* IS FALSE OF THE AGENT ARM AND THE TREE SAYS SO ON
+           THE DECLARATION: `ProposerRef`'s agent arm carries NO id, so `segregationViolated()` answers
+           `false` and THE CALLER MUST READ `ApprovalVerdict.segregationVacuous`. Derive:
+             grep -n 'segregationVacuous' model/approval.ts
+           A reader who takes this cell at face value ships a control that always passes and believes it
+           is enforced. THE STATUS WORD IS NOT CHANGED (see the vocabulary note on `Onboarding state in
+           the model`); WHAT IS RECORDED IS THAT THE CELL CLAIMS MORE THAN THE CODE DOES.
+
+           ⚠️ AND THE DUPLICATION IS NOT RESOLVED BY DELETING EITHER COPY. Each says something the other
+           does not — this one names the default (`On by default`), the other names the agent exclusion
+           and the approver's own proposal — and NOBODY IN THIS REPOSITORY KNOWS WHICH THE PACK'S AUTHOR
+           MEANT TO SURVIVE. Both are kept and both are annotated; collapsing them is the pack owner's. -->
+      <tr><th scope="row">Segregation of duties</th><td>On by default. Whoever triaged is the proposer of record and cannot approve their own work — the check no longer passes vacuously.</td><td>built</td></tr>
+      <!-- REFUSED 1 Oct 2026 — R16, THE OWNER'S RULING (docs/HANDOFF.md G2442). This row was `not built`. Declined because the same decision as "One-person finance team", filed twice under two statuses (G1344). R16 declines the decision, so both rows move; leaving this one at not built would say a declined waiver is owed. A decline is not a prohibition for ever: it returns only with a new ruling. -->
+      <tr><th scope="row">Waived knowingly</th><td>A tenant too small to staff two people may switch it off, and <b>every approval the waiver permits is recorded as self-approved</b> — so the trail says which tenants bought speed with the control.</td><td>refused</td></tr>
+      <tr><th scope="row">The delivery allow-list</th><td>Email addresses, S3 buckets, SFTP hosts and webhook endpoints, entered by the admin. An user may schedule only to a destination already on it, which is why Reports refuses the endpoint that is not. Adding one is an egress decision and belongs to whoever answers the security review.</td><td>not built</td></tr>
+      <tr><th scope="row">Read, refused, unwritten</th><td>Reports reads the list and refuses against it; nothing writes it. The destinations it reads are fixtures, and the pane says so.</td><td>partial</td></tr>
+      <tr><th scope="row">Waived, then audited</th><td>The tenant is asked to evidence a control it chose not to run. The trail answers — which tenants waived it and which approvals it permitted — <b>even when that is not the answer they wanted</b>.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>The partner portal</h2>
+  <p class="note">Accepted in review as a <b>control-plane surface only</b>. G51's
+  invariant is about the data plane and holds unchanged: no partner user reaches
+  a customer tenant. What the portal carries is the partner's own commercial
+  position, the state of the tenants they sold, and <b>three writes</b> — a deal
+  registration, a case, and an invitation. Everything else on it is a read.</p>
+
+  <h2>P1 · Get registered</h2>
+  <p class="note">Every step is ours to execute and there is nothing for the
+  partner to do. The pane exists anyway, because every figure elsewhere in the
+  portal is decided by this record and a partner who cannot see it is taking the
+  rest on trust.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">The arrangement, read</th><td>Standing, signing date, billing arrangement and territory as figures; then the eight decisions that were made — partner of record, billing arrangement, wholesale and retail card, commission basis, payment terms, resale rights, support path — each with whose decision it was and what it governs.</td><td>built</td></tr>
+      <tr><th scope="row">Partner administrator only</th><td>Partner user does not see it, on the same rule as rate cards: a commercial position is the admin's to read. Switching role while the pane is open returns to Deals rather than showing an empty surface.</td><td>built</td></tr>
+      <tr><th scope="row">Partner-billed against customer-billed</th><td>The load-bearing line. It decides whether we invoice the partner or their customer, and changing it mid-term re-papers every tenant underneath it.</td><td>specified</td></tr>
+      <tr><th scope="row">Read-only by construction</th><td>No line is a field. An amendment is a conversation with the partner manager, which is what the pane says instead of drawing a disabled control.</td><td>built</td></tr>
+      <tr><th scope="row">The record that is read</th><td>Rows a person edits by hand. No staff surface writes a partner, and the registry P9 submits into is the same object.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>P2 · Rate cards and retail price</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Two cards, one of them theirs</th><td>Per line: wholesale — what we bill the partner — beside retail and the margin between them. Both visible, because a partner cannot price without seeing both.</td><td>built</td></tr>
+      <tr><th scope="row">Requesting a change</th><td>A retail card is part of an arrangement rather than a setting, so the control sends a request and says so. Cards already issued to a customer stand; a change takes effect from the next period.</td><td>built</td></tr>
+      <tr><th scope="row">Customers who set their own retail</th><td>Where the customer negotiated directly, the commission row reads <span class="spec">retail set by the customer</span> and the margin column is empty rather than zero.</td><td>built</td></tr>
+      <tr><th scope="row">Writing a card</th><td>Assignment and amendment are ours, from a staff surface that does not exist.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>P3 · Invite partner administrators</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">People, and what each reaches</th><td>Name, address, role, what that role reaches, and sign-in state. Partner delivery is listed with <span class="spec">nothing · P7 is refused</span> — drawn rather than omitted, because a role with no access is a fact about the product.</td><td>built</td></tr>
+      <tr><th scope="row">Inviting</th><td>An address and one of two roles — partner administrator for commercials and people, partner user for deals, tenants and cases. The invitation is the write; the portal is where it now arrives, which is the ruling that resolved P3.</td><td>built</td></tr>
+      <tr><th scope="row">Enrolment</th><td>The invited person enrols a passkey and V3 routes them here by the organisation it belongs to. Nothing in the flow asks which portal they want.</td><td>specified</td></tr>
+      <tr><th scope="row">Delivery and revocation</th><td>Sending the mail, and removing a person who has left. Neither exists.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>P4 · Scope catalogue access</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">What may be resold</th><td>The blueprints in scope, each with what it reconciles and what it needs from a customer. A partner selling from a list they were told about rather than shown was the gap; this closes it.</td><td>built</td></tr>
+      <tr><th scope="row">Scoping is ours</th><td>The set is bounded by 1CloudHub catalogue. The pane reads it and offers no control to widen it.</td><td>built</td></tr>
+      <tr><th scope="row">Requesting a blueprint</th><td>Asking for resale rights on something outside the set.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>P5 · Sell and create a tenant</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Tenants sold, with onboarding state</th><td>Customer, deployment mode, where onboarding has got to, live-since date and the arrangement each runs on. The answer to the phone call a partner would otherwise make.</td><td>built</td></tr>
+      <tr><th scope="row">Whose stall it is</th><td>Each state says who it waits on — <span class="spec">waiting on their cloud engineer, not on you</span> — because a partner reading a stall needs to know whether to act.</td><td>built</td></tr>
+      <tr><th scope="row">Nothing inside the tenant</th><td>No register, no exceptions, no documents, no usage detail below the billing line. Stated on the surface as a boundary rather than left as an absence.</td><td>built</td></tr>
+      <tr><th scope="row">Raise a case from a row</th><td>Every row carries it, and the case is filed against the tenant named on that row.</td><td>built</td></tr>
+      <tr><th scope="row">Creating the tenant</th><td>Ours, with the customer. The partner closes the deal; provisioning is a staff surface that does not exist.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>P6 · See commission and margin</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">The position, four figures</th><td>Billed to them wholesale, billed by them retail, their margin, and commission owed — with the basis and payment terms named under it rather than left to be asked.</td><td>built</td></tr>
+      <tr><th scope="row">Per customer, with the invoice</th><td>Usage this period, wholesale, retail, margin, and <b>which invoice the line is on</b>. Commission is on invoiced revenue, so the invoice number is the basis — there is nothing further to qualify.</td><td>built</td></tr>
+      <tr><th scope="row">The sandbox line</th><td>When a sandbox is live it is the first row, marked <span class="spec">your own tenant · no retail</span>. A partner's own demo costs them money and the statement says so.</td><td>built</td></tr>
+      <tr><th scope="row">Querying a statement</th><td>The usage total is theirs to see; the documents behind it are their customer's. So a query is a conversation with us, not a drill-down.</td><td>built</td></tr>
+      <tr><th scope="row">Per-user attribution</th><td>Impossible for either side — usage records ship with no user id. Stated on the surface, because a partner will ask and the answer is not "later".</td><td>refused</td></tr>
+    </tbody>
+  </table>
+
+  <h2>P7 · Support their own tenant</h2>
+  <p class="note">Refused, and costed rather than deferred. 1CloudHub is always
+  the support path, priced into the arrangement, instead of a delegated grant
+  into the customer's account. The cost is real: a partner cannot support what it
+  sold.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Partner-led support</th><td>No partner user reaches the data plane, and delegated tenant grants are not pursued.</td><td>refused</td></tr>
+      <tr><th scope="row">Stated where it bites</th><td>Named on Tenants sold and again beside partner delivery in People, so the refusal is read at the two places somebody would look for the capability.</td><td>built</td></tr>
+      <tr><th scope="row">What it leaves open</th><td>Cases, below — the partner's words reach us, and our replies reach them, with no tenant data crossing.</td><td>built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>P8 · Escalate a resold tenant to BYOA</h2>
+  <p class="note">Three organisations, and the one running the technical steps
+  has no relationship with us. The partner's customer's cloud engineer is
+  reachable only through the partner.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">The five steps, and whose hands</th><td>The security review that requires it, the commercial amendment, provisioning in the customer's account, the migration, and cutover — each with whose hands it is in and what the partner does, which for three of the five is nothing.</td><td>built</td></tr>
+      <tr><th scope="row">The arrangement does not change</th><td>Same wholesale card, same commission, same support path. The mode changes; the commercials do not.</td><td>built</td></tr>
+      <tr><th scope="row">Asking about one</th><td>Sends it to the partner manager, and says what we need first: an introduction to their customer's engineer.</td><td>built</td></tr>
+      <!-- REFUSED 1 Oct 2026 — R16, THE OWNER'S RULING (docs/HANDOFF.md G2442). This row was `specified`. Declined because P8's copy of C12's rule ("Same rule as C12"), and C12 is declined with it. A decline is not a prohibition for ever: it returns only with a new ruling. -->
+      <tr><th scope="row">Migration is all-or-nothing</th><td>Documents, runs, resolutions, approvals and the audit trail move together, and the new plane is authoritative from cutover. Same rule as C12.</td><td>refused</td></tr>
+      <tr><th scope="row">State while it runs</th><td>No escalation request, no progress to show the partner, and no named third party on a partner-sold tenant. The row changes mode one day with no visible passage between the two.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>P9 · Register a deal</h2>
+  <p class="note">The portal's one commercial write, and it is a <b>request</b>:
+  received, then accepted by us. That is what keeps a visibility surface from
+  becoming a system partners can enter facts into.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Two shapes</th><td>A <b>deal</b> — customer, value, close date, named contact — or a <b>customer claim</b>, which is the relationship with no expiry and asks why them, in one line. Registering the relationship and registering the opportunity are different claims and the form says which is being made.</td><td>built</td></tr>
+      <tr><th scope="row">A request until accepted</th><td>The result states it plainly, and states that the time of receipt is what decides precedence. Nothing is registered by submitting.</td><td>built</td></tr>
+      <tr><th scope="row">Precedence, and what is not said</th><td>A colliding claim is refused <b>without naming the holder</b> — telling one partner who else is working a company leaks the other's pipeline.</td><td>specified</td></tr>
+      <tr><th scope="row">Dormancy, not expiry</th><td>Claims do not lapse on a calendar. The register shows last activity and marks a claim <span class="spec">dormant · nobody has worked it</span>, leaving the judgement with people who can see both sides.</td><td>built</td></tr>
+      <tr><th scope="row">Registration-first attribution</th><td>A later lead from V2 is matched against an accepted registration rather than attributed after the fact. The console never sees the lead; the CRM holds the copy.</td><td>specified</td></tr>
+      <tr><th scope="row">Accepting or refusing one</th><td>Ours, and there is no queue, no screen and no route for it.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Cases · what P7's refusal leaves open</h2>
+  <p class="note">Partner-raised, and we own the work. The partner's words reach
+  us and our replies reach them; no tenant data travels in either direction.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Raising one</th><td>Against a tenant they sold, in their own words. Filed by tenant name rather than by a position in a list, so a list that shifts cannot re-target the case.</td><td>built</td></tr>
+      <tr><th scope="row">Severity is proposed, not set</th><td>The partner picks what they mean — blocked, a question, not urgent — and it is recorded as <span class="spec">you propose</span>. We decide, and where the two differ the row says both: <span class="spec">normal · you said high</span>.</td><td>built</td></tr>
+      <tr><th scope="row">Visibility is a choice at raise time</th><td>The partner and us by default; naming the customer's contact lets them see it too. Chosen when the case is raised, because it changes who reads every later message.</td><td>built</td></tr>
+      <tr><th scope="row">The thread</th><td>The case opens to its history — severity, commitment and visibility as chips, then every message in order, the partner's on sheet ground and ours on paper — with a composer at the foot.</td><td>built</td></tr>
+      <tr><th scope="row">Words only</th><td>No attachments. A partner cannot send us a document, because a document a partner holds about their customer's tenant is the boundary P7 refuses, arriving by another route.</td><td>built</td></tr>
+      <tr><th scope="row">Resolved for them is a note</th><td>A partner saying it is fine now puts a message on the case; it does not close it. Closing is ours, and the distinction matters when the two disagree.</td><td>built</td></tr>
+      <tr><th scope="row">Commitment</th><td>A response commitment per severity, shown met or outstanding. What is drawn is the commitment, never a promised resolution time.</td><td>built</td></tr>
+      <tr><th scope="row">Our side of it</th><td>The queue we work from, and whatever writes a reply. Nothing on our side exists.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Sandbox · a tenant the partner may sign into</h2>
+  <p class="note">The one tenant a partner user can enter, and it is theirs:
+  provisioned in the <b>partner's own AWS account</b>, seeded with an invented
+  story, carrying no customer data. G51 is untouched because there is nothing in
+  it to protect — which is exactly why it was allowed.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Where it runs</th><td>A BYOA tenant in a partner account that is <b>never the account a production tenant of theirs runs in</b>, so a mistake in one cannot reach the other. Reached from the tenant switcher, under the portal identity.</td><td>built</td></tr>
+      <tr><th scope="row">Standing and the reset clock</th><td>Whether they have one, the seeded story version, and the next automatic reset. Reset is monthly, and can be asked for on demand before a demo.</td><td>built</td></tr>
+      <tr><th scope="row">Marked demo</th><td>In the chrome and on every export, so a screen-shared window is never mistaken for a customer's own figures.</td><td>specified</td></tr>
+      <tr><th scope="row">Uploaded documents</th><td>Permitted — a prospect's own sample is the strongest demo there is — then <b>labelled while present and purged at reset</b>. The ledger shows the tenant-level count and each document with its purge date.</td><td>built</td></tr>
+      <tr><th scope="row">What it refuses</th><td>Bank and ERP source connections, and any delivery or export leaving the account. A demo tenant that can reach a real source is a production tenant wearing a label; nothing addressed to a person outside the firm may be sent from a tenant whose figures are invented.</td><td>built</td></tr>
+      <tr><th scope="row">It costs money</th><td>Metered and billed at their wholesale card, appearing on Commission as their own line with no retail. A demo that costs nothing is a demo nobody turns off.</td><td>built</td></tr>
+      <tr><th scope="row">Who reaches it</th><td>Partner user and partner administrator. Partner delivery does not — P7's refusal is about live tenants, and a role with no live access has no reason for a demo one.</td><td>built</td></tr>
+      <tr><th scope="row">Asking for one, and handing it back</th><td>Both are provisioning steps with the partner's cloud engineer rather than a switch, and the surface says so — about two days either way.</td><td>built</td></tr>
+      <tr><th scope="row">Prospect trial tenants</th><td>Created separately, attributed to the partner, and the prospect cannot sign in. Not the same object as the sandbox.</td><td>specified</td></tr>
+      <tr><th scope="row">The jobs behind it</th><td>Provisioning, the reset cycle, the upload purge and the demo marking. All specified; none wired.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>The staff console</h2>
+  <p class="note">The control plane, and the only console with <b>six live
+  writes</b>. Three roles share it and see different parts of it: an FDE lands
+  on tenancy, billing on the period, support on the case queue. Two of the
+  writes ask before they act, because creating a tenant and issuing an
+  adjustment cannot be taken back.</p>
+  <table>
+    <caption>The six writes, and what each one costs to get wrong.</caption>
+    <thead><tr><th scope="col">Write</th><th scope="col">Guard</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Create a tenant</th><td>Two-step: the permanent choices are read back before it commits.</td><td>built</td></tr>
+      <tr><th scope="row">Move an onboarding step</th><td>Only the next open step. Anything below it is blocked, or forced with a reason.</td><td>built</td></tr>
+      <tr><th scope="row">Set an extraction floor</th><td>Immediate, effective next run, and the surface says which way the cost falls.</td><td>built</td></tr>
+      <tr><th scope="row">Accept or refuse a registration</th><td>Immediate. Accepting a colliding claim is refused by the surface itself.</td><td>built</td></tr>
+      <tr><th scope="row">Add a domain to the sign-in list</th><td>Immediate, with the count it widens stated before and after.</td><td>built</td></tr>
+      <tr><th scope="row">Raise an adjustment</th><td>Two-step: the amount, the target and the reason are read back.</td><td>built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>H1 · Create account, tenant and plan</h2>
+  <p class="note">Four choices, and <b>two of them are permanent</b>. That is the
+  whole design of this form: the permanent pair is read back before the tenant
+  exists, and the amendable pair is marked as amendable where it is chosen.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Deployment mode and residency are frozen</th><td>Written once. A customer who outgrows either does not get an amended record — they get a second tenant and a migration, which is C12 when they ask and P8 when their partner does. The tenant detail says both things: frozen here, changed only by us, through migration.</td><td>built</td></tr>
+      <tr><th scope="row">Retention and support access mode are amendable</th><td>Both marked as such at creation. Shortening retention destroys documents, so it is the one amendment that needs the customer's instruction in writing rather than a message on a case.</td><td>specified</td></tr>
+      <tr><th scope="row">Telemetry profile, the second axis</th><td>Named profiles — <span class="spec">minimum</span>, <span class="spec">standard</span>, <span class="spec">full</span> — chosen beside the support access mode and answering a different question: the mode says what we may reach <b>on request</b>, the profile says what arrives <b>continuously, without asking</b>. <span class="spec">minimum</span> is a floor nobody goes below, carries no customer content, and is a condition of the support SLA rather than a request.</td><td>built</td></tr>
+      <!-- 🛑 THIS ROW IS A RULING, NOT A TASK, AND THE LEGEND SAYS OTHERWISE. FLAGGED 21 Sep 2026 —
+           G1342. NOTHING HERE DECIDES IT; IT IS THE OWNER'S.
+
+           ⚠️ THE LEGEND IS WHAT MAKES THIS DANGEROUS. `specified` is defined on this very page as
+           *"Decided and written down … Safe to build without a second conversation."* A build agent
+           trusting that sentence takes this row as work and, in taking it, INSTANTIATES A PRICE.
+
+           `PRODUCT.md` — which CLAUDE.md names as THE AUTHORITY on what may be claimed — forbids exactly
+           that, by name: *"NEVER — a named customer, logo, testimonial, PRICE, SLA, or benchmark. None
+           have been established. Do not invent one."* And the row does not merely mention money: it says
+           the posture *"must be PRICED AND CONTRACTED at signing"*.
+           ⚠️ G48 DID NOT LOOSEN THIS. CLAUDE.md records that making v1 a product *"changed the build
+           target and supplied no customer, no price, no SLA and no benchmark"*.
+           SO: the row may be built only after somebody with the authority to establish a price does so,
+           in writing. That is a second conversation, which is precisely what the legend promises is
+           unnecessary. -->
+      <!-- REFUSED 1 Oct 2026 — R16, THE OWNER'S RULING (docs/HANDOFF.md G2442). This row was `specified`. Declined because it carries a PRICE, and PRODUCT.md — the authority on claims — says NEVER a price: none has been established. Pricing a posture at signing is a commercial act, not a feature. A decline is not a prohibition for ever: it returns only with a new ruling. -->
+      <tr><th scope="row">The unsupportable customer, priced</th><td><span class="spec">minimum</span> plus support access <span class="spec">never</span> is supportable at error-class triage and a customer-run bundle, and no further. A legitimate posture for a bank, and one that must be <b>priced and contracted at signing rather than discovered during an incident</b>.</td><td>refused</td></tr>
+      <tr><th scope="row">Environment is a fourth choice</th><td><span class="spec">sandbox</span> · <span class="spec">evaluation</span> · <span class="spec">production</span>. An evaluation tenant <b>behaves as production for every invariant</b> and adds a recorded processing agreement — without which non-synthetic ingest is blocked — and a purge date agreed up front. No entitlement lease, because an evaluation is not metered against a tier.</td><td>built</td></tr>
+      <tr><th scope="row">Conversion is an act</th><td>Evaluation to production is performed, never reached by a date passing. Data collected under an evaluation agreement silently continuing under no agreement is the outcome to avoid.</td><td>specified</td></tr>
+      <tr><th scope="row">Confirmation reads the permanent pair back</th><td>The first press checks, the second creates. The confirmation names the mode and the region in a sentence rather than showing the form again.</td><td>built</td></tr>
+      <tr><th scope="row">Sold direct or sold by a partner</th><td>Decided here, and it decides who is invoiced: a partner-sold tenant is never invoiced to the customer. The result says which.</td><td>built</td></tr>
+      <tr><th scope="row">Amending either amendable field</th><td>No surface, and no record of an amendment.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>H2 · Run customer onboarding</h2>
+  <p class="note">Six steps, each blocked by the one above it. The order is not
+  guidance: skipping it produces a first period measured against a source nobody
+  bound or a floor nobody set, and the customer reads that as the product being
+  wrong.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">The sequence, with one step open</th><td>Tenant record, tag policy, sources declared and bound, pack installed with source roles bound, extraction floor, first run. Only the first incomplete step can be marked done; the rest read blocked.</td><td>built</td></tr>
+      <tr><th scope="row">Whose hands each step is in</th><td>Ours, theirs, or both — named per step, because the stalls are nearly always on the steps that are theirs.</td><td>built</td></tr>
+      <tr><th scope="row">Forcing a gate</th><td>Permitted, with a <b>typed reason</b>, and it marks every step above it done too — a gate passed out of order does not leave the earlier ones meaningful. The tenant then carries a forced-step mark for the life of the record, and the reason travels with it.</td><td>built</td></tr>
+      <tr><th scope="row">What the mark is for</th><td>A review asking why a first period was wrong reads the reason in the words of the person who decided it, rather than reconstructing it.</td><td>built</td></tr>
+      <!-- 🛑 THE TREE HAS BUILT THIS. ANNOTATED 21 Sep 2026 — G1334, the first of six.
+           THE STATUS WORD IS DELIBERATELY NOT CHANGED, and that is a ruling about vocabulary rather
+           than timidity: in THIS record `built` means *drawn on a surface in this project and operable
+           there — a reader can click it* (its own legend), which is a claim about these HTML files.
+           Whether ReconcileAI's REPOSITORY has built a thing is a different question in a different
+           vocabulary, and CLAUDE.md names the collision: *"'built' THERE MEANS drawn and operable in
+           these HTML files — 242 rows carry it and roughly 230 of them are NOT built in this
+           repository's sense."* Moving a word here on tree evidence would merge the two senses and
+           destroy the pack's ability to say anything. So the row stands and the tree is recorded
+           beside it, which is what stops a build agent spending a slice on work already done.
+
+           THIS ROW'S BEHAVIOUR CELL READS: *"Nothing persists the sequence, the force or the mark.
+           All of it is state on this surface."* ⚠️ THE FIRST SENTENCE IS FALSE AGAINST THE TREE ON ALL
+           THREE COUNTS, since 20 Sep 2026 (G1241, the owner's ruling). Derive it, never read it:
+             ls db/migrations control/0030_onboarding_record.sql   [path uses a hyphen: migrations-control]
+             grep -n 'CREATE TABLE' db/migrations-control/0030_onboarding_record.sql
+           THE SEQUENCE persists as `onboarding_record.completed_steps`, ONE integer column, because the
+           state is a PREFIX LENGTH and not a set (G1242) — six booleans would make *"step four done,
+           step two not"* writable. THE FORCE AND THE MARK persist as `onboarding_forced_step`, APPEND
+           ONLY, held by a trigger as well as a withheld grant (G1243) because the grant is vacuous
+           against the only writer the table has, the admin. AND THE STAGE IS DERIVED, never stored
+           twice: `model/onboarding.ts#onboardingStage()`, read by `listTenants`, which is MOUNTED:
+             grep -rn 'listTenants' server/data-plane/start.ts
+           ⚠️ WHAT IS STILL EXACTLY TRUE, AND IT IS WHY THE ROW IS NOT SIMPLY WRONG: NOTHING WRITES
+           EITHER TABLE ON A REQUEST PATH. `completeOnboardingStep` and `forceOnboardingStep` are
+           declared, unmounted and hold no privilege, and there is no clock, so no `stalled` stage. The
+           sequence PERSISTS and is not yet DRIVEN. -->
+      <tr><th scope="row">Onboarding state in the model</th><td>Nothing persists the sequence, the force or the mark. All of it is state on this surface.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>H3 · Author and publish a pack</h2>
+  <p class="note">The agent builder is a destination in this console, because
+  authoring belongs where the catalogue it publishes into lives. A pack is
+  <b>five parts</b>, and the fifth is the one that is usually forgotten: the
+  source roles it needs, which an install binds to a customer's real systems.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Document types, identified by source \u00d7 pattern</th><td>The same PDF arriving by email intake and by SFTP is two types, because what can be assumed about each differs — and each carries its own floor.</td><td>built</td></tr>
+      <tr><th scope="row">Rules with thresholds</th><td>What each compares, the threshold it answers to, and what happens when it fails. Adding one writes into the draft.</td><td>built</td></tr>
+      <tr><th scope="row">Draft and published versions</th><td>A pack has a published version and a draft. Editing touches the draft; publishing mints a version and scopes who may install it.</td><td>built</td></tr>
+      <tr><th scope="row">Tenants are not moved by a publish</th><td>A tenant stays on the version it installed until an install moves it. A pack changing under a tenant mid-period would change what their period means.</td><td>built</td></tr>
+      <!-- ⚠️ ONE ITEM IN THIS ROW'S LIST IS FALSE; THE OTHERS ARE NOT CHECKED HERE. ANNOTATED
+           21 Sep 2026 — G1339. THE STATUS WORD IS NOT CHANGED (vocabulary note on `Onboarding state in
+           the model`).
+
+           THE ROW LISTS FOUR ABSENCES: *"Not the pack, not a document type, not a rule, not a version."*
+           🛑 `not a version` IS FALSE. A pack version is half the primary key of the control database's
+           first table. Derive it, never read it:
+             grep -n 'PRIMARY KEY' db/migrations-control/0001_catalogue.sql
+           `pack_catalogue` is `PRIMARY KEY (pack_key, pack_version)`, which also makes `not the pack`
+           false in the same breath: the pack IS a row, in the CONTROL database, published downward over
+           `listEntitledPacks`.
+           ⚠️ THE OTHER TWO ARE NOT ADJUDICATED HERE AND MUST NOT BE READ AS CORRECTED. `document_type_id`
+           exists as a COLUMN on `tenant.document_field_spec` with NO table behind it and no foreign key,
+           so *"not a document type"* is defensible; and whether `0160`'s engine spec tables amount to
+           *"a rule"* is a judgement this annotation does not make. Checking them is somebody's slice.
+
+           🛑 AND THE ROW'S HEADLINE CLAIM SURVIVES EVERYTHING ABOVE, WHICH IS WHY THE STATUS IS RIGHT:
+           *"The agent builder is a v1 surface in neither the data model nor the three module vocabulary,
+           so a published pack is a row a person maintains."* Nothing authors a pack on any of the seven
+           contract tiers, and G110's publication seam does not exist. A version having a COLUMN is not
+           the agent builder having a MODEL. -->
+      <tr><th scope="row">None of it is in the model</th><td>Not the pack, not a document type, not a rule, not a version. The agent builder is a v1 surface in neither the data model nor the three-module vocabulary, so a published pack is a row a person maintains.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>H4 · Set an extraction floor for a tenant</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Set off the customer's surface</th><td>The pack default, this tenant's floor, and how many documents the last run parked for a person. Set here, effective on the next run.</td><td>built</td></tr>
+      <tr><th scope="row">Which way the cost falls</th><td>Stated on commit rather than left to be learned: below the default, more passes unread and the exceptions that follow are what a lower floor buys; at or above it, the capture queue grows.</td><td>built</td></tr>
+      <tr><th scope="row">The tenant cannot see the number</th><td>The band may exist; the number may not. A facet printing it would assert a value the tenant has no access to.</td><td>built</td></tr>
+      <tr><th scope="row">Per-type floors</th><td>Drawn in the agent builder, per document type. Setting one per tenant per type does not exist.</td><td>partial</td></tr>
+    </tbody>
+  </table>
+
+  <h2>H5 · Respond to an incident</h2>
+  <p class="note">The queue the partner portal's cases arrive in, and the one
+  place the product lets us past a boundary the customer set. <b>Break-glass was
+  decided in this round</b> and it is the sharpest thing in the document.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">The queue</th><td>Cases raised by a partner on a customer's behalf and by customers directly, with severity as we decided it beside what was proposed, the response commitment, and what access we currently hold on that tenant.</td><td>built</td></tr>
+      <tr><th scope="row">The mode governs, and is named</th><td>Each case says which support access mode that customer chose and what it permits. Where the mode refuses a read, the refusal is a row in the read log rather than an absence.</td><td>built</td></tr>
+      <tr><th scope="row">Break-glass exceeds it</th><td>A typed reason, a grant <b>scoped to one tenant and one case</b>, and a <b>twenty-four hour</b> expiry. Every read until it expires is recorded under break-glass rather than under the mode.</td><td>built</td></tr>
+      <tr><th scope="row">The reason is theirs to read</th><td>It lands <b>verbatim in the customer's audit trail</b>, at C11, beside the reads it permitted — which they reach without asking us for it.</td><td>specified</td></tr>
+      <tr><th scope="row">Consent moved to signing</th><td>The customer authorises incident access <b>once, at contract time</b> — purpose, resource classes, a ceiling on hours, who may invoke it, and the notification path. Each incident draws against that standing authorisation, so nobody at the customer is woken at 03:00 and nobody waits on their change control.</td><td>specified</td></tr>
+      <tr><th scope="row">Two of us, never them</th><td>A second 1CloudHub person approves each grant, and the raiser may not be the approver — <b>re-checked when the grant is used, not only when it is issued</b>, so a grant written around the screen still fails in the hand. The cost is a rota: at 03:00 on a Sunday two people are awake, which is an operational commitment rather than a model change.</td><td>built</td></tr>
+      <tr><th scope="row">Why not per-incident consent</th><td>An approval at 03:00 is theatre — nobody reads it, they click yes — and a control people route around is worse than a looser one they use, because under a customer-owned plane the activity moves to their own console where we never see it.</td><td>built</td></tr>
+      <!-- 🛑🛑 HAZARD. THIS ROW LOOKS LIKE A ONE LINE IMPLEMENTATION AND THE OBVIOUS IMPLEMENTATION
+           SILENTLY WIDENS AN INVARIANT FOR EVERY TENANT AT ONCE. ANNOTATED 21 Sep 2026 — G1341.
+           THE STATUS WORD IS NOT CHANGED AND THE TABLE IT NAMES IS NOT TOUCHED BY THIS SLICE.
+
+           THE ROW ASKS FOR A CEILING *"negotiated and read from the authorisation, not a platform
+           constant. A customer who granted eight hours gets eight."*
+
+           WHAT IS IN THE TREE. `tenant.grant_duration_ceiling` is a TWO ROW PLATFORM CONSTANT, and its
+           primary key is `purpose` ALONE — there is NO `tenant_id` column at all. Derive it, never read it:
+             grep -n 'CREATE TABLE tenant.grant_duration_ceiling' db/migrations/0008_staff_grant_selection.sql
+             grep -n 'INSERT INTO tenant.grant_duration_ceiling' db/migrations/0008_staff_grant_selection.sql
+           The seeded rows are `('delivery', 2160)` and `('incident', 24)`, and the 2160 is spelled
+           `24 * 90` in the migration because it IS G75's ninety day delivery ceiling — the one the record
+           says was taken over a written objection and must not be quietly narrowed OR widened.
+
+           🛑 SO EDITING THOSE ROWS TO SATISFY THIS FEATURE MOVES G75's CEILING FOR EVERY TENANT
+           SIMULTANEOUSLY, AND NOTHING IN `npm run check` WOULD SAY SO. A per customer ceiling is not
+           merely unbuilt here, it is INEXPRESSIBLE in that table: there is no tenant column to put it in,
+           and the policy at `0008` joins the ceiling by `purpose` only. The honest shape is a new column
+           or a new table plus a reader, AND a ruling — the invariant 8 neighbourhood is the owner's.
+           ⚠️ AND THE ROW'S OWN LAST SENTENCE ALREADY SAYS THE HALF THAT MAKES IT A TASK NOBODY CAN
+           FINISH: *"Nothing reads it yet, and the cumulative extension cap has no call site either."*
+           A ceiling read by nothing is `0004`'s refusal of a column ahead of its reader. -->
+      <tr><th scope="row">The ceiling is per customer</th><td>Negotiated and read from the authorisation, not a platform constant. A customer who granted eight hours gets eight. <b>Nothing reads it yet</b>, and the cumulative-extension cap has no call site either.</td><td>not built</td></tr>
+      <tr><th scope="row">The customer is still not told at the time</th><td>They find the read in their trail, which is to say after it. The right fix is an operational notice carrying no tenant data — a notice is not a read, and the contact it goes to authorises nothing.</td><td>not built</td></tr>
+      <tr><th scope="row">The L1 diagnostic bundle</th><td>The step before any grant, and where most diagnosis actually happens: the customer runs it, <b>reads what it produced</b>, and sends it — versions, migrations, packs in force, configuration with secrets elided, error codes with counts, queue depths. No document content. That they inspect it first is what makes it acceptable to a security team, and it is why a bundle beats a standing tap.</td><td>specified</td></tr>
+      <tr><th scope="row">Breach, in three states</th><td>Detection, assessment and notification are separate facts with separate times and actors, and the tenant sees all three. <b>The statutory clock runs from assessment</b>, which is why it may not be the same field as detection. Under a customer-owned plane they may detect first, so detection carries who detected it — reported by raising a case at the top severity.</td><td>built</td></tr>
+      <!-- 🛑 THIS ROW IS AN INVARIANT AMENDMENT, NOT A TASK, AND THE TREE ENFORCES THE INVARIANT IT
+           WOULD AMEND. FLAGGED 21 Sep 2026 — G1343. NOTHING HERE DECIDES IT; IT IS THE OWNER'S.
+
+           ⚠️ THE LEGEND CALLS `specified` *"Safe to build without a second conversation."* This row is
+           a break glass into `statutory`, and invariant 8 forbids it in words that leave no room:
+           *"`statutory` appears in neither, at any price: a statutory obligation is not the customer's
+           to delegate to a processor."* Copy that sentence from CLAUDE.md's numbered list, never from
+           here — a paraphrased invariant is a changed invariant.
+
+           🛑 AND IT IS NOT MERELY WRITTEN DOWN, IT IS ENFORCED, SO THE ROW IS INEXPRESSIBLE AS
+           SPECIFIED RATHER THAN UNBUILT. Derive it, never read it:
+             grep -n 'statutory' db/migrations/0008_staff_grant_selection.sql
+             grep -n 'NON_DELEGABLE_RESOURCES\|CONTRACT_ONLY_RESOURCES\|PERMITTED_RESOURCES' model/governance.ts
+           `statutory` is seeded into `non_delegable_resource`, and `authorisationPermits()` tests that
+           list FIRST — before the null check, before withdrawal, before anything. THREE constants govern
+           reachability, not two; G75 is the precedent for how much is missed by reading only two.
+
+           ⚠️ THE ROW ARGUES ITSELF WELL AND THAT IS NOT THE SAME AS BEING BUILDABLE. Its distinctions are
+           real — preservation is not access, a hold suspends a sweep and grants no read, and answering a
+           subject request on the customer's behalf stays refused because *"standing is not something an
+           emergency confers"*. A future amendment may well take it. BUT IT WOULD BE AN AMENDMENT TO A
+           NUMBERED INVARIANT, argued in writing and recorded as a reversal the way G60 was — the record's
+           one precedent for exactly this, and one it deliberately marks as a reversal rather than a fix. -->
+      <!-- REFUSED 1 Oct 2026 — R16, THE OWNER'S RULING (docs/HANDOFF.md G2442). This row was `specified`. Declined because a break-glass into the statutory class, and invariant 8 says statutory appears in no grant path "at any price"; db/migrations/0008 seeds it into non_delegable_resource. Inexpressible as specified: building it is an invariant amendment, in writing, as G60 was. A decline is not a prohibition for ever: it returns only with a new ruling. -->
+      <tr><th scope="row">Legal hold, and only that</th><td>Statutory acts are not the customer's to delegate. One break-glass exception: a court or regulator may order us, as processor, to preserve. <b>Scoped to placing a hold</b> — answering a subject request on their behalf stays refused, because standing is not something an emergency confers. Preservation is not access: a hold suspends the sweep and grants no read.</td><td>refused</td></tr>
+      <tr><th scope="row">When the mode permits nothing</th><td>Some customers choose a mode that permits no read. The fallback is to ask the customer to look and tell us — slower, and the only honest option when the alternative is reading data they said we could not.</td><td>built</td></tr>
+      <tr><th scope="row">Issuing, expiring and recording the grant</th><td>Nothing issues it, nothing expires it, and nothing writes the reason into the customer's trail. The mode is chosen at tenant creation and enforced nowhere yet.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>H6 · Meter usage and invoice</h2>
+  <p class="note">Decided in this round: <b>a partner-sold tenant is never
+  invoiced to the customer.</b> We invoice the partner, one consolidated invoice
+  per partner with a line item per customer under it, and the partner invoices
+  their own customers at their own retail card.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">The period, four figures</th><td>Metered, invoiced to customers, invoiced to partners, and adjustments carried. The split between the last two is the whole of who we bill.</td><td>built</td></tr>
+      <tr><th scope="row">The consolidated partner invoice</th><td>One invoice, one line per customer, each line carrying documents read, runs, Ask turns and the platform fee, priced at that partner's wholesale card. The partner's margin is not on it, because it is not ours to state.</td><td>built</td></tr>
+      <tr><th scope="row">A direct invoice</th><td>Same document, lines per entity instead of per customer, priced at a customer card.</td><td>built</td></tr>
+      <tr><th scope="row">The invoice is a document</th><td>A pane shaped like the invoice, with a print view behind it for the paper copy.</td><td>built</td></tr>
+      <tr><th scope="row">Effective dates, never retroactive</th><td>A card applies from its effective date and never backwards. Where a card changed mid-quarter the invoice says which card priced which month.</td><td>built</td></tr>
+      <tr><th scope="row">Adjustments carry a reason the payer reads</th><td>An issued invoice stands. A correction is an adjustment on the next one, and the reason is printed on their invoice rather than kept as an internal note — which the confirmation says before it commits.</td><td>built</td></tr>
+      <tr><th scope="row">Uncategorised usage shows up here</th><td>Where a tag vocabulary was agreed late, the invoice states how much of the period will never attribute to a cost centre. It is the customer's first sight of H9's cost.</td><td>built</td></tr>
+      <tr><th scope="row">Issuing, sending, and recording payment</th><td>All outside this surface. The figures are metered; the document is a statement of them.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>H7 · Reconcile partner billing</h2>
+  <p class="note"><b>A scope change, decided in this round.</b> Commission was on
+  collected revenue, and nothing in the product knows whether an invoice was
+  paid. Rather than draw a state we cannot compute, <b>commission moved to
+  invoiced revenue</b> and the partner arrangement was amended to match.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Settlement per partner</th><td>Tenants, what we invoiced them, commission owed, and the basis — which is now an invoice number and a wholesale card.</td><td>built</td></tr>
+      <tr><th scope="row">Invoiced, not collected</th><td>A commission basis the product cannot compute is a promise somebody settles by hand. The change is recorded on the partner's own arrangement pane, with the period it was amended from.</td><td>built</td></tr>
+      <tr><th scope="row">A disputed line</th><td>Evidenced with usage records, which ship <b>with no user id</b>. Neither we nor a partner can say which of a customer's people spent what, and any plan assuming per-seat chargeback is unbuildable until that record changes.</td><td>refused</td></tr>
+      <tr><th scope="row">Paying commission</th><td>No payment run, no statement to the partner beyond what the portal already shows.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>H8 · Manage the commercial catalogue</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Published blueprints beside the cards</th><td>One destination, because a price without the thing it prices is how a rate card drifts from what is actually installable.</td><td>built</td></tr>
+      <tr><th scope="row">Cards with effective dates</th><td>Customer cards and partner wholesale cards, each with what it charges per document, per run and per tenant month, and the date it applies from.</td><td>built</td></tr>
+      <tr><th scope="row">Install scope per blueprint</th><td>Which tenants and which partners may install it — the same set P4 reads from the partner side.</td><td>built</td></tr>
+      <tr><th scope="row">Issuing or assigning a card</th><td>Ours, and not a control here. A card assignment is part of an arrangement, so it is amended where the arrangement is.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>H9 · Govern tags and chargeback</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Keys, values seen, coverage</th><td>Per tenant, with the one key nominated to drive chargeback marked as such. Everything downstream depends on that one choice.</td><td>built</td></tr>
+      <tr><th scope="row">The vocabulary is theirs</th><td>They own the names; what the meter does with them is ours. Neither half has a surface the other can edit.</td><td>built</td></tr>
+      <tr><th scope="row">The handoff whose lateness cannot be repaired</th><td>Every usage record emitted before the vocabulary was agreed is uncategorised and stays that way — there is nothing to re-tag it from. The tenant pane names the weeks, and the invoice is where the customer discovers it.</td><td>built</td></tr>
+      <tr><th scope="row">Nominating the key</th><td>A database write on our side. The vocabulary is a conversation with no surface at either end.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>H10 · Review the licence position</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Per tenant, not centrally</th><td>Every third-party runtime that lands inside a customer's account, its licence, and where it runs — read on the tenant, because under BYOA the position is that customer's to accept.</td><td>built</td></tr>
+      <tr><th scope="row">Model access is theirs</th><td>Vendor terms, their account, their quota. Marked as theirs to accept rather than as cleared, because it is the one line we cannot clear on their behalf.</td><td>built</td></tr>
+      <tr><th scope="row">A defensible answer before the review asks</th><td>The point of the pane is that the answer exists before a security review requests it, not that it can be assembled afterwards.</td><td>built</td></tr>
+      <tr><th scope="row">A customer who refuses the arrangement</th><td>Wants the application served from their account too. No answer, and no surface for one.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>H11 · Run the partner registry and the domain list</h2>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">The queue, oldest first</th><td>Registrations waiting on us, each with the time of receipt, because receipt time is what decides precedence. A claim is never accepted ahead of an earlier one on the same company.</td><td>built</td></tr>
+      <tr><th scope="row">Collisions are shown to us</th><td>The queue marks a colliding claim and names the earlier date. Accepting one anyway is refused by the surface, which will not hand the same company to two partners.</td><td>built</td></tr>
+      <tr><th scope="row">The refusal carries one fact</th><td><b>A date only</b> — claimed earlier by another partner. Not who holds it, not whether it is being worked: that is the other partner's pipeline and not ours to hand over. We see both claims; they see the date.</td><td>built</td></tr>
+      <tr><th scope="row">Refusing without a collision</th><td>Needs a reason from us, and this surface has nowhere to put one. Stated where it happens.</td><td>not built</td></tr>
+      <tr><th scope="row">The registry</th><td>Partners, standing, cards, billing arrangement, tenants and claims held — the record P1 reads from the partner side.</td><td>built</td></tr>
+      <tr><th scope="row">The domain list, and what it exposes</th><td>How many domains resolve today, how many were added this month, and the cost said plainly: a domain that resolves tells whoever typed it that the company is a customer. Sign-in answers identically either way, which narrows the oracle to timing and to what a resolving host name carries — and under BYOA a host name can carry the customer's own name.</td><td>built</td></tr>
+      <tr><th scope="row">Adding one widens it by one</th><td>The count is stated before and after the addition, and the commit says the part that matters: removing it later does not unlearn what resolving already told somebody.</td><td>built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Governance · the subject, not the period</h2>
+  <p class="note">A destination on the tenant surface, because <b>the acts are the
+  tenant's</b>: answering a subject request and running an erasure are theirs to
+  perform, and assurance reads the result. Two things in it are ours and are
+  named rather than drawn as controls — legal hold and breach. The data subject
+  is usually not a user: in KYC the person whose identity document was verified
+  has no account, never signs in, and cannot be named by a user id.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Requests keyed by subject, not user</th><td>They arrive through the tenant and are held against an <b>opaque reference that means nothing outside it</b>. Access, correction and erasure are three kinds on one record.</td><td>built</td></tr>
+      <tr><th scope="row">Where the subject appears</th><td>Per request: documents, extracted values, explanations citing them, match-group keys, exceptions naming them, and the trail — each with its class, a count, and what erasure does to it.</td><td>built</td></tr>
+      <tr><th scope="row">The trail survives the data</th><td>An erasure leaves a <b>tombstone</b>: the fact of the deletion, with the data gone. The audit window may never be shorter than the longest business or content class, or the record of a deletion outlives nothing.</td><td>built</td></tr>
+      <tr><th scope="row">A correction writes through</th><td>To the source record rather than sitting beside it, so the next run reads the corrected value. The closed period keeps what it closed on, and the trail says both.</td><td>built</td></tr>
+      <tr><th scope="row">Refusals are answers</th><td>A hold in force refuses an erasure, and AML recordkeeping may impose a minimum retention that outlives a deletion request. Where it does, the obligation wins and <b>the refusal is the answer</b>, with its ground stated.</td><td>built</td></tr>
+      <tr><th scope="row">The sub-processor register</th><td>Published rather than requested, because the transfer assessment a reviewer asks for is only answerable from it. The model provider is on it, <b>marked as seeing document content</b>, because it does.</td><td>built</td></tr>
+      <tr><th scope="row">What the plan claims when it finishes</th><td><b>Erased.</b> Unqualified, and the residuals — exports, page renders, traces, and copies that exist only in a backup — are a contractual disclosure rather than a screen. <span class="spec">Decided 18 Sep</span>; the alternative was qualifying it on screen, which invites a question the screen cannot answer.</td><td>built</td></tr>
+      <!-- ⚠️ THE SUBJECT INDEX EXISTS, AND THIS ROW'S LIMITATION IS ACCURATE ABOUT IT. ANNOTATED
+           21 Sep 2026 — G1340. THE STATUS WORD IS NOT CHANGED (vocabulary note on `Onboarding state in
+           the model`).
+
+           🛑 READ THIS ONE CAREFULLY, BECAUSE THE OBVIOUS SUMMARY OF IT IS WRONG IN BOTH DIRECTIONS.
+           A reader skimming `not built` concludes THERE IS NO SUBJECT INDEX. There is one:
+             grep -n 'CREATE TABLE tenant.subject_index_entry' db/migrations/0012_payload_and_subject_index.sql
+           `0012` creates it, and G295 rules it INSEPARABLE from the payload and the addressing — landing
+           the payload without it is the case the record calls UNRECOVERABLE, because *"a scan cannot find
+           a value inside a stored Explanation"* and the location must be registered at CREATION time.
+
+           ✅ AND THE ROW'S OWN SENTENCE IS TRUE OF THAT TABLE, WHICH IS THE PART TO KEEP:
+           *"Every location it holds is a database row. Exports, renders and traces are not in it."*
+           `0012` gives columns to ONE of `SubjectLocation`'s variants, behind a `CHECK` (G322), so the
+           index is honestly PARTIAL rather than falsely complete. The row is therefore a correct
+           statement of a live limitation, not a stale absence — and its closing clause, that a backup
+           copy has no disposition and the agreed direction destroys a per subject key, is *"a direction
+           rather than a design"* in its own words and is untouched by anything in the tree.
+           ⚠️ SO NEITHER *"no subject index"* NOR *"the subject index is done"* is a fair reading. What is
+           built is a row level index; what is not is every other kind of location. -->
+      <tr><th scope="row">The subject index reaches rows only</th><td>Every location it holds is a database row. Exports, renders and traces are not in it, and a backup copy has no disposition at all — the agreed direction destroys a per-subject key rather than touching the backup, and that is a direction rather than a design.</td><td>not built</td></tr>
+      <tr><th scope="row">Assurance reads it</th><td>Read-only, alongside the trail, closed periods and policy. The console answers <b>what happened to this person</b>; the trail answers what happened in this period. Same records, two readings.</td><td>built</td></tr>
+      <tr><th scope="row">Everything behind it</th><td>No subject index, no erasure plan, no request record, no sweep. Retention is computed at ingest and nothing enforces it.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Cross-cutting mechanisms</h2>
+
+  <h3>The command palette</h3>
+  <p class="note">⌘K or Ctrl-K from anywhere, or the door in the chrome. It is
+  the reason the nav never needs a fourth item, and it is now on <b>all three
+  consoles</b> — the close, the partner portal and the staff console — with the
+  same sections, the same keys and the same refusal behaviour.</p>
+  <table>
+    <caption>What each console's palette holds. The sections never reorder.</caption>
+    <thead><tr><th scope="col">Console</th><th scope="col">Find</th><th scope="col">Go</th><th scope="col">Do</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">C1 · the close</th><td>Exceptions, suppliers, documents</td><td>Destinations this role holds</td><td>Scoped to the focused row — and Ask is last, because in a product full of identifiers a typed string is usually a reference</td><td>built</td></tr>
+      <tr><th scope="row">P1 · partner portal</th><td>Customers they registered or sold</td><td>Eight destinations, role-gated</td><td>Register a deal, raise a case, invite, request a price change — and <b>read a customer's register, refused with the reason beside it</b></td><td>built</td></tr>
+      <tr><th scope="row">S1 · staff console</th><td>Tenants, partners, cases</td><td>Only destinations the role holds; one it does not is absent</td><td>The six writes, each refused where the role cannot hold it — plus two permanent refusals: reading past a mode outside its case, and answering a subject request</td><td>built</td></tr>
+    </tbody>
+  </table>
+  <ul class="kv">
+    <li><b>A search that finds what you cannot open</b><span>Support searching for a tenant it may not open is told <span class="spec">tenancy is not yours to open</span> rather than shown an empty result. A refusal is information; silence is a bug report waiting to happen.</span></li>
+    <li><b>Nothing here writes without a form</b><span>Every Do row opens the same form the surface uses, with the same read-back. A shortcut that commits is a shortcut that commits by accident.</span></li>
+  </ul>
+
+  <h3>Keyboard shortcuts</h3>
+  <p class="note">The whole set, on every console. There are no others, and no
+  single-key accelerators that fire while typing.</p>
+  <table>
+    <caption>Every shortcut in the product.</caption>
+    <thead><tr><th scope="col">Keys</th><th scope="col">What it does</th><th scope="col">Where</th></tr></thead>
+    <tbody>
+      <tr><th scope="row"><span class="spec">⌘K</span> / <span class="spec">Ctrl-K</span></th><td>Open the palette; press again to close it</td><td>all three consoles</td></tr>
+      <tr><th scope="row"><span class="spec">↑ ↓</span></th><td>Move through palette results, skipping refused rows</td><td>palette</td></tr>
+      <tr><th scope="row"><span class="spec">⏎</span></th><td>Run the selected row</td><td>palette</td></tr>
+      <tr><th scope="row"><span class="spec">Esc</span></th><td>Close the palette, the tray, the account menu or a panel, and return focus to what opened it</td><td>everywhere</td></tr>
+      <tr><th scope="row"><span class="spec">Tab</span></th><td>Cycles inside an open dialog and cannot leave it — the other half of restoring focus on close</td><td>palette, tray, account menu</td></tr>
+      <tr><th scope="row"><span class="spec">&gt;</span></th><td>Commands only, skipping the Find section</td><td>palette</td></tr>
+      <tr><th scope="row"><span class="spec">?</span></th><td>Straight to Ask</td><td>C1 only — the other consoles have no agent</td></tr>
+      <tr><th scope="row"><span class="spec">J K</span> · <span class="spec">⏎</span> · <span class="spec">A</span> · <span class="spec">⌘Z</span></th><td>Move, open, accept, undo — in the register</td><td>C1 · the register</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Notifications</h3>
+  <p class="note">Added because no journey had an affordance for one. The rule
+  that shapes it comes from the access model: <b>a notification that carries
+  content is a first-class read</b> — masked by organisation, scoped on every
+  dimension, classified per channel, audited and residency-checked. So the tray
+  carries no content.</p>
+  <table>
+    <thead><tr><th scope="col">Feature</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">One affordance, named in words</th><td><span class="spec">Needs you</span> in the chrome with a count, on all three consoles. Not a bell glyph: this kernel has no icon vocabulary, and a count nobody can read is a count nobody trusts.</td><td>built</td></tr>
+      <tr><th scope="row">An interrupt is a signal, not a figure</th><td>Each line says <b>that</b> something needs a person and where to go — no amount, no counterparty, no document. That is what keeps the tray out of the read path: the moment a notice carries a figure it becomes a read and acquires all five obligations.</td><td>built</td></tr>
+      <tr><th scope="row">Two sections, and the order is fixed</th><td>What is waiting on you, then what happened since you looked. A list that mixes them trains people to read neither.</td><td>built</td></tr>
+      <tr><th scope="row">Scoped to the role</th><td>C1 gives the user their register, the approver what waits on their authority, the administrator setup and policy, and assurance a read-only list with nothing to act on. S1 splits FDE, billing and support, and shows the others <b>dimmed with whose they are</b> — so the fleet is legible without anybody acting on somebody else's queue.</td><td>built</td></tr>
+      <tr><th scope="row">The partner tray carries no tenant data</th><td>A case answered, a registration waiting, a statement ready, a sandbox reset. Nothing about what a customer's tenant is doing.</td><td>built</td></tr>
+      <tr><th scope="row">No channel delivery in v1</th><td>Email, Teams and Slack digests are deferred, and the reason is on the record: a mailbox is outside the session we authorise, kept indefinitely, forwarded freely, and it crosses a residency boundary on the way. Both vendors also reserve termination without cause, so a channel is a delivery surface and never a dependency.</td><td>refused</td></tr>
+      <tr><th scope="row">When a digest does arrive</th><td>It must aggregate — a per-exception firehose is a terms violation on Teams, not merely poor manners — and it becomes a governed read with a capability of its own, distinct from opening a dashboard, because a push to a mailbox and a pull inside a session are different sinks.</td><td>specified</td></tr>
+      <tr><th scope="row">Nothing raises one</th><td>No catalogue of notifiable events, no delivery, no read receipt, no per-person preference. The tray reads fixtures.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h3>The account menu</h3>
+  <p class="note">The avatar is a door rather than a label. Everything about the
+  <b>person</b> rather than the work sits behind it, and signing out is last and
+  separated because it is the only item that leaves the product.</p>
+  <ul class="kv">
+    <li><b>Who you are</b><span>Name, role and organisation at the head of the menu, so the answer to “which hat am I wearing” never needs a click.</span></li>
+    <li><b>Your profile</b><span>Organisation, role, what that role reaches, and how you signed in — all read-only, with the reason stated: your role is an administrator's to set, and the organisation comes from the directory you authenticated against.</span></li>
+    <li><b>Pending actions</b><span>Opens the same tray the chrome opens, with the same count. Two doors, one list.</span></li>
+    <li><b>Keyboard shortcuts</b><span>The set above, in the menu, so it is discoverable without documentation.</span></li>
+    <li><b>Administration</b><span>Present only where the role holds it — absent, not disabled.</span></li>
+    <li><b>Switch role</b><span>Marked <span class="spec">illustrative</span>. In the product the credential decides the role; the switch exists so a reader can see every surface from one screen.</span></li>
+    <li><b>Sign out</b><span>Returns to V3. The only item that ends the session, and the only one below a rule.</span></li>
+    <li><b>Keyboard and focus</b><span>Opens with <span class="spec">aria-expanded</span>, traps Tab while open, closes on Esc or a click outside, and restores focus to the avatar.</span></li>
+  </ul>
+
+  <h3>Table controls</h3>
+  <p class="note">One implementation in <span class="spec">table.js</span>, so the
+  counts, the keyboard and the empty states are identical wherever a table
+  appears. Three positions are load-bearing.</p>
+  <ul class="kv">
+    <li><b>The count is computed from the rows that survived</b><span>Never typed beside a list. A figure that disagrees with the rows under it is the defect this file exists to prevent — the same rule the palette already held to.</span></li>
+    <li><b>A filter narrows and says so</b><span>While a search or filter is live the toolbar prints what was removed. A table showing four of forty rows with no statement of that is a table that lies by omission.</span></li>
+    <li><b>Sort is a view, never a fact</b><span>The order a table is read in belongs to the reader. It changes nothing a row says and is not recorded.</span></li>
+  </ul>
+  <table>
+    <thead><tr><th scope="col">Control</th><th scope="col">Behaviour</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Sort, on the column header</th><td>The header is a button; <span class="spec">aria-sort</span> sits on the cell, which is what a screen reader announces. Three states cycle: ascending, descending, off. <b>Figures sort as figures</b> — a money column ordered lexically puts the largest amount in the middle.</td><td>built</td></tr>
+      <tr><th scope="row">Filter, on the column header</th><td>A filter row under the headers, closed until asked for, because a row of empty inputs above every table is a row of noise. A column with <b>seven or fewer distinct values becomes a picker</b>; anything wider is a text box — offering free text over four known values invites a typo that reads as an empty result.</td><td>built</td></tr>
+      <tr><th scope="row">Search across the row</th><td>One box per table, reading the columns the table names, with the number of columns it read stated.</td><td>built</td></tr>
+      <tr><th scope="row">Pagination</th><td>Ten rows a page by default. <b>One page is not a pager</b> — the controls are absent rather than drawn and dead, and the page line is computed.</td><td>built</td></tr>
+      <tr><th scope="row">Empty states</th><td>Distinguish “nothing matches, clear the filter” from “there is nothing here yet”, because the two need opposite actions.</td><td>built</td></tr>
+      <tr><th scope="row">Which tables get controls</th><td>Every list a reader might scan: claims, tenants sold, commission, cases, tenancy, invoices, the registration queue. <b>A short explanatory table deliberately gets none</b> — the five steps of an escalation, the sandbox refusals, a pack's rules. A pager under four rows of prose is furniture.</td><td>built</td></tr>
+      <tr><th scope="row">Server-side anything</th><td>Sorting, filtering and paging happen over rows already in the browser. At fleet scale the register and the tenancy need this in the query, and the shape of that is not designed.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Accessibility</h3>
+  <p class="note">Audited across every surface and repaired in place. The rules
+  the kernel already held are listed with the ones that were missing.</p>
+  <table>
+    <thead><tr><th scope="col">Property</th><th scope="col">How it is met</th><th scope="col">Status</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Language</th><td><span class="spec">lang="en"</span> on every document. It was absent from all fifteen, which is the cheapest defect in this list and the one a screen reader notices first.</td><td>built</td></tr>
+      <tr><th scope="row">A heading, and a way past the chrome</th><td>Every console names itself in a visually-hidden <span class="spec">h1</span>, and the first thing in the tab order is <b>Skip to the work</b> — eight destinations and a palette button ahead of the register is eight presses paid on every arrival.</td><td>built</td></tr>
+      <tr><th scope="row">Landmarks</th><td><span class="spec">header</span>, <span class="spec">nav</span> and a status bar, with the destination list as a real list of buttons.</td><td>built</td></tr>
+      <tr><th scope="row">Every control has a name</th><td>Audited: no button or link renders without an accessible name, and the two icon-only controls — the pager arrows and the palette close — carry <span class="spec">aria-label</span>.</td><td>built</td></tr>
+      <tr><th scope="row">Every input has a label</th><td>Including the filter cells and the search boxes, where the label is visually hidden because the column header above it already says what it filters.</td><td>built</td></tr>
+      <tr><th scope="row">Tables announce themselves</th><td><span class="spec">scope</span> on every header cell, a caption on every controlled table, and <span class="spec">aria-sort</span> on the sorted column.</td><td>built</td></tr>
+      <tr><th scope="row">State is in the attribute, not the colour</th><td><span class="spec">aria-current</span> for the destination, <span class="spec">aria-pressed</span> for a toggle, <span class="spec">aria-expanded</span> for the menu, <span class="spec">aria-disabled</span> for a refused control — which stays focusable so the reason beside it can be read.</td><td>built</td></tr>
+      <tr><th scope="row">Dialogs behave like dialogs</th><td>The palette, the tray and the account menu each carry <span class="spec">role</span> and a label, trap Tab, close on Esc, and <b>restore focus to whatever opened them</b>.</td><td>built</td></tr>
+      <tr><th scope="row">Results and counts are announced</th><td><span class="spec">role="status"</span> on every computed count, every narrowing line and every act's result, so a change nobody is looking at is still heard.</td><td>built</td></tr>
+      <tr><th scope="row">Targets and contrast</th><td>Every control is at least the kernel's target height, and the palette's refused rows dim the row while keeping <b>the reason at full ink</b>.</td><td>built</td></tr>
+      <tr><th scope="row">Not yet done</th><td>No audit with an actual screen reader, no reduced-motion pass over the one animation the kernel owns, and the chrome's role labels collapse to initials under 1280px — legible to a screen reader, invisible to everyone else.</td><td>not built</td></tr>
+    </tbody>
+  </table>
+  <ul class="kv">
+    <li><b>Fixed sections</b><span>Find · Go · Do · Ask, and they never reorder. Ask is last even when it matches best, because in a product full of identifiers a typed string is usually a reference.</span></li>
+    <li><b>Do here</b><span>Scoped to the focused row and named without repeating the finding — "accept the proposal and post". The chip naming that row is on screen, which is what makes the permission state honest.</span></li>
+    <li><b>Recent</b><span>Stands in for Do here when no row is focused.</span></li>
+    <li><b>Prefixes</b><span><span class="spec">&gt;</span> commands only, <span class="spec">?</span> straight to Ask. Both named in the footer.</span></li>
+    <li><b>Count</b><span>Computed from the rows rendered, never a figure typed beside a list.</span></li>
+    <li><b>Refused rows</b><span>Dimmed with the reason beside them at full ink. A refused control drawn as ordinary is evidence of a control that was never shipped.</span></li>
+    <li><b>Focus</b><span>Trapped while open, restored to the opener on close. Esc is the shortcut; the ✕ is the mechanism.</span></li>
+  </ul>
+
+  <h3>Spend, and how it is stated</h3>
+  <ul class="kv">
+    <li><b>The metered mark</b><span>∴ still, in agent ink, trailing a spend figure and following words that say an act is billable. No unit word is needed: the figure's own qualifier says what was counted.</span></li>
+    <li><b>Where it appears</b><span>Plan spend in the chrome, run spend on arrival, row spend in the register, the evidence panel, the Ask answer, and every billable control.</span></li>
+    <li><b>Re-runs are never automatic</b><span>A run costs tokens and is recorded, so a person asks for it.</span></li>
+  </ul>
+
+  <h3>The mascot</h3>
+  <ul class="kv">
+    <li><b>Still</b><span>The metered mark, above. Needs no markup and cannot move.</span></li>
+    <li><b>Working · 4.8s</b><span>A run is reading and nobody is watching that spot.</span></li>
+    <li><b>Thinking · 2s</b><span>Ask is composing and the person is watching it.</span></li>
+    <li><b>Listening · 1.25s</b><span>The question field has focus.</span></li>
+  </ul>
+  <p class="note">It is brand, not iconography: it may move because it reports
+  nothing. <b>It is never the only thing saying the machine is working</b>, and
+  it never moves in a dense context like a register cell.</p>
+
+  <h3>The audit trail</h3>
+  <ul class="kv">
+    <li><b>Every act, in order</b><span>Run, machine and person alike, each with its own id, time, actor and cost.</span></li>
+    <li><b>Reachable from everywhere</b><span>A door in the chrome and a row in the palette; the status bar names the id of the last act.</span></li>
+    <li><b>Per reconciliation</b><span>Each one carries its own trail, because a shared trail cannot say which run raised what.</span></li>
+  </ul>
+
+  <h2>What it refuses to do</h2>
+  <p class="note">The refusals are as much the product as the features are, and
+  they are on the record rather than discovered.</p>
+  <ul class="kv">
+    <li><b>No silent decisions</b><span>Anything below the floor is parked for a person, never guessed.</span></li>
+    <li><b>No partial register</b><span>A run that has read half the lines shows its progress, not half a picture.</span></li>
+    <li><b>No self-approval</b><span>Unless the tenant switched segregation off knowingly, and then every such approval is recorded as self-approved.</span></li>
+    <li><b>No hidden cost</b><span>Every act that spends says so before it runs and prints what it spent after.</span></li>
+    <li><b>No credential readable from a request</b><span>We custody each source credential in Secrets Manager under the tenant's own KMS key, and nothing that serves a request can read one back — which is also why some failures are indistinguishable from here.</span></li>
+    <li><b>No floor set from the close surface</b><span>It is an onboarding decision, and moving it mid-period would change what the register means.</span></li>
+  </ul>
+
+  <h2>Open · specified but not built</h2>
+  <ul class="kv">
+    <li><b>The partner record itself</b><span>What the Arrangement pane reads is edited by hand on our side. There is no staff surface that writes a partner, a card assignment or an amendment, so a change is an email and a database write.</span></li>
+    <li><b>The registry behind P9</b><span>The portal submits a registration; nothing on our side queues, accepts or refuses it, and precedence between two claims on one company is a judgement with no screen.</span></li>
+    <li><b>Sandbox provisioning and its jobs</b><span>The reset cycle, the upload purge and the demo marking are specified and drawn; the jobs that run them are not wired.</span></li>
+    <li><b>Break-glass, end to end</b><span>Nothing issues the grant, expires it at twenty-four hours, or writes the reason into the customer's audit trail. The support access mode is chosen at tenant creation and enforced nowhere yet, which makes it the largest gap between what the console says and what the product does.</span></li>
+    <li><b>Onboarding state, the force and the mark</b><span>The ordered sequence, a forced step and the mark it leaves are state on the staff surface only. Nothing persists any of it, so nothing survives a reload or reaches a review.</span></li>
+    <li><b>Issuing an invoice, and recording a payment</b><span>The figures are metered and the document is drawn; issuing it, sending it and knowing it was paid are all outside. Commission moved to invoiced revenue partly because of this.</span></li>
+    <li><b>Amending a tenant</b><span>Retention and support access mode are the customer's to change and ours to execute. No surface, and no record of an amendment.</span></li>
+    <li><b>Routing a second approver</b><span>The segregation check holds and the proposer of record cannot post. What does not exist is the routing that finds another approver when the only one available is the proposer — the proposal waits.</span></li>
+    <li><b>Source × pattern → document type</b><span>The pair that identifies a document, and the field mapping and per-type floor that hang off it. C9 cannot be finished without it, and OCR sources cannot be read at all.</span></li>
+    <li><b>Connection configuration and its test</b><span>Per source kind, with the IAM or BTP prerequisites drafted for the customer's engineer. Until it exists a source is declared and nobody knows whether it works.</span></li>
+    <li><b>Quota pre-flight</b><span>An ongoing check against the tenant's model quota, so a run cannot stop with no warning.</span></li>
+    <li><b>Posting failure after leaving</b><span>Where the terminal state of an asynchronous act is reported.</span></li>
+  </ul>
+
+  <h2>Change log</h2>
+  <table>
+    <thead><tr><th scope="col">Date</th><th scope="col">Change</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">1 Oct 2026 · late</th><td><b>We custody the credential — the owner's ruling, recorded in the handoff as G2408, applying G2401.</b> The C9 row that read <em>"The credential is theirs … We never hold one"</em> is rewritten, and three sentences carrying the same claim with it (<em>Waiting on a source</em>, <em>Declare a source</em>, and the <em>No credentials on our side</em> refusal): a source credential is held in <b>our Secrets Manager under the tenant's own KMS key</b>, bound by the tenant's administrator or by an FDE under a live delivery grant, and <b>never readable by a request path</b>. The drawn copy in <span class="spec">C1 Close</span> moved too. No status word moved. ⚠️ The onboarding step note in <span class="spec">S1 Staff</span> — <em>"the credential is theirs"</em> — still carries the old sentence and is owed: the tree transcribes that array into its onboarding model, so it moves with that model rather than alone.</td></tr>
+      <tr><th scope="row">1 Oct 2026</th><td><b>Eleven rows moved to refused, by the owner's ruling R16.</b> The legend says a specified row is <em>safe to build without a second conversation</em>, and for rows that are rulings that was false precisely where a second conversation is mandatory. Each declined row carries its reason beside it: the priced unsupportable customer (a price, which nothing here may state); legal hold (a break-glass into statutory, which no grant reaches at any price); the four C12 escalation rows and P8's copy of them (commercial and security, and BYOA is slipped to v1+1); the one-person finance team and its duplicate, waived knowingly (a switch that disables four eyes); and the SAP and forwarded-email source rows (each ends in a credential or a mail domain we would operate). A decline returns only with a new ruling. Recorded in the handoff as G2442.</td></tr>
+      <tr><th scope="row">18 Sep 2026 · last</th><td><b>Voice and motion became rules, and the error pages exist.</b> The design system now carries a <b>microcopy</b> section: second person for consequences and neutral for facts — a split the product had by accident — <b>British spelling in copy and in code</b>, with a field name that diverges named as a finding, since the records already carry one scope dimension spelled two ways across an authorisation join. A failure is a sentence then the code in mono. Five things are banned with the reason attached: hedges, cheer, vagueness, anthropomorphism and emoji. <b>An apology is narrow</b> — only where the fault is ours and it cost the reader something. And the agent speaks in the <b>first person about acts and confidence only</b>: it read, it matched, it is 71% confident; it never thinks, believes, wants or feels, because those claim a state of mind in place of evidence. On <b>motion</b>: under reduced-motion the spring still runs with distance clamped to a few pixels rather than being switched off, since travel is what causes the problem; and five things never move — anything carrying a number that matters, register rows, a refusal appearing, the status bar, and a skeleton resolving. <b>Loading skeletons</b> were specified against shadcn's, with the three cases where a skeleton is the wrong answer and a rule that a persistent one is a fifth nothing nobody can act on. <b>shadcn/ui was mapped across all fourteen primitives</b> with a verdict each, a generated token bridge aliasing its variables onto the kernel, and three refusals: the six indicators, the metered mark and the icon set. <b>E1 Errors</b> ships six states built to the new copy rules.</td></tr>
+      <tr><th scope="row">18 Sep 2026 · late</th><td><b>Four cross-cutting mechanisms, documented above rather than left in the surfaces.</b> <b>Notifications</b> were absent from every journey and are now one affordance in the chrome of all three consoles — <span class="spec">Needs you</span>, scoped to the role, carrying a signal and never a figure, which is what keeps a notice out of the read path. Channel digests stay refused for v1. <b>The command palette reached P1 and S1</b> with the same sections, keys and refusal behaviour as C1, including the property that a search which finds something you may not open <em>says so</em> rather than returning nothing. <b>The account menu</b> became real: profile, pending actions, keyboard shortcuts, administration where the role holds it, the illustrative role switch, and sign out. <b>Table controls</b> — sort and filter on the column header, text search, pagination — landed as one implementation in <span class="spec">table.js</span>, wired into the seven list tables and deliberately kept off the short explanatory ones. <b>The chrome is now one line, always</b>: the nav scrolls, the tenant name truncates and the role label collapses to initials rather than the bar wrapping and moving every destination when a count changes width. And an <b>accessibility pass</b> across all fifteen documents added the missing <span class="spec">lang</span>, a named heading and a skip link on each console, captions and <span class="spec">aria-sort</span> on controlled tables, and labels on the filter cells.</td></tr>
+      <tr><th scope="row">18 Sep 2026 · evening</th><td><b>All three journey families reconciled against the design records, and seven of them disagreed with what had been built.</b> <b>Break-glass was rebuilt</b>: consent moves to signing as a standing authorisation naming purpose, classes, a per-customer ceiling and a notification path, and a second 1CloudHub person approves each grant — the raiser never — re-checked at use rather than only at issue. This reverses the no-second-approver ruling taken the same afternoon; the cost accepted is a rota. <b>The telemetry profile became a second axis</b> beside the support access mode, with <span class="spec">minimum</span> as a contractual floor, because the two answer different questions: what we may reach on request, and what arrives without asking. <b>The stakeholder vocabulary was applied</b> — user, administrator, author, sponsor, assurance — so `operator` and `auditor` are gone from every surface, partner roles became partner administrator and partner user, and <b>assurance and sponsor became real roles</b>: assurance reads the trail, the governance console, closed periods and policy history, and never live work; the sponsor's one act is acknowledging a period. <b>A governance destination landed on the tenant surface</b> carrying subject access, correction and erasure as the tenant's own acts, plus the sub-processor register — with legal hold and breach named as ours. An erasure claims <b>erased</b>, unqualified, and residuals are a contractual disclosure rather than a screen. <b>Breach is three states</b> with three clocks and a detector, reported by the tenant as a top-severity case. <b>Legal hold is the one statutory act we may reach</b>, by break-glass, scoped to placing a hold and never to answering a request on their behalf. <b>The entitlement lease and the non-payment ladder are on the plan</b>, with the ceiling held apart from the tier and two things that never stop. <b>The L1 diagnostic bundle</b> was added on both sides. <b>Environment became a fourth choice</b> at tenant creation, with evaluation behaving as production and converting only by an act. <b>PartnerAccessGrant is drawn with nobody holding one</b> — P7 stays refused, and the grant is the exception that proves it, because a live grant would make the partner a sub-processor. <b>Federation sits beside the domain allow-list</b> at sign-in, with DNS-verified domains, guests refused to their own realm, and the organisation stamped on every act at the time it happens. ⚠️ <b>Left unreconciled on purpose:</b> G36 slips BYOA to v1+1 and the journeys keep it in v1 by ruling, so C12, P8 and the sandbox still assume a customer-owned plane.</td></tr>
+      <tr><th scope="row">18 Sep 2026</th><td><b>The staff console was built, H1 to H11 feature by feature.</b> Six destinations over three roles — FDE, billing and support — each landing on its own work, with a destination a role does not need drawn absent rather than disabled. Six live writes, two of them confirming: creating a tenant and raising an adjustment. Seven rulings came out of the review. <b>Deployment mode and residency are frozen at creation</b>, and C12 and P8 are reconciled with that by being a migration into a second tenant rather than an amendment — the record never changes because the tenant does not. <b>An FDE may force an onboarding gate</b> with a typed reason, which marks every step above it done and leaves the tenant carrying a forced-step mark. <b>Break-glass</b> lets support exceed the support access mode a customer chose: a typed reason that lands verbatim in their audit trail, scoped to one tenant and one case, expiring in twenty-four hours — with no second approver and no notification at the time, both written on the surface as the cost. <b>Commission moved from collected to invoiced revenue</b>, because nothing in the product knows whether an invoice was paid, and the partner portal was amended in four places to match. <b>A partner-sold tenant is never invoiced to the customer:</b> one consolidated invoice per partner, a line item per customer. <b>A refused colliding registration is told a date and nothing else.</b> <b>Adding a domain to the sign-in list states what the list already exposes</b>, including how many domains resolve today. The agent builder became a destination with a real draft-and-published editor, and is recorded as being in neither the model nor the module vocabulary.</td></tr>
+      <tr><th scope="row">18 Sep 2026</th><td><b>The partner portal was built and folded in, P1 to P9 feature by feature</b>, plus two sections the journey map had no name for: <b>Cases</b>, which is what P7's refusal leaves open — partner-raised, severity proposed by them and decided by us, words only, and "resolved for us" as a note rather than a close — and the <b>Sandbox</b>, a BYOA tenant in the partner's own account, marked demo, reset monthly, with uploads labelled and purged at reset and the cost on their own statement. Two surfaces the audit found missing were added: <b>P1 Arrangement</b>, the record every other pane reads from, and <b>P8</b>, the escalation of a resold tenant to BYOA, drawn as five steps and whose hands each is in. The surfaces index now carries V4 and the partner portal, and the roles table carries partner administrator, partner user and partner delivery — the last with no access, because P7 is refused.</td></tr>
+      <tr><th scope="row">16 Sep 2026</th><td><b>Reports became a canvas</b>, and report definitions came back into scope with it. Panels are dragged or clicked onto a close pack from Close, Ask or the plan; each keeps a chip naming its source; sheet numbers are computed from the order; the pack refreshes weekly, monthly, quarterly, yearly or on every exception-raising run, with a <b>custom cycle refused</b> because the model holds a cadence and not a rule. Nothing persists the arrangement — ReportDefinition does not exist — and the pane states that rather than implying otherwise.</td></tr>
+      <tr><th scope="row">16 Sep 2026</th><td><b>Ask rebuilt as a session</b>: sessions left, thread and sticky composer right, provenance chips above every answer with the turn's cost on the same line, and a source selectable as the scope. Asking a source returns its <b>last delivery</b>, chipped <span class="spec">not a live read</span>; a live oData query through the BTP destination is specified and not built. Correspondence questions are refused whatever the scope, with no meter and no citations.</td></tr>
+      <tr><th scope="row">16 Sep 2026</th><td>C10 to C13 folded in, feature by feature. <b>C10</b> tag policy, including the one handoff whose lateness cannot be repaired — records emitted before the vocabulary is agreed carry no tag and cannot be re-tagged. <b>C11</b> the audit trail and the <b>assurance reader</b> role, read-only, reading the register and the reports as well as the trail, with every changing control absent rather than disabled. <b>C12</b> hosted-to-BYOA escalation: everything migrates, counts are reconciled before teardown, and cutover is forward only. <b>C13</b> policy: segregation of duties and the delivery allow-list, both recorded on every action they permit. Serene Oh added to the profile switcher.</td></tr>
+      <tr><th scope="row">16 Sep 2026</th><td>Pack model corrected in review. A pack is <b>five parts, including the sources it needs</b> — so a pack names source roles and the install binds them, rather than sources and packs being two unrelated acts. Added: variables refused-if-unfilled, a <b>dry run</b> that reports without writing and costs tokens, and editing an installed pack as <b>overlays</b> over tenant-editable parts (variables, SOPs, tolerances) with types, rules and matching arity staying pack-owned.</td></tr>
+      <tr><th scope="row">16 Sep 2026</th><td>C9 decided in review, five rounds, and the section rewritten around an ordered onboarding sequence: <b>declared up front</b> over a calibration first run; <b>OCR declared by the pack per document type</b>; a source's connection <b>test must pass before it can be declared</b>; the parked pile <b>drains on declaration and counts against the plan</b>, finishing as a continuation if it crosses the ceiling; unmatched and pre-declaration deliveries share one <b>unclassified</b> state; a scanned sample against a digital-only type <b>refuses the pair</b>, with the way out a pack change raised with the FDE; and <b>Setup is admin-only</b> — Close, Ask and Reports belong to the user role, which one person may also hold.</td></tr>
+      <tr><th scope="row">16 Sep 2026</th><td>C7, C8 and C9 promoted from journey level to feature-by-feature tables, with the surfaces to match: Reports (export and scheduled delivery with the destination allow-list), the plan behind the chrome meter, and Setup. <span class="spec">partial</span> added to the status words it had been using without declaring.</td></tr>
+      <tr><th scope="row">16 Sep 2026</th><td>Show and Order by share one row in triage. They were separated by the grid, not by a decision; the two labels carry the distinction.</td></tr>
+      <tr><th scope="row">15 Sep 2026</th><td>First version. C1 and C2 captured feature by feature; C3–C6 captured at journey level with status words.</td></tr>
+      <tr><th scope="row">15 Sep 2026</th><td>Corrected V3: it is passkey-first with an emailed one-use link that enrols a passkey, and the route is derived from the organisation the passkey belongs to. The first draft described an SSO-and-passphrase screen with a tenant picker, which is not what the surface does — the first instance of the defect this document exists to prevent, found by review rather than by reading the surface.</td></tr>
+      <tr><th scope="row">15 Sep 2026</th><td>Two contrast repairs in the kernel. Form controls now inherit the ink ramp instead of an OS system colour — every button that set no colour was painting white text on a white ground for readers whose OS reports dark mode. And <span class="spec">--recede</span> moved from <span class="spec">#63787c</span> to <span class="spec">#607478</span>, because 4.30:1 on <span class="spec">--sheet</span> was below AA on the run strip's state line.</td></tr>
+    </tbody>
+  </table>
+
+  </div>
+</doc-page>
+</x-dc>
+</body>
+</html>

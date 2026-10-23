@@ -1,0 +1,262 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   JOURNEY MAP — geometry only. Every value composes a token from tokens.css.
+   The map is drawn in the product's own design system deliberately: the accent
+   carries the tab wayfinding (R16), the not-built hatch marks a journey nothing
+   specifies (R7), and the grammar glyphs carry whose move it is — › for the
+   actor, … for waiting on somebody else. If the map invented its own
+   vocabulary it would be a second system.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.jp{padding:calc(var(--u)*8) var(--gutter) calc(var(--u)*20);max-width:var(--measure)}
+
+h1{font-weight:var(--w-display);font-size:var(--s7);line-height:var(--lh-display);
+  letter-spacing:var(--tr-display);margin:0 0 calc(var(--u)*3);text-transform:lowercase}
+h2{font-size:var(--s2);letter-spacing:.14em;text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--muted);
+  margin:calc(var(--u)*12) 0 calc(var(--u)*3);padding-top:calc(var(--u)*4);
+  border-top:1px solid var(--rule-strong)}
+h3{font-size:var(--s3);font-weight:var(--w-emph);margin:calc(var(--u)*6) 0 calc(var(--u)*2);
+  color:var(--ink)}
+.lede{color:var(--muted);font-size:var(--s4);font-weight:var(--w-lede);
+  max-width:var(--measure-lede);margin:0 0 calc(var(--u)*8)}
+.sub{color:var(--muted);font-size:var(--s2);max-width:var(--measure-text);
+  margin:0 0 calc(var(--u)*6)}
+.note{color:var(--muted);font-size:var(--s2);max-width:var(--measure-text);
+  margin:calc(var(--u)*3) 0 0;line-height:var(--lh-note)}
+.note b{color:var(--ink);font-weight:var(--w-emph)}
+.spec{font-family:var(--face-mono);font-size:var(--s2);color:var(--muted)}
+.lab{display:block;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  margin-bottom:calc(var(--u)*2)}
+
+.masthead{display:flex;align-items:baseline;justify-content:space-between;
+  gap:calc(var(--u)*6);flex-wrap:wrap;padding-bottom:calc(var(--u)*5);
+  border-bottom:1px solid var(--rule-strong);margin-bottom:calc(var(--u)*8)}
+.masthead .who{font-size:var(--s2);color:var(--muted);text-align:right}
+.masthead .who b{display:block;color:var(--ink);font-weight:var(--w-emph)}
+@media (max-width:720px){.masthead .who{text-align:left}}
+
+/* ═══ THE TABS ═════════════════════════════════════════════════════════════
+   Five, and the accent marks which one you are on — the same three channels
+   the destination rule uses: weight, a 2px edge, and the accent on that edge.
+   Remove the accent and the tab still reads as current. */
+.tabs{display:flex;gap:calc(var(--u)*6);flex-wrap:wrap;list-style:none;margin:0;
+  padding:0;border-bottom:1px solid var(--rule-strong)}
+.tabs button{font:inherit;font-size:var(--s3);color:var(--muted);background:none;
+  border:0;border-bottom:2px solid transparent;padding:calc(var(--u)*2) 0;
+  cursor:pointer;min-height:var(--target);
+  transition:color var(--t-fade) linear,border-color var(--t-fade) linear}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-current="page"]{color:var(--ink);font-weight:var(--w-emph);
+  border-bottom-color:var(--accent)}
+.tabs .ct{font-family:var(--face-mono);font-variant-numeric:tabular-nums;
+  color:var(--muted);font-weight:var(--w-body);margin-left:calc(var(--u)*2)}
+
+/* ═══ THE JOURNEY ══════════════════════════════════════════════════════════ */
+.journeys{display:flex;flex-direction:column;gap:calc(var(--u)*3);
+  margin-top:calc(var(--u)*6)}
+.j{background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.j-head{display:flex;align-items:flex-start;gap:calc(var(--u)*4);width:100%;
+  font:inherit;text-align:left;background:none;border:0;cursor:pointer;
+  padding:calc(var(--u)*4);min-height:var(--target)}
+.j-head:hover{background-color:var(--row-hover)}
+.j-id{font-family:var(--face-mono);font-size:var(--s2);font-weight:var(--w-figure);
+  color:var(--muted);flex:none;min-width:calc(var(--u)*10)}
+.j-main{flex:1;min-width:0}
+.j-name{display:block;font-size:var(--s3);font-weight:var(--w-emph);color:var(--ink)}
+.j-trig{display:block;font-size:var(--s2);color:var(--muted);
+  margin-top:calc(var(--u)*1);line-height:var(--lh-note)}
+.j-right{display:flex;align-items:center;gap:calc(var(--u)*3);flex:none;
+  flex-wrap:wrap;justify-content:flex-end}
+.j-open{font-family:var(--face-mono);color:var(--muted);flex:none}
+.j-body{padding:0 calc(var(--u)*4) calc(var(--u)*4);border-top:1px solid var(--rule)}
+@media (max-width:720px){
+  .j-head{flex-wrap:wrap}
+  .j-right{justify-content:flex-start}
+}
+
+/* THE STATUS MARK. A word, never a colour — R1. v1 is plain ink; v2 recedes;
+   unspecified takes the refused step, because "nothing specifies this" is a
+   refusal and not a later version. */
+.st{font-size:var(--s1);letter-spacing:var(--tr-micro);text-transform:uppercase;
+  font-weight:var(--w-emph);white-space:nowrap;padding:0 calc(var(--u)*1.5);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);color:var(--muted)}
+.st[data-s="v1"]{color:var(--on-ink);background-color:var(--ink);box-shadow:none}
+.st[data-s="v2"]{color:var(--recede)}
+.st[data-s="unspecified"]{color:var(--refused);box-shadow:inset 0 0 0 1px var(--refused)}
+.st[data-s="refused"]{color:var(--ink);box-shadow:inset 0 0 0 2px var(--ink)}
+
+/* ═══ THE STEP ═════════════════════════════════════════════════════════════
+   One row per step. The kind is carried by the leading glyph and by the word,
+   never by a hue: › your move · … elsewhere · ✕ the branch where it breaks. */
+.steps{list-style:none;margin:calc(var(--u)*4) 0 0;padding:0}
+.steps li{display:grid;grid-template-columns:calc(var(--u)*8) 1fr;
+  gap:calc(var(--u)*3);padding:calc(var(--u)*3) 0;border-bottom:1px solid var(--rule)}
+.steps li:last-child{border-bottom:0}
+.s-n{font-family:var(--face-mono);font-variant-numeric:tabular-nums;
+  font-size:var(--s2);color:var(--muted)}
+.s-t{font-size:var(--s2);line-height:var(--lh-note);color:var(--ink)}
+.s-t b{font-weight:var(--w-emph)}
+.s-t .mk{font-family:var(--face-mono);font-weight:var(--w-emph);color:var(--ink)}
+/* A FAILURE BRANCH AND A WAITING STATE ARE NOT DECORATED DIFFERENTLY FROM A
+   HAPPY STEP — they are indented one unit and named. A hue or an icon here
+   would be a seventh indicator. */
+.steps li[data-kind="branch"]{background-color:var(--sheet)}
+.steps li[data-kind="branch"] .s-t{color:var(--ink)}
+.steps li[data-kind="wait"] .s-t{color:var(--muted)}
+.steps li[data-kind="wait"] .s-t b{color:var(--ink)}
+
+/* The annotation row. Seven possible tags, each a word. */
+.tags{display:flex;flex-wrap:wrap;gap:calc(var(--u)*1) calc(var(--u)*3);
+  margin-top:calc(var(--u)*2);font-size:var(--s1);letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted)}
+.tags span{display:inline-flex;align-items:baseline;gap:calc(var(--u)*1)}
+.tags b{font-weight:var(--w-emph);color:var(--ink);letter-spacing:.06em}
+.tags .hands[data-h="them"] b{color:var(--refused)}
+.stall{display:block;font-size:var(--s2);color:var(--refused);
+  line-height:var(--lh-note);margin-top:calc(var(--u)*2);
+  padding-left:calc(var(--u)*3);border-left:2px solid var(--ink)}
+.stall b{color:var(--ink);font-weight:var(--w-emph)}
+
+/* ═══ THE SPINE ════════════════════════════════════════════════════════════
+   The collapsed row's glance: one tick per step, so the SHAPE of a journey is
+   readable before it is opened — a long rail with two drops looks different
+   from three steps and four branches.
+   ⚠️ TWO CHANNELS, NOT ONE. Each kind differs in BOTH height and ink step, so
+   the strip does not depend on tone alone — and the words are one click away.
+   A hue here would be a seventh indicator. */
+.spine{display:flex;align-items:flex-end;gap:2px;margin-top:calc(var(--u)*2);
+  height:calc(var(--u)*3)}
+.spine i{display:block;width:calc(var(--u)*3);flex:none}
+.spine i[data-k="step"]{height:calc(var(--u)*2);background-color:var(--rule-strong)}
+.spine i[data-k="wait"]{height:1px;background-color:var(--rule-strong)}
+.spine i[data-k="branch"]{height:calc(var(--u)*3);background-color:var(--ink)}
+
+/* ═══ THE FLOW DIAGRAM ═════════════════════════════════════════════════════
+   The happy path is a horizontal rail; a waiting state sits ON the rail
+   because the journey does pass through it; a failure branch DROPS below the
+   step it leaves from, because the journey does not continue along it.
+
+   🛑 NO GLYPH BETWEEN NODES. The connector is a plain hairline and direction
+   is carried by reading order — a chevron would collide with ›, which already
+   means "your move" in this system's grammar. */
+.flow{display:flex;align-items:flex-start;overflow-x:auto;
+  margin-top:calc(var(--u)*4);padding-bottom:calc(var(--u)*2)}
+.fc{flex:0 0 auto;display:flex;flex-direction:column;
+  min-width:calc(var(--u)*36);max-width:calc(var(--u)*44);
+  padding-right:calc(var(--u)*6)}
+.fc:last-child{padding-right:0}
+
+.fn{position:relative;background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);
+  padding:calc(var(--u)*2) calc(var(--u)*3);font-size:var(--s2);
+  line-height:var(--lh-note);color:var(--ink)}
+.fn::after{content:"";position:absolute;left:100%;top:50%;
+  width:calc(var(--u)*6);height:1px;background-color:var(--rule-strong)}
+.fc:last-child .fn::after{display:none}
+.fn[data-k="wait"]{background-color:var(--sheet);color:var(--muted)}
+.fn[data-k="wait"] .fl{color:var(--ink)}
+.fn .fm{font-family:var(--face-mono);font-weight:var(--w-emph);color:var(--ink);
+  margin-right:calc(var(--u)*1)}
+.fn .fno{font-family:var(--face-mono);font-variant-numeric:tabular-nums;
+  font-size:var(--s1);color:var(--muted);display:block}
+.fn .fl{display:block;font-weight:var(--w-emph);margin-top:calc(var(--u)*.5)}
+
+/* A branch hangs off the node above it. The vertical stub is what says it
+   leaves the rail rather than continuing along it. */
+.fb{position:relative;margin:calc(var(--u)*4) 0 0 calc(var(--u)*4);
+  background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--ink);
+  padding:calc(var(--u)*2) calc(var(--u)*3);font-size:var(--s2);
+  line-height:var(--lh-note);color:var(--ink)}
+.fb::before{content:"";position:absolute;left:calc(var(--u)*-4);
+  top:calc(var(--u)*-4);width:1px;height:calc(var(--u)*4 + 50%);
+  background-color:var(--ink)}
+.fb::after{content:"";position:absolute;left:calc(var(--u)*-4);top:50%;
+  width:calc(var(--u)*4);height:1px;background-color:var(--ink)}
+.fb .fm{font-family:var(--face-mono);font-weight:var(--w-emph)}
+.fb .fl{display:block;font-weight:var(--w-emph);margin-top:calc(var(--u)*.5)}
+.fb .fno{font-family:var(--face-mono);font-variant-numeric:tabular-nums;
+  font-size:var(--s1);color:var(--muted);display:block}
+/* A branch that stalls is the one a reader must notice. It takes the emphasis
+   edge on the side the journey stopped on — the 1px edge doubled, in ink. */
+.fb[data-stall="true"]{border-left:2px solid var(--ink)}
+
+.flow-key{display:flex;flex-wrap:wrap;gap:calc(var(--u)*2) calc(var(--u)*5);
+  margin-top:calc(var(--u)*3);font-size:var(--s1);letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted)}
+.flow-key span{display:inline-flex;align-items:center;gap:calc(var(--u)*2)}
+.flow-key b{font-family:var(--face-mono);color:var(--ink);
+  font-weight:var(--w-emph);letter-spacing:0}
+
+@media (max-width:720px){
+  .fc{min-width:calc(var(--u)*30)}
+}
+
+/* ═══ FILTERS ══════════════════════════════════════════════════════════════ */
+.filters{display:flex;align-items:center;gap:calc(var(--u)*3);flex-wrap:wrap;
+  margin-top:calc(var(--u)*6)}
+.chip{display:inline-flex;align-items:center;gap:calc(var(--u)*2);font:inherit;
+  font-size:var(--s2);color:var(--ink);background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);border:0;
+  padding:calc(var(--u)*1) calc(var(--u)*2);cursor:pointer;
+  min-height:var(--target-min)}
+.chip:hover{background-color:var(--tile-hover)}
+.chip[aria-pressed="true"]{background-color:var(--sheet);font-weight:var(--w-emph);
+  box-shadow:inset 0 0 0 1px var(--ink)}
+.count{font-size:var(--s2);color:var(--muted)}
+
+/* ═══ ROLES ════════════════════════════════════════════════════════════════ */
+.roles{display:grid;gap:calc(var(--u)*4);margin-top:calc(var(--u)*4);
+  grid-template-columns:repeat(auto-fit,minmax(var(--col-min),1fr))}
+.role{padding:calc(var(--u)*4);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  background-color:var(--paper)}
+.role .nm{display:block;font-size:var(--s3);font-weight:var(--w-emph)}
+.role .rt{display:block;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;color:var(--muted);margin-top:calc(var(--u)*1);
+  font-weight:var(--w-emph)}
+.role p{font-size:var(--s2);color:var(--muted);line-height:var(--lh-note);
+  margin:calc(var(--u)*3) 0 0;max-width:none}
+
+/* ═══ TABLES ═══════════════════════════════════════════════════════════════ */
+.wrap{overflow-x:auto;margin-top:calc(var(--u)*4)}
+table{border-collapse:collapse;width:100%}
+.wrap table{min-width:calc(var(--u)*170)}
+caption{text-align:left;font-size:var(--s2);color:var(--muted);
+  padding:0 0 calc(var(--u)*3);max-width:var(--measure-text)}
+th,td{text-align:left;vertical-align:top;padding:calc(var(--u)*2) calc(var(--u)*3);
+  border-bottom:1px solid var(--rule);font-size:var(--s2)}
+thead th{font-size:var(--s1);letter-spacing:.12em;text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--muted);
+  border-bottom:1px solid var(--rule-strong);white-space:nowrap}
+tbody th{font-weight:var(--w-body)}
+.rt-route{font-family:var(--face-mono);font-weight:var(--w-figure);color:var(--ink);
+  white-space:nowrap}
+.yes{font-family:var(--face-mono);color:var(--ink);font-weight:var(--w-emph)}
+.ro{font-family:var(--face-mono);color:var(--muted)}
+.no{font-family:var(--face-mono);color:var(--rule-strong)}
+.matrix td,.matrix th{text-align:center}
+.matrix td:first-child,.matrix th:first-child{text-align:left}
+
+/* ═══ THE HANDOFF ══════════════════════════════════════════════════════════ */
+.handoffs{display:flex;flex-direction:column;gap:calc(var(--u)*3);
+  margin-top:calc(var(--u)*6)}
+.ho{background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  padding:calc(var(--u)*4);display:grid;gap:calc(var(--u)*4);
+  grid-template-columns:minmax(0,1fr) minmax(0,1.4fr)}
+@media (max-width:720px){.ho{grid-template-columns:minmax(0,1fr)}}
+.ho .nm{display:block;font-size:var(--s3);font-weight:var(--w-emph)}
+.ho .pass{display:block;font-size:var(--s2);color:var(--muted);
+  margin-top:calc(var(--u)*2);line-height:var(--lh-note)}
+.ho .arrow{font-family:var(--face-mono);color:var(--ink);font-weight:var(--w-emph)}
+.ho p{font-size:var(--s2);color:var(--muted);line-height:var(--lh-note);margin:0;
+  max-width:none}
+.ho p + p{margin-top:calc(var(--u)*2)}
+
+.callout{border-left:2px solid var(--ink);padding:calc(var(--u)*3) 0 calc(var(--u)*3)
+  calc(var(--u)*4);margin:calc(var(--u)*5) 0 0;font-size:var(--s2);
+  line-height:var(--lh-note);max-width:var(--measure-text);color:var(--muted)}
+.callout b{color:var(--ink);font-weight:var(--w-emph)}
+
+.synthetic{font-size:var(--s1);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-top:calc(var(--u)*14);padding-top:calc(var(--u)*4);
+  border-top:1px solid var(--rule-strong);max-width:none}

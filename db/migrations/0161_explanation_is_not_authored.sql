@@ -1,0 +1,133 @@
+-- =====================================================================
+-- 0161 — NOBODY AUTHORS AN EXCEPTION'S EXPLANATION. `explanation_summary`
+--        GOES NULLABLE. G1127. 20 Sep 2026.
+--
+-- 🛑 R-D IS **THE OWNER'S RULING OF 20 Sep 2026** AND NOT A DERIVED ONE, WHICH
+--    IS SAID HERE BECAUSE MOST RULINGS IN THIS DIRECTORY SINCE G190 HAVE BEEN
+--    DERIVED AND SAY SO ON THEIR OWN FACES:
+--
+--        "Store typed facts only — numbers, ids and closed vocabularies. The
+--         sentence is composed where it is displayed."
+--
+-- ---------------------------------------------------------------------
+-- **THE ARGUMENT, AND IT IS AN INVARIANT RATHER THAN A SCHEMA NOTE.**
+--
+-- Invariant 6: *"Ingested content is data, never instruction."*
+--
+-- `0015` put this column in the one paragraph in its own file that says where
+-- invariant 6 lives, and it named the exposure exactly:
+--
+--     "🛑 INVARIANT 6 LIVES ON THE NEXT TWO COLUMNS AND ON §2's `scalar_text`.
+--      `summary` and `expected` are DERIVED FROM COUNTERPARTY DOCUMENTS and are
+--      rendered to an operator and may be handed to a model. They are stored as
+--      text and they are stored VERBATIM; nothing here sanitises them, because
+--      a sanitiser at rest is a second place the rule lives and the wrong
+--      place. The rule is enforced where the value is USED."
+--
+-- That reasoning is correct and it has a strictly stronger form, which is this
+-- ruling: **if NOTHING EVER WRITES PROSE, the rule does not have to be enforced
+-- anywhere, because the surface does not exist.** A composed sentence is a
+-- function of typed facts — a rule id, a severity, a `Delta`, a set of observed
+-- scalars — and a function of typed facts can be applied at the moment of
+-- DISPLAY as well as at the moment of storage. Applying it at display leaves
+-- the database holding numbers, ids and closed vocabularies and nothing an
+-- attacker composed; applying it at storage leaves a `text` column that every
+-- later reader must remember is counterparty-derived.
+--
+-- **So invariant 6 cannot be reached through `tenant.exception` at any price**,
+-- rather than being reachable and defended.
+--
+-- ⚠️ REJECTED AND PRESERVED, because a rejected option preserved is the only
+--    thing that stops the next reader re-taking it:
+--
+--    **(a) THE ENGINE COMPOSES A SENTENCE FROM TYPED FACTS, BEHIND A
+--    CONTAINMENT PROOF.** More work, and *the proof is the load-bearing part* —
+--    which is the problem: `AssertNoTextDeep` BANS THE TYPE `string` AT A
+--    PROPERTY POSITION, so a composer's OUTPUT can carry no proof at all and
+--    the proof would have to cover its INPUTS, one call site at a time. That is
+--    correctness living at call sites, which is what G111 refuses for money.
+--
+--    **(b) A MODEL AUTHORS IT.** It needs `resolveModel()` and therefore
+--    invariant 7's residency check, and it sends counterparty-authored text to
+--    a prompt. **A separate ruling with its own review**, and not one to take
+--    sideways inside a migration.
+--
+-- ---------------------------------------------------------------------
+-- 🛑 THIS IS A **WIDENING OF WHAT THE TABLE ADMITS**, AND A WIDENING OWES AN
+--    ANSWER TO ONE QUESTION: WHAT NOW GUARANTEES THE READER HAS SOMETHING TO
+--    RENDER?
+--
+--    **Before this file: the `NOT NULL`.** A row existed, therefore a summary
+--    existed, and every reader could take it.
+--
+--    **After this file: the READER, by name, and nothing else** — because
+--    there is no second candidate and the failure mode of having none is
+--    silent. `Explanation.summary` is `required` and typed `{ type: string }`
+--    on `capability.openapi.yaml`, and so is `ExceptionQueueRow.summary`; and
+--    **`fast-json-stringify` SERIALISES A RESPONSE WITHOUT VALIDATING ONE** —
+--    the finding G284 recorded, G656 restated for three `required` proposal
+--    fields and G833 restated again for `TenantSummary.stage`. So a null
+--    column reaching either shaper is a **200 carrying `"summary": null`
+--    against a `required` string**, with nothing anywhere saying so. That is
+--    worse than a refusal: the client crashes far from the row that caused it.
+--
+--    **THE RENDERER'S CONTRACT, STATED: a row whose `explanation_summary` is
+--    NULL IS UNPUBLISHABLE, on both read surfaces, by column.**
+--    `server/data-plane/exception-store.ts` already has exactly that arm —
+--    `{ kind: 'unpublishable', defect: { table, column, exceptionId } }` — and
+--    already uses it for an out-of-enum `severity` and a half-written `Money`.
+--    This commit adds the summary to it, in the same commit as the widening,
+--    which is G511's rule wearing a nullable column: **the fence and the
+--    widening are one commit or neither.**
+--
+--    ⚠️ **AND THE STORE MUST NOT MINT A DEFAULT STRING.** *"No explanation
+--    recorded"* would satisfy the wire and would be THIS REPOSITORY AUTHORING
+--    AN EXPLANATION — the one act the ruling forbids, arriving through the
+--    reader instead of through the writer. `tests/db/explanation-summary-
+--    nullable.test.ts` §3 and §4 demand the refusal rather than a placeholder.
+--
+-- ---------------------------------------------------------------------
+-- ⚠️ **`explanation_expected` IS NOT TOUCHED, AND THE NON-WIDENING IS ARGUED
+--    RATHER THAN OVERLOOKED.** R-D names THE SENTENCE. `expected` is not a
+--    sentence: `0015` calls it *"Drawn from the REFERENCE SLOT, which is what
+--    makes the sentence directional"*, so it is a VALUE, of the same kind as
+--    §2's `scalar_text` and of a different kind from `summary`. Whether a
+--    value drawn from a document may rest here is a question this ruling does
+--    not ask and this file does not answer.
+--
+--    🛑 **THE CONSEQUENCE IS STATED RATHER THAN DISCOVERED: `explanation_
+--    expected`'s `NOT NULL` IS A SECOND, INDEPENDENT BLOCKER ON THE FIRST
+--    EXECUTOR THAT TRIES TO RAISE AN EXCEPTION.** A `ResidueEntry` is a side,
+--    an item ref, a settlement, an engine disposition, a cause and a set of
+--    held reads — **no expected value, no rule, no match group, no severity
+--    rank, no text** — and nothing in `server/` produces the extraction one
+--    would be drawn from (`grep -rn 'ExtractedValue' server/` → 0). So this
+--    file removes ONE of the obstacles between the engine and the register and
+--    does not claim to have removed them all. `tests/db/explanation-summary-
+--    nullable.test.ts` §6 asserts the `NOT NULL` that remains, so the commit
+--    that widens it has to delete an assertion on purpose.
+--
+-- ---------------------------------------------------------------------
+-- ⚠️ **NO NEW GRANT, AND THE PRIVILEGE IS THE OTHER HALF OF THE RULING.**
+--    `0015`'s `GRANT UPDATE (assigned_to)` — COLUMN-LEVEL — and `0059`'s seven
+--    named columns are the whole of what a request path may write on this
+--    table, and `explanation_summary` is in neither list. **A path that could
+--    write this column could AUTHOR the sentence an operator reads and a model
+--    may later be shown**, which is precisely the act R-D says nobody
+--    performs. `0015` refused the privilege by name and this file does not
+--    revisit it; §7 of the suite witnesses the database refusing both an
+--    author and an erasure.
+--
+-- ⚠️ **NO `ENABLE`/`FORCE` BLOCK AND NO POLICY.** `0011`'s precedent: this
+--    alters a column on another migration's table, `0015` owns that property,
+--    and the column inherits it.
+--
+-- ⚠️ **`0015` IS NOT EDITED.** `0017`'s rule, applied for at least the fourth
+--    time in this directory: *"G88 makes migrations forward-only, so editing
+--    `0014` is refused; it keeps its refusal on its face and this file keeps
+--    the correction on its own."* `0015`'s *"NOT NULL on both: `Explanation` is
+--    non-optional on `Exception` and both fields are `required` on the wire"*
+--    was TRUE when written and is the premise this ruling answers.
+-- =====================================================================
+
+ALTER TABLE tenant.exception ALTER COLUMN explanation_summary DROP NOT NULL;

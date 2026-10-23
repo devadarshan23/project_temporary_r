@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@200;300;400;500;600;700&amp;family=Roboto:wght@500&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./public.css">
+</helmet>
+
+<div class="entry">
+  <div class="card">
+
+    <div class="top">
+      <a href="./V1 Landing.dc.html" style="text-decoration:none">
+        <span class="logo" style="--logo-size:1.0625rem"><span class="mascot" style="--mascot-size:1em"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span><span>Reconcile</span><span class="badge">AI</span></span>
+      </a>
+      <span class="conn"><i></i>Sign-in service <b>reachable</b></span>
+      <a href="./V1 Landing.dc.html" class="small" style="color:var(--muted)"><span class="mono" aria-hidden="true">‹</span>&nbsp;Back to the site</a>
+    </div>
+
+    <!-- ═══ THE WAY IN ═══════════════════════════════════════════════════ -->
+    <sc-if value="{{ isIdle }}" hint-placeholder-val="{{ true }}">
+      <div class="card-split">
+        <div>
+        <ul class="tabs" style="margin-bottom:calc(var(--u)*5)">
+          <li><button type="button" aria-current="{{ tabCust }}" onClick="{{ goTabCust }}">Customer</button></li>
+          <li><button type="button" aria-current="{{ tabPtnr }}" onClick="{{ goTabPtnr }}">Partner</button></li>
+        </ul>
+        <sc-if value="{{ isCustTab }}" hint-placeholder-val="{{ true }}">
+        <h1>Welcome back. Your ledger is ready for you.</h1>
+        <p>The reading is done. Every document has been read, every pair
+        matched, and every exception arrives with the reasoning behind it —
+        including what it ruled out. <b>What is left is the part that needs
+        you.</b></p>
+
+        <div class="way">
+          <button class="btn btn--primary" type="button" data-commit onClick="{{ usePasskey }}">
+            Use a passkey<span class="k">fastest</span>
+          </button>
+
+          <button class="fedbtn fedbtn--ms" type="button" onClick="{{ useMicrosoft }}">
+            <svg width="21" height="21" viewBox="0 0 21 21" aria-hidden="true" focusable="false">
+              <rect x="1" y="1" width="9" height="9" fill="#f25022"></rect>
+              <rect x="11" y="1" width="9" height="9" fill="#7fba00"></rect>
+              <rect x="1" y="11" width="9" height="9" fill="#00a4ef"></rect>
+              <rect x="11" y="11" width="9" height="9" fill="#ffb900"></rect>
+            </svg>
+            <span class="lbl">Sign in with Microsoft</span>
+          </button>
+
+          <button class="fedbtn fedbtn--g" type="button" onClick="{{ useGoogle }}">
+            <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"></path>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+            </svg>
+            <span class="lbl">Sign in with Google</span>
+          </button>
+        </div>
+
+        <div class="orline">No passkey on this device</div>
+        <div class="way">
+          <button class="btn" type="button" onClick="{{ goEmail }}">
+            Email me a sign-in link<span class="k">one use · 15 min</span>
+          </button>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ isPtnrTab }}" hint-placeholder-val="{{ false }}">
+        <h1>Sign in to the partner portal.</h1>
+        <p>Your arrangements, your rate cards, the tenants you sold and the
+        commission you have earned. <b>You sign in with your own organisation's
+        identity provider</b> — we never hold your people's credentials, and
+        removing someone there removes them here.</p>
+
+        <div class="way">
+          <button class="btn btn--primary" type="button" data-commit onClick="{{ usePartnerIdp }}">
+            Continue with your organisation<span class="k">SAML · your IdP</span>
+          </button>
+          <button class="btn" type="button" onClick="{{ usePartnerPasskey }}">
+            Use a passkey<span class="k">if you enrolled one</span>
+          </button>
+        </div>
+
+        <p class="foot-note" style="margin-top:calc(var(--u)*6)"><b>This route
+        reaches the control plane only.</b> No partner sign-in reaches a
+        customer's tenant or a row of their data — that boundary is what makes
+        resale safe to sell, and the portal carries two writes: a deal
+        registration, and a case raised on a customer's behalf.</p>
+        </sc-if>
+
+        </div>
+
+        <aside class="auds-col">
+        <span class="lab">You land in the right place</span>
+        <div class="audiences">
+          <div class="aud">
+            <span class="who">Customer · user</span>
+            <span class="lands">Straight into your own tenant, at your own
+            host — the register, Ask and Reports, with your data never leaving
+            your account.</span>
+          </div>
+          <div class="aud">
+            <span class="who">Customer · approver</span>
+            <span class="lands">Same tenant, different surface: what is waiting
+            on your authority. The passkey carries the role, so nobody picks it
+            from a list.</span>
+          </div>
+          <div class="aud">
+            <span class="who">Partner</span>
+            <span class="lands">Straight into the partner portal — your
+            arrangements, your rate cards, the tenants you sold and the
+            commission you have earned.</span>
+          </div>
+          <div class="aud">
+            <span class="who">1CloudHub</span>
+            <span class="lands">Straight into the staff console — and your
+            tenant stays yours: reaching it takes your explicit grant, every
+            time.</span>
+          </div>
+        </div>
+        </aside>
+      </div>
+    </sc-if>
+
+    <!-- ═══ THE EMAIL FALLBACK ═══════════════════════════════════════════ -->
+    <sc-if value="{{ isEmail }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <h1>We will email you a link.</h1>
+        <p>Use this on a device that does not hold your passkey yet. The link
+        signs you in once and then <b>asks you to create a passkey</b> — so this
+        is the last time you should need it.</p>
+
+        <div class="way" style="margin-top:calc(var(--u)*6)">
+          <label class="field">
+            <span>Work email</span>
+            <input type="email" value="{{ email }}" onInput="{{ onEmail }}" placeholder="you@company.com" aria-describedby="why-same">
+          </label>
+          <button class="btn btn--primary" type="button" data-commit onClick="{{ sendLink }}" aria-disabled="{{ sendDisabled }}">Send the link</button>
+          <button class="btn btn--quiet" type="button" onClick="{{ goIdle }}">Back to passkeys</button>
+        </div>
+
+        <p id="why-same" style="margin-top:calc(var(--u)*5)"><b>We never confirm
+        whether an address belongs to a customer.</b> A domain we do not
+        recognise gets the same reply as one we do — because a reply that
+        differed would tell anyone whether a company is a customer, and under
+        bring-your-own-account a host name can carry their name.</p>
+
+        <p style="margin-top:calc(var(--u)*5)"><b>Two ways an address resolves,
+        and only one of them is ours to maintain.</b> If your organisation has
+        registered its own directory with us, your domain routes to it and your
+        own sign-in decides who you are — we verify the domain by DNS before it
+        routes anywhere, because an unverified claim on a domain is a way to
+        capture somebody else's logins. Everyone else resolves against a list we
+        keep, which is the older path and the one with the cost above.</p>
+
+        <p style="margin-top:calc(var(--u)*4)">Two consequences worth stating.
+        <b>Your directory decides membership, not employment</b> — so a guest
+        account in a customer's directory is refused here and sent to its own
+        sign-in, because otherwise a partner's engineer would arrive as that
+        customer's own person. And <b>a directory tells us who someone is now,
+        not who they were then</b>, so the organisation is stamped on every act
+        at the moment it happens: an approval made in March stays attributed to
+        who they were in March.</p>
+      </div>
+    </sc-if>
+
+    <!-- ═══ SENT ═════════════════════════════════════════════════════════ -->
+    <sc-if value="{{ isSent }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <h1>Check your inbox.</h1>
+        <p>{{ sentLine }}</p>
+        <p><b>If nothing arrives</b>, your IT team can tell you your sign-in
+        address, or ask us to add your domain. Both are faster than
+        guessing.</p>
+        <div class="way" style="margin-top:calc(var(--u)*6)">
+          <button class="btn" type="button" onClick="{{ goIdle }}">Try a passkey instead</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ═══ ROUTED ═══════════════════════════════════════════════════════ -->
+    <sc-if value="{{ isRouted }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <h1>{{ routedTitle }}</h1>
+        <p>{{ routedWhy }}</p>
+        <div class="routed">
+          <span class="lab">Taking you to</span>
+          <span class="dest">{{ routedHost }}</span>
+          <p style="margin-top:calc(var(--u)*3)">{{ routedNote }}</p>
+        </div>
+        <div class="way" style="margin-top:calc(var(--u)*6)">
+          <button class="btn btn--primary" type="button" data-commit onClick="{{ routedGo }}">Continue</button>
+          <button class="btn btn--quiet" type="button" onClick="{{ goIdle }}">Not you? Start again</button>
+        </div>
+        <p class="foot-note" style="margin-top:calc(var(--u)*7)"><b>Illustrative.</b>
+        In the product this redirect happens without a screen — it is drawn here
+        so the routing is visible, because <b>sending each person straight to
+        the right place is the whole design of this route.</b></p>
+      </div>
+    </sc-if>
+
+    <!-- ═══ ENROL ════════════════════════════════════════════════════════ -->
+    <sc-if value="{{ isEnrol }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <h1>Add a passkey to this device.</h1>
+        <p>Next time it is a fingerprint and nothing else — no link, no inbox,
+        no code.</p>
+        <div class="way">
+          <button class="btn btn--primary" type="button" data-commit onClick="{{ goIdle }}">Create a passkey</button>
+          <button class="btn btn--quiet" type="button" onClick="{{ goIdle }}">Not on this device</button>
+        </div>
+        <p class="foot-note"><b>Add a second one while you are here.</b> A
+        second device, or a hardware key, is what makes losing the first an
+        inconvenience rather than a phone call.</p>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  /* idle · email · sent · routed · enrol */
+  state = { view:'idle', email:'', as:null, tab:'customer' };
+
+  /* Illustrative identities. Which of the three planes a credential belongs to
+     is control-plane data, and the passkey carries it — which is why this
+     route never asks who you are before it knows. */
+  IDENTITIES = {
+    /* THE PASSKEY CARRIES THE ROLE, not just the tenant — which is why two
+       people at the same customer land on different surfaces from the same
+       screen. The user lands in the register; the approver lands in what
+       is waiting on his authority, because a queue of one is still the thing
+       he signed in for. */
+    user: {
+      title: 'Welcome back, Rosalie.',
+      why: 'Your passkey belongs to Meridian Group Pte Ltd and carries the user role, so you are going to your own tenant, at the register.',
+      host: 'https://meridian-group.reconcile.customer/close',
+      note: 'The application is served from our CloudFront and your browser calls your own API directly, so your documents never transit a 1CloudHub account.',
+      to: './C1 Close.dc.html?who=rosalie'
+    },
+    approver: {
+      title: 'Welcome back, Mark.',
+      why: 'Your passkey belongs to Meridian Group Pte Ltd and carries the approver role, so you are going to what is waiting on your authority rather than to the register.',
+      host: 'https://meridian-group.reconcile.customer/approvals',
+      note: 'Segregation of duties is on for this tenant, so the two roles are two people and the surfaces differ: triage is absent for you, and approving is absent for the user who proposed.',
+      to: './C1 Close.dc.html?who=mark'
+    },
+    partner: {
+      title: 'Welcome back, Jonas.',
+      why: 'Your passkey belongs to a partner organisation, so you are going to the partner portal.',
+      host: 'https://partners.reconcile.ai/arrangements',
+      note: 'Arrangements, rate cards, tenants sold and commission owed. No partner user reaches a customer tenant — that boundary is what makes resale safe to sell, and the portal has exactly one write: a deal registration, which is a request until staff approve it.',
+      to: './P1 Partner.dc.html'
+    },
+    staff: {
+      title: 'Welcome back, Arun.',
+      why: 'Your passkey belongs to 1CloudHub, so you are going to the staff console — and it carries which side of the business you are on, so you land on your own work rather than on a menu.',
+      host: 'https://console.reconcile.ai/tenancy',
+      note: 'Tenancy, catalogue, the agent builder, billing, partners and support. Reaching into a customer tenant is a separate step, bounded by the support access mode that customer chose at tenant creation — and exceeding it is a break-glass grant that expires, with the reason written into their own audit trail.',
+      to: './S1 Staff.dc.html'
+    }
+  };
+
+  /* Illustrative. In the product the credential decides this and there is no
+     cycling — the demo rotates so all three audiences can be seen from one
+     surface, which is the thing this route is actually claiming. */
+  ORDER = ['user','approver','partner','staff'];
+
+  routeTo(kind){ this.setState({view:'routed', as:kind}); }
+
+  renderVals(){
+    const s = this.state;
+    const email = s.email.trim();
+    const valid = /^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(email);
+    const who = s.as ? this.IDENTITIES[s.as] : null;
+    const nextKind = ()=>{
+      const i = this.ORDER.indexOf(s.as);
+      return this.ORDER[(i + 1) % this.ORDER.length];
+    };
+
+    return {
+      isIdle:   s.view === 'idle',
+      /* TWO ROUTES ON ONE SCREEN. The credential decides the destination in
+         the product; the tab stands in for arriving with a partner one, so
+         the fork is visible rather than described. */
+      tabCust: s.tab === 'customer' ? 'true' : undefined,
+      tabPtnr: s.tab === 'partner' ? 'true' : undefined,
+      isCustTab: s.tab === 'customer',
+      isPtnrTab: s.tab === 'partner',
+      goTabCust: ()=> this.setState({tab:'customer'}),
+      goTabPtnr: ()=> this.setState({tab:'partner'}),
+      usePartnerIdp: ()=> this.routeTo('partner'),
+      usePartnerPasskey: ()=> this.routeTo('partner'),
+      isEmail:  s.view === 'email',
+      isSent:   s.view === 'sent',
+      isRouted: s.view === 'routed',
+      isEnrol:  s.view === 'enrol',
+
+      /* All three ways in land in the same place: authenticated first, routed
+         second. The kind cycles so every audience is reachable from the demo. */
+      usePasskey:    ()=> this.routeTo(s.as ? nextKind() : 'user'),
+      useMicrosoft:  ()=> this.routeTo('staff'),
+      useGoogle:     ()=> this.routeTo('partner'),
+
+      /* WHERE THE SCREEN SAYS IT IS TAKING YOU is where Continue goes, when
+         that place exists as a surface. Enrolment is what follows a route
+         that has nowhere to land yet. */
+      routedGo: ()=>{
+        const to = (this.IDENTITIES[s.as] || {}).to;
+        if(to){ window.location.assign(to); return; }
+        this.setState({view:'enrol'});
+      },
+      goIdle:  ()=> this.setState({view:'idle'}),
+      goEmail: ()=> this.setState({view:'email'}),
+      goEnrol: ()=> this.setState({view:'enrol'}),
+
+      email: s.email,
+      onEmail: (e)=> this.setState({email:e.target.value}),
+      sendDisabled: valid ? undefined : 'true',
+      sendLink: ()=>{ if(valid) this.setState({view:'sent'}); },
+      /* 🛑 ONE SENTENCE WHATEVER THE DOMAIN, AND THERE IS NO BRANCH TO READ.
+         A reply that differed for a recognised domain would tell anyone
+         whether a company is a customer — and under bring-your-own-account a
+         host name can carry their name. The allow-list decides whether a mail
+         is SENT, never what this screen SAYS. */
+      sentLine: 'If ' + (email ? email.split('@')[1] : 'your domain')
+        + ' is set up with us, a one-use link is on its way and it expires in'
+        + ' fifteen minutes. We do not say whether it was.',
+
+      routedTitle: who ? who.title : '',
+      routedWhy:   who ? who.why   : '',
+      routedHost:  who ? who.host  : '',
+      routedNote:  who ? who.note  : ''
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,647 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE PUBLIC PLANE — page geometry for the landing page and the demo form.
+   GEOMETRY ONLY; every value composes a token from tokens.css.
+
+   These are the two surfaces the design system was not built for: no tenant,
+   no session, no register. The rules still hold and two of them do most of the
+   work here — R1 (no state on hue) and the accent's one job (wayfinding), so
+   nothing on a marketing page is allowed to shout in colour.
+
+   🛑 AND THE MARK'S GRADIENT IS STILL THE ONLY GRADIENT. A public page is
+   exactly where a decorative gradient gets added; THE SURFACE RULE reaches
+   here too.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══ THE PUBLIC CHROME ════════════════════════════════════════════════════
+   Four controls, not nine. A visitor has no entity, no period, no connection
+   and no spend — so the bar carries the mark, two links, sign-in and the one
+   action the page exists for. */
+.pchrome{position:sticky;top:0;z-index:var(--z-popover);
+  display:flex;align-items:center;gap:calc(var(--u)*5);flex-wrap:wrap;
+  padding:calc(var(--u)*3) var(--gutter);background-color:var(--paper);
+  border-bottom:1px solid var(--rule-strong)}
+.pchrome .sp{flex:1}
+.pnav{display:flex;gap:calc(var(--u)*5);list-style:none;margin:0;padding:0}
+.pnav a{font-size:var(--s2);color:var(--muted);text-decoration:none;
+  min-height:var(--target-min);display:inline-flex;align-items:center}
+.pnav a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+@media (max-width:720px){
+  .pnav{display:none}
+}
+
+/* ⚠️ NO max-width AND NO CENTRING. Phani: the content should use the width of
+   the screen. It can, because TEXT measures are ch-based and live on the
+   paragraphs themselves — --measure-text caps a LINE at 80 characters however
+   wide the page gets, which is the whole reason the kernel keeps a page
+   measure and a text measure apart. */
+/* THE RAIL AND THE CONTENT SHARE ONE CENTRED PAGE BLOCK, and the bands stay
+   full-bleed behind it. Three requirements pulling against each other:
+     · a --sheet band must reach both screen edges  → the band is full width
+     · the content must not sit under the rail      → the wrapper is inset left
+     · it must look centred                          → the inset cannot simply
+       be padding, or the page reads as a wide left margin and a thin right one
+   So the wrapper is a CENTRED block of --measure whose left padding clears the
+   rail, and the rail is positioned against the same centred block rather than
+   against the viewport edge. Both then move together as the window changes. */
+.wrapper{max-width:var(--measure);margin:0 auto;padding:0 var(--gutter)}
+/* Only the rail layout pays for the rail. */
+.shell .wrapper{max-width:var(--measure);margin:0 auto;padding:0 var(--gutter)}
+@media (min-width:1281px){
+  .shell .band,.shell .pfoot{padding-left:calc(var(--u)*74)}
+}
+.band{padding:calc(var(--u)*20) 0;border-bottom:1px solid var(--rule)}
+.band--sheet{background-color:var(--sheet);border-bottom:0}
+.band--last{border-bottom:0}
+@media (max-width:720px){
+  .band{padding:calc(var(--u)*12) 0}
+}
+
+/* ═══ TYPE ON A PUBLIC PAGE ════════════════════════════════════════════════
+   The same six steps. --s7 is the one display line per page, and the hero is
+   where it goes. */
+.eyebrow{display:block;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  margin-bottom:calc(var(--u)*4)}
+h1{font-size:var(--s7);font-weight:var(--w-display);line-height:var(--lh-display);
+  letter-spacing:var(--tr-display);margin:0;max-width:24ch;text-wrap:pretty}
+h2{font-size:var(--s4);font-weight:var(--w-emph);letter-spacing:var(--tr-title);
+  margin:0 0 calc(var(--u)*3);max-width:44ch;text-wrap:pretty}
+h3{font-size:var(--s3);font-weight:var(--w-emph);margin:0 0 calc(var(--u)*2)}
+.stand{font-size:var(--s4);font-weight:var(--w-lede);color:var(--muted);
+  max-width:var(--measure-lede);margin:calc(var(--u)*6) 0 0;text-wrap:pretty}
+p{font-size:var(--s3);line-height:var(--lh-body);max-width:var(--measure-text);
+  margin:calc(var(--u)*4) 0 0;text-wrap:pretty}
+.small{font-size:var(--s2);line-height:var(--lh-note);color:var(--muted);
+  max-width:var(--measure-text)}
+.small b{color:var(--ink);font-weight:var(--w-emph)}
+.acts{display:flex;gap:calc(var(--u)*3);flex-wrap:wrap;margin-top:calc(var(--u)*8)}
+
+/* ═══ THE BUTTON ═══════════════════════════════════════════════════════════ */
+.btn{display:inline-flex;align-items:center;justify-content:center;
+  gap:calc(var(--u)*2);font:inherit;font-size:var(--s2);font-weight:var(--w-figure);
+  color:var(--ink);background-color:var(--paper);
+  border:1px solid var(--rule-strong);border-radius:0;
+  min-height:var(--target);padding:0 calc(var(--u)*4);cursor:pointer;
+  text-decoration:none;white-space:nowrap;
+  transition:background-color var(--t-fade) linear,color var(--t-fade) linear}
+.btn:hover{background-color:var(--tile-hover)}
+.btn:active{background-color:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+.btn[data-commit]{background-color:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+.btn[data-commit]:hover{background-color:var(--agent-deep);border-color:var(--agent-deep)}
+.btn[aria-disabled="true"]{color:var(--refused);background-color:var(--sheet);
+  border-color:var(--rule);cursor:default}
+.btn[aria-disabled="true"]:hover{background-color:var(--sheet);color:var(--refused)}
+.btn--lg{min-height:calc(var(--u)*11);padding:0 calc(var(--u)*6);font-size:var(--s3)}
+.btn--quiet{border-color:transparent;background-color:transparent}
+.btn--quiet:hover{background-color:var(--tile-hover)}
+
+/* ═══ THE SIX STAGES ═══════════════════════════════════════════════════════
+   The product's real spine, and the only diagram on the page. A rail, because
+   the stages are sequential and each one hands to the next. */
+/* A GRID, NOT A SCROLLING ROW. Six stages at a readable minimum width need
+   more than 900px, so as a flex row they forced the band to scroll sideways —
+   which 1.4.10 Reflow does not allow the page to do. They wrap instead, and
+   the connector hairline is dropped when they do, because a line pointing off
+   the end of a row points at nothing.
+
+   ⚠️ 6 SEP 2026 — A `@media (min-width:1281px)` BLOCK WAS PUTTING THE FLEX ROW
+   BACK, and it broke in the way the note above predicts: the rail lives inside
+   .split .main, which is roughly 62% of the wrapper, so six cards at a 168px
+   minimum plus their connectors need ~1150px inside a column that never
+   exceeds ~800px. The cards ran out past the column and off the band. The
+   query was keyed to the VIEWPORT while the constraint is the COLUMN, which is
+   why a wide window made it worse rather than better. Removed rather than made
+   scrollable: a single-axis scroller would be allowed by 1.4.10, but this file
+   already decided that a pipeline you have to drag is not worth the hairlines,
+   and nothing about that has changed. */
+.rail{display:grid;gap:calc(var(--u)*4);margin-top:calc(var(--u)*8);
+  grid-template-columns:repeat(2,minmax(0,1fr))}
+.rail > div{position:relative;min-width:0}
+.rail .stage::after{display:none}
+@media (min-width:861px){
+  .rail{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+.stage{position:relative;background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);padding:calc(var(--u)*4);height:100%}
+.stage::after{content:"";position:absolute;left:100%;top:calc(var(--u)*8);
+  width:calc(var(--u)*6);height:1px;background-color:var(--rule-strong)}
+.rail > div:last-child .stage::after{display:none}
+.stage .n{display:block;font-family:var(--face-mono);font-size:var(--s1);
+  letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+  font-weight:var(--w-emph)}
+.stage .nm{display:block;font-size:var(--s3);font-weight:var(--w-emph);
+  margin-top:calc(var(--u)*1)}
+.stage .ds{display:block;font-size:var(--s2);line-height:var(--lh-note);
+  color:var(--muted);margin-top:calc(var(--u)*2)}
+
+/* ═══ PANELS ═══════════════════════════════════════════════════════════════ */
+.cols{display:grid;gap:calc(var(--u)*5);margin-top:calc(var(--u)*8);
+  grid-template-columns:repeat(auto-fit,minmax(var(--col-min),1fr))}
+.cols--two{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:720px){.cols--two{grid-template-columns:minmax(0,1fr)}}
+.panel{background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  padding:calc(var(--u)*5);min-width:0}
+.panel .tag{display:block;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  margin-bottom:calc(var(--u)*3)}
+.panel p{margin-top:calc(var(--u)*3);max-width:none}
+.panel p:first-of-type{margin-top:0}
+/* The recommended mode is marked by an accent edge — wayfinding, which is the
+   accent's one job: it says which panel you are being pointed at. The words
+   say it too, so removing the edge loses nothing. */
+.panel[data-pick="true"]{box-shadow:inset 0 0 0 1px var(--rule-strong),
+  inset 2px 0 0 0 var(--accent)}
+
+.list{list-style:none;margin:calc(var(--u)*4) 0 0;padding:0;max-width:var(--measure-text)}
+.list li{display:grid;grid-template-columns:calc(var(--u)*6) 1fr;
+  gap:calc(var(--u)*3);padding:calc(var(--u)*3) 0;border-top:1px solid var(--rule);
+  font-size:var(--s2);line-height:var(--lh-note)}
+.list .mk{font-family:var(--face-mono);font-weight:var(--w-emph);color:var(--ink)}
+.list b{font-weight:var(--w-emph)}
+
+/* ═══ THE LOOKUP ═══════════════════════════════════════════════════════════
+   Sign-in on a public page, and the one place the page touches the control
+   plane. Every customer signs in at their own host, so this routes rather
+   than authenticates. */
+.lookup{display:flex;gap:calc(var(--u)*3);flex-wrap:wrap;align-items:flex-end;
+  margin-top:calc(var(--u)*6)}
+/* The grow/basis is the LOOKUP's, not the field's: 280px is a width basis for
+   a horizontal row. Inherited into a column flex container (.way, the email
+   state) it becomes a height basis and opens a 230px void under the input. */
+.field{display:flex;flex-direction:column;gap:calc(var(--u)*2);min-width:0;flex:none}
+.lookup > .field{flex:1 1 calc(var(--u)*70)}
+.field > span{font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted)}
+.field input,.field select,.field textarea{width:100%}
+.field .hint{font-size:var(--s2);color:var(--muted);letter-spacing:0;
+  text-transform:none;font-weight:var(--w-body);line-height:var(--lh-note)}
+.answer{margin-top:calc(var(--u)*5);padding:calc(var(--u)*4);
+  background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  font-size:var(--s2);line-height:var(--lh-note);max-width:var(--measure-text)}
+.answer b{color:var(--ink);font-weight:var(--w-emph)}
+.answer .mono{color:var(--ink)}
+
+/* ═══ THE FORM ═════════════════════════════════════════════════════════════ */
+.form{display:grid;gap:calc(var(--u)*5);grid-template-columns:repeat(2,minmax(0,1fr));
+  margin-top:calc(var(--u)*8);max-width:calc(var(--u)*200)}
+.form .full{grid-column:1 / -1}
+/* Groups keep the long intake readable: one question per row inside a titled
+   set, so every question starts at the same left edge rather than half of
+   them sitting in a second column. */
+.form .group{grid-column:1 / -1;display:grid;gap:calc(var(--u)*5);
+  padding-top:calc(var(--u)*5);border-top:1px solid var(--rule-strong)}
+.form .group > .glab{display:flex;align-items:baseline;gap:calc(var(--u)*3);
+  flex-wrap:wrap;font-size:var(--s1);text-transform:uppercase;
+  letter-spacing:var(--tr-micro);font-weight:var(--w-emph);color:var(--ink)}
+.form .group > .glab .gnote{font-family:var(--face-mono);color:var(--muted);
+  text-transform:none;letter-spacing:0;font-weight:var(--w-body)}
+.form .headstart{grid-column:1 / -1;display:flex;gap:calc(var(--u)*4);
+  align-items:center;flex-wrap:wrap}
+/* The form is the right-hand column of a split, so it drops the standalone
+   top margin and the page-level measure cap — the column already holds it. */
+.split > .form.main{margin-top:0;max-width:none}
+@media (max-width:1080px){
+  .split > .form.main{grid-template-columns:minmax(0,1fr)}
+}
+.phone{display:grid;grid-template-columns:calc(var(--u)*30) minmax(0,1fr);
+  gap:calc(var(--u)*2)}
+@media (max-width:720px){
+  .form{grid-template-columns:minmax(0,1fr)}
+}
+.choices{display:flex;gap:calc(var(--u)*2);flex-wrap:wrap}
+.choice{font:inherit;font-size:var(--s2);color:var(--ink);background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);border:0;
+  padding:calc(var(--u)*2) calc(var(--u)*3);cursor:pointer;
+  min-height:var(--target)}
+.choice:hover{background-color:var(--tile-hover)}
+.choice[aria-pressed="true"]{background-color:var(--sheet);font-weight:var(--w-emph);
+  box-shadow:inset 0 0 0 1px var(--ink)}
+.slots{display:flex;gap:calc(var(--u)*2);flex-wrap:wrap;margin-top:calc(var(--u)*3)}
+.slot{font-family:var(--face-mono);font-size:var(--s2);color:var(--ink);
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  border:0;padding:calc(var(--u)*2) calc(var(--u)*3);cursor:pointer;
+  min-height:var(--target)}
+.slot:hover{background-color:var(--tile-hover)}
+.slot[aria-pressed="true"]{background-color:var(--ink);color:var(--on-ink)}
+.slot[aria-disabled="true"]{color:var(--refused);background-color:var(--sheet);
+  cursor:default}
+
+/* ═══ FOOTER ═══════════════════════════════════════════════════════════════ */
+.pfoot{padding:calc(var(--u)*10) 0 calc(var(--u)*16);
+  border-top:1px solid var(--rule-strong)}
+
+.pfoot .rows{display:flex;gap:calc(var(--u)*10);flex-wrap:wrap;
+  justify-content:space-between;align-items:flex-start}
+.pfoot ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;
+  gap:calc(var(--u)*2)}
+.pfoot a{font-size:var(--s2);color:var(--muted);text-decoration:none;
+  min-height:var(--target-min);display:inline-flex;align-items:center}
+.pfoot a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.disclaimer{font-size:var(--s1);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-top:calc(var(--u)*10);padding-top:calc(var(--u)*4);
+  border-top:1px solid var(--rule);max-width:none}
+
+/* ⚠️ THE CMS BOUNDARY. Marketing owns the words inside these blocks;
+   engineering owns the blocks. A CMS field may carry text and inline emphasis
+   and nothing else — no colour, no size, no gradient, no icon — which is what
+   keeps a content change from producing an off-system page. */
+.cms{display:contents}
+
+
+/* ═══ THE RAIL ═════════════════════════════════════════════════════════════
+   The page's primary wayfinding: a numbered list down the left edge, where the
+   section you are in is set at --s4 and everything else at --s2. It is the
+   destination rule's three channels again — WEIGHT, a mark, and the accent on
+   the mark — so the rail still reads correctly with the accent removed.
+
+   🛑 THE ACTIVE ITEM GROWS RATHER THAN CHANGING COLOUR ALONE. Size is the
+   channel a reader cannot miss and does not depend on distinguishing hues,
+   which is R1 applied to navigation rather than to state.
+
+   ⚠️ THE RAIL IS NOT A DESTINATION LIST. The product's shell has three
+   destinations and never a fourth; this is a page index, and the distinction
+   matters because a visitor has no routes to be on. */
+.shell{display:block}
+/* Fixed rather than sticky, and centred on the VIEWPORT rather than on the
+   document — so it sits in the middle of the visible screen area at any scroll
+   position. max-height plus overflow keeps it usable on a short window. */
+.rail-nav{position:fixed;left:var(--gutter);
+  top:50%;transform:translateY(-50%);
+  width:calc(var(--u)*58);max-height:calc(100dvh - var(--u)*24);
+  overflow-y:auto;z-index:calc(var(--z-popover) - 1)}
+.rail-nav ol{list-style:none;margin:0;padding:0;display:flex;
+  flex-direction:column;gap:calc(var(--u)*1)}
+.rail-nav a{display:grid;grid-template-columns:calc(var(--u)*9) calc(var(--u)*6) 1fr;
+  align-items:baseline;gap:calc(var(--u)*3);
+  text-decoration:none;color:var(--muted);padding:calc(var(--u)*1) 0;
+  min-height:var(--target-min)}
+.rail-nav .dash{position:relative;top:-.35em;height:1px;
+  background-color:var(--rule-strong);width:calc(var(--u)*4);justify-self:end;
+  transition:width var(--t-fade) linear,background-color var(--t-fade) linear}
+.rail-nav .n{font-family:var(--face-mono);font-size:var(--s1);
+  font-variant-numeric:tabular-nums;letter-spacing:.06em;color:var(--muted)}
+.rail-nav .t{font-size:var(--s2);line-height:1.25;
+  transition:font-size var(--t-fade) linear,letter-spacing var(--t-fade) linear}
+.rail-nav a:hover{color:var(--ink)}
+.rail-nav a:hover .dash{background-color:var(--ink)}
+.rail-nav a[aria-current="true"]{color:var(--ink)}
+.rail-nav a[aria-current="true"] .dash{width:calc(var(--u)*9);
+  background-color:var(--accent);height:2px}
+.rail-nav a[aria-current="true"] .t{font-size:var(--s4);
+  font-weight:var(--w-emph);letter-spacing:var(--tr-title)}
+.rail-nav a[aria-current="true"] .n{color:var(--ink)}
+/* The rail replaces the horizontal nav, so the chrome keeps only the mark,
+   sign-in and the one action. Below the mid tier there is no rail and the
+   chrome links come back. */
+/* The rail arrives at the MID tier rather than the wide one. It is the page's
+   primary wayfinding, so hiding it on a 900px window would leave the chrome
+   carrying navigation it no longer has. Narrower column at mid, full at wide. */
+.rail-nav{display:none}
+@media (min-width:1281px){
+  .rail-nav{display:block}
+  .pchrome .pnav{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .rail-nav .dash,.rail-nav .t{transition:none}
+}
+
+/* ═══ THE DOCUMENT STACK ═══════════════════════════════════════════════════
+   Three documents mid-match: a purchase order, a goods receipt and the invoice
+   that does not agree with them. It is the product's actual subject, drawn
+   rather than described.
+
+   🛑 NO SHADOW, AND THE STACK STILL READS AS A STACK. R4 — a surface separates
+   by RULE or by GROUND — so these are --paper sheets with a 1px edge on a
+   --sheet ground, offset and rotated. A drop shadow is the obvious way to do
+   this and it is not available. */
+.stack{position:relative;max-width:calc(var(--u)*180);background-color:var(--sheet);
+  padding:calc(var(--u)*10) calc(var(--u)*6) calc(var(--u)*14);
+  min-height:calc(var(--u)*106);overflow:hidden}
+.sheetdoc{position:relative;background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);
+  padding:calc(var(--u)*4);max-width:calc(var(--u)*76)}
+.sheetdoc + .sheetdoc{margin-top:calc(var(--u)*-3)}
+.sheetdoc:nth-child(1){transform:rotate(-1.1deg);margin-left:calc(var(--u)*10)}
+.sheetdoc:nth-child(2){transform:rotate(.7deg);margin-left:calc(var(--u)*4)}
+.sheetdoc:nth-child(3){transform:rotate(-.3deg);margin-left:calc(var(--u)*14)}
+.sheetdoc .dt{display:flex;align-items:center;justify-content:space-between;
+  gap:calc(var(--u)*3);font-family:var(--face-mono);font-size:var(--s1);
+  letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  font-weight:var(--w-figure)}
+/* The one marker on the stack: WHICH document is being worked on. Wayfinding,
+   which is the accent's one job — and the .lit chip below says it in words. */
+.sheetdoc .mark{width:calc(var(--u)*2);height:calc(var(--u)*2);flex:none;
+  background-color:var(--accent)}
+.sheetdoc .lines{display:flex;flex-direction:column;gap:calc(var(--u)*2);
+  margin-top:calc(var(--u)*4)}
+.sheetdoc .lines i{display:block;height:2px;background-color:var(--rule)}
+.sheetdoc .chip{display:inline-block;margin-top:calc(var(--u)*5);
+  padding:calc(var(--u)*2) calc(var(--u)*3);font-family:var(--face-mono);
+  font-size:var(--s2);color:var(--ink)}
+@media (max-width:720px){
+  .stack{padding:calc(var(--u)*6) calc(var(--u)*4) calc(var(--u)*10);
+    min-height:calc(var(--u)*90)}
+  .sheetdoc:nth-child(1),.sheetdoc:nth-child(2),.sheetdoc:nth-child(3){margin-left:0}
+}
+
+
+/* ═══ THE ENTRY ROUTE ══════════════════════════════════════════════════════
+   One surface for three audiences. THE ENTRY FRAME in tokens.css owns the
+   centring and the ceiling; this is only what sits inside the card.
+
+   🛑 THE GROUND IS NOT INVERTED and the card takes THE OVERLAY SURFACE —
+   --paper on --paper with a 1px --rule-strong edge, radius 0, no shadow. A
+   --sheet page with a --paper card would separate by ground and need no edge,
+   and it is refused because that makes --sheet a PAGE ground. */
+/* ⚠️ THE CARD IS WIDER THAN THE KERNEL'S ENTRY CEILING, DELIBERATELY, AND THE
+   CEILING STILL GOVERNS THE PART IT WAS RULED FOR. THE ENTRY FRAME caps
+   .entry > * at calc(--u*102) — 408px — and that number was ratified as the
+   width of ONE FORM COLUMN. This card is not only a form column: it also
+   carries a three-up explainer of who lands where, because one surface serves
+   three audiences and has to say so. So the CARD widens and the ACTIONS keep
+   the ruled 408px (see .way below). Reading the form ceiling onto a card that
+   also explains itself is how a page ends up with a 408px-wide paragraph. */
+/* Wide enough for the ruled 408px action column AND a second column that can
+   hold a sentence: at 680px the "where you land" column came out at 168px,
+   which is narrower than the text measure of anything in it. */
+.entry > .card{max-width:calc(var(--u)*196)}
+.card{background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  padding:calc(var(--u)*8)}
+.card > .top{display:flex;align-items:center;justify-content:space-between;
+  gap:calc(var(--u)*4);flex-wrap:wrap;padding-bottom:calc(var(--u)*6);
+  border-bottom:1px solid var(--rule)}
+.card h1{font-size:var(--s4);font-weight:var(--w-emph);
+  letter-spacing:var(--tr-title);line-height:var(--lh-body);max-width:34ch;
+  margin:calc(var(--u)*6) 0 0}
+.card p{font-size:var(--s2);line-height:var(--lh-note);color:var(--muted);
+  max-width:var(--measure-act);margin:calc(var(--u)*3) 0 0}
+.card p b{color:var(--ink);font-weight:var(--w-emph)}
+@media (max-width:720px){
+  .card{padding:calc(var(--u)*5)}
+}
+
+/* THE PRIMARY WAY IN. A passkey button is full width because it is not one
+   option among four — the other three exist for people who cannot use it
+   yet. */
+/* The actions keep THE ENTRY FRAME's form-column ceiling. A 680px-wide sign-in
+   button is a banner. */
+.way{display:flex;flex-direction:column;gap:calc(var(--u)*2);
+  margin-top:calc(var(--u)*7);max-width:calc(var(--u)*102)}
+.way .btn{width:100%;justify-content:flex-start;gap:calc(var(--u)*3)}
+/* 🛑 ALL THREE WAYS IN ARE THE SAME HEIGHT, AND THE BRANDS PERMIT IT. They
+   were 48 / 41 / 40 — three near-identical heights stacked, which reads as a
+   rendering fault rather than as a hierarchy. Microsoft specifies 41px and
+   Google 40px as MINIMUMS, not fixed sizes, so raising both to the system's
+   own control height satisfies each guideline and squares the stack. Type
+   size, logo size, colour and radius stay exactly as each brand requires —
+   only the height is ours to set. */
+/* One inner left edge down the whole stack. Microsoft and Google both specify
+   12px of padding; ours was 16, so the two wordmarks sat 3px left of our own
+   labels — the stagger you see without being able to name it. The brands keep
+   their padding; we move to meet them. And every row in the stack is 48px:
+   the email fallback was 32, which made the last row read as a footnote. */
+.way .btn{min-height:calc(var(--u)*12);padding-left:12px;padding-right:12px}
+.way .btn--primary{min-height:calc(var(--u)*12);font-size:var(--s3)}
+.way .fedbtn{min-height:calc(var(--u)*12)}
+.way .k{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted);
+  margin-left:auto;letter-spacing:.06em}
+.way .btn[data-commit] .k{color:var(--on-ink-2)}
+/* The federated marks are wordmarks, not logos: this system has no icon set,
+   and a third-party logo would be the only drawn glyph in the product. */
+.way .fed{font-weight:var(--w-emph)}
+
+.orline{display:flex;align-items:center;gap:calc(var(--u)*3);
+  margin:calc(var(--u)*6) 0 0;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;color:var(--muted);font-weight:var(--w-emph)}
+.orline::before,.orline::after{content:"";flex:1;height:1px;
+  background-color:var(--rule)}
+
+/* WHO IS SIGNING IN. Three audiences on one surface, and the surface does not
+   ask which — the credential says. Drawn so a reader can see all three are
+   served without having to pick a door. */
+.audiences{display:grid;gap:calc(var(--u)*3);margin-top:calc(var(--u)*7);
+  grid-template-columns:repeat(3,minmax(0,1fr))}
+.aud{padding:calc(var(--u)*4);background-color:var(--sheet);min-width:0}
+.aud .who{display:block;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted)}
+.aud .lands{display:block;font-size:var(--s2);line-height:var(--lh-note);
+  color:var(--ink);margin-top:calc(var(--u)*2)}
+.aud .plane{display:block;font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted);margin-top:calc(var(--u)*2);letter-spacing:.06em}
+@media (max-width:720px){
+  .audiences{grid-template-columns:minmax(0,1fr)}
+}
+
+.routed{margin-top:calc(var(--u)*6);padding:calc(var(--u)*5);
+  background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.routed .lab{display:block;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted)}
+.routed .dest{display:block;font-family:var(--face-mono);font-size:var(--s3);
+  color:var(--ink);margin-top:calc(var(--u)*2);word-break:break-all}
+.foot-note{margin-top:calc(var(--u)*8);padding-top:calc(var(--u)*5);
+  border-top:1px solid var(--rule);font-size:var(--s2);color:var(--muted);
+  line-height:var(--lh-note)}
+.foot-note b{color:var(--ink);font-weight:var(--w-emph)}
+.foot-note ul{list-style:none;margin:calc(var(--u)*3) 0 0;padding:0;
+  display:flex;flex-direction:column;gap:calc(var(--u)*2)}
+.foot-note li{display:grid;grid-template-columns:calc(var(--u)*5) 1fr;
+  gap:calc(var(--u)*2)}
+.foot-note .mk{font-family:var(--face-mono);font-weight:var(--w-emph);
+  color:var(--ink)}
+
+
+/* ═══ THE TWO FEDERATED BUTTONS ════════════════════════════════════════════
+   🛑 THESE ARE THE ONE DELIBERATE EXCEPTION TO ICONOGRAPHY, AND TO R2.
+   The system has no icon set and six typographic glyphs; radius is 0
+   everywhere but the connection light. Both rules are SUSPENDED here, and
+   only here, because a third-party sign-in button is not ours to design:
+   Microsoft and Google publish branding requirements for their buttons and an
+   implementer follows them or does not use the button. Our system cannot
+   overrule another company's trademark guidance on its own mark.
+
+   WHAT EACH BRAND REQUIRES, AND WHAT WE ARE THEREFORE DOING:
+   · Microsoft — "Sign in with Microsoft", the four-square logo at 21px, Segoe
+     UI semibold 15px, #5E5E5E text on #FFFFFF with a #8C8C8C border, 41px
+     minimum height, square corners. The logo may not be recoloured, rotated
+     or redrawn.
+   · Google — "Sign in with Google", the four-colour G at 18px, Roboto Medium
+     14px, #3C4043 text on #FFFFFF with a #DADCE0 border, 40px minimum height,
+     4px corner radius, and at least 8px of clear space around the wordmark.
+     The G may not be recoloured or used without the accompanying text.
+
+   ⚠️ SO THIS IS THE ONLY PLACE IN THE PRODUCT WITH AN SVG, A BRAND HEX, A
+   THIRD TYPEFACE OR A NON-ZERO RADIUS. Every one of those is a deviation, each
+   is required by the brand it belongs to, and none of them may spread: a
+   1CloudHub control that copies this styling is a defect. */
+.fedbtn{display:inline-flex;align-items:center;gap:12px;width:100%;
+  border-radius:0;cursor:pointer;text-align:left;
+  background-color:#ffffff;padding:0 12px}
+.fedbtn:disabled{cursor:default}
+.fedbtn svg{flex:none;display:block}
+.fedbtn .lbl{white-space:nowrap}
+.fedbtn .k{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted);
+  margin-left:auto;letter-spacing:.06em}
+
+/* Microsoft: square corners, Segoe UI, 41px, #8C8C8C border. */
+.fedbtn--ms{min-height:41px;border:1px solid #8c8c8c;
+  font-family:'Segoe UI',Frutiger,'Dejavu Sans','Helvetica Neue',sans-serif;
+  font-size:15px;font-weight:600;color:#5e5e5e}
+.fedbtn--ms:hover{background-color:#f3f3f3}
+
+/* Google: 4px radius, Roboto Medium, 40px, #DADCE0 border. The radius is the
+   brand's requirement and is the single non-zero radius in the product
+   besides the connection light. */
+.fedbtn--g{min-height:40px;border:1px solid #dadce0;border-radius:4px;
+  font-family:Roboto,'Helvetica Neue',Arial,sans-serif;
+  font-size:14px;font-weight:500;color:#3c4043;letter-spacing:.25px;
+  padding:0 12px 0 12px}
+.fedbtn--g:hover{background-color:#f7f8f8}
+
+/* The focus ring still applies to both, because that is ours rather than
+   theirs and 2.4.7 does not have a brand exception. */
+.fedbtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+
+/* ═══ THE SPLIT BAND ═══════════════════════════════════════════════════════
+   THE PAGE WAS ONE NARROW COLUMN INSIDE A WIDE BAND, which is why it read as
+   unused width however far the band stretched: a single column can only be as
+   wide as a line of text is readable, and --measure-text caps that at 80
+   characters. Widening the column would have broken the measure; the answer is
+   to give the band a SECOND column instead.
+
+   Every section is now a split: the heading and its eyebrow hold the left
+   column, and the substance — paragraphs, panels, lists, the stack — holds the
+   right. The left column is narrow and ragged on purpose, so the two columns
+   read as a heading BESIDE its content rather than as two equal columns of
+   text competing to be read first.
+
+   🛑 AND THE TEXT MEASURE STILL GOVERNS. Paragraphs keep --measure-text; the
+   width is spent on a second column, never on longer lines. */
+.split{display:grid;align-items:start;
+  grid-template-columns:minmax(0,calc(var(--u)*62)) minmax(0,1fr);
+  gap:calc(var(--u)*8) calc(var(--u)*14)}
+.split > .side{position:sticky;top:calc(var(--u)*20)}
+.split > .side .eyebrow{margin-bottom:calc(var(--u)*3)}
+.split > .side h2{margin-bottom:0;max-width:22ch}
+.split > .side .aside{display:block;font-size:var(--s2);color:var(--muted);
+  line-height:var(--lh-note);margin-top:calc(var(--u)*4);max-width:30ch}
+.split > .main > :first-child{margin-top:0}
+
+/* The hero carries the display step, so its columns are ASYMMETRIC: the claim
+   gets the larger share and the stack the smaller one. Two equal columns put a
+   70px headline in a 402px box and broke it to one or two words a line.
+
+   🛑 AND THE DISPLAY STEP IS SIZED TO ITS COLUMN, NOT TO THE VIEWPORT. --s7 is
+   clamped against vw, which is correct for a headline spanning the page and
+   wrong the moment the headline sits in a column half that wide — the type
+   went on scaling with the window while its container stopped. The side column
+   is an inline-size container and the step is clamped in cqw, so the headline
+   is sized by the box it is actually in. This is the one place in the system
+   that needs a container query, and it is the finding the kernel records as
+   open, arriving at a real call site.
+
+   align-items is START, like every other split. Centring made the two columns
+   share no top edge, so the stack floated 123px below the eyebrow. */
+.split--hero{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);
+  align-items:start;gap:calc(var(--u)*12)}
+.split--hero > .side{container-type:inline-size}
+.split--hero h1{font-size:clamp(2rem,1rem + 7cqw,4.25rem);max-width:22ch}
+
+/* Two columns of list, because five short refusals in one column leaves the
+   band half empty again. */
+.list--two{columns:2;column-gap:calc(var(--u)*12)}
+.list--two li{break-inside:avoid}
+
+@media (max-width:860px){
+  .list--two{columns:1}
+}
+@media (max-width:1080px){
+  .split{grid-template-columns:minmax(0,calc(var(--u)*50)) minmax(0,1fr);
+    gap:calc(var(--u)*6) calc(var(--u)*10)}
+  /* Re-stated because the narrowed .split above it wins on source order, and a
+     200px column is a headline broken one word per line. */
+  .split--hero{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr)}
+}
+@media (max-width:860px){
+  .split,.split--hero{grid-template-columns:minmax(0,1fr)}
+  .split > .side{position:static}
+  .split > .side h2{max-width:34ch}
+}
+
+
+/* ═══ THE CARD SPLIT ═══════════════════════════════════════════════════════
+   Capping the actions at the ruled 408px form column inside a 680px card left
+   a column of dead space to their right — which is what Phani saw. The card
+   now has TWO columns: the actions keep the form ceiling on the left, and
+   "where you land" moves beside them instead of under them.
+
+   That is the same move the landing page's split band makes, and for the same
+   reason: a control column cannot be widened without becoming a banner, so
+   the width is spent on a second column rather than on a wider button. */
+/* ═══ TWO ROUTES ON ONE SIGN-IN SCREEN ════════════════════════════════════
+   The credential decides where you land; these say which kind of credential
+   this screen is about to ask for. A rule under the current one, because a
+   filled tab would read as a mode the page is stuck in. */
+.tabs{display:flex;gap:calc(var(--u)*6);list-style:none;margin:0;padding:0;
+  border-bottom:1px solid var(--rule)}
+.tabs button{font:inherit;font-size:var(--s2);font-weight:var(--w-figure);
+  color:var(--muted);background:none;border:0;cursor:pointer;
+  padding:calc(var(--u)*2) 0;min-height:var(--target);
+  box-shadow:inset 0 -1px 0 transparent}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-current="true"]{color:var(--ink);
+  box-shadow:inset 0 -2px 0 var(--ink)}
+
+.card-split{display:grid;align-items:start;
+  grid-template-columns:minmax(0,calc(var(--u)*102)) minmax(0,1fr);
+  gap:calc(var(--u)*10)}
+.card-split .way{max-width:none}
+/* Both columns of the card start on ONE top edge. The h1 carries a top margin
+   for the stacked case; inside the split it is the first thing in its column,
+   and the aside's label is the first thing in the other — a 24px offset
+   between them is the misalignment you see before you can name it. */
+.card-split{padding-top:calc(var(--u)*6)}
+.card-split h1{margin-top:0}
+.auds-col{padding-left:calc(var(--u)*8);border-left:1px solid var(--rule)}
+.auds-col > .lab{display:block;font-size:var(--s1);
+  letter-spacing:var(--tr-micro);text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--muted);margin-bottom:calc(var(--u)*4);
+  line-height:var(--lh-body)}
+.auds-col .audiences{grid-template-columns:minmax(0,1fr);margin-top:0;
+  gap:calc(var(--u)*2)}
+@media (max-width:860px){
+  .card-split{grid-template-columns:minmax(0,1fr);gap:calc(var(--u)*8)}
+  .auds-col{padding-left:0;border-left:0;padding-top:calc(var(--u)*6);
+    border-top:1px solid var(--rule)}
+  .auds-col .audiences{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:720px){
+  .auds-col .audiences{grid-template-columns:minmax(0,1fr)}
+}
+
+
+/* ═══ THE EXTRACTION READOUT ════════════════════════════════════════════════
+   🛑 THE METER NEEDS A TRACK, AND A FLEX ROW WILL NOT GIVE IT ONE. .meter is
+   an inline-block with no width of its own, so as a flex item it shrank to the
+   width of its own "0.97" label — 26px — and the bar and track, being absolute
+   and sized in percent, resolved against that. A 97% fill of 26px is 25px of
+   dash, and a 41% fill is 11px: four fields rendering as identical stubs, in
+   the one band whose whole argument is that a field below the floor is parked.
+
+   So the field is TWO LINES: name and value on the first, the meter spanning
+   the full row on the second. The meter gets a real length by construction
+   rather than by a width nobody will maintain.
+   And the FLOOR TICK is drawn — without it nothing on screen says what 0.41
+   fell below, which is the only reason the readout is here. */
+.fieldrow{display:grid;gap:calc(var(--u)*2);
+  border-bottom:1px solid var(--rule);padding-bottom:calc(var(--u)*3)}
+.fieldrow .top{display:flex;align-items:baseline;justify-content:space-between;
+  gap:calc(var(--u)*3)}
+.fieldrow .fname{font-size:var(--s2);color:var(--muted)}
+.fieldrow .fval{font-size:var(--s2);color:var(--ink)}
+.fieldrow .meter{display:block;width:100%}
+.fieldrow .meter > .v{font-size:var(--s1)}
+/* The parked field is the subject of the illustration, so it is the one that
+   states the floor in words as well as marking it. */
+.fieldrow[data-parked="true"] .fname,
+.fieldrow[data-parked="true"] .fval{color:var(--ink);font-weight:var(--w-emph)}

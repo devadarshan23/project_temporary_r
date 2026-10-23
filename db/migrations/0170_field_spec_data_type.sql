@@ -1,0 +1,214 @@
+-- =====================================================================
+-- 0170 — WHAT KIND OF THING IS AT THIS POSITION. G1371–G1374. 21 Sep 2026.
+--
+-- ONE COLUMN ON ANOTHER MIGRATION'S TABLE. No new table, no new policy, no new
+-- grant, and — deliberately — NO CHECK.
+--
+--     ALTER TABLE tenant.document_field_spec ADD COLUMN data_type text NOT NULL;
+--
+-- 🛑 THIS IS INVARIANT 4's COLUMN AND ITS ABSENCE WAS INVARIANT 4's LARGEST
+--    HOLE. Copy the invariant, never paraphrase it:
+--
+--        "Classification is declared once, on `FieldSpec`, and everything
+--         derives from it."
+--
+--    `FieldSpec` HAS SEVEN FIELDS. `0012` STORED FOUR and `0160` ADDED A FIFTH.
+--    `dataType` WAS NOT AMONG THEM. Derive that it was true until this commit:
+--
+--        git show HEAD~1 -- db/ | grep -c data_type        → 0
+--        grep -rn 'data_type' db/                          → nothing
+--
+--    `0160` §6 NAMES THIS ABSENCE IN ITS OWN VOICE and names the condition that
+--    ends it: *"`label`, `dataType` and `required` are still absent and are
+--    still `0004`'s refusal: nothing reads them."* **THIS COMMIT IS THE READER**
+--    — `server/data-plane/payload-store.ts` publishes the declared type on every
+--    addressable position — so the condition `0004` sets is met in the commit
+--    that meets it, exactly as `0160` met it for `confidence_floor`:
+--    *"a column ahead of its reader would have been filled later by whoever
+--    built the writer, with whatever they had to hand."*
+--
+-- ---------------------------------------------------------------------
+-- 🛑 G1371 — WHY THIS COLUMN IS FIRST, AND IT IS AN INVARIANT ARGUMENT RATHER
+--    THAN A SEQUENCING PREFERENCE.
+--
+-- The conversion seam that turns a stored position into an `ExtractedScalar`
+-- (`model/extraction.ts`, NOT WRITTEN, and not this slice) must decide a
+-- scalar KIND. There are exactly two places that decision can come from:
+--
+--   · FROM THE DECLARATION — this column. The operator declared, once, that
+--     this position holds an identifier, and everything derives from it.
+--   · FROM THE ARTEFACT — sniffing the stored JSON. Is `"1234"` an identifier
+--     or a number? Is `"2026-09-21"` a date or a string? Is `"10.00"` money or
+--     a number?
+--
+-- **THE SECOND IS CLASSIFICATION DECLARED BY THE COUNTERPARTY**, which is
+-- precisely what G106 refused on the class axis and for precisely the same
+-- reason: it is scope failing OPEN, and `docs/HANDOFF.md` §5.5 records this
+-- codebase already fixing that once. A sniffed type is worse than a wrong one,
+-- because its failure mode is SILENT — `"1234"` sniffed as a number reconciles
+-- against `1234` and an identifier that should never have been compared
+-- numerically has just been. **Every later slice in this wave breaches
+-- invariant 4 without this column**, so it is not that this one is convenient
+-- first; it is that the others are not buildable correctly at all.
+--
+-- ⚠️ AND THE SNIFF WOULD HAVE BEEN WRITTEN, NOT MERELY POSSIBLE. The
+--    declarations are already read whole by TWO readers — `readDeclarations()`
+--    in `payload-store.ts` and `readSetReconciliationDefinition()` in
+--    `definition-store.ts` — and NEITHER had a type to hand a converter. A
+--    converter author with a payload, a class and no type has one honest
+--    option (refuse everything) and one obvious one (look at the value).
+--
+-- ---------------------------------------------------------------------
+-- 🛑 G1372 — `NOT NULL`, NO DEFAULT, AND THE RULE IS THE TABLE'S OWN RATHER
+--    THAN THIS FILE'S.
+--
+-- This table already answers the nullability question twice and answers it the
+-- same way both times — **the column is nullable exactly when the model's field
+-- is nullable**:
+--
+--      FieldSpec.dataClass              DataClass            data_class               NOT NULL   (0012)
+--      FieldSpec.modelProcessingAllowed boolean              model_processing_allowed NOT NULL   (0012)
+--      FieldSpec.confidenceFloor        number | null        confidence_floor         NULL       (0160)
+--
+-- `FieldSpec.dataType` is `DataType`. **It is not `DataType | null`** — derive
+-- it, never read it: `grep -n 'dataType' model/domain.ts` → `dataType: DataType`.
+-- So this column is `NOT NULL`, and the decision is `0160` §6's own distinction
+-- APPLIED rather than re-taken.
+--
+-- ⚠️ A NULLABLE COLUMN WOULD HAVE COST A REFUSAL ARM THE MODEL HAS NO NAME FOR.
+--    A declaration with a class and no type is a position nothing can convert,
+--    so a reader meeting one must either refuse it — inventing a
+--    `type_not_declared` arm for a state the model says cannot exist — or
+--    coerce it to `'string'`, which is G106's rejected default arriving through
+--    a cast on a second axis. Neither is better than the column being `NOT NULL`.
+--
+-- 🛑 `ADD COLUMN … NOT NULL` WITH NO DEFAULT REFUSES TO APPLY AGAINST A TABLE
+--    HOLDING A ROW, AND THAT REFUSAL IS WANTED — `0140` §2's precedent, and the
+--    argument is the same one: **nobody could supply the missing value
+--    honestly.** No role holds `INSERT` on this table (`0012` grants `SELECT`
+--    alone), so a row here was written by the MIGRATOR standing in for G110's
+--    unbuilt publication seam, and retro-typing somebody else's declaration is
+--    `0004`'s *"filled later by whoever built the writer, with whatever they
+--    had to hand"* with the quiet part said out loud.
+--
+-- ⚠️ AND THE REFUSAL COSTS NOTHING TODAY, WHICH IS MEASURED RATHER THAN HOPED:
+--    **no migration in this repository inserts a `document_field_spec` row.**
+--
+--        grep -cE '^[^-]*INSERT INTO tenant.document_field_spec' db/migrations/*.sql   → 0 everywhere
+--        (G2181 — the unanchored form answered 1 for THIS file, on this line)
+--
+--    The only two INSERT sites are `tests/db/payload-and-subject-index.test.ts`
+--    and `tests/db/definition-engine-spec.test.ts`, both as the migrator and
+--    both AFTER migrations have run. So the table is EMPTY in every deployed
+--    database and this applies cleanly; the refusal is a fence for tomorrow,
+--    not a blocker today. **A `DEFAULT 'string'` would have made it apply
+--    everywhere and would have typed every future declaration by accident.**
+--
+-- ---------------------------------------------------------------------
+-- 🛑 G1373 — NO `CHECK` ON THE VOCABULARY, AND THIS IS THE ONE DECISION A
+--    READER'S INSTINCT WILL GET BACKWARDS.
+--
+-- `DataType` is a FIVE-MEMBER CLOSED SET in `model/domain.ts` —
+-- `string | number | date | money | identifier` — and a `CHECK` restating it
+-- here is the obvious move. **It is refused, on `0007`'s stated polarity and
+-- `0069`'s, both of which say it in almost these words:**
+--
+--     `0069`: *"NO `CHECK` ON ANY VOCABULARY COLUMN — `0007`'s decision, and
+--      the polarity is the deciding half: an UNKNOWN value must reach the model
+--      as an `*_unreadable` refusal, not be rejected at write time by a list
+--      somebody forgot to extend."*
+--
+-- The difference is WHERE A SIXTH MEMBER LANDS. With a `CHECK`, a sixth
+-- `DataType` minted in `model/domain.ts` is a WRITE that fails in whatever
+-- publication seam is mid-flight, against a constraint under G88's forward-only
+-- rule that a later migration must widen — and the failure is at the writer,
+-- far from the model change that caused it. Without one, the value is stored
+-- and the READER refuses it BY NAME, at the position, with the column named in
+-- the defect. **The vocabulary is held in ONE place (`model/domain.ts`) rather
+-- than two, which is `0002_run.sql`'s rule about a second vocabulary with
+-- nothing checking it.**
+--
+-- ⚠️ THE COST IS NAMED AND IT IS REAL, AS `0007` NAMED ITS OWN: the database
+--    will store `data_type = 'currency'` without complaint, and nothing catches
+--    it until something reads that position. **That is the intended direction**
+--    — a stored-but-unreadable declaration is G106's UNREADABLE state, which
+--    this schema already treats as the correct answer rather than as a fault,
+--    and `tests/db/field-spec-data-type.test.ts` §3 witnesses the store
+--    accepting exactly such a row and the reader refusing it.
+--
+-- ⚠️ THIS IS NOT `0004`'s DECISION AND THE DIFFERENCE IS THE RULE RATHER THAN
+--    THE FILE. `0004_subject_ledger.sql` carries a CHECK on `scope` because
+--    *"a scope the evaluator cannot answer must not be storable"* — there the
+--    constraint protects a WRITE against a value the model has no arm for.
+--    Here the model HAS an arm: the reader's refusal. `0012` declined a CHECK
+--    on `kind` on the table one section over for this same reason.
+--
+-- ---------------------------------------------------------------------
+-- ⚠️ G1374 — NO `ENABLE`/`FORCE` BLOCK, NO `ALTER POLICY`, AND NO NEW `GRANT`.
+--    ALL THREE ABSENCES ARE `0011`'s PRECEDENT AND `0160` §6 QUOTES IT VERBATIM:
+--
+--      *"It is the FIRST migration here that adds a column to another
+--       migration's table, so there is NO `ENABLE`/`FORCE` block and there must
+--       not be one — 0009 owns that property and a column inherits it."*
+--
+--    `0012` owns row-level security on `tenant.document_field_spec`: `ENABLE`
+--    and `FORCE`, with `0001`'s predicate verbatim on `USING` and on
+--    `WITH CHECK`. A column added later inherits it and this file must not
+--    restate it — a second `ENABLE` is noise, and a second POLICY would be a
+--    second predicate to drift.
+--
+-- 🛑 THE INHERITANCE IS WITNESSED RATHER THAN ASSUMED, WHICH IS
+--    `tests/db/identity-substrate.test.ts` §6f's PRECEDENT:
+--    `tests/db/field-spec-data-type.test.ts` §5 DROPS `document_field_spec_rls`
+--    and requires the read to return ZERO ROWS — fail-closed — then §4 reads
+--    the new column across a tenant boundary and requires it invisible. A
+--    comment claiming a column inherits a policy is worth nothing; a dropped
+--    policy and an empty result set is the claim.
+--
+-- 🛑 AND NO NEW `GRANT` IS NEEDED, WHICH IS VERIFIED RATHER THAN ASSERTED.
+--    A table-level `GRANT SELECT` covers a column added later — PostgreSQL
+--    attaches the privilege to the RELATION, and a column-level grant is a
+--    narrowing of it rather than an enumeration. `0012`'s
+--    `GRANT SELECT ON tenant.document_field_spec TO tenant_rw` therefore already
+--    covers `data_type`, and `tests/db/field-spec-data-type.test.ts` §2
+--    SELECTs the new column AS THE APP ROLE to prove it rather than trusting
+--    this paragraph. **`0004`'s rule governs the other direction and is why
+--    there is no `GRANT INSERT` here either:** a write privilege ahead of its
+--    writer is refused, and `0012` §5's argument is untouched by this
+--    column — *"a request path that could INSERT here could DECLARE A
+--    CLASSIFICATION"*, and a path that could declare a TYPE could declare that
+--    an identifier is a number and have it compared as one.
+--
+-- ---------------------------------------------------------------------
+-- RULINGS THIS APPLIES
+--
+--   G106  A key with no `FieldSpec` is UNREADABLE — stored, but unaddressable.
+--         Fail-closed. **Its rejected alternative is not re-taken on the TYPE
+--         axis any more than on the CLASS axis:** there is no default type
+--         column here and there must never be one.
+--   G1121 A definition's content lives in TYPED COLUMNS, one per declared
+--         field. This is that rule reaching the seventh `FieldSpec` field.
+--   G88   Forward-only. `0012` AND `0160` ARE NOT EDITED BY THIS FILE; each
+--         keeps its own text, and `0160` §6's *"`dataType` … still absent"*
+--         is corrected on ITS OWN FACE by this file's existence rather than by
+--         a rewrite — `0017`'s precedent.
+--   G97   Every branded id is `text`. `DataType` is not an id and is `text`
+--         for the vocabulary reason above, not for that one.
+--   G100  The policy DENIES on NULL. Inherited from `0012`, witnessed at §5.
+--   G101  Transaction-mode pooling assumed; `SET LOCAL` inside an explicit
+--         transaction, issued only by `db/tenant-scope.ts`.
+--
+-- 🛑 WHAT THIS FILE DOES NOT DO, SAID SO THE SILENCE IS NOT READ AS COVERAGE:
+--    **IT MOUNTS NOTHING.** `classifyValue`, `getDocument`, `createUpload` and
+--    `completeUpload` are declared on `docs/contracts/capability.openapi.yaml`
+--    and mounted nowhere, and this commit mounts none of them — G300's test is
+--    table AND model AND capability, and `Document` still requires an
+--    extraction and a `Provenance` nothing on this path produces. The column is
+--    proven by `tests/db/field-spec-data-type.test.ts` against a real
+--    PostgreSQL instead of by a route, which is `0007`'s precedent:
+--    *"a column with no reader is a column nothing checks"*.
+--    **AND `label` AND `required` ARE STILL ABSENT AND STILL `0004`'s REFUSAL.**
+--    Nothing reads either one. This file types a position; it does not label it.
+-- =====================================================================
+
+ALTER TABLE tenant.document_field_spec ADD COLUMN data_type text NOT NULL;

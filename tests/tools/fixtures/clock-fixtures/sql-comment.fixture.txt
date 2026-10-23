@@ -1,0 +1,9 @@
+-- In a .sql file, `--` opens a comment and the interval quoted below is prose.
+-- This is the real shape: db/migrations/0035_membership_liveness_voids_sessions.sql
+-- quotes its own measurement this way —
+--     UPDATE tenant.membership SET expires_at = now() - interval '1 hour'
+-- and a scanner reading raw source would report that migration as defective.
+--
+-- Correct result: zero past intervals.
+
+SELECT 1;

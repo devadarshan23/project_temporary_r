@@ -1,0 +1,30 @@
+openapi: 3.1.0
+info:
+  title: wire-mirror fixture — PAIRING STRATEGY REORDERED (order-only, equal sets)
+  version: 0.0.0
+  description: |
+    Fixture for tools/check-wire-mirror.mjs. NOT a real contract, and
+    DELIBERATELY WRONG.
+
+    EQUAL SETS, WRONG SEQUENCE. Nothing is missing and nothing is extra, so the
+    only thing left to fail on is ORDER — which is the assertion its sibling
+    `pairing-strategy-drift.openapi.yaml` structurally cannot make, because there
+    missing/extra dominate.
+
+    🛑 ORDER IS LOAD-BEARING FOR THIS PARTICULAR VOCABULARY AND NOT MERELY A
+    HOUSE RULE. `PairingSpec.strategies` is an ORDERED list folded in declared
+    order, and the whole multi-pass certainty argument rests on the sequence:
+    an exact identifier join is stronger evidence than an amount-and-date match,
+    which is stronger than a bounded subset sum, which is stronger than a fuzzy
+    string comparison. A client rendering the four in a different order is
+    presenting a weaker verdict as a stronger one.
+paths: {}
+components:
+  schemas:
+    PairingStrategyKind:
+      type: string
+      enum:
+        - exact_identifier
+        - amount_sum
+        - amount_and_date
+        - fuzzy_reference

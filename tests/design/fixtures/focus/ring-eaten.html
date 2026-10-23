@@ -1,0 +1,33 @@
+<!doctype html><meta charset="utf-8"><title>fixture · the ring that can no longer be eaten</title>
+<link rel="stylesheet" href="../../../../docs/handoff-pack/tokens.css">
+<!-- THE PLANTED INTRUDER — UNCHANGED SINCE 17 Aug 2026, AND THAT IS THE POINT.
+
+     ⚠️ THIS FILE'S MEANING INVERTED ON 22 Aug 2026 (G240) AND ITS CONTENT DID
+     NOT. It was written as the defect shape: three elements each carrying their
+     own box-shadow at a specificity that beat the kernel's `:focus-visible`
+     (0,1,0) or tied it and won on source order, against a kernel that had
+     already written `outline:none`. All three DID eat the ring, measured, and
+     the header here read "if the detector reports this file clean, the detector
+     is measuring nothing".
+
+     THE KERNEL RING IS NOW AN `outline`, so these same three attackers cannot
+     reach it — a box-shadow does not compete with an outline at any specificity
+     or source order. The file is therefore kept BYTE-FOR-BYTE as the attacker
+     it always was, and the assertion in focus-indicator.test.ts §1 is inverted:
+     every element here must now KEEP its ring.
+
+     🛑 THAT MAKES THIS THE REGRESSION CONTROL FOR G240 AND NOT A DEAD FIXTURE.
+     Restore the box-shadow ring in design/system/tokens.css and this file goes
+     red immediately, because these three were built to beat exactly that rule.
+     A fixture rewritten to match the new kernel would have proved nothing; one
+     that beat the old kernel and cannot beat this one proves the ruling.
+     The detector's ability to report a BARE element is witnessed separately, in
+     ring-erased.html — see the note there for why it had to move. -->
+<style>
+  .eater{box-shadow:inset 0 0 0 1px var(--rule-strong)}          /* (0,1,0), later */
+  .eater-strong.eater-strong{box-shadow:inset 0 0 0 1px var(--ink)} /* (0,2,0) */
+  input.eater-attr{box-shadow:inset 0 0 0 1px var(--rule-strong)}   /* (0,1,1) */
+</style>
+<button class="eater">once ate the ring on source order</button>
+<button class="eater-strong eater-strong">once ate it on specificity</button>
+<input class="eater-attr" aria-label="once ate it on an attribute selector">

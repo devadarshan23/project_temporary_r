@@ -1,0 +1,122 @@
+openapi: 3.1.0
+
+info:
+  title: ReconcileAI — Data Plane Local API
+  version: 0.1.0-draft
+  summary: Customer-facing endpoints served strictly within the Data Plane VPC.
+  description: |
+    THE ONLY CONTRACT WHERE INBOUND ACCESS IS PERMITTED, BECAUSE THE CALLER IS THE CUSTOMER.
+    
+    This API is served by the Data Plane directly inside the customer's AWS account
+    (e.g., inside their VPC). It is never exposed to the public internet, and 
+    1CloudHub control plane never calls it.
+
+    It exists to allow the customer's own infrastructure (ALBs, Prometheus scrapers, 
+    Datadog agents) to monitor the health and activity of the Data Plane using 
+    standard protocols.
+    
+    Authentication: 
+    Depending on the customer's BYOA deployment posture, these endpoints may be 
+    secured via local VPC network boundaries, or via a shared secret (API Key) 
+    provisioned during installation.
+
+servers:
+  - url: http://localhost:9090
+    description: Local bind address inside the Data Plane container/VPC.
+
+tags:
+  - name: Liveness & Telemetry
+
+paths:
+  /health:
+    get:
+      tags: [Liveness & Telemetry]
+      operationId: checkLocalHealth
+      x-capability: 'exempt: no security scheme is declared at all — the caller is an ALB inside the customer own VPC and structurally cannot hold a session'
+      summary: Lightweight liveness probe for load balancers.
+      description: |
+        Returns 200 OK if the application is running and able to serve traffic.
+        Does not check downstream dependencies (like RDS or Bedrock). Use `/status` for deep checks.
+      responses:
+        '200':
+          description: Plane is alive.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+        '503':
+          description: Plane is shutting down or unresponsive.
+
+  /status:
+    get:
+      tags: [Liveness & Telemetry]
+      operationId: checkLocalStatus
+      x-capability: 'exempt: no security scheme is declared at all — a readiness probe inside the customer VPC, with no identity to derive a principal from'
+      summary: Deep health check including downstream dependencies.
+      description: |
+        Checks connectivity to required BYOA infrastructure (RDS, S3, KMS) and 
+        returns the health of each component.
+      responses:
+        '200':
+          description: All dependencies are healthy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyStatus'
+        '503':
+          description: One or more critical dependencies are unreachable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyStatus'
+
+  /metrics:
+    get:
+      tags: [Liveness & Telemetry]
+      operationId: getLocalMetrics
+      x-capability: 'exempt: no security scheme is declared at all — a metrics scraper inside the customer VPC; the human-facing meter is view_metering, which has no declared operation anywhere'
+      summary: Prometheus-compatible metrics endpoint.
+      description: |
+        Exposes the same internal operational counters that the plane aggregates
+        and sends to the Control Plane in its `/fleet/heartbeats`. 
+        This enables customers to alert on queue depths or error bands locally.
+      responses:
+        '200':
+          description: Prometheus formatted text payload.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # HELP reconcile_queue_depth Current number of items in processing queue
+                  # TYPE reconcile_queue_depth gauge
+                  reconcile_queue_depth 42
+                  # HELP reconcile_errors_total Total errors by class
+                  # TYPE reconcile_errors_total counter
+                  reconcile_errors_total{class="validation"} 5
+
+components:
+  schemas:
+    DependencyStatus:
+      type: object
+      required: [status, components]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, offline]
+        components:
+          type: object
+          properties:
+            database:
+              type: string
+              enum: [ok, unreachable]
+            storage:
+              type: string
+              enum: [ok, unreachable]
+            kms:
+              type: string
+              enum: [ok, unreachable]

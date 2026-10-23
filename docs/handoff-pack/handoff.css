@@ -1,0 +1,80 @@
+/* Handoff document — print geometry belongs to <doc-page>; this file styles
+   content only. Every value composes a token from tokens.css.
+   NOTE: the document prints, so it is authored in the light theme and no
+   [data-theme] switch is offered. Colour is used only where it is the subject. */
+
+.h-meta{display:flex;flex-wrap:wrap;gap:calc(var(--u)*2) calc(var(--u)*8);
+  font-size:var(--s2);color:var(--muted);padding-bottom:calc(var(--u)*4);
+  border-bottom:1px solid var(--rule-strong);margin-bottom:calc(var(--u)*8)}
+.h-meta b{color:var(--ink);font-weight:var(--w-emph)}
+
+.doc h1{font-size:var(--s7);font-weight:var(--w-display);
+  letter-spacing:var(--tr-display);line-height:var(--lh-display);
+  text-transform:lowercase;margin:0 0 calc(var(--u)*3)}
+.doc h2{font-size:var(--s4);font-weight:var(--w-emph);letter-spacing:var(--tr-title);
+  margin:calc(var(--u)*12) 0 calc(var(--u)*3);padding-top:calc(var(--u)*3);
+  border-top:1px solid var(--rule-strong);break-after:avoid}
+.doc h3{font-size:var(--s3);font-weight:var(--w-emph);
+  margin:calc(var(--u)*8) 0 calc(var(--u)*2);break-after:avoid}
+.doc h4{font-size:var(--s2);font-weight:var(--w-emph);text-transform:uppercase;
+  letter-spacing:.08em;color:var(--muted);margin:calc(var(--u)*6) 0 calc(var(--u)*2);
+  break-after:avoid}
+.doc p{margin:calc(var(--u)*3) 0 0;max-width:var(--measure-text)}
+.doc .lede{font-size:var(--s4);font-weight:var(--w-lede);color:var(--muted);
+  max-width:var(--measure-lede)}
+.doc .note{font-size:var(--s2);color:var(--muted);line-height:var(--lh-note);
+  max-width:var(--measure-text)}
+.doc .note b{color:var(--ink);font-weight:var(--w-emph)}
+.doc code,.doc .spec{font-family:var(--face-mono);font-size:.92em;color:var(--ink)}
+
+/* The spec table. One per primitive, and it must not split across a page in
+   the middle of a row — break-inside on the row, not the table, so a long
+   spec can still paginate between rows. */
+.doc table{border-collapse:collapse;width:100%;margin-top:calc(var(--u)*3);
+  font-size:var(--s2)}
+.doc caption{text-align:left;font-size:var(--s2);color:var(--muted);
+  padding:0 0 calc(var(--u)*2)}
+.doc th,.doc td{text-align:left;vertical-align:top;
+  padding:calc(var(--u)*2) calc(var(--u)*3) calc(var(--u)*2) 0;
+  border-bottom:1px solid var(--rule);line-height:var(--lh-note)}
+.doc tr{break-inside:avoid}
+.doc thead th{font-size:var(--s1);letter-spacing:.12em;text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--muted);
+  border-bottom:1px solid var(--rule-strong)}
+.doc tbody th{white-space:nowrap;font-weight:var(--w-emph);color:var(--ink);
+  width:calc(var(--u)*26)}
+.doc td.num,.doc th.num{font-family:var(--face-mono);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.doc .never th{color:var(--ink)}
+.doc .never td{color:var(--ink)}
+
+.doc .kv{margin:calc(var(--u)*3) 0 0;padding:0;list-style:none;
+  max-width:var(--measure-text)}
+.doc .kv li{display:grid;grid-template-columns:calc(var(--u)*30) 1fr;
+  gap:calc(var(--u)*3);padding:calc(var(--u)*2) 0;border-bottom:1px solid var(--rule);
+  font-size:var(--s2);break-inside:avoid}
+.doc .kv b{font-family:var(--face-mono);font-weight:var(--w-figure);color:var(--ink)}
+.doc .kv span{color:var(--muted);line-height:var(--lh-note)}
+
+.doc .sw{display:inline-block;width:calc(var(--u)*10);height:calc(var(--u)*4);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);vertical-align:middle}
+
+.doc .callout{border-left:2px solid var(--ink);padding:calc(var(--u)*3) 0
+  calc(var(--u)*3) calc(var(--u)*4);margin:calc(var(--u)*5) 0 0;
+  font-size:var(--s2);line-height:var(--lh-note);max-width:var(--measure-text);
+  break-inside:avoid}
+.doc .callout b{font-weight:var(--w-emph)}
+
+/* ⚠️ NOT SCOPED UNDER .doc, AND THAT IS LOAD-BEARING. A slot="header" /
+   slot="footer" element must be a DIRECT child of <doc-page> to be slotted, so
+   the running furniture can never sit inside the .doc wrapper — it is a
+   SIBLING of it. Scoped as `.doc .runhead` these rules match nothing, and the
+   furniture that repeats on every printed page renders as body prose. */
+.runhead{display:flex;justify-content:space-between;gap:calc(var(--u)*4);
+  font-size:var(--s1);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);padding-bottom:calc(var(--u)*2);
+  border-bottom:1px solid var(--rule)}
+.runfoot{display:flex;justify-content:space-between;gap:calc(var(--u)*4);
+  font-size:var(--s1);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);padding-top:calc(var(--u)*2);
+  border-top:1px solid var(--rule)}

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@200;300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./public.css">
+</helmet>
+
+<div class="shell" style="max-width:calc(var(--u)*220);margin:0 auto;padding:calc(var(--u)*8) var(--gutter) calc(var(--u)*12)">
+
+    <div class="top">
+      <a href="./V1 Landing.dc.html" style="text-decoration:none">
+        <span class="logo" style="--logo-size:1.0625rem"><span class="mascot" style="--mascot-size:1em"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span><span>Reconcile</span><span class="badge">AI</span></span>
+      </a>
+      <span class="conn"><i></i>{{ conn }}</span>
+      <a href="./V1 Landing.dc.html" class="small" style="color:var(--muted)"><span class="mono" aria-hidden="true">‹</span>&nbsp;Back to the site</a>
+    </div>
+
+    <!-- The picker is the demo, not the product. In the product a reader
+         arrives at exactly one of these. -->
+    <div role="group" aria-label="Which error to show" style="display:flex;gap:calc(var(--u)*2);flex-wrap:wrap;margin:calc(var(--u)*8) 0 calc(var(--u)*5)">
+      <sc-for list="{{ codes }}" as="c" hint-placeholder-count="6">
+        <button type="button" aria-pressed="{{ c.on }}" onClick="{{ c.pick }}" style="display:flex;align-items:baseline;gap:calc(var(--u)*2);font:inherit;font-family:var(--face-mono);font-size:var(--s2);min-height:var(--target);padding:0 calc(var(--u)*3);cursor:pointer;border:0;color:var(--ink);background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong)" style-hover="background-color:var(--tile-hover)">{{ c.code }}<span style="font-family:var(--face-sans);font-size:var(--s1);color:var(--muted)">{{ c.short }}</span></button>
+      </sc-for>
+    </div>
+
+    <div class="card">
+      <span style="display:block;font-family:var(--face-mono);font-size:var(--s1);letter-spacing:.12em;text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted)">{{ kind }}</span>
+      <h1>{{ head }}</h1>
+      <p style="font-size:var(--s3);line-height:var(--lh-body);color:var(--ink);max-width:var(--measure-text);margin-top:calc(var(--u)*5)">{{ said }}</p>
+
+      <sc-if value="{{ hasMeans }}" hint-placeholder-val="{{ true }}">
+        <p style="max-width:var(--measure-text)">{{ means }}</p>
+      </sc-if>
+
+      <div class="way" style="margin-top:calc(var(--u)*7)">
+        <sc-for list="{{ ways }}" as="w" hint-placeholder-count="2">
+          <a class="btn {{ w.cls }}" data-commit="{{ w.commit }}" href="{{ w.to }}">{{ w.label }}<span class="k">{{ w.note }}</span></a>
+        </sc-for>
+      </div>
+
+      <div style="margin-top:calc(var(--u)*8);padding-top:calc(var(--u)*5);border-top:1px solid var(--rule)">
+        <span class="lab">What to quote</span>
+        <p style="font-family:var(--face-mono);font-size:var(--s3);color:var(--ink);margin-top:calc(var(--u)*2)">{{ code }} · {{ ref }}</p>
+        <p style="max-width:var(--measure-text)">{{ refWhy }}</p>
+      </div>
+
+      <sc-if value="{{ hasOwn }}" hint-placeholder-val="{{ false }}">
+        <p style="max-width:var(--measure-text);padding:calc(var(--u)*3) calc(var(--u)*4);margin-top:calc(var(--u)*5);background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule)">{{ own }}</p>
+      </sc-if>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,calc(var(--u)*56)),1fr));gap:calc(var(--u)*6);margin-top:calc(var(--u)*10)">
+      <div>
+        <span class="lab">Where a refusal is drawn instead</span>
+        <p style="font-size:var(--s2);line-height:var(--lh-note);color:var(--muted);max-width:var(--measure-text);margin-top:calc(var(--u)*2)">A page like this is what the server returns when <b>there is no
+        application to draw into</b>. Inside the product a refusal is never a
+        page: a destination a role does not hold is <b>absent from the
+        navigation</b>, and a control it may not use is drawn with the reason
+        beside it at full ink. Sending someone to a 403 for something the
+        product could have simply not offered is a design failure wearing a
+        status code.</p>
+      </div>
+      <div>
+        <span class="lab">Why the code is on the page</span>
+        <p style="font-size:var(--s2);line-height:var(--lh-note);color:var(--muted);max-width:var(--measure-text);margin-top:calc(var(--u)*2)">Every failure path in this product emits a code from a <b>closed
+        vocabulary</b>, because under a restrictive telemetry profile the class
+        of an error is the only diagnostic channel that survives. So the code is
+        printed where a person can read it out, and the reference beside it
+        resolves to a record — the run, the act, the request — that support can
+        open without asking them to describe a screen.</p>
+      </div>
+      <div>
+        <span class="lab">What none of these pages do</span>
+        <p style="font-size:var(--s2);line-height:var(--lh-note);color:var(--muted);max-width:var(--measure-text);margin-top:calc(var(--u)*2)">They do not guess at a cause where two causes look alike, they do not
+        apologise for a control working, and they do not offer a retry that
+        cannot help. <b>The way back is always somewhere that exists</b> — the
+        register, the sign-in route, or the site — never a reload of the thing
+        that just refused.</p>
+      </div>
+    </div>
+
+    <p style="font-size:var(--s1);line-height:var(--lh-note);color:var(--muted);max-width:var(--measure-text);margin-top:calc(var(--u)*10);padding-top:calc(var(--u)*4);border-top:1px solid var(--rule)">Illustrative. Six states, drawn on the public shell
+    because that is the shell that survives when the application does not. The
+    5xx pages are the only ones that apologise, and only because the fault is
+    ours and it cost the reader something.</p>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:1000}}">
+class Component extends DCLogic {
+  state = { at: 2 };
+
+  /* SIX STATES, AND THE COPY IS THE DESIGN. Each one follows the microcopy
+     rules the design system now carries: a fact stated neutrally, a
+     consequence addressed to the reader, the code last, no hedge, no cheer,
+     no vagueness. The 5xx pair are the only two that apologise, because the
+     fault is ours and it cost the reader something. */
+  ERRORS = [
+    {
+      code:'401', short:'session', kind:'401 · your session ended',
+      head:'You have been signed out.',
+      said:'Sessions here are short by design, and this one has expired. Nothing was lost — anything committed before it ended is committed, and anything half-typed is not.',
+      means:'Signing in again returns you to where you were. Your passkey carries which organisation and which role you hold, so you will land on the same surface rather than at a menu.',
+      ref:'sess-9f41-2c',
+      refWhy:'A session reference rather than an account: it says which sign-in expired and nothing about who you are.',
+      conn:'Sign-in service reachable',
+      ways:[
+        {label:'Sign in again', note:'passkey · one press', to:'./V3 Sign In.dc.html', cls:'btn--primary'},
+        {label:'Back to the site', note:'nothing needed', to:'./V1 Landing.dc.html', cls:'btn--quiet'}
+      ]
+    },
+    {
+      code:'403', short:'refused', kind:'403 · refused',
+      head:'This is not yours to open.',
+      said:'The address is real and the thing behind it exists. Your role does not reach it, and no grant on your account does either.',
+      means:'You cannot widen this yourself, and neither can we from here \u2014 in this product authority is granted by somebody at your own organisation, which is who to ask. If you reached this from a link somebody sent you, they hold something you do not.',
+      ref:'req-4471-08b2',
+      refWhy:'The request, not the resource. It records that a refusal happened and under which authority it was evaluated, and it does not name what you were refused.',
+      conn:'You are signed in',
+      own:'Refusals are recorded on the tenant\u2019s own audit trail, at the same weight as a read that succeeded. Nothing about this page is quiet.',
+      ways:[
+        {label:'Back to your register', note:'where your work is', to:'./C1 Close.dc.html', cls:'btn--primary'},
+        {label:'Sign in as someone else', note:'if you hold two roles', to:'./V3 Sign In.dc.html', cls:'btn--quiet'}
+      ]
+    },
+    {
+      code:'404', short:'not here', kind:'404 · nothing at this address',
+      head:'There is nothing here.',
+      said:'No record answers to this address. It may have been purged under a retention policy, migrated to another plane at a cutover, or it may never have existed \u2014 and this page cannot tell those apart, deliberately.',
+      means:'If you were sent this link by somebody who can see the record, it is in a tenant you do not reach rather than gone. If you reached it from your own history, the most likely answer is retention: a document outlives its window and then it does not.',
+      ref:'req-2210-77c4',
+      refWhy:'The request. There is no record reference to give, which is the whole content of a 404.',
+      conn:'You are signed in',
+      own:'This page answers identically for a record that was purged, one in another tenant, and one that never existed. A page that distinguished them would tell a stranger which customers we hold.',
+      ways:[
+        {label:'Back to your register', note:'where your work is', to:'./C1 Close.dc.html', cls:'btn--primary'},
+        {label:'Search from the palette', note:'\u2318K, once you are back', to:'./C1 Close.dc.html', cls:'btn--quiet'}
+      ]
+    },
+    {
+      code:'429', short:'quota', kind:'429 · a quota, and it is not ours',
+      head:'The model quota in this account is exhausted.',
+      said:'Extraction stopped part-way through the run. The quota belongs to the account this tenant runs in, which is yours rather than ours, so raising it is a change on your side and not something we can do from here.',
+      means:'What was read before it stopped is kept and is on the register. Nothing has been posted, and re-running is safe \u2014 but it will stop again at the same place until the quota is raised, so raising it first is the cheaper order.',
+      ref:'run-4471',
+      refWhy:'The run. It carries what was read, what it cost, and where it stopped, so nothing has to be reconstructed after the quota is raised.',
+      conn:'Your plane is reachable',
+      own:'The product has no ongoing check against this ceiling \u2014 model access is verified once, at onboarding \u2014 so a run can stop here with no warning beforehand. That is a known gap rather than a surprise.',
+      ways:[
+        {label:'Back to your register', note:'what was read is there', to:'./C1 Close.dc.html', cls:'btn--primary'},
+        {label:'Raise a case', note:'we will walk it through with you', to:'./C1 Close.dc.html', cls:'btn--quiet'}
+      ]
+    },
+    {
+      code:'500', short:'ours', kind:'500 · ours',
+      head:'We broke this, and we are sorry.',
+      said:'Something on our side failed while answering you. It has been recorded with the reference below and somebody is looking at it \u2014 you do not need to report it, though quoting the reference will get you past the first three questions.',
+      means:'Nothing was written. This product does not leave half-finished work: an act either completed before the failure and is on your trail, or it did not happen at all. If you were mid-way through a form, its contents are gone, and that is the part that cost you something.',
+      ref:'err-8802-1f9d',
+      refWhy:'The failure, on our side. It resolves to the request, the trace and the code, and it is the same reference support reads.',
+      conn:'Your plane is reachable',
+      own:'A run in flight is unaffected. Runs complete or fail as a whole, and this page is about the request you just made rather than the work behind it.',
+      ways:[
+        {label:'Back to your register', note:'nothing was written', to:'./C1 Close.dc.html', cls:'btn--primary'},
+        {label:'Back to the site', note:'if you would rather leave it', to:'./V1 Landing.dc.html', cls:'btn--quiet'}
+      ]
+    },
+    {
+      code:'503', short:'unreachable', kind:'503 · we cannot reach it',
+      head:'Your plane did not answer, and we are sorry for the wait.',
+      said:'The application is served by us and it calls the plane your data lives in. That call is not being answered. Whether the plane is down, the network between us is, or a security group changed cannot be told apart from here, and all three look like this.',
+      means:'Your documents have not moved and nothing has been read. If a run was due, it will be held rather than skipped \u2014 a held run reports as held, so no period quietly goes unmeasured.',
+      ref:'req-5512-3ab0',
+      refWhy:'The request. The plane has its own reference and we do not hold it, which is the consequence of the data being yours.',
+      conn:'Your plane is not answering',
+      own:'Because the plane runs in your own account, this is one of the few failures we may be unable to diagnose without asking you to look \u2014 which is slower, and honest.',
+      ways:[
+        {label:'Try again in a few minutes', note:'nothing is lost by waiting', to:'./C1 Close.dc.html', cls:'btn--primary'},
+        {label:'Back to the site', note:'the public plane is unaffected', to:'./V1 Landing.dc.html', cls:'btn--quiet'}
+      ]
+    }
+  ];
+
+  renderVals(){
+    const s = this.state;
+    const e = this.ERRORS[s.at];
+    return {
+      codes: this.ERRORS.map((x,i)=>({code:x.code, short:x.short,
+        on: s.at === i ? 'true' : 'false', pick: ()=> this.setState({at:i})})),
+      kind:e.kind, head:e.head, said:e.said,
+      means:e.means, hasMeans: !!e.means,
+      code:e.code, ref:e.ref, refWhy:e.refWhy, conn:e.conn,
+      own:e.own || '', hasOwn: !!e.own,
+      /* THE PRIMARY WAY OUT CARRIES THE COMMIT WEIGHT, because on this page
+         the safe route is the one that should be pressed without reading
+         twice. data-commit is the kernel's own primary, not a second one. */
+      ways:e.ways.map(w=>({label:w.label, note:w.note, to:w.to, cls:w.cls,
+        commit: w.cls === 'btn--primary' ? 'true' : undefined}))
+    };
+  }
+}
+</script>
+</body>
+</html>

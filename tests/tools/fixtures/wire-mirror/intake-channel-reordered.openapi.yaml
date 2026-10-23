@@ -1,0 +1,29 @@
+openapi: 3.1.0
+info:
+  title: wire-mirror fixture — INTAKE CHANNEL ORDER ONLY (the second red witness)
+  version: 0.0.0
+  description: |
+    Fixture for tools/check-wire-mirror.mjs. NOT a real contract, and
+    DELIBERATELY WRONG — in exactly one way.
+
+    THE SET IS CORRECT. All four of G184's channels are here and nothing else
+    is. Only the ORDER differs: `mailbox` is hoisted to the front.
+
+    This is the claim `intake-channel-drift.openapi.yaml` structurally CANNOT
+    make, because where the sets differ the missing/extra report dominates and
+    the ordering never becomes the reason for the finding. `INTAKE_CHANNEL_KINDS`
+    declares that the wire's order is the pinned one and the model adopts it, so
+    an order-only drift is a real finding and needs a witness of its own.
+paths: {}
+components:
+  schemas:
+    IntakeChannelStatus:
+      type: object
+      additionalProperties: false
+      required: [channel, wired, lastArrivalAt]
+      properties:
+        channel:
+          type: string
+          enum: [mailbox, upload, watched_drop, connector_pull]
+        wired: { type: boolean }
+        lastArrivalAt: { type: [string, 'null'], format: date-time }

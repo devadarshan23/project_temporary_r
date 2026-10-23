@@ -1,0 +1,104 @@
+-- =====================================================================
+-- 0300 — EACH BROKERED DOOR CARRIES ITS OWN KEY-SET URL AND AUDIENCE, AND
+--        THE DATA PLANE MAY READ THEM ACROSS TENANTS ONCE, AT BOOT.
+--        R2 AS AMENDED — THE OWNER'S RULING OF 1 Oct 2026 (G2571):
+--        "Per-connection, boot-time: fetch every registered connection's
+--         JWKS at boot and cache by connection; audience becomes a column.
+--         Still no runtime JWKS egress; a new connection needs a restart."
+--        G2571–G2576.
+--
+-- G88: forward-only. `0009`, `0011`, `0013`, `0200`, `0220` AND `0280` ARE
+--      NOT EDITED — `0017`'s precedent. This file adds TWO columns and ONE
+--      policy and replaces nothing.
+-- ⚠️ SCHEMA-QUALIFIED THROUGHOUT, because 0003 requires it from 0004 on.
+--
+-- ---------------------------------------------------------------------
+-- 🛑 §1 · `jwks_uri` AND `audience` — `0011`'s TWO REFUSALS, MET BY THEIR
+--         READER.
+--
+-- `0011` refused `audience` and `jwks_uri` BY NAME: *"nothing here verifies
+-- a token and a column ahead of its reader is 0004's refusal."* The reader
+-- now exists twice over — `server/data-plane/main.ts` reads both at boot,
+-- and `verificationTermsAt()` hands them to `verifyIdentityToken()` for the
+-- door a sign-in was PINNED to. `0280` met the same refusal for
+-- `token_endpoint` on the same ground.
+--
+-- G2498 is the gap this closes: D6-5 moved the ISSUER onto the row, R2 kept
+-- ONE key document and ONE audience per deployment, so a door on a second
+-- pool pinned the right issuer and could not verify. Under G276's BYOA a pool
+-- sits in a customer's own account, and one value per environment is one
+-- pool per environment — the shape D6-5 refused for `iss`.
+--
+-- ⚠️ NULLABLE, AND NULL IS A NAMED REFUSAL, NEVER A DEFAULT (G2576). The rule
+-- `0012` states and `0170` applied is that a column is nullable exactly when
+-- the thing it stores may be absent. Both may be: every UNBROKERED door has
+-- neither, and a brokered door registered before its pool's app client exists
+-- has neither yet. So `NOT NULL` is refused (it is also unwritable against a
+-- table holding rows, which this one does in every seeded database), and so
+-- is a `CHECK` pairing them with `broker_ref` — `0011`'s argument verbatim:
+-- *"a constraint would make the malformed row unrepresentable and the
+-- REFUSAL untestable."* The reader refuses a brokered door with either NULL
+-- by name — `connection_jwks_uri_undeclared`, `connection_audience_undeclared`
+-- — and never substitutes a deployment value or the token's own `aud`.
+--
+-- ⚠️ NO `CHECK` ON THE SCHEME, `0069`'s POLARITY and `0280`'s for
+-- `token_endpoint`: the transport refuses a redirect and a non-JSON body, and
+-- a second statement of a URL rule in SQL is a second language for one rule.
+--
+-- 🛑 NO NEW GRANT, AND NO WRITER. `0009`'s `GRANT SELECT` covers a column
+-- added later (`0011`'s precedent, witnessed there). A request path that could
+-- write `jwks_uri` could point a door's verification at a key set IT controls
+-- and mint any identity through that door — the strongest write primitive this
+-- table could hold. The values arrive by migrator, like every other column
+-- here, and a new value needs a restart (G2571) before anything reads it.
+--
+-- ---------------------------------------------------------------------
+-- 🛑 §2 · A SIXTH POLICY ON `tenant.identity_connection`, AND THE FIRST THAT
+--         IS AN INVENTORY RATHER THAN AN ADDRESS — G2573.
+--
+-- Every other policy on this table admits a row by something that names it:
+-- the acting session (`0009`, `0018`), a broker handle (`0013`), a claimed
+-- domain (`0220`), a pinned attempt (`0280`). "Fetch every registered
+-- connection's JWKS at boot" names nothing, and at boot there is no session
+-- and no tenant, so under G100 every existing policy denies. This one admits
+-- EVERY BROKERED ROW when `app.key_inventory = 'boot'`, which only
+-- `db/key-inventory-scope.ts` sets.
+--
+-- ⚠️ IT ADMITS WHOLE ROWS AND THAT IS A NAMED COST, NOT AN OVERSIGHT. The
+-- stronger shape — a NOLOGIN role with `SELECT` on three COLUMNS, entered by
+-- `SET LOCAL ROLE` — was MEASURED against a live PostgreSQL 14.18 before this
+-- file was written and FAILS: the read answered `permission denied for table
+-- membership`, because the other permissive policies on this table are still
+-- evaluated for the new role and their subqueries read `tenant.membership`,
+-- `tenant."user"` and `tenant.sign_in_attempt` as that role. The narrowing
+-- that remains is (a) the reader names three columns, (b) the helper is
+-- called exactly once in `server/`, at boot, and (c) the transaction is READ
+-- ONLY — a CENSUS rather than a construction, which is G1161's phrase for the
+-- same trade. `tests/db/connection-key-inventory.test.ts` holds all three.
+--
+-- ⚠️ `broker_ref IS NOT NULL` AND NOT `jwks_uri IS NOT NULL`, DELIBERATELY:
+-- a brokered door with no declared key set must be VISIBLE at boot so it is
+-- reported unverifiable BY NAME, rather than silently absent from the
+-- inventory and refused later as `connection_not_loaded_at_boot` — which
+-- would send an operator looking for a restart that cannot help.
+--
+-- 🛑 THE RECURSION HAZARD, MEASURED, NOT ASSUMED. `0200` recorded a policy
+-- cycle through `0018`'s directory policy. This expression reads the row's own
+-- `broker_ref` and a GUC and nothing else, so its expansion reaches no table.
+-- Measured: app role, no GUC → 0 rows; GUC `boot` → the brokered row only;
+-- GUC `yes` → 0 rows; after ROLLBACK the GUC is empty and the read is 0 rows.
+--
+-- `FOR SELECT` AND NOTHING ELSE — G1982's lesson, `0027`'s before it: a policy
+-- with no `FOR` is `FOR ALL`, and a `FOR ALL` policy with a `USING` and no
+-- `WITH CHECK` reuses the `USING` as the INSERT check.
+-- =====================================================================
+
+ALTER TABLE tenant.identity_connection ADD COLUMN jwks_uri text;
+ALTER TABLE tenant.identity_connection ADD COLUMN audience text;
+
+CREATE POLICY identity_connection_key_inventory_rls ON tenant.identity_connection
+  FOR SELECT
+  USING (
+    nullif(current_setting('app.key_inventory', true), '') = 'boot'
+    AND broker_ref IS NOT NULL
+  );

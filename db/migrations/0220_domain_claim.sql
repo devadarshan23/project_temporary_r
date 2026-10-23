@@ -1,0 +1,525 @@
+-- =====================================================================
+-- 0220 — THE DOMAIN CLAIM. G1942/G1943/G1944 (22 Sep 2026), applying the
+-- owner's S7 ruling that `resolveHomeRealm` is MOUNTED.
+--
+-- ⚠️ THIS FILE WAS `0170_domain_claim.sql` UNTIL THE MERGE OF 22 Sep 2026 AND
+--    IS RENUMBERED RATHER THAN EDITED — G2029.
+--
+--    `main` landed `0170_field_spec_data_type.sql` while this branch held
+--    `0170_domain_claim.sql`, and `git merge` produced BOTH WITH NO CONFLICT,
+--    because different filenames give git nothing to object to. That is the
+--    collision `tools/check-migration-numbers.mjs` exists for — G356 built it
+--    after the same thing happened with `0011` — and it fired here in its own
+--    words: *"`db/migrate.ts` orders by `readdir().sort()` and keys the ledger
+--    on the FILENAME, so BOTH would apply, in alphabetical order — an order
+--    nobody chose."* Alphabetically `0170_domain_claim` sorts BEFORE
+--    `0170_field_spec_data_type`, so this file would have run FIRST, and G88
+--    makes that order permanent.
+--
+-- 🛑 RENUMBERING IS LEGITIMATE HERE AND WOULD NOT BE ON THE OTHER FILE, AND
+--    THE DISTINCTION IS THE LEDGER RATHER THAN THE DIRECTORY. G88 is
+--    forward-only about migrations that have been APPLIED; the ledger keys on
+--    the FILENAME, and no ledger anywhere holds `0170_domain_claim.sql` —
+--    this file has only ever existed on an unmerged branch and nothing
+--    deployed has run it. `0170_field_spec_data_type.sql` is on trunk and may
+--    have been applied, so it is the one that must not move. **The rule is not
+--    "the newer file yields"; it is "the file no ledger has seen yields".**
+--
+-- ⚠️ THE NUMBER IS 0220 AND NOT 0171: `main` reached 0210, and a number BELOW
+--    the highest applied one would sort before migrations that already ran.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 THIS FILE IS OWED BY NAME, BY ANOTHER MIGRATION, TO THIS COMMIT.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- `db/migrations/0009_identity_substrate.sql`, on `tenant.identity_connection`:
+--
+--     ⚠️ `domains` IS ABSENT AND IT IS NOT AN OVERSIGHT. `DomainClaim[]` is
+--        read by `mayRouteToConnection()` at HOME-REALM ROUTING time, and
+--        nothing routes a realm in this repository — there is no sign-in path
+--        at all. 0008's rule applies unchanged: *"the column set is the
+--        predicate's and not the interface's"* … **The commit that builds
+--        federated sign-in owns the `domain_claim` table, in the same commit
+--        as the router that reads it.**
+--
+-- Derive it, never read this quote:
+--   grep -n 'domain_claim' db/migrations/0009_identity_substrate.sql
+--
+-- **`resolveHomeRealm` IS THAT ROUTER** and it is mounted in this commit —
+-- `server/data-plane/realm.ts`, `server/data-plane/start.ts`. Delete either
+-- half and this file becomes `0004_subject_ledger.sql`'s refusal: a table
+-- ahead of its reader. `server/data-plane/identity.ts`'s own assembler carries
+-- the same sentence at its `domains` cast, and that comment is corrected in
+-- this commit rather than left saying the table does not exist.
+--
+-- RULINGS THIS APPLIES (docs/HANDOFF.md §3):
+--   G1941 THE OWNER'S — G165/D6 is CONCURRENT rather than gating for this
+--         surface, extending G248. **A DEPARTURE, not an interpretation.**
+--         This file is the storage half of the first unauthenticated
+--         person-facing operation in the product.
+--   G231  a claim is `{domain, challenge, verifiedAt, verificationExpiresAt}`
+--         and **nothing routes on the expiry**. See the refused columns below.
+--   G100  deny on NULL. The new policies compare against an unset GUC exactly
+--         as 0009's and 0013's do, so a caller outside the realm scope reads
+--         NOTHING rather than everything.
+--   G101  `SET LOCAL` inside an explicit transaction, via `set_config(…, true)`.
+--         `db/realm-scope.ts` issues it; nothing here assumes a session `SET`.
+--   G97   every branded id is `text`. `IdentityConnectionId` is `text` and the
+--         domain is stored verbatim.
+--   G88   forward-only. There is no `down`, and 0009 is NOT edited — 0017's
+--         precedent: a successor keeps the correction on its own face.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 G1942 — THE COLUMN SET IS THE PREDICATE'S, AND THE PREDICATE IS
+--    `routeToConnection()`. THREE COLUMNS; TWO REFUSED BY NAME.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- `model/domain.ts` declares FOUR fields on `DomainClaim`. Derive it:
+--   grep -n 'export interface DomainClaim' -A 20 model/domain.ts
+--
+--   `domain`                  STORED. It is the lookup key and the ambiguity
+--                             key, and `normaliseClaimedDomain()` is what makes
+--                             the comparison sound.
+--   `verifiedAt`              STORED, NULLABLE, AND THE NULL IS THE WHOLE
+--                             CONTROL. `mayRouteToConnection(claim)` is
+--                             `claim.verifiedAt !== null` and nothing else;
+--                             the declaration says why in its own voice —
+--                             *"PRESENCE IS NOT VERIFICATION: a claim carrying
+--                             a challenge digest is a claim on which
+--                             verification was STARTED, which is exactly the
+--                             state a `claims.length > 0` guard reads as
+--                             done."* #221's red is that guard.
+--   `challenge`               🛑 **REFUSED, TWO COLUMNS (`keyRef`, `digest`).**
+--                             It is the VERIFIER's, and there is no verifier:
+--                             nothing in this repository issues a DNS TXT
+--                             challenge, computes that HMAC or compares one.
+--                             `0004_subject_ledger.sql` refuses a column ahead
+--                             of its reader at length, and this is that rule
+--                             on a column whose reader is an entire unbuilt
+--                             subsystem. ⚠️ **AND IT IS NOT MERELY WASTEFUL
+--                             HERE**: `keyRef` is *"a reference to the
+--                             per-connection salt"*, so the column would carry
+--                             a pointer into a key store this repository does
+--                             not have, in a table the request path can read.
+--   `verificationExpiresAt`   🛑 **REFUSED, AND G231 IS WHY — NOT LAZINESS.**
+--                             *"`verificationExpiresAt` IS RECORDED AND
+--                             NOTHING ROUTES ON IT, AND THAT IS G231 DECLINING
+--                             A DECISION RATHER THAN THIS DECLARATION
+--                             FORGETTING ONE."* A column here would be read by
+--                             nothing (0004's refusal) **and** would be the
+--                             obvious thing for the next reader to add an
+--                             `AND verification_expires_at > now()` against —
+--                             which is precisely the polarity G231 says *"needs
+--                             its own argument rather than arriving as a side
+--                             effect"*, because it can lock a tenant out of its
+--                             own directory on a clerical failure.
+--                             `mayRouteToConnection()` TAKES NO CLOCK for the
+--                             same reason, and its header says that deciding
+--                             the question REQUIRES changing that signature.
+--                             **The absence here is the SQL half of that
+--                             fence.** `tests/db/domain-claim.test.ts` §5 is
+--                             the tripwire.
+--
+-- ⚠️ **NO `tenant_id`, AND IT IS 0009's PRECEDENT RATHER THAN AN OMISSION.**
+--    A claim belongs to a CONNECTION, and `IdentityConnection` carries no
+--    tenant: it is one of the five tables 0009 keys on the SESSION because
+--    *"a person is read BEFORE a tenant is selected"*. A realm lookup happens
+--    before even that. A `tenant_id` here would be a column no predicate could
+--    fill and no policy could use, on the one path where there is provably no
+--    tenant to fill it with. `tests/db/control-plane-census.test.ts` states the
+--    other half of this rule for the other database; here the assurance is
+--    `tests/db/rls-census.test.ts`, which sweeps schema `tenant` by catalogue.
+--
+-- ⚠️ **AND NOTHING NORMALISES THE STORED VALUE, WHICH IS STATED RATHER THAN
+--    HIDDEN.** `normaliseClaimedDomain()` is `trim().toLowerCase()` in
+--    TypeScript. A `CHECK (domain = btrim(lower(domain)))` would be a SECOND
+--    implementation of that function, in SQL, over a Unicode case-folding that
+--    PostgreSQL and V8 do not agree about for every code point — §5.3, where
+--    the copy is what drifts, on a comparison that decides an ORG CLASS. So the
+--    rule is: **the writer stores the normalised form, and a row that does not
+--    carry one simply never matches.** That is the fail-closed direction — an
+--    unnormalised row is unroutable, not wrongly routable — and it is why the
+--    reader normalises its INPUT and compares.
+-- ---------------------------------------------------------------------
+
+CREATE TABLE tenant.domain_claim (
+  -- `IdentityConnectionId`. NO FOREIGN KEY to `tenant.identity_connection`,
+  -- for 0009's own reason on `tenant."user".connection_id`: the constraint
+  -- would make an orphan claim UNREPRESENTABLE and therefore make the reader's
+  -- refusal of one untestable, which is §5.6. What refuses it is the reader —
+  -- a claim naming a connection that is not there contributes no claimant, so
+  -- the answer is `domain_not_claimed`, which is true.
+  connection_id text NOT NULL,
+  -- Stored as `normaliseClaimedDomain()` produces it. See the note above.
+  domain        text NOT NULL,
+  -- NULL means CLAIMED AND NOT PROVED. `mayRouteToConnection()` reads exactly
+  -- this and nothing else.
+  verified_at   timestamptz,
+  -- 🛑 ONE CLAIM PER (CONNECTION, DOMAIN), WHICH IS `supersedeDomainClaim()`
+  --    EXPRESSED AS A CONSTRAINT: *"A re-verification REPLACES the claim on
+  --    that domain. It never appends a second one."* The declaration argues it
+  --    at length and the argument is a security one — *"An accumulated list is
+  --    a list of proofs EACH OF WHICH STILL VERIFIES … a re-verification
+  --    prompted by suspicion would leave the suspected proof in place."*
+  --    A composite primary key makes the accumulated shape unrepresentable
+  --    rather than merely discouraged, which is §5.5's polarity.
+  --
+  -- ⚠️ IT IS NOT `UNIQUE (domain)`. Two connections claiming one domain is a
+  --    REPRESENTABLE state and must stay one: it is exactly the takeover state
+  --    `domain_claimed_by_more_than_one_connection` reports, and a database
+  --    constraint forbidding it would delete that refusal from the product
+  --    while leaving its name in `errors.yaml`. The refusal is the control;
+  --    the constraint would be a control that hides it.
+  PRIMARY KEY (connection_id, domain)
+);
+
+
+-- ---------------------------------------------------------------------
+-- 🛑 G1981 — THE INDEX ON `domain`, AND IT IS NOT A PERFORMANCE NOTE: IT IS
+--    THE ONLY COLUMN AN ANONYMOUS CALLER CONTROLS.
+--
+-- The primary key is `(connection_id, domain)`, so `domain` is the SECOND
+-- column of that index and **PostgreSQL has no index skip scan** — a predicate
+-- naming only `domain` cannot use it and falls back to a sequential scan.
+-- Derive it rather than trusting this line, once rows exist:
+--   EXPLAIN SELECT * FROM tenant.domain_claim WHERE domain = 'acme.example';
+--
+-- ⚠️ **AND `domain` IS THE ONLY COLUMN ANY READER OR ANY POLICY FILTERS ON.**
+--    `domain_claim_realm_rls` compares it against `app.claimed_domain`;
+--    `identity_connection_realm_rls`'s subquery compares it again;
+--    `DOMAIN_CLAIM_READ` carries no `WHERE` at all and leans entirely on the
+--    first of those. **Nothing anywhere filters on `connection_id` alone**, so
+--    the primary key's leading column is the one nobody queries by.
+--
+-- 🛑 **THE REASON THIS IS NOT DEFERRED TO A LATER SLICE IS THE CALLER.**
+--    `resolveHomeRealm` is the first unauthenticated person-facing operation
+--    in this product (G1941), it is reachable through CloudFront with no WAF
+--    and no throttle, and **a sequential scan is work an anonymous caller
+--    chooses the cost of.** `db/tenant-scope.ts`'s `createAppPool()` holds one
+--    pooled connection per in-flight request for the whole of it, so scan time
+--    is connection-hold time and connection-hold time is the resource every
+--    authenticated tenant request on the same task is competing for. An index
+--    does not make that safe — **only a per-IP throttle at the edge does, and
+--    it is `infra/`'s** — but shipping the scan would be handing the lever out
+--    with the operation.
+--
+-- ⚠️ NOT UNIQUE, AND NOT PARTIAL. See the `UNIQUE (domain)` discussion put to
+--    the owner below: an index that ENFORCED anything here would change which
+--    states are representable, and that is a ruling rather than an index.
+-- ---------------------------------------------------------------------
+
+CREATE INDEX domain_claim_domain ON tenant.domain_claim (domain);
+
+
+-- ---------------------------------------------------------------------
+-- RLS. ENABLE **and** FORCE, as every table in this directory does —
+-- `db/migrations/0001_tenancy_and_rls.sql` explains that FORCE is what binds
+-- the OWNER too, so a policy is not something the table's owner walks past.
+-- ---------------------------------------------------------------------
+
+ALTER TABLE tenant.domain_claim ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tenant.domain_claim FORCE  ROW LEVEL SECURITY;
+
+
+-- ---------------------------------------------------------------------
+-- 🛑 G1943 — THE POLICY IS KEYED ON THE DOMAIN THE CALLER NAMED, AND THAT IS
+--    0013's SHAPE RATHER THAN A NEW ONE.
+--
+-- `db/signin-scope.ts` states the rule this obeys, and it is the rule that
+-- makes a caller-supplied key safe:
+--
+--     "`brokerIssuer`, `brokerRef` and `stateDigest` are values a CALLER
+--      supplied. That is not invariant 1 inverted — none of them is a tenant,
+--      none of them is an organisation, and none of them selects a scope. They
+--      are LOOKUP KEYS, and the thing that makes supplying them safe is that
+--      holding one proves nothing: the policies admit exactly the row the key
+--      names, the caller learns only what it already named, and every DECISION
+--      downstream … is read off the row rather than off the key."
+--
+-- **A DOMAIN IS EXACTLY THAT AND THE TEST IS THE SAME THREE QUESTIONS.** It is
+-- not a tenant; it is not an organisation — `orgClass` comes from
+-- `orgFor(connection.owner)` and this key never touches it; and it selects no
+-- scope, because `app.tenant_id` is never set in this transaction so every
+-- tenant-scoped table reads EMPTY.
+--
+-- ⚠️ **INVARIANT 1 IS THE FIRST OBJECTION AND IT IS ANSWERED RATHER THAN
+--    WAVED PAST.** *"Tenant scope is derived from the session, never read from
+--    a request."* A GUC set from a request body LOOKS like that sentence being
+--    broken. It is not, and the distinguishing property is the DIRECTION the
+--    value travels: this GUC only ever NARROWS a read to rows the caller has
+--    already named, and the answer it produces is an `IdentityConnectionId` —
+--    never a tenant, never an org, never a capability. **If a value supplied
+--    through this key ever reaches a decision without a row in between, this
+--    policy has become the relocation `db/session-scope.ts` refuses.**
+--
+-- 🛑 **AND IT NARROWS WHAT WAS ALREADY THE WHOLE TABLE TO ONE DOMAIN'S ROWS,
+--    WHICH IS THE OPPOSITE OF A WIDENING.** The alternative shape — a policy
+--    admitting every claim and a `WHERE domain = $1` in the handler — is what
+--    a reviewer will propose because it is shorter. It is refused here on
+--    `server/data-plane/identity.ts`'s own words one function over: *"a
+--    handler-side predicate beside a policy-side one is two answers to one
+--    question, and the handler is the one an attacker gets to influence."*
+--    With the policy keyed, a handler that forgot its `WHERE` returns one
+--    domain's rows; with it open, the same handler returns the claim table.
+-- ---------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------
+-- 🛑 G1982 — `FOR SELECT`, AND THE FIRST DRAFT OF THIS FILE OMITTED IT. THE
+--    OMISSION IS `db/migrations/0027_session_lapsed_policy_is_update_only.sql`
+--    ARRIVING A SECOND TIME, ON A KEY A CALLER SUPPLIES.
+--
+-- **A policy with no `FOR` clause is `FOR ALL`. A policy with a `USING`
+-- expression and no `WITH CHECK` clause uses THE `USING` EXPRESSION AS THE
+-- `WITH CHECK` for INSERT and UPDATE.** Both halves are PostgreSQL's
+-- documented behaviour and neither is obvious from the text on the page.
+--
+-- ⚠️ **SO THE SENTENCE THAT STOOD BELOW THE SECOND POLICY WAS EXACTLY
+--    BACKWARDS AND IS CORRECTED RATHER THAN DELETED**, because it is the
+--    sentence a reader would have trusted before adding a `GRANT`. It read:
+--    *"NO `WITH CHECK`, BECAUSE THERE IS NO WRITE TO CHECK … A `WITH CHECK`
+--    would be a clause governing a verb nobody holds."* **There was no
+--    `WITH CHECK` written and there was one in force**, on both policies,
+--    governing INSERT, and it was PERMISSIVE on `app.claimed_domain`.
+--
+-- 🛑 **WITNESSED RED AGAINST A LIVE PostgreSQL 16.13 RATHER THAN DERIVED FROM
+--    THE DOCUMENTATION, because this file's first draft derived it the other
+--    way and got it wrong.** Against the policy exactly as it shipped, with
+--    the `INSERT` deliberately granted to a NOBYPASSRLS role:
+--
+--      BEGIN; SELECT set_config('app.claimed_domain','victim.example',true);
+--      INSERT INTO tenant.domain_claim VALUES ('idc_attacker','victim.example',now());
+--      -- -> INSERT 0 1.  COMMITTED.
+--
+--    and the catalogue agreed it had done so on purpose:
+--      SELECT polname, polcmd, pg_get_expr(polwithcheck, polrelid) FROM pg_policy;
+--      -- -> domain_claim_realm_rls | * | (null)
+--
+-- 🛑 **THE SHARP PART IS NOT THAT THE INSERT WAS PERMITTED. IT IS THAT THE
+--    IMPLIED `WITH CHECK` WAS DERIVED FROM THE CALLER'S OWN KEY**, so the
+--    policy admitted PRECISELY the takeover row and refused only rows for a
+--    domain the caller had not named — measured in the same run:
+--      INSERT … VALUES ('idc_attacker','other.example',now());
+--      -- -> ERROR: new row violates row-level security policy
+--    **The control was not merely absent; it was authorising the one write
+--    the GRANTS block below refuses by name.** `0009`'s sentence, one table
+--    over: *"a request path that could write `role_assignment` could grant
+--    itself any capability … and `decide()` would then permit it CORRECTLY."*
+--
+-- ⚠️ **NOTHING WAS REACHABLE, AND THAT IS WHY THIS IS A REPAIR AND NOT AN
+--    INCIDENT.** The app role holds `SELECT` and nothing else, so no request
+--    path could perform that INSERT at any point. What `FOR SELECT` buys is
+--    that the property survives the `GRANT INSERT` that `addSignInDomain`
+--    will one day need — which is exactly `0027`'s lesson: that policy
+--    defaulted to `FOR ALL` too, and its `WITH CHECK` let the app role
+--    **fabricate a pre-revoked session row for another person**. `0027` split
+--    it in two and recorded that `FOR UPDATE` alone was not enough either.
+--
+-- 🛑 **`FOR SELECT` TAKES NO `WITH CHECK` AT ALL** — PostgreSQL rejects the
+--    clause on a SELECT policy — so the repair is not "state the missing
+--    clause", it is "name the verb, and the clause becomes unstatable".
+--    §5.5's polarity: the wrong thing is made unrepresentable rather than
+--    rejected. `tests/db/domain-claim.test.ts` §6 reads `polcmd` back out of
+--    the catalogue and §6b re-witnesses the refused INSERT on every run.
+-- ---------------------------------------------------------------------
+
+CREATE POLICY domain_claim_realm_rls ON tenant.domain_claim
+  FOR SELECT
+  USING (domain = nullif(current_setting('app.claimed_domain', true), ''));
+
+
+-- ---------------------------------------------------------------------
+-- 🛑 G1944 — A SECOND POLICY ON `tenant.identity_connection`, AND IT IS THE
+--    THIRD. 0013's argument applies verbatim and is not re-made: it is a
+--    SECOND PERMISSIVE POLICY and NOT a rewrite of either existing one,
+--    because *"editing the existing policy to add an `OR` would put two
+--    unrelated access paths inside one expression, and the next person
+--    widening one would be editing the other's predicate."*
+--
+-- **WHY IT IS OWED AT ALL, WHICH IS ONE REFUSAL ARM:** `routeToConnection()`
+-- answers `connection_disabled` for *"a disabled connection [that] does not
+-- route even with a verified claim"*, and `status` lives on the CONNECTION.
+-- Without this policy the realm reader sees claims and no doors, so every
+-- claimed domain answers `domain_not_claimed` — a refusal that is WRONG and
+-- looks right. ⚠️ **DENORMALISING `status` ONTO THE CLAIM WAS THE CHEAPER
+-- REPAIR AND IS REFUSED**: two homes for one fact, with the copy going stale
+-- the moment a connection is disabled (§5.3), on the field that decides
+-- whether a door is usable.
+--
+-- ⚠️ **IT ADMITS NOTHING TO ANY EXISTING SCOPE, AND THAT IS THE ASSERTION
+--    RATHER THAN THE HOPE.** Outside a realm scope `app.claimed_domain` is
+--    unset, `nullif(current_setting(…), '')` is NULL, `c.domain = NULL` is
+--    NULL, the `EXISTS` is FALSE, and this disjunct contributes no row — so a
+--    session-scoped caller keeps exactly the one row 0009 gave it and a
+--    sign-in-scoped caller keeps exactly the one row 0013 gave it. G100
+--    unchanged. `tests/db/domain-claim.test.ts` §4 asserts it in both
+--    directions rather than reasoning about it.
+--
+-- 🛑 **THE SUBQUERY READS A TABLE WITH RLS ON IT, AND THAT IS WANTED.**
+--    PostgreSQL applies `domain_claim_realm_rls` INSIDE this expression — the
+--    behaviour `db/selection-scope.ts` was written for and `G449` measured —
+--    so the inner read is narrowed by the same GUC. It is a policy on a
+--    DIFFERENT table, so there is no policy recursion: G449's finding was
+--    about a `WITH CHECK` subquerying its OWN table, and nothing here does.
+--
+-- 🛑 **`FOR SELECT`, FOR G1982's REASON ABOVE, AND THIS IS THE POLICY WHOSE
+--    OLD COMMENT WAS THE WRONG ONE.** It read:
+--
+--        ⚠️ **NO `WITH CHECK`, BECAUSE THERE IS NO WRITE TO CHECK.** The app
+--           role holds `SELECT` on this table and nothing else (0009), and
+--           this file adds no write privilege anywhere. A `WITH CHECK` would
+--           be a clause governing a verb nobody holds.
+--
+--    **Its premise was true and its conclusion was inverted.** There was no
+--    write privilege — and the absent `FOR` clause made this `FOR ALL`, and
+--    the absent `WITH CHECK` did not mean *no clause*, it meant *the `USING`
+--    expression, reused as one*. The clause governing INSERT was present and
+--    permissive; what was missing was a verb nobody holds **yet**.
+--
+-- ⚠️ **AND HERE THE STAKES ARE HIGHER THAN ON THE CLAIM TABLE**, which is why
+--    it is spelled out twice rather than cross-referenced: an INSERT admitted
+--    by this predicate would mint a row in `tenant.identity_connection` — a
+--    DOOR — for any caller who could name a domain and hold the grant. `0009`
+--    withholds every write on that table for exactly that reason.
+--
+-- ⚠️ **THE `USING` EXPRESSION IS UNCHANGED TO THE CHARACTER.** `0020`'s
+--    discipline applies: this edit names the verb and does not re-type the
+--    predicate, so it cannot be mistyped. `tests/db/domain-claim.test.ts` §6
+--    reads both policies' `polcmd` and requires the qual to be byte-identical
+--    to what this file writes — `0020`'s §0, one table over.
+-- ---------------------------------------------------------------------
+
+CREATE POLICY identity_connection_realm_rls ON tenant.identity_connection
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1
+        FROM tenant.domain_claim c
+       WHERE c.connection_id = identity_connection.id
+         AND c.domain = nullif(current_setting('app.claimed_domain', true), '')
+    )
+  );
+
+
+-- ---------------------------------------------------------------------
+-- GRANTS. By name, because 0003 declines `ALTER DEFAULT PRIVILEGES` on this
+-- schema and every table since has said so.
+--
+-- 🛑 **`SELECT` AND NOTHING ELSE, AND THE REFUSED `INSERT` IS THE DECISION.**
+--    `docs/contracts/administration.openapi.yaml` declares `addSignInDomain`
+--    and `listSignInDomains`; **that tier mounts nothing** and this file grants
+--    no write. Derive the absence rather than trusting this line:
+--      grep -rn 'handlers:' server/data-plane/start.ts
+--
+--    A request path that could write this table could **claim a domain it does
+--    not own, verify it by writing a timestamp, and capture every sign-in at
+--    that domain** — and because `orgClass` derives from
+--    `orgFor(connection.owner)`, it would also capture the ORGANISATION those
+--    people resolve to. `model/domain.ts` names the attack in its own voice:
+--    *"Unverified claiming is a takeover vector: a partner that registers a
+--    customer's domain captures those logins AND the organisation those users
+--    resolve to."* This is 0009's `role_assignment` sentence — *"a request path
+--    that could write `role_assignment` could grant itself any capability in
+--    the closed set, and `decide()` would then permit it CORRECTLY"* — one
+--    table over and one layer earlier.
+--
+-- ⚠️ **SO THE WRITER IS OWED AND IS NAMED: it is `addSignInDomain` plus a DNS
+--    TXT VERIFIER, and neither exists.** `0004`'s rule binds in the direction
+--    it is written — a write privilege ahead of its writer is refused — and
+--    G511's *"the fence and the writer are one commit or neither"* is why the
+--    `GRANT INSERT` is not taken here in advance of one.
+--
+-- ⚠️ **A CLAIM THEREFORE REACHES THIS TABLE BY MIGRATOR ONLY**, which is
+--    exactly `tenant.identity_connection`'s own state since 0009 and
+--    `server/dev/identity-seed.ts` is the only thing that writes one. That is
+--    a statement about how few rows exist, not a hole: the READ path is the
+--    thing this slice ships, and it is proven against a real PostgreSQL by
+--    `tests/db/domain-claim.test.ts` rather than by a route that could write.
+-- ---------------------------------------------------------------------
+
+GRANT SELECT ON tenant.domain_claim TO tenant_rw;
+
+
+-- =====================================================================
+-- 🛑 G1983 — PUT TO THE OWNER AND DELIBERATELY NOT TAKEN:
+--    `CREATE UNIQUE INDEX ON tenant.domain_claim (domain)
+--       WHERE verified_at IS NOT NULL`
+--
+-- **THIS IS A RULING AND NOT AN INDEX, AND IT IS RECORDED HERE BECAUSE IT IS
+-- THE FIRST THING A REVIEWER PROPOSES AND THE ARGUMENT FOR IT IS GOOD.**
+-- =====================================================================
+--
+-- WHAT IT WOULD DO. The `PRIMARY KEY (connection_id, domain)` above permits
+-- two connections to hold a claim on one domain, and the comment on it argues
+-- that this is CORRECT: that state is the takeover state, it is what
+-- `domain_claimed_by_more_than_one_connection` reports, and *"a database
+-- constraint forbidding it would delete that refusal from the product while
+-- leaving its name in `errors.yaml`."*
+--
+-- A PARTIAL unique index is the sharper version of that proposal, and it is
+-- sharper in a way the paragraph above does not answer: **it permits two
+-- UNVERIFIED claims and forbids two VERIFIED ones.** So it would not delete
+-- the refusal wholesale — `domain_not_verified` and the whole unverified
+-- ambiguity space survive — it would make only the *verified* collision
+-- unrepresentable, at the moment a verifier writes the second timestamp.
+--
+-- 🛑 **THE ARGUMENT AGAINST, AND IT IS THE ONE THAT MAKES THIS A RULING:
+--    THE SHIPPED BEHAVIOUR CONVERTS A TAKEOVER INTO A PERMANENT SIGN-IN
+--    OUTAGE FOR THE VICTIM.** Today, the instant a second verified claim
+--    appears, `routeToConnection()` refuses BOTH doors and every person at
+--    that domain stops being able to sign in — and stays unable to until a
+--    human deletes a row by migrator, because nothing on any request path can
+--    write this table. `model/domain.ts` states the polarity this is derived
+--    from — *"A denial of service is not an improvement on a takeover"* — and
+--    that sentence was written about UNVERIFIED claims, where the product
+--    obeys it. **At the verified collision the product does the opposite of
+--    what that sentence asks, and no document said so until this one.**
+--
+--    The index inverts which party bears it: the SECOND verifier's write
+--    fails, the incumbent keeps routing, and nobody is signed out. Whether
+--    that is right depends on a fact this repository does not have — whether
+--    the second writer is more often an attacker or more often the legitimate
+--    owner migrating between directories.
+--
+-- ⚠️ **AND IT IS NOT A FREE SWAP. THREE COSTS, NAMED:**
+--
+--   (1) **IT MAKES THE REFUSAL UNREACHABLE THROUGH THE ONLY WRITER WE WILL
+--       EVER HAVE.** `domain_claimed_by_more_than_one_connection` would stay
+--       in `errors.yaml`, stay in `DOMAIN_ROUTING_REFUSALS`, stay mapped in
+--       `server/data-plane/realm.ts` — and become reachable only from a row
+--       set a migrator wrote before the index existed. A refusal that only a
+--       fixture can produce is §5.6 wearing a constraint, and `0009`'s own
+--       rule says so: a constraint that makes the malformed row
+--       unrepresentable makes the REFUSAL untestable.
+--
+--   (2) **IT MOVES THE FAILURE TO A PLACE WITH NO READER.** The collision
+--       stops being an answer a person gets at sign-in and becomes a unique
+--       violation inside whatever writes claims — `addSignInDomain`, which
+--       does not exist. **Designing the error path of an unwritten writer is
+--       exactly what `0004` refuses**, and the shape of that refusal here is
+--       that we would be choosing the failure mode of a subsystem nobody has
+--       specified.
+--
+--   (3) **IT IS FORWARD-ONLY AGAINST DATA THAT MAY ALREADY VIOLATE IT.** G88
+--       means the index arrives as a migration, and `CREATE UNIQUE INDEX`
+--       against a table already holding a verified collision FAILS TO APPLY.
+--       That is the right polarity — it refuses rather than silently picking
+--       — but it makes the ruling's application conditional on a data state,
+--       which is worth knowing before it is taken rather than at deploy.
+--
+-- ⚠️ **A THIRD SHAPE EXISTS AND IS WORSE THAN BOTH, NAMED SO IT IS NOT
+--    REACHED FOR AS A COMPROMISE:** keeping both rows and breaking the tie by
+--    `verified_at` (oldest wins, or newest wins). That is the reader choosing
+--    an `orgClass` by row order, which `model/domain.ts` names as *"the reach
+--    invariant 2 exists to close"* — the one thing every other line in this
+--    file is arranged to prevent. **Refused outright, not put to the owner.**
+--
+-- 🛑 **NOT TAKEN HERE. THE CONSTRAINT IS NOT WRITTEN AND THE BEHAVIOUR IS
+--    UNCHANGED**, because changing which states this table can represent is a
+--    decision about what the product does to a customer under attack, and
+--    `0004`'s rule plus G511's *"the fence and the writer are one commit or
+--    neither"* both point at the same answer: it belongs in the commit that
+--    builds the verifier, with the owner's ruling attached.
+--    `tests/db/domain-claim.test.ts` §7 asserts the index is ABSENT, so the
+--    commit that takes this ruling has to delete an assertion and meet this
+--    paragraph on its way past.
+-- =====================================================================

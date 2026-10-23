@@ -1,0 +1,28 @@
+openapi: 3.1.0
+info:
+  title: wire-mirror fixture — MIRRORED (the green control)
+  version: 0.0.0
+  description: |
+    Fixture for tools/check-wire-mirror.mjs. NOT a real contract. It is excluded
+    from the real-tree scan by the `fixtures` path segment; see
+    EXCLUDED_DIR_NAMES in the checker and the exclusion test beside it.
+paths: {}
+components:
+  schemas:
+    FixtureLocation:
+      type: object
+      additionalProperties: true
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum:
+            - alpha
+            - bravo
+            - charlie
+
+    FixtureMeter:
+      type: string
+      enum:
+        - alpha_count
+        - bravo_count

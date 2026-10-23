@@ -1,0 +1,26 @@
+openapi: 3.1.0
+info:
+  title: wire-mirror fixture — REORDERED (equal sets, different order)
+  version: 0.0.0
+  description: |
+    Fixture for tools/check-wire-mirror.mjs. NOT a real contract, and
+    DELIBERATELY WRONG. `FixtureLocation` carries EVERY member the fixture model
+    declares and carries them in a DIFFERENT ORDER.
+
+    This is the only fixture that separates an order-preserving implementation
+    from a set-equality one: a checker written against sets passes every other
+    fixture here.
+paths: {}
+components:
+  schemas:
+    FixtureLocation:
+      type: object
+      additionalProperties: true
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum:
+            - charlie
+            - alpha
+            - bravo

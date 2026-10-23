@@ -1,0 +1,7 @@
+paths:
+  /one:
+    get:
+      gadgetId: one
+  /two:
+    get:
+      gadgetId: two

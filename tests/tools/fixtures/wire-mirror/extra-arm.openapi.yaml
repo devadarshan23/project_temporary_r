@@ -1,0 +1,25 @@
+openapi: 3.1.0
+info:
+  title: wire-mirror fixture — EXTRA ARM (a wire member the model never declares)
+  version: 0.0.0
+  description: |
+    Fixture for tools/check-wire-mirror.mjs. NOT a real contract, and
+    DELIBERATELY WRONG. `FixtureLocation` carries `delta`, which the fixture
+    model does not declare. Drift runs both directions: a wire vocabulary wider
+    than the model is a boundary that accepts a value nothing downstream can
+    handle.
+paths: {}
+components:
+  schemas:
+    FixtureLocation:
+      type: object
+      additionalProperties: true
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum:
+            - alpha
+            - bravo
+            - charlie
+            - delta

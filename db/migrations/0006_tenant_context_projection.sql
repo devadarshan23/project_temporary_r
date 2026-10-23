@@ -1,0 +1,90 @@
+-- =====================================================================
+-- 0006 — THE TWO COLUMNS `TenantContext` NEEDS AND THE PROJECTION DID NOT
+-- CARRY. For D1, `POST /context/resolve` (`resolveTenantContext`).
+--
+-- WHAT IT IS FOR, AND IT IS NARROW. `docs/contracts/foundation.openapi.yaml`
+-- declares `TenantContext` with `required: [tenantId, environment, residency,
+-- deploymentMode]` and `additionalProperties: false`, and `model/access.ts`
+-- mirrors it key for key. `db/migrations/0003_tenant_schema.sql` says the
+-- data-plane projection *"carries only the id/status/residency projection the
+-- data plane needs"* — TWO of the four. So the operation whose own description
+-- reads *"Every other operation in every tier receives the result of this
+-- call"* could not be answered from this database at all.
+--
+-- 🛑 THE ALTERNATIVE WAS TO INVENT THE TWO VALUES IN THE HANDLER, AND IT IS
+--    REFUSED HERE RATHER THAN LEFT UNSAID. `environment` decides whether a
+--    tenant accepts non-synthetic uploads (`model/domain.ts`: *"Sandbox
+--    tenants reject non-synthetic uploads"*, enforced rather than advisory) and
+--    `deploymentMode` decides whose account the plane runs in. A handler that
+--    answered `'production'` and `'hosted'` from a constant would be
+--    MANUFACTURING a governance fact on the response every other tier is told
+--    to trust — `docs/HANDOFF.md` §5.6 with a compliance posture in it. A fact
+--    has to be recorded somewhere before it can be returned, and the row is
+--    where this one belongs: `model/domain.ts` declares both ON `Tenant`.
+--
+-- ⚠️ THE VALUES BACKFILLED BELOW ARE DECLARED DEFAULTS AND NOT DERIVED DATA,
+--    exactly as `0003`'s `residency` backfill is, and its sentence is the one
+--    to re-read: *"No column on the pre-0003 `tenant` row carries a residency —
+--    the fact was never recorded — so it cannot be computed, only declared."*
+--    The same is true here, twice over, and the direction chosen is the
+--    CLOSED one in both cases:
+--
+--      environment     = 'sandbox'  — the posture that REFUSES non-synthetic
+--                        ingest. Backfilling `'production'` would silently
+--                        widen every existing row into one that accepts real
+--                        data, which is the wrong direction for a value nobody
+--                        recorded.
+--      deployment_mode = 'hosted'   — the only mode that exists. CLAUDE.md:
+--                        *"no AWS resource has been created"*, so there is no
+--                        customer account for a `byoa` row to name.
+--
+-- 🛑 BOTH FACTS ARE CONTROL-OWNED AND PUBLISHED DOWNWARD (G185(d), invariant
+--    3), AND THERE IS NO PUBLICATION PATH. `db/migrations-control/` holds
+--    `pack_catalogue` and nothing else; the control `tenant` row is M0-2 and
+--    unbuilt. So these columns are a PROJECTION with no publisher, written
+--    today by `seedTwoTenants()` and by nothing else. **That is owed, not
+--    done**, and the commit that builds the control `tenant` row owns making
+--    this a copy rather than an origin. Naming it here is the whole of the
+--    difference between a declared temporary and a discovered one.
+--
+-- ⚠️ EXPAND, THEN BACKFILL, THEN CONSTRAIN — THREE STATEMENTS PER COLUMN, FOR
+--    0003'S REASON AND NOT FOR TIDINESS. `ADD COLUMN … NOT NULL` with no
+--    `DEFAULT` raises `ERROR: column … contains null values` the moment a
+--    single row exists; the one-statement form works only while the property it
+--    depends on is *"nobody has used this yet"*, which is the property that
+--    stops being true first.
+--
+-- 🛑 AND NO `DEFAULT` SURVIVES THE MIGRATION, DELIBERATELY. A column default
+--    would hand every future `INSERT INTO tenant.tenant` a governance posture
+--    nobody chose, silently — and `seedTwoTenants()` is amended in the same
+--    commit to state both values at every insert, so the absence of a default
+--    is what makes the statement of them mandatory.
+--
+-- 🛑 NO `CHECK` CONSTRAINT ON EITHER COLUMN, and the reason is `0002_run.sql`'s
+--    in its own words: a third copy of a closed enum is *"a third place to
+--    drift — and the one nothing checks, because no pair in the wire-mirror
+--    addresses SQL."* `TenantEnvironment` and `DeploymentMode` are closed sets
+--    in `model/domain.ts` and the wire repeats them as `enum`s in
+--    `foundation.openapi.yaml`; a third copy here would be checked by nobody.
+--    `residency` is unconstrained one column over for exactly this reason and
+--    0003 records it as an OPEN GAP rather than arguing it away. So does this.
+--
+-- ⚠️ SCHEMA-QUALIFIED, BECAUSE 0003 SAYS EVERY MIGRATION FROM 0004 ON MUST BE.
+--
+-- G88 — forward-only. There is no `down` and no facility for one. 0001–0005
+-- ARE NOT EDITED BY THIS FILE.
+--
+-- ⚠️ NO NEW GRANT. `0003` already grants `SELECT, INSERT, UPDATE, DELETE ON
+--    tenant.tenant TO tenant_rw` on the TABLE, and a column added to a granted
+--    table inherits the table-level privilege. 0005's *"a future table created
+--    here is unreachable by the app until granted BY NAME"* is about TABLES;
+--    this adds none.
+-- =====================================================================
+
+ALTER TABLE tenant.tenant ADD COLUMN environment text;
+UPDATE tenant.tenant SET environment = 'sandbox' WHERE environment IS NULL;
+ALTER TABLE tenant.tenant ALTER COLUMN environment SET NOT NULL;
+
+ALTER TABLE tenant.tenant ADD COLUMN deployment_mode text;
+UPDATE tenant.tenant SET deployment_mode = 'hosted' WHERE deployment_mode IS NULL;
+ALTER TABLE tenant.tenant ALTER COLUMN deployment_mode SET NOT NULL;

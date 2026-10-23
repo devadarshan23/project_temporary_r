@@ -1,0 +1,1179 @@
+openapi: 3.1.0
+
+info:
+  title: ReconcileAI — Session Establishment
+  version: 0.1.0-draft
+  summary: The way in. Four operations, three paths, and no capability on any of them.
+  description: |
+    THE TIER THAT ISSUES THE CREDENTIAL THE OTHER THREE DEMAND.
+
+    Sixty-nine paths stood in this directory and not one signed in, exchanged a
+    token or signed out. `X-Session` was a security scheme on three tiers with
+    NO PRODUCER ANYWHERE, and `POST /context/resolve` took a `sessionToken` body
+    field that nothing in the system could mint. These four operations are that
+    producer.
+
+    ⚠️ TWO PATHS LOOK LIKE THE ANSWER AND ARE NOT, named here so nobody
+    re-derives the mistake. `reportAccessSessions` is a report of what a staff
+    SUPPORT session touched — the grant permits, the session records — and
+    `resolveMembership` resolves a role IN AN ALREADY-RESOLVED TENANT,
+    presupposing the selection that G210 says has no function.
+
+    ┌─ WHY THIS IS A FIFTH FILE AND NOT A SECTION OF AN EXISTING ONE ───────────┐
+    │ All three of the tiers that predate it declare a REQUIRED security scheme │
+    │ at DOCUMENT level. This is the tier whose first two operations have no    │
+    │ session yet, by definition. `security: []` cannot be expressed inside a   │
+    │ document whose fallback is `sessionContext`, except as a per-operation    │
+    │ override that reads as an exemption rather than as the tier's nature.     │
+    │                                                                          │
+    │ THE COST IS REAL AND IS STATED RATHER THAN WAVED PAST: five tiers to keep │
+    │ consistent instead of four. `docs/contracts/README.md` already records a  │
+    │ missing `administration.openapi.yaml`, and G76 puts administration in ONE │
+    │ file with enforced plane tags. The alternative — writing that file first  │
+    │ and putting session inside it — costs building a document nothing else    │
+    │ currently needs, and puts an UNAUTHENTICATED surface in the same file as  │
+    │ the platform's administration operations. That is Q9, answered.           │
+    └──────────────────────────────────────────────────────────────────────────┘
+
+    🛑 DECLARED AND UNMOUNTED — G200. Nothing here is served. The ruling freezes
+    MOUNTING at four operations and explicitly does NOT freeze declaring: "a PR
+    that adds contract operations without mounting them is not in conflict with
+    this row." No handler exists, `server/*/start.ts` is untouched, and
+    `mountTier()` is never called for this tier.
+
+    🛑 G165 IS OWED AND IS NOT DISCHARGED HERE. Its text — "THE D6 THREAT-MODEL
+    GATE LANDS BEFORE THE FIRST UNAUTHENTICATED ENDPOINT" — is about SHIPPING a
+    public surface, and nothing here ships: G200 keeps it unserved, which is the
+    reading under which this file is not the endpoint G165 blocks. G248 then
+    treats G165 as CONCURRENT rather than gating for the entry surface, and
+    records that as a DEPARTURE rather than an interpretation, adding: "a threat
+    model written after the surface it covers must be allowed to change the
+    surface, or it is documentation rather than a control." That applies here
+    unchanged. THE FIRST THING THE THREAT MODEL SHOULD BE POINTED AT IS NAMED
+    BELOW ON `resolveHomeRealm`: this tier closes the user-existence oracle and
+    leaves a domain-existence one open, deliberately, because closing it would
+    depart from the model.
+
+    CAPABILITIES: NONE, AND THAT IS CORRECT. `decide()` needs a
+    `PrincipalContext` carrying a `tenantId`, and pre-session there is none — a
+    capability here is a verb with no noun. Every operation states that
+    exemption on itself rather than in a list inside a checker.
+
+    TENANT SCOPE APPEARS IN NO REQUEST BODY IN THIS DOCUMENT, and on this tier
+    the absence is load-bearing twice over: two of the four callers are
+    unauthenticated. `completeFederatedSignIn` mints a session with
+    `tenantId: null` precisely so that AUTHENTICATION CANNOT CONFER A SCOPE.
+
+servers:
+  - url: local://in-process
+    description: |
+      Declared and unmounted under G200. The URL is a placeholder so the
+      document is valid; it is not a deployment instruction, and no plane
+      registers a handler for anything below.
+
+tags:
+  - name: A Session
+
+# 🛑 THE DOCUMENT-LEVEL FALLBACK IS "NO SESSION REQUIRED", AND THE TWO
+# OPERATIONS THAT DO REQUIRE ONE OVERRIDE IT PER OPERATION.
+#
+# G191 built `mountTier()` to read exactly this: "whether a route is secured is
+# read from the document's own per-operation `security`", so one listener can
+# carry a session-required tier and a no-auth tier "with no hand-maintained
+# exemption list — the artefact that always ends up one entry stale in the wrong
+# direction." An empty list here is the mechanism, not a workaround.
+security: []
+
+paths:
+
+  # ---------------------------------------------------------------- A1
+  /session/realm:
+    post:
+      tags: [A Session]
+      operationId: resolveHomeRealm
+      x-capability: 'exempt: no human principal and no tenant — this operation runs BEFORE any authentication, so decide() has no PrincipalContext to build and no tenantId to evaluate a capability in'
+      summary: Which door to try. Takes a domain, and is never given a person.
+      description: |
+        🛑 THIS OPERATION RETURNS NO USER-EXISTENCE SIGNAL, AND THE PROPERTY IS
+        STRUCTURAL RATHER THAN PROMISED.
+
+        It is never GIVEN a user to look up. The request admits exactly
+        `domain` — not an email address, not a username, nothing that names a
+        person — so two addresses at one domain are ONE REQUEST and identical
+        responses are a consequence of the shape rather than an observation
+        about one implementation. The client splits the address locally; the
+        address never leaves the browser until the door is chosen.
+
+        It mirrors `routeToConnection(connections, domain)` in `model/domain.ts`,
+        which "holds that line by naming a domain and a connection in every
+        refusal and never a person." `SignInAttempt` carries no `userId` for the
+        same reason and `_SignInAttemptCarriesNoUserId` makes adding one a
+        compile error — the wire may not re-open through a schema what the model
+        closed through a type.
+
+        EVERY REFUSAL SHARES ONE STATUS, and that is deliberate. #231 names the
+        failure exactly: "returning 404 for an unknown address is the natural
+        thing to write and it is a user-existence oracle." Two statuses would
+        put the distinction in a channel a caller can read without parsing a
+        body, and one of them would eventually be keyed on something narrower
+        than a domain. The four refusals are distinguished by `ErrorCode` alone.
+
+        ⚠️ WHAT THIS DOES *NOT* CLOSE, STATED HERE RATHER THAN LEFT TO BE FOUND.
+        A 200 for a claimed domain and a 422 for an unclaimed one is a
+        DOMAIN-existence signal. It is a weaker leak than user existence and it
+        is a real one. It is not invented away, because collapsing the four arms
+        on the wire would depart from the model this tier exists to mirror —
+        `routeToConnection()` returns them distinctly and does so with an
+        argument (`domain_not_verified` is #221's own red, and ambiguity is
+        counted over verified claims only so that an unverified claim cannot
+        take a tenant's sign-in down). THIS IS THE FIRST QUESTION FOR THE D6
+        THREAT MODEL G165 IS STILL OWED.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RealmRequest' }
+      responses:
+        '200':
+          description: |
+            One live connection holds a verified claim on this domain.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RealmRouting' }
+        '422':
+          description: |
+            No door. ONE STATUS FOR ALL FOUR ARMS OF `DOMAIN_ROUTING_REFUSALS`,
+            distinguished by `ErrorCode` and by nothing else:
+            `domain_not_claimed` · `domain_not_verified` · `connection_disabled`
+            · `domain_claimed_by_more_than_one_connection`.
+
+            The third and fourth are the interesting pair. A disabled connection
+            does not route even with a verified claim; two connections with a
+            verified claim on one domain IS the takeover state, and picking
+            either would pick an `orgClass` for the user — the reach invariant 2
+            exists to close.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ---------------------------------------------------------------- A1b
+  /session/signin:
+    post:
+      tags: [A Session]
+      operationId: beginFederatedSignIn
+      x-capability: 'exempt: no human principal and no tenant — this operation runs BEFORE any authentication and creates no principal, it only pins the door a sign-in will come back through, so decide() has nothing to evaluate'
+      summary: Begin a federated sign-in. Pins the door and returns the broker redirect.
+      description: |
+        THE OWNER'S RULING OF 1 Oct 2026 (G2541), verbatim: *"Build a public
+        'start sign-in' operation that inserts an attempt row (state, nonce,
+        PKCE) and returns the broker redirect — same D6 posture: WAF rate rule,
+        servedPublicly, INSERT-only grant on sign_in_attempt with a restrictive
+        WITH CHECK, attempt TTL per D6-6."* It is the PRECONDITION of
+        `completeFederatedSignIn` (G2497) and it mirrors nothing new in the
+        model: the routing is `routeToConnection()`'s, exactly as for
+        `resolveHomeRealm`.
+
+        THE REQUEST NAMES A DOMAIN AND A DOOR, AND NEVER A PERSON. The door is
+        the `connectionId` `resolveHomeRealm` answered; the domain is carried so
+        the plane RE-ASKS the model rather than trusting the id — a door the
+        domain does not route to is refused (`sign_in_attempt_connection_mismatch`),
+        and the four routing refusals are `resolveHomeRealm`'s four codes, one
+        status, one body length. No oracle is opened that operation had not
+        already opened.
+
+        THE PLANE MINTS `state`, `nonce` AND THE PKCE VERIFIER and stores only
+        the keyed DIGESTS of the first two, on a `SignInAttempt` row that pins
+        the routed door and expires per D6-6 (`0240`, `0290`). The VERIFIER IS
+        RETURNED ONCE AND STORED NOWHERE: `state` and `code` both travel in the
+        broker's redirect URL, so a verifier recoverable from the row by `state`
+        would let anybody holding that URL complete the sign-in, and RFC 7636
+        would be decoration. The tab keeps it and presents it to
+        `completeFederatedSignIn` (G2491, unchanged).
+
+        🛑 THE AUTHORIZE URL IS BUILT FROM THE PINNED ROW AND NOTHING THE CALLER
+        SENT: the endpoint is the door's `authorization_endpoint` (`0290`), the
+        `redirect_uri` is this HOST's callback, and `client_id`, `scope`, the
+        challenge and the provider name are the plane's. A request path that
+        could choose any of them would be an open redirect on the first public
+        sign-in route — D6 §4.4 arriving from the other end of the round trip.
+        `additionalProperties: false` refuses a smuggled one with a 400 (G191).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SignInBeginRequest' }
+      responses:
+        '200':
+          description: |
+            An attempt is pinned. The browser stores `state` and `codeVerifier`
+            for THIS tab (the login-CSRF defence G2501 rests on it) and goes to
+            `authorizationUrl`. `Cache-Control: no-store`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SignInBegun' }
+        '403':
+          description: |
+            The host this request arrived on is not a registered serving host —
+            `tenant_context_missing`, D1's own refusal. The callback URL is built
+            from the host, so an unregistered one begins nothing.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '422':
+          description: |
+            No attempt was written. ONE STATUS: the four arms of
+            `DOMAIN_ROUTING_REFUSALS` by exact name — `domain_not_claimed` ·
+            `domain_not_verified` · `connection_disabled` ·
+            `domain_claimed_by_more_than_one_connection` — and
+            `sign_in_attempt_connection_mismatch` when the door named is not the
+            door the domain routes to. Every body is one length.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '503':
+          description: |
+            `upstream_unavailable` — the platform cannot begin a sign-in at this
+            door: no identity terms are loaded (R2), the routed door is not
+            brokered, or it declares no usable `authorization_endpoint`.
+            Nothing was written.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ---------------------------------------------------------------- A1c
+  /session/signin/return:
+    get:
+      tags: [A Session]
+      operationId: relayBrokerReturn
+      x-capability: 'exempt: no human principal and no tenant — the broker returns an unauthenticated browser here, and this operation creates no principal and reads no tenant, it only relays the browser to the host the sign-in was begun on'
+      summary: The ONE fixed URL the broker returns every sign-in to; 303s to the host it was begun on.
+      description: |
+        THE OWNER'S RULING G2549, 2 Oct 2026, verbatim: *"One shared callback
+        host: all sign-ins return to one fixed callback which then 303s to the
+        tenant host via resolveServingHost (a registry lookup, grant bound to
+        the host)."* It amends R4 a second time and replaces G2548's
+        callback-per-tenant list in AWS.
+
+        Served on the shared return host ALONE. The `state` is digested and
+        the attempt it addresses is read; the target is that row's
+        `begun_host` (`0360`), re-resolved through the registry
+        (`resolveHandOffTarget()`), and the browser is sent to
+        `https://<that host>/signin/callback` with `code` and `state` — where
+        the tab that began the sign-in holds the PKCE verifier and completes it
+        (`completeFederatedSignIn`, which refuses a `state` presented on any
+        other host).
+
+        🛑 NOTHING IN THIS REQUEST NAMES A PLACE. There is no `return_to`, the
+        `state` carries no tenant and no host, and `additionalProperties:
+        false` refuses a smuggled parameter (`tenantId`, `host`) with a 400
+        rather than ignoring it. A target the registry does not serve — a host
+        retired since the begin, a NULL `begun_host` — is REFUSED, never
+        redirected to: D6 §4.4, *"the open redirect and the grant-theft are the
+        same bug."*
+      parameters:
+        - name: state
+          in: query
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 256 }
+        - name: code
+          in: query
+          required: false
+          schema: { type: string, minLength: 1, maxLength: 2048 }
+        - name: error
+          in: query
+          required: false
+          description: The broker's OAuth error. Never relayed verbatim — the browser is told only that the sign-in did not complete.
+          schema: { type: string, maxLength: 256 }
+        - name: error_description
+          in: query
+          required: false
+          description: Accepted so a broker's error return is not a 400; read by nothing.
+          schema: { type: string, maxLength: 1024 }
+      responses:
+        '303':
+          description: |
+            Relayed. `Location` is `https://<registered begun host>/signin/callback`
+            carrying `code` and `state`, or `error=sign_in_not_completed` and
+            `state` when the broker returned an error. `Cache-Control: no-store`,
+            `Referrer-Policy: no-referrer` — the URL carries a code.
+          headers:
+            Location:
+              schema: { type: string }
+        '403':
+          description: |
+            This host is not the shared return host — `tenant_context_missing`.
+            Nothing is read.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '422':
+          description: |
+            Nothing was relayed. `sign_in_attempt_handle_mismatch` when the
+            `state` addresses no live attempt or the attempt's host is not
+            served; `sign_in_attempt_replayed` when the attempt is consumed.
+            Every body is one length.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ---------------------------------------------------------------- A2
+  /session/federated:
+    post:
+      tags: [A Session]
+      operationId: completeFederatedSignIn
+      x-capability: 'exempt: the caller has no session yet — this is the operation that MINTS one, so gating it on a capability derived from a session is circular'
+      summary: Consume a sign-in attempt and mint a session with no tenant scope.
+      description: |
+        The callback half of a federated sign-in. It mirrors
+        `consumeSignInAttempt(attempt, callback)` in `model/domain.ts`, and the
+        request body is `FederatedCallback` — "three digested or branded values
+        and nothing else — no tenant, no org, no user, no realm."
+
+        SINGLE USE, AND THE ROW IS THE ENFORCEMENT. `consumedAt` is set in the
+        same transaction that mints the `Session`, under the row's own
+        uniqueness, so a replayed callback finds a consumed row and is refused.
+
+        🛑 IT MINTS A SESSION WITH `tenantId: null`, AND THE 200 SCHEMA SAYS SO
+        WITH A `const` RATHER THAN MERELY PERMITTING IT. Authentication cannot
+        confer a scope. A nullable field a success response is allowed to fill
+        is a scope handed out at the door, which is exactly what
+        `selectTenantForSession()` — the CHECK, never the CHOOSER, G210 — exists
+        to perform afterwards, against the tenant the HOST has already bound.
+
+        ✅ HOW THE SESSION HANDLE REACHES THE CLIENT IS DECIDED — G386,
+        19 Sep 2026 — AND THE RESERVATION THAT STOOD HERE IS QUOTED RATHER
+        THAN DELETED, BECAUSE IT IS THE SENTENCE THAT BLOCKED FOUR SLICES AND
+        THE ONE A READER WOULD HAVE TRUSTED:
+
+            "⚠️ HOW THE SESSION HANDLE REACHES THE CLIENT IS NOT DECIDED HERE,
+             AND THE OMISSION IS DELIBERATE RATHER THAN AN OVERSIGHT … Whether
+             the handle arrives as a `Set-Cookie` or as a response body field
+             is a security decision with cookie-fixation and cookie-tossing on
+             one side of it … Declaring a field here would take that decision
+             silently. It is owed to the D6 threat model, and until it lands
+             this operation's 200 describes the session and does not deliver
+             the credential."
+
+        THE DECISION: a `Set-Cookie` — `HttpOnly`, `Secure`, `SameSite=Lax`,
+        `Path=/`, `__Host-`-prefixed, on the tenant host. It is NOT a response
+        body field, and `MintedSession` is unchanged: still `SessionView`
+        narrowed, still nine keys, still none of them the handle. **The
+        credential travels in a header the page cannot read, and the body goes
+        on describing the session.** `Session` still declares no `sessionToken`
+        and no `csrfToken`; `model/access.ts` still refuses the JWT shape
+        outright — *"A REFERENCE, NOT A BEARER TOKEN"* — and a cookie carrying
+        an opaque handle is that reference, delivered.
+
+        The two threats the reservation named are answered by the prefix rather
+        than by a promise: `__Host-` makes the cookie HOST-ONLY at the user
+        agent, so a sibling subdomain can neither set it nor overwrite it, and
+        `checkHostBinding()` refuses a mismatch server-side on every request
+        regardless. `components.securitySchemes.sessionContext` carries the
+        whole of it, and `server/data-plane/session-cookie.ts` is the only
+        place in `server/` that may name the cookie or set its attributes.
+
+        🛑 AND THIS OPERATION STILL MINTS NOTHING, WHICH IS THE HALF NOT TO
+        MISREAD. The channel is decided and **no handler is mounted**:
+        `tenant.session.user_id` is `NOT NULL`, a `user_id` comes from the
+        subject a directory asserted, and nothing in this repository verifies a
+        token — `grep -rn 'jwtVerify|createRemoteJWKSet' server/` returns
+        nothing. What G386 removed is a BLOCKER, not the remaining work.
+
+        ✅ MOUNTED 1 Oct 2026 — S6, G2490–G2499 — AND THE PARAGRAPH ABOVE IS
+        KEPT RATHER THAN DELETED, because it is the sentence four files carried.
+        Every clause of it is false now: `server/data-plane/token-verify.ts`
+        verifies (G976), `0200` gave `tenant."user"` its external subject (S1),
+        `server/data-plane/session-mint-store.ts` writes the session (S3), and
+        `server/data-plane/federated-signin.ts` is the handler. R1 is closed by
+        D6-1, THE OWNER'S: *"Both operations go public; mount the callback too."*
+
+        🛑 THE REQUEST BODY CHANGED SHAPE, AND THE OLD ONE WAS UNSATISFIABLE —
+        G2491. It was `FederatedCallback` — *"three digested or branded values"*
+        — and the digests are a KEYED HMAC under the plane's own key
+        (`server/data-plane/handle-digest.ts`), so no client that did not hold
+        that key could produce one. And it carried no authorization `code`,
+        so the exchange G2443 authorises had nothing to send. The body is now
+        `FederatedCallbackRequest`: the `state` the redirect handed the browser,
+        the `code` the broker returned, the PKCE `codeVerifier` (G2152), and
+        the `connectionId` the browser believes it used. The plane digests
+        `state` at once and stores it nowhere; `code` and `codeVerifier` go to
+        the PINNED door's token endpoint and nowhere else; `connectionId` is
+        COMPARED and never carried. `FederatedCallback` is unchanged as the
+        MODEL's input and is still declared below, because it is what the plane
+        hands `consumeSignInAttempt()` after digesting.
+
+        🛑 THE BROKER PAIR AND THE ISSUER ARE IN NO BODY AND NEVER WILL BE.
+        D6-5: *"The commit that writes the callback handler owes an assertion
+        that these two values are not derived from the request body."*
+        `additionalProperties: false` refuses them with a 400 (G191), and both
+        are read off the row the attempt PINNED (`0280`, G2235).
+
+        🛑 THE ANSWER IS A `303`, NOT A `200`, AND IT CARRIES NO HOST — D6 §4.4.
+        The session is minted on the host this request ARRIVED at, resolved
+        through the registry, and is bound to it (G180, `__Host-`). The
+        `Location` is an absolute PATH chosen by the surface kind, so the
+        redirect cannot leave that host and there is no string a caller sent
+        that names a place. `303` and not `302` because this is a `POST` and
+        `303` is the status whose meaning is *"done; GET this next"*.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FederatedCallbackRequest' }
+      responses:
+        '303':
+          description: |
+            The attempt was consumed and a session exists, with `tenantId` NULL
+            and nothing able to make it otherwise — `MintedSession` below states
+            the minted row's shape with `tenantId: { const: null }`, and this
+            response does not serialise it: the credential travels in
+            `Set-Cookie`, the destination in `Location`, and there is no body
+            for a tenant to ride in.
+
+            ⚠️ THIS WAS A `200` CARRYING `MintedSession` UNTIL 1 Oct 2026 AND IS
+            CORRECTED RATHER THAN DUPLICATED. The `200` was written for a client
+            that would decide where to go next; the plane decides now, because
+            the place is a fact about the host the session is bound to.
+          headers:
+            Set-Cookie:
+              description: |
+                The session handle — `__Host-reconcile_session`, `HttpOnly`,
+                `Secure`, `SameSite=Lax`, `Path=/`, and NO `Domain` attribute.
+
+                ⚠️ THE ATTRIBUTES ARE NOT ADVISORY AND ARE NOT ASSEMBLED AT A
+                CALL SITE. `server/data-plane/session-cookie.ts` emits them from
+                one constant, and `tests/http/session-cookie-channel.test.ts`
+                asserts each by name with what it buys, because a browser
+                reports a malformed `__Host-` cookie by SILENTLY NOT STORING IT.
+              schema:
+                type: string
+            Location:
+              description: |
+                An absolute PATH — `/close` on a tenant surface, `/` on a
+                console — and never a URL. See the operation description.
+              schema:
+                type: string
+                pattern: '^/'
+        '403':
+          description: |
+            The host this request arrived on is not a registered serving host —
+            `tenant_context_missing`, D1's own refusal and for D1's reason: the
+            four registry outcomes are one answer so the operation is no oracle
+            over the published registry.
+
+            ⚠️ AND `user_disabled` (S6, G2492) — the person the directory named
+            exists here and is switched off. It mirrors
+            `MINT_SESSION_REFUSALS.userDisabled` by exact name and is answered
+            only AFTER a token for that very subject verified, so it is no
+            existence oracle: the only caller who reaches it has just
+            authenticated as that person. The two `403`s differ by `code`.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '422':
+          description: |
+            The callback was refused. The four arms of
+            `SIGN_IN_ATTEMPT_REFUSALS`, by exact name:
+            `sign_in_attempt_handle_mismatch` · `sign_in_attempt_replayed` ·
+            `sign_in_attempt_connection_mismatch` ·
+            `sign_in_attempt_challenge_mismatch`.
+
+            THE ORDER IS THE DESIGN. Replay is checked BEFORE the pinned facts,
+            so that a replayed callback carrying a tampered connection reports
+            the replay — the fact about the row — rather than the tampering,
+            which is a fact about the caller. Both refuse; only one names what
+            the system knows.
+
+            ⚠️ SINCE S6 (G2492) `sign_in_attempt_challenge_mismatch` ALSO
+            ANSWERS EVERY REFUSAL OF THE CODE, THE EXCHANGE AND THE TOKEN — and
+            that is the code's meaning rather than a borrowing: the challenge
+            the model compares is now the VERIFIED token's `nonce` (G2487), so
+            no verified, bound token is no matching challenge. ONE code for
+            every such arm, so a caller holding a stolen `state` learns that
+            their code failed and not which check refused it. And
+            `connection_disabled` — the door the redirect pinned is switched
+            off. An EXPIRED attempt (D6-6) answers
+            `sign_in_attempt_handle_mismatch`, identically to one that never
+            existed.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '502':
+          description: |
+            `upstream_unavailable` — the directory did not answer usefully: the
+            pinned token endpoint was unreachable, timed out, redirected
+            (refused), answered a `5xx`, or issued a token missing the claims
+            the door's claim map names. Nothing was consumed in the first four.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '503':
+          description: |
+            THE PLATFORM CANNOT MINT A SESSION BECAUSE ITS OWN BOUNDS ARE NOT
+            USABLE. The eight arms of `SESSION_BOUND_REFUSAL_REASONS`, by exact
+            name: `bounds_not_configured` · `bound_not_a_number` ·
+            `bound_not_an_integer` · `bound_zero` · `bound_negative` ·
+            `session_lifetime_exceeds_ceiling` · `session_idle_exceeds_ceiling`
+            · `idle_exceeds_lifetime`.
+
+            A 5xx AND NOT A 4xx, because none of these is anything the caller
+            did. `validateSessionBounds()` REFUSES ON ABSENCE rather than
+            defaulting — G139's whole point — and `bound_not_a_number` is the
+            dangerous one it exists for: every comparison against `NaN` is
+            false, so a `NaN` bound expires nothing and FAILS OPEN, and
+            `Infinity` parses out of a config string straight through any naive
+            `> 0` guard to the same place.
+
+            ⚠️ AND `upstream_unavailable` FOR THE PLATFORM'S OTHER TWO
+            CONFIGURATION FACTS (S6): a plane started with no identity terms
+            (R2) can verify no token, and a pinned door with no usable
+            `token_endpoint` (`0280`) has nowhere a code may be sent.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ---------------------------------------------------------------- A3, A4
+  /session:
+    get:
+      tags: [A Session]
+      operationId: getSession
+      x-capability: 'exempt: the subject of this read is the caller own session row, resolved from the presented credential rather than from any tenant scope, so there is no resource class for a capability to name'
+      security:
+        - sessionContext: []
+      summary: The caller's own session. Never another principal's.
+      description: |
+        Returns `SessionView` — `Session` minus the credential's shadow and
+        minus the one field G223 dropped. See the schema; both omissions are
+        argued there rather than here.
+
+        NOTHING IN THE REQUEST PLANE CAN ENUMERATE ANOTHER PRINCIPAL'S SESSIONS,
+        and that is a property rather than a limitation: the policy is
+        digest-keyed, so the only session reachable is the one whose handle was
+        presented.
+      responses:
+        '200':
+          description: The session behind the presented handle.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+    delete:
+      tags: [A Session]
+      operationId: signOut
+      x-capability: 'exempt: self-service sign-out reaches exactly the row the presented credential addresses and no tenant-scoped resource at all, so decide() has nothing to decide about'
+      security:
+        - sessionContext: []
+      summary: Self-service sign-out, and nothing else.
+      description: |
+        Sets `revokedAt`. IT IS NOT A REVOCATION OF ACCESS AND MUST NOT BE READ
+        AS ONE: revoking a person's access is `User.status = 'disabled'` or the
+        assignment. This ends one session — the caller's own.
+
+        `Session.revokedAt` is on the row rather than derived from an absence
+        because G180's host check writes here too: a request whose Host differs
+        from `issuedHost` is refused AND the session revoked.
+      responses:
+        '204':
+          description: |
+            Revoked. IDEMPOTENT: signing out an already-revoked session is the
+            same answer, because a caller told "that was already revoked" learns
+            something about a credential they have just proved they hold, and a
+            caller told anything else learns nothing useful.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  # ---------------------------------------------------------------- A5
+  /session/principal:
+    get:
+      tags: [A Session]
+      operationId: getSessionPrincipal
+      x-capability: 'exempt: the subject of this read is the person the presented credential names and the tenant that session is already bound to, never anybody else, so there is no resource class for a capability to name'
+      security:
+        - sessionContext: []
+      summary: Who the caller is — the person, their organisation class, and the bound tenant's name.
+      description: |
+        G3354–G3360, 3 Oct 2026 (DERIVED, NOT THE OWNER'S). THE CHROME'S
+        WHO-AM-I. The live finding that forced it: on staging the account menu
+        said *"Signed in · your account"* because no served operation named the
+        signed-in PERSON and `TenantContext` carries no tenant NAME, so a name
+        drawn there would have been invented.
+
+        ⚠️ WHY A FIFTH SESSION OPERATION AND NOT A WIDER D1. `TenantContext` is
+        `model/access.ts`'s projection of the TENANT and is mirrored there key
+        for key; a person's name in it would be a second subject in one record,
+        and a console session — which has no tenant and never calls D1 — would
+        have no who-am-I at all. And `SessionView` is pinned to `Session`'s own
+        keys (`tests/contracts/session-operations-wire.test.mjs`), which a
+        `displayName` is not.
+
+        WHAT EACH FIELD IS AND WHERE IT IS READ:
+
+          `displayName`, `email`  `tenant."user"`, AS STORED. Written at
+                                  first sign-in from the directory's claims
+                                  (R5/R6) and stored verbatim — D6-9: *"stored
+                                  verbatim and parsed by nothing."* A client
+                                  renders both as TEXT. Under BYOA the value
+                                  is supplied outside our control, and that is
+                                  why it is text and never markup.
+          `orgClass`              `orgFor(connection.owner)` — the ONE
+                                  producer (G289). Never a membership, never
+                                  the route.
+          `tenant`                `null` for a session no tenant is bound to
+                                  (a console session; a tenant session before
+                                  D1). Otherwise the BOUND tenant's id — read
+                                  off the session row, never off the request
+                                  (invariant 1) — and its NAME from the control
+                                  database's `tenancy_roster`, where G185(d)
+                                  puts it (`0003` dropped it from the data
+                                  projection by that ruling and
+                                  `tests/db/tenant-projection.test.ts` holds
+                                  the absence). `name` is `null` when the
+                                  roster holds no row for the tenant.
+
+        🛑 NOTHING ABOUT ANYBODY ELSE. No role, no membership list, no other
+        tenant: the person read is `user_visible_to_session`'s one row, and the
+        roster read is narrowed to the one tenant the session row names.
+        ⚠️ THIS READ *"No role, no capability, no membership list"* UNTIL
+        G3521 (3 Oct 2026) AND IS CORRECTED RATHER THAN DELETED: the CALLER'S
+        OWN verbs are now published as `capabilities`, below. Still no role,
+        no assignment, and nothing about anybody else.
+        ⚠️ AND *"Still no role"* WENT FALSE ON 4 Oct 2026 — G4045, THE
+        OWNER'S — AND IS CORRECTED RATHER THAN DELETED: the CALLER'S OWN live
+        role NAMES are published as `roles`. Still no assignment row, no
+        membership list, and nothing about anybody else.
+
+          `capabilities`          G3521 (DERIVED). The verbs this session
+                                  HOLDS, as the gate would answer them: the
+                                  plane asks its own `preValidation`
+                                  authoriser once per member of the closed
+                                  set (`decide()`, never a second evaluator),
+                                  so a customer's role assignments, a
+                                  partner's portal roles (R10), a platform
+                                  assignment and a live staff grant (G2591)
+                                  all count exactly as the gate counts them.
+                                  `[]` for a session `decide()` cannot resolve
+                                  a principal for — an unbound session on a
+                                  tenant host. 🛑 ADVISORY, FOR DRAWING ONLY:
+                                  a client HIDES a control whose verb is
+                                  absent (C9 row #22, G3193) and must still
+                                  handle the 403 — every operation gates
+                                  server-side, and this list is as stale as
+                                  the moment it was read.
+          `roles`                 G4045 (THE OWNER'S). The labels of the roles
+                                  the caller LIVE-holds, read off the same
+                                  already-resolved assignments the gate reads
+                                  (so no new read and no new reach), "live"
+                                  being `decide()`'s answer for that one
+                                  assignment. Tenant-authored text, rendered
+                                  as text (D6-9).
+          `tenant.reportingCurrency`  G4046 (THE OWNER'S). The bound tenant's
+                                  declared ISO 4217 reporting currency from
+                                  `0560`'s data-plane table, read inside
+                                  `withTenantScope()` on the SESSION ROW's
+                                  tenant (invariant 1). `null` = declared none;
+                                  never defaulted.
+      responses:
+        '200':
+          description: The person behind the presented handle, and their bound tenant.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionPrincipal' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+components:
+
+  securitySchemes:
+    sessionContext:
+      type: apiKey
+      in: cookie
+      name: __Host-reconcile_session
+      description: |
+        THE SESSION HANDLE, AS AN `HttpOnly` COOKIE — G386, 19 Sep 2026.
+
+        ⚠️ THIS SCHEME READ `in: header` / `name: X-Session` UNTIL THAT RULING
+        AND IS CORRECTED RATHER THAN DUPLICATED, because a second scheme would
+        leave four tiers declaring two credentials for one session and every
+        `security:` list in this file would have to choose between them.
+
+        The ruling: *"`Set-Cookie`, `HttpOnly` `Secure` `SameSite=Lax`, on the
+        tenant host, in production. Page script cannot read it, so the
+        exfiltration class `frontend/src/api/plane.ts`'s origin allowlist
+        exists to guard STOPS BEING POSSIBLE rather than being blocked."*
+
+        🛑 `X-Session` IS NOT DECLARED ANYWHERE ANY MORE AND THAT IS
+        DELIBERATE. It survives in exactly one place —
+        `server/dev/session-header.ts` — reachable only through a dynamic
+        import that runs when `RECONCILE_LOCAL_TEST_AUTH` is exactly `1`, so a
+        deployed plane holds no code that reads it. **A local-only channel
+        behind a flag is not part of the contract**; declaring it here would
+        publish a second way in and invite a client to use it. G192's own
+        argument, one channel over.
+
+        ⚠️ AND CSRF IS NOW A LIVE CONCERN THE HEADER DESIGN DID NOT HAVE. A
+        custom header is never attached by a cross-site form; a cookie is
+        attached by the browser. `SameSite=Lax` keeps it off every cross-site
+        `POST`, `PUT`, `PATCH` and `DELETE` — which is every state-changing
+        operation served today — and it is **not** a complete answer: a
+        state-changing `GET` reached by a top-level navigation would carry it,
+        and there is none only because nobody has written one.
+        `server/data-plane/session-cookie.ts` states the bound precisely. No
+        `csrfToken` is declared here, and minting one is a ruling.
+
+        ⚠️ THE CONTROL-PLANE TIER IS UNCHANGED AND STILL CARRIES A HEADER. That
+        is not an oversight: its credential is a machine channel secret read
+        from `RECONCILE_CONTROL_*`, not a person's session, and no browser is
+        involved. Two different credentials that happened to share a header
+        name now differ in the contract as they always differed in fact.
+  responses:
+    Unauthenticated:
+      description: |
+        No valid session — `session_invalid`. REUSED, NOT RE-MINTED: a
+        session-flavoured twin of an existing code would be the second
+        vocabulary this tier exists not to create.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  schemas:
+
+    OrgClass:
+      type: string
+      description: |
+        `ORG_CLASSES` in `model/access.ts`, mirrored element for element and in
+        ORDER — the `org_classes` pair in `tools/check-wire-mirror.mjs`.
+      enum: [platform, partner, customer]
+
+    SessionPrincipal:
+      type: object
+      additionalProperties: false
+      required: [userId, displayName, email, orgClass, tenant, capabilities, roles]
+      properties:
+        userId: { type: string }
+        displayName:
+          type: string
+          description: |
+            AS THE DIRECTORY SUPPLIED IT AND AS STORED — verbatim, parsed by
+            nothing (D6-9). Render as text.
+        email:
+          type: string
+          description: As stored. Render as text.
+        orgClass: { $ref: '#/components/schemas/OrgClass' }
+        tenant:
+          description: |
+            REQUIRED-AND-NULLABLE. `null` means no tenant is bound to this
+            session; it never means "a tenant whose name we could not read" —
+            that is `tenant.name: null`.
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/SessionPrincipalTenant'
+        capabilities:
+          type: array
+          uniqueItems: true
+          description: |
+            G3521. The verbs the gate would ALLOW this session, in
+            `CAPABILITIES`' order. ADVISORY — for hiding controls, never for
+            skipping a check; every operation still gates server-side.
+          items: { $ref: '#/components/schemas/Capability' }
+        roles:
+          type: array
+          description: |
+            G4045 — THE OWNER'S RULING, 4 Oct 2026: *"Serve role labels."* The
+            display NAMES of the roles this session LIVE-holds: for a customer,
+            `tenant.role.label` through their own `tenant.role_assignment` in
+            the BOUND tenant; for a platform or partner principal, their
+            platform or partner role labels. TENANT-AUTHORED TEXT, AS STORED
+            AND PARSED BY NOTHING (D6-9) — a client renders each as a text node.
+            "Live" is the GATE's word and never a second predicate: a role is
+            named when `decide()` would allow at least one capability it
+            carries with that assignment alone, so a revoked or expired
+            assignment, an archived role or a moved version is not named.
+            Read off the caller's OWN already-resolved assignments — the same
+            rows the gate reads — so it names nobody else's role. `[]` for an
+            unbound session and for a person holding no live role; deduplicated,
+            in the order the assignments were read.
+          items: { type: string }
+
+    Capability:
+      type: string
+      description: |
+        `CAPABILITIES` in `model/access.ts`, mirrored member for member and in
+        ORDER — the `capabilities` pair in `tools/check-wire-mirror.mjs`. A
+        closed set: a verb the model mints and this enum lacks is a red gate.
+      enum:
+        - view_exception
+        - view_run
+        - view_document
+        - view_dashboard
+        - export_data
+        - view_summary
+        - assign_exception
+        - propose_resolution
+        - admit_correspondence
+        - send_outbound
+        - advance_procedure
+        - trigger_run
+        - execute_resolution
+        - close_exception
+        - approve_resolution
+        - reverse_resolution
+        - close_period
+        - set_autonomy
+        - author_definition
+        - author_procedure
+        - author_rule
+        - install_pack
+        - configure_tolerance
+        - view_endpoint
+        - configure_endpoint
+        - configure_tag_policy
+        - manage_users
+        - manage_roles
+        - view_audit
+        - view_access_log
+        - configure_telemetry
+        - place_legal_hold
+        - handle_subject_request
+        - configure_identity
+        - bind_secret
+        - enable_endpoint_writeback
+        - view_metering
+        - view_commercial
+        - promote_learning
+        - admit_source
+        - view_substrate
+        - provision_substrate
+        - view_catalogue
+        - author_catalogue
+        - publish_catalogue
+        - view_deals
+        - register_deal
+        - view_sandbox
+        - operate_sandbox
+        - view_partner_staff
+        - manage_partner_staff
+
+    SessionPrincipalTenant:
+      type: object
+      additionalProperties: false
+      required: [tenantId, name, reportingCurrency]
+      properties:
+        tenantId:
+          type: string
+          description: |
+            The tenant the SESSION ROW is bound to — an output, read off the
+            row D1 wrote. Invariant 1: never read from a request.
+        name:
+          type: [string, 'null']
+          description: |
+            `tenancy_roster.name` in the control database — G185(d)'s home for
+            it. `null` when the roster holds no row for this tenant; a client
+            then renders the id, never an invented name.
+        reportingCurrency:
+          type: [string, 'null']
+          pattern: '^[A-Z]{3}$'
+          description: |
+            G4046 — THE OWNER'S RULING, 4 Oct 2026: *"Declare tenant currency."*
+            The tenant's DECLARED reporting currency, ISO 4217 by shape (never
+            checked as a member — `model/money.ts`). Read from
+            `tenant.tenant_reporting_currency` (`db/migrations/0560`) in the
+            session's own bound tenant — a data-plane table, and NOT the
+            control roster, which G185(d) limits to identification and
+            placement. `null` means the tenant DECLARED NONE; there is no
+            default, and a client then draws no currency rather than an
+            invented one.
+
+    RealmRequest:
+      type: object
+      description: |
+        A DOMAIN, AND NOTHING THAT NAMES A PERSON. This schema IS the
+        no-user-existence-signal property: an operation handed an email address
+        can be made to differ between "no such user" and "wrong credential"; an
+        operation handed a domain cannot.
+
+        `additionalProperties: false` is load-bearing rather than tidy. ajv runs
+        with `removeAdditional: false` (G191), so it REJECTS a smuggled field
+        rather than stripping it — under Fastify's default the field is silently
+        deleted and the request served, which satisfies the rule and leaves no
+        evidence that it did.
+      additionalProperties: false
+      required: [domain]
+      properties:
+        domain:
+          type: string
+          maxLength: 253
+          description: |
+            Compared after normalisation — `normaliseClaimedDomain()` in
+            `model/domain.ts`. A host comparison that is not case-insensitive
+            refuses a legitimate request on a capitalised value, which is a
+            failure a customer finds and a test does not.
+
+            `maxLength: 253` IS A CONTROL AND NOT A TIDY-UP — G1985,
+            22 Sep 2026. A fully qualified domain name is at most 253 octets
+            (RFC 1035 §2.3.4: a 255-octet wire encoding, less the leading
+            length byte and the root label), so this refuses nothing anybody
+            can own.
+
+            WHAT IT IS FOR IS THE CALLER. This is the first unauthenticated
+            person-facing operation in the product, and WITHOUT A BOUND HERE
+            the only limit on the body was Fastify's 1 MiB default, reached
+            AFTER the body had been read and answered with a 500 — measured:
+            a 2 MiB `domain` returned `500 upstream_unavailable`, while the
+            same body to the SECURED `/context/resolve` returned 401 because
+            authentication runs in `onRequest`, before parsing. So an
+            anonymous caller held a one-request lever on the data ALB's 5xx
+            alarm, which `infra/lib/observability-stack.ts` declares fires on
+            a rate whose *"Expected rate is zero"*.
+
+            BOTH HALVES WERE NEEDED AND NEITHER IS SUFFICIENT. This bound
+            refuses an oversized domain INSIDE the 1 MiB Fastify allows, with
+            a 400 from the schema; the plane's error handler maps Fastify's
+            own `FST_ERR_CTP_BODY_TOO_LARGE` to a 413 for a body ABOVE it,
+            which ajv never sees because parsing failed first. A schema
+            cannot bound what was never parsed, and a status map cannot bound
+            what parsed successfully.
+
+    RealmRouting:
+      type: object
+      description: |
+        AN ID, NEVER A CONNECTION, AND NEVER AN ORG. This mirrors the success arm
+        of `DomainRouting` exactly: "Routing chooses the door; the door decides."
+
+        ⚠️ IT DOES NOT CARRY `protocol` OR `label`, AND A CLIENT THEREFORE
+        CANNOT DERIVE FROM THIS RESPONSE WHICH FORM TO RENDER. That is a known
+        cost and it is left open on purpose: `routeToConnection()` returns an id
+        by design, so widening the answer is a MODEL question. A slice that
+        widened it on the wire alone would have minted the second vocabulary
+        this tier exists not to mint.
+      additionalProperties: false
+      required: [connectionId]
+      properties:
+        connectionId:
+          type: string
+          description: The door to present next. Branded `IdentityConnectionId` in the model.
+
+    SignInBeginRequest:
+      type: object
+      description: |
+        A DOMAIN AND A DOOR, AND NOTHING THAT NAMES A PERSON — `RealmRequest`'s
+        property, plus the `connectionId` that operation answered. Bounded
+        throughout (`RealmRequest.domain`'s G1985 reason: an anonymous surface),
+        and `additionalProperties: false` so a smuggled `redirectUri`,
+        `authorizationEndpoint`, `tenantId` or `state` is a 400 (G191).
+      additionalProperties: false
+      required: [domain, connectionId]
+      properties:
+        domain:
+          type: string
+          minLength: 1
+          maxLength: 253
+          description: Normalised by `normaliseClaimedDomain()` and routed by `routeToConnection()`.
+        connectionId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: The door `resolveHomeRealm` answered. COMPARED against the routed door, never trusted.
+
+    SignInBegun:
+      type: object
+      description: |
+        WHERE TO SEND THE BROWSER, AND THE TWO VALUES ONLY THIS TAB MAY HOLD.
+        No connection, no org, no tenant and no nonce — the nonce went to the
+        broker inside the URL and its digest is on the row.
+      additionalProperties: false
+      required: [authorizationUrl, state, codeVerifier]
+      properties:
+        authorizationUrl:
+          type: string
+          maxLength: 4096
+          description: The pinned door's `authorization_endpoint` with the plane's parameters. Never a value the request carried.
+        state:
+          type: string
+          minLength: 43
+          maxLength: 512
+          description: The relay parameter, in the clear. Its keyed digest is the attempt's `handle_digest`; the tab compares the broker's return against it (G2501).
+        codeVerifier:
+          type: string
+          minLength: 43
+          maxLength: 128
+          description: PKCE (RFC 7636). Returned once and stored nowhere by the plane.
+
+    FederatedCallbackRequest:
+      type: object
+      description: |
+        WHAT A BROWSER RETURNING FROM A DIRECTORY PRESENTS — S6, G2491. Four
+        strings and nothing else: no tenant, no org, no user, no broker pair,
+        no issuer and no endpoint.
+
+        `additionalProperties: false` IS LOAD-BEARING TWICE HERE. ajv runs with
+        `removeAdditional: false` (G191), so a smuggled `tenantId`, a
+        `brokerIssuer` or a `tokenEndpoint` is a 400 rather than a field
+        silently dropped — invariant 1 and D6-5's *"not derived from the
+        request body"*, each made a refusal somebody can count.
+
+        THE BOUNDS ARE CONTROLS, `RealmRequest.domain`'s G1985 reason: this is
+        an anonymous surface, and without them the only limit on a field is
+        the 1 MiB body Fastify allows. `codeVerifier` is RFC 7636 §4.1's own
+        43–128 characters.
+      additionalProperties: false
+      required: [state, code, codeVerifier, connectionId]
+      properties:
+        state:
+          type: string
+          minLength: 1
+          maxLength: 512
+          description: |
+            The relay parameter the redirect handed the browser, IN THE CLEAR —
+            because only the plane holds the key that digests it. Digested at
+            once by `digestOfHandle()` and stored nowhere.
+        code:
+          type: string
+          minLength: 1
+          maxLength: 2048
+          description: The authorization code the broker returned. Sent to the pinned token endpoint and nowhere else.
+        codeVerifier:
+          type: string
+          minLength: 43
+          maxLength: 128
+          description: PKCE (RFC 7636). Sent with `code`; the broker enforces the binding.
+        connectionId:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: |
+            The door the BROWSER believes it used. COMPARED against the door the
+            redirect pinned (`sign_in_attempt_connection_mismatch`) and never
+            carried forward — the reason `FederatedCallback` below carries one.
+
+    FederatedCallback:
+      type: object
+      description: |
+        What a federated callback presents. Three digested or branded values and
+        nothing else — no tenant, no org, no user, no realm.
+
+        ⚠️ IT CARRIES A `connectionId` PRECISELY SO THAT THE DISAGREEMENT IS
+        REPRESENTABLE. Dropping the field would make the mismatch inexpressible
+        and therefore impossible to refuse; ignoring it would be equally safe and
+        INVISIBLE. `consumeSignInAttempt()` refuses on it, so an attempt to name
+        a different door becomes a refusal somebody can count rather than a value
+        quietly discarded.
+
+        NO CHALLENGE VALUE AND NO RELAY PARAMETER IN THE CLEAR, only digests —
+        the same rule and the same reason as `Session.handleDigest`.
+      additionalProperties: false
+      required: [handleDigest, connectionId, challengeDigest]
+      properties:
+        handleDigest:
+          type: string
+          description: The relay/state parameter's DIGEST, never the parameter.
+        connectionId:
+          type: string
+          description: |
+            The door the CALLBACK claims. It is compared against the one the
+            redirect PINNED and is never carried forward: re-choosing at callback
+            would let a caller name a different connection than the one it was
+            sent to, and org class derives from a connection's owner. That is the
+            ORG AXIS READ FROM A REQUEST — invariant 1's shape, one axis over.
+        challengeDigest:
+          type: string
+          description: |
+            The IdP's own nonce or PKCE verifier, digested. COMPARED, NEVER
+            RE-DERIVED — re-deriving it from anything the callback supplied would
+            compare the caller's value against itself.
+
+    SessionView:
+      type: object
+      description: |
+        DERIVED FROM `Session`, NOT A SECOND VOCABULARY. Nine of the row's eleven
+        keys. `tests/contracts/session-operations-wire.test.mjs` reads the key
+        list out of `model/identity.ts`'s own `SessionKey` union — which
+        `_SessionCarriesExactlyTheseKeys` proves under `tsc`, bidirectionally, to
+        equal `keyof Session` — so a field added to the row goes RED here rather
+        than quietly missing from the wire.
+
+        TWO OMISSIONS, EACH ARGUED:
+
+        `handleDigest` — the credential's shadow. "`id` is what an `AuditEvent`
+        or a `SignInAttempt` cites and may appear in a log; `handleDigest` is the
+        credential's shadow and appears in neither." #231 names this one.
+
+        `secondFactorAt` — `@dropped-for-v1` under G223, whose row says NOTHING
+        MAY GIVE IT A PRODUCER, and a wire field is a producer. ⚠️ #231 predates
+        that ruling and asks for `Omit<Session, 'handleDigest'>` alone; G223
+        outranks it, and shipping the field would be the wire-for-a-mechanism-
+        that-does-not-exist the same issue refuses one operation later.
+
+        WHAT IS ABSENT FROM THE ROW ITSELF AND THEREFORE FROM HERE: no
+        `orgClass`, no role, no capability, no `AssignmentScope`, no
+        `TenantAccessGrantId` — all derived per request, and a stamp of a derived
+        fact is a second door.
+      additionalProperties: false
+      required:
+        [id, userId, connectionId, tenantId, issuedHost, authenticatedAt, lastUsedAt, expiresAt, revokedAt]
+      properties:
+        id:
+          type: string
+          description: Citable. Distinct from the handle digest, deliberately and not redundantly.
+        userId: { type: string }
+        connectionId:
+          type: string
+          description: |
+            THE DOOR THAT AUTHENTICATED THIS SESSION, not the person's directory.
+            Org is a property of HOW YOU AUTHENTICATED: a dual-affiliated
+            consultant is partner on Monday and customer on Tuesday.
+        tenantId:
+          type: [string, 'null']
+          description: |
+            REQUIRED-AND-NULLABLE, NEVER OPTIONAL. Optional would let a payload
+            omit the key silently while `tsc` stayed green, on the one field
+            whose absence is a bypass. Null between authentication and selection;
+            a session with null here can reach nothing tenant-scoped, because no
+            `set_config('app.tenant_id', …)` is ever issued and RLS denies on
+            NULL.
+        issuedHost:
+          type: string
+          description: |
+            G180, and the binding is PERMANENT. Platform configuration written at
+            mint time, never echoed from the request that asked — not counterparty
+            text.
+        authenticatedAt: { type: string }
+        lastUsedAt:
+          type: string
+          description: |
+            G220, and it is what makes `SessionBounds.maxIdleSeconds` enforceable
+            at all. Required, never null: a session that has never been used has
+            been used once — establishing it.
+        expiresAt:
+          type: string
+          description: |
+            Required, never null. "An open-ended grant is not a grant", and a
+            session is the longest-lived reference in the system, so it is the
+            last place to relax it.
+        revokedAt: { type: [string, 'null'] }
+
+    MintedSession:
+      description: |
+        A SESSION THE INSTANT AUTHENTICATION SUCCEEDS, WHICH IS A NARROWER THING
+        THAN A SESSION.
+
+        `SessionView` permits `tenantId` to be a string because a selected
+        session has one. THIS schema forbids it, with a `const`, because
+        AUTHENTICATION CANNOT CONFER A SCOPE. It is a constraint on the derived
+        type rather than a second declaration of it — nine keys are stated once,
+        one field is narrowed here.
+      allOf:
+        - $ref: '#/components/schemas/SessionView'
+        # `const: null` AND NOTHING BESIDE IT. The narrowing is argued once, in
+        # this schema's description above, rather than repeated as a sibling
+        # `description:` key — `tests/contracts/session-operations-wire.test.mjs`
+        # assertion 5c reads the SERIALISED constraint, and a schema that argues
+        # for itself in a sibling key is a schema whose constraint has to be
+        # located before it can be read.
+        #
+        # G210: the path that later writes `tenantId` is a CHECK, not a chooser
+        # — it validates that the principal may be scoped to the tenant THE HOST
+        # HAS ALREADY BOUND. "A login surface with a tenant selector defeats
+        # invariant 1 by RELOCATION."
+        - type: object
+          properties:
+            tenantId:
+              const: null

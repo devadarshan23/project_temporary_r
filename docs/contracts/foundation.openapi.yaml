@@ -1,0 +1,1408 @@
+openapi: 3.1.0
+
+info:
+  title: ReconcileAI — Foundation Services (F1–F14)
+  version: 0.1.0-draft
+  summary: The fourteen services every capability depends on.
+  description: |
+    Contract discipline for the foundation tier. Several of these are in-process
+    and must stay that way — see docs/contracts/README.md for which, and why.
+
+    TWO CONVENTIONS CARRY INVARIANTS.
+
+    `tenantId` appears in no request body in this document. Tenant scope is
+    derived from the session by F1 and flows implicitly. A request that could
+    state its tenant could state the wrong one — invariant 1, expressed as an
+    absence.
+
+    Errors are a single closed enum shared across every tier. Under a
+    restrictive SpanAttributePolicy the error class is the only diagnostic
+    channel that survives redaction, so a free-text message is undiagnosable and
+    the enum has to be exhaustive before launch.
+
+servers:
+  - url: local://in-process
+    description: |
+      Most of this tier is a library call. The URL is a placeholder so the
+      document is valid; it is not a deployment instruction.
+
+tags:
+  - name: F1 Tenant Context
+  - name: F2 Identity
+  - name: F3 Policy
+  - name: F4 Classification
+  - name: F5 Subject Index
+  - name: F6 Metering
+  - name: F7 Model Gateway
+  - name: F8 Object Store
+  - name: F9 Audit
+  - name: F10 Telemetry
+  - name: F11 Tags
+  - name: F12 Sanitisation
+  - name: F13 Tool Broker
+  - name: F14 Authoring Validator
+
+security:
+  - sessionContext: []
+
+paths:
+
+  # ---------------------------------------------------------------- F1
+  /context/resolve:
+    post:
+      tags: [F1 Tenant Context]
+      operationId: resolveTenantContext
+      x-capability: 'exempt: no human principal — this operation MINTS the session a capability check would later be built from, so gating it on one is circular'
+      summary: Derive tenant scope from the session. Never from a request field.
+      description: |
+        Every other operation in every tier receives the result of this call.
+        None of them asks for a tenant.
+
+        Sets the row-level-security session variable as a side effect. A caller
+        that reaches PostgreSQL without having called this sees nothing, which
+        is the intended failure mode rather than an inconvenient one.
+
+        THE SESSION ARRIVES ON THE COOKIE AND NOWHERE ELSE — G3211, 2 Oct
+        2026, applying G3006, THE OWNER'S RULING: *"D1 reads the cookie: POST
+        /context/resolve takes the session from the HttpOnly cookie (not the
+        body); the tenant still comes only from the host registry and
+        selectTenantForSession() still checks membership/grant. Mint stays
+        tenant-less (G726/S2 unchanged)."*
+
+        ⚠️ THE BODY READ `required: [sessionToken]` UNTIL THAT RULING AND IS
+        NARROWED RATHER THAN DELETED. The credential was demanded TWICE — once
+        by `security: [sessionContext]`, once in the body — and the plane
+        closed that defect by requiring the two to digest equal. But the
+        cookie is `HttpOnly`, so page script cannot read it and therefore
+        CANNOT put it in a body: the body field made D1 uncallable by the one
+        client G386 built the cookie for. **The body is now a CLOSED EMPTY
+        OBJECT**, so a smuggled `sessionToken` or `tenantId` is a 400 rather
+        than a field silently ignored — invariant 1 expressed as a schema that
+        refuses the key rather than as a handler that forgets to read it.
+
+        🛑 IT IS A STATE-CHANGING POST AUTHENTICATED BY A COOKIE, SO CSRF IS
+        LIVE. `SameSite=Lax` keeps the cookie off every cross-SITE POST; a
+        same-site sibling host is still same-site, and so the plane also
+        refuses a request whose `Sec-Fetch-Site` is present and not
+        `same-origin`, or whose `Origin` names a host other than the one the
+        request arrived at — answered as `session_invalid`, because a
+        credential a browser attached to a request another origin started is
+        not a credential this caller presented.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties: {}
+              description: |
+                EMPTY BY RULING (G3006). The session is the cookie; the tenant
+                is the host. Neither may be stated here.
+      responses:
+        '200':
+          description: Scope resolved and pinned for the request.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TenantContext' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+  # ---------------------------------------------------------------- F2
+  /identity/membership:
+    get:
+      tags: [F2 Identity]
+      operationId: resolveMembership
+      x-capability: 'exempt: no human principal — which tenants a subject may reach, resolved before any tenant is selected, so there is no scope to evaluate a capability in'
+      summary: The role this user holds in the resolved tenant.
+      description: |
+        Returns the membership with its clamp APPLIED. A partner-derived
+        membership is evaluated against its live PartnerAccessGrant before it is
+        returned — the clamp is not a separate call a caller might forget,
+        because that is exactly how it was bypassed once.
+
+        WHAT THE CLAMP DOES NOW, corrected 7 Aug 2026 with the `RoleKey`
+        migration. It used to substitute one enum value for another
+        (`roleCeilingForScope()` / `effectivePartnerRole()`), and both functions
+        were DELETED rather than migrated: one failed open on its default branch,
+        and the substitution it performed handed a partner the exact string the
+        correspondence admission ladder required while removing the one that
+        ladder excluded. The replacement, `PARTNER_CAPABILITY_MASK` /
+        `effectivePartnerCapabilities()` in `model/access.ts`, INTERSECTS
+        capabilities. So the role row itself is never rewritten — `roleId` is
+        what is stored, and `clamped` says the effective capability set was
+        reduced beneath it.
+      responses:
+        '200':
+          description: Effective membership.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [userId, roleId, isStaff, clamped]
+                properties:
+                  userId: { type: string }
+                  roleId:
+                    type: string
+                    description: |
+                      Addresses one `Role` row. Was `role: RoleKey`, a
+                      five-member enum deleted 7 Aug 2026: a bare `'approver'`
+                      is satisfied by any pack's role keyed `approver`, and role
+                      identity is `(packId, key)`. A KYC reviewer approving an
+                      AP write-off was one string comparison away.
+
+                      Left as an opaque string rather than enumerated, for the
+                      same reason `CapabilityRequirement.capability` is —
+                      composed roles are per tenant and per pack, so there is no
+                      closed set to enumerate here, which is the whole point.
+
+                      ⚠️ NOT THE AUTHORITY RECORD. `RoleAssignment` in
+                      `model/access.ts` is, and it pins `roleVersion` and
+                      carries an `AssignmentScope`. A client must not infer what
+                      this user may do from this id; ask F3.
+                  isStaff:
+                    type: boolean
+                    description: |
+                      Being staff grants NOTHING by itself. Reaching a tenant
+                      requires a TenantAccessGrant. The flag exists so that rule
+                      is expressible, not so it can be skipped.
+                  clamped:
+                    type: boolean
+                    description: |
+                      True when a live PartnerAccessGrant reduced the effective
+                      capability set. The stored role is unchanged — a clamp
+                      that rewrote the role is the defect this replaced.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404':
+          description: No membership. Distinct from a denial — the user is real elsewhere.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ---------------------------------------------------------------- F3
+  /policy/evaluate:
+    post:
+      tags: [F3 Policy]
+      operationId: evaluatePolicy
+      x-capability: 'exempt: no human principal — the engine asking its own policy layer what is permitted; a capability here would gate the check rather than the act'
+      summary: May this actor take this action, here, now?
+      description: |
+        Evaluated LOCALLY, always. Never a call to the control plane — that is
+        constraint C2, and it is what lets a data plane keep working through a
+        control-plane outage.
+
+        Writes a PolicyEvaluation. Allows are sampled per policy; denials,
+        requires_approval and redacted outcomes are retained in full.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [action, subject]
+              properties:
+                action: { $ref: '#/components/schemas/AgentAction' }
+                subject: { $ref: '#/components/schemas/PolicySubject' }
+                procedureStepId:
+                  type: [string, 'null']
+                  description: Set when evaluating a step. Null for ad-hoc checks.
+      responses:
+        '200':
+          description: |
+            An outcome, including a denial. A denial is a successful evaluation
+            and is not an HTTP error — conflating the two makes denials
+            invisible in every dashboard that counts 4xx.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [outcome, reason, policyVersion]
+                properties:
+                  outcome:
+                    type: string
+                    enum: [allow, deny, requires_approval, redacted]
+                  reason:
+                    $ref: '#/components/schemas/ErrorCode'
+                    description: |
+                      Closed vocabulary, deliberately reusing the error enum.
+                      PolicyEvaluation.reason must stay PII-free, and free text
+                      is how that rule gets broken.
+                  policyVersion: { type: integer }
+                  redactedPaths:
+                    type: array
+                    description: Set when outcome is `redacted`.
+                    items: { $ref: '#/components/schemas/FieldPath' }
+
+  # ---------------------------------------------------------------- F4
+  /classification/classify:
+    post:
+      tags: [F4 Classification]
+      operationId: classifyValue
+      x-capability: 'exempt: no human principal — a pure classification of one value against its FieldSpec, performed inside a run that already carries authority'
+      summary: The data class of a value, from its declared FieldSpec.
+      description: |
+        Declared once on FieldSpec; everything derives from it. This operation
+        is the derivation, and it is the only one — a caller that reasons about
+        classification independently is how a ceiling gets bypassed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [documentTypeId, path]
+              properties:
+                documentTypeId: { type: string }
+                path:
+                  $ref: '#/components/schemas/FieldPath'
+                  description: |
+                    The declared `FieldSpec` path whose class is being derived.
+                    A token list since G214, not a string — see `FieldPath`.
+      responses:
+        '200':
+          description: Classification.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [dataClass]
+                properties:
+                  dataClass: { $ref: '#/components/schemas/DataClass' }
+
+  /classification/apply-ceiling:
+    post:
+      tags: [F4 Classification]
+      operationId: applyCeiling
+      x-capability: 'exempt: no human principal — the engine clamping its own model-processing ceiling before a call it already holds authority for'
+      summary: Redact a payload for a destination.
+      description: |
+        THREE CEILINGS, ONE IMPLEMENTATION.
+
+        `prompt`     — ModelUseConfig.maxDataClassInPrompt
+        `telemetry`  — TelemetryPolicy.maxDataClassInSpanAttributes
+        `outbound`   — CorrespondenceConfig.maxDataClassInOutbound
+
+        They were found one at a time, months apart, and each was a hole of the
+        same shape. Implementing them separately is how the fourth one gets
+        missed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [destination, values]
+              properties:
+                destination:
+                  type: string
+                  enum: [prompt, telemetry, outbound]
+                values:
+                  type: object
+                  additionalProperties: true
+                  propertyNames: { $ref: '#/components/schemas/FieldPathKey' }
+                  description: |
+                    Keyed by `FieldPathKey` — the one-way identity token, NOT a
+                    path and NOT a dotted string. A JSON property name is a
+                    string, so a `FieldPath` cannot key this object directly;
+                    read `FieldPathKey` before writing a client for it, and in
+                    particular read the open question recorded there.
+      responses:
+        '200':
+          description: |
+            Redacted payload plus what was removed. The caller is told what it
+            lost — silent redaction produces prompts that are quietly wrong and
+            traces that are quietly useless.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [values, removedPaths, highestClassPresent]
+                properties:
+                  values:
+                    type: object
+                    additionalProperties: true
+                    propertyNames: { $ref: '#/components/schemas/FieldPathKey' }
+                    description: Keyed by `FieldPathKey`, as the request is.
+                  removedPaths:
+                    type: array
+                    items: { $ref: '#/components/schemas/FieldPath' }
+                  highestClassPresent: { $ref: '#/components/schemas/DataClass' }
+        '422':
+          description: |
+            The ceiling cannot be met — a required field exceeds it. Failing is
+            correct: sending it anyway is the breach, and dropping it silently
+            produces a chase email missing the number it was about.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ---------------------------------------------------------------- F5
+  /subject-index/register:
+    post:
+      tags: [F5 Subject Index]
+      operationId: registerSubjectLocation
+      x-capability: 'exempt: no human principal — the engine recording where a subject location landed, an index it maintains for itself under invariant 4'
+      summary: Record that a classified value was written somewhere.
+      description: |
+        Called at the moment of writing, never in a sweep afterwards. A
+        classified value stored without registering a location is
+        UNRECOVERABLE — you cannot retroactively discover which rows held whose
+        data, which is why this is one of the two things that cannot be deferred
+        past stage 2 of the build.
+
+        Idempotent on (subjectRef, location).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [subjectRef, location, dataClass]
+              properties:
+                subjectRef:
+                  type: string
+                  description: |
+                    A PER-TENANT HMAC of the natural identifier. A global key
+                    would make the privacy index itself a cross-tenant
+                    correlation surface.
+                location: { $ref: '#/components/schemas/SubjectLocation' }
+                dataClass: { $ref: '#/components/schemas/DataClass' }
+      responses:
+        '204': { description: Registered. }
+
+  /subject-index/erasure-plan:
+    post:
+      tags: [F5 Subject Index]
+      operationId: planErasure
+      x-capability: 'exempt: no human principal — the engine computing a plan; the human act that ACTS on it is handle_subject_request, which has no declared operation on any tier'
+      summary: Everywhere this subject exists, and what can be done about each.
+      responses:
+        '200':
+          description: |
+            A plan, including what CANNOT be reached. `out_of_reach` items are
+            disclosed rather than omitted — a plan that silently skips a copy is
+            worse than one that admits it.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [planId, items]
+                properties:
+                  planId: { type: string }
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: false
+                      required: [location, disposition, reason]
+                      properties:
+                        location: { $ref: '#/components/schemas/SubjectLocation' }
+                        disposition:
+                          type: string
+                          enum: [purge, retain_under_hold, retain_regulatory, out_of_reach]
+                        reason: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [subjectRef]
+              properties:
+                subjectRef: { type: string }
+
+  # ---------------------------------------------------------------- F6
+  /metering/record:
+    post:
+      tags: [F6 Metering]
+      operationId: recordUsage
+      x-capability: 'exempt: no human principal — invariant 5 makes UsageRecord immutable and unpriced, written by the system actor kind that AUTHORIZATION_MAY_BE_ABSENT admits'
+      summary: Emit billable events. Never blocks a run.
+      description: |
+        Fire-and-forget, buffered locally, shipped to the control plane with a
+        per-plane sequence. A metering failure must never fail a reconciliation;
+        a billable event that happened before metering existed is revenue that
+        can be neither invoiced nor proven.
+
+        Idempotent on `idempotencyKey` — at-least-once delivery otherwise
+        double-counts into an append-only table with no compensating instrument.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [events]
+              properties:
+                events:
+                  type: array
+                  items: { $ref: '#/components/schemas/UsageEvent' }
+      responses:
+        '202': { description: Accepted for shipping. Not yet durable upstream. }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+
+  /metering/drawdown:
+    post:
+      tags: [F6 Metering]
+      operationId: drawDownEntitlement
+      x-capability: 'exempt: no human principal — a draw against the engine own lease, inside a run that was authorised before the draw was reached'
+      summary: Consume against the lease, and say what happens next.
+      description: |
+        Verified OFFLINE against the signed lease. No control-plane call — that
+        is what makes a control-plane outage invisible to the customer.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [meter, quantity]
+              properties:
+                meter: { $ref: '#/components/schemas/Meter' }
+                quantity: { type: number }
+      responses:
+        '200':
+          description: |
+            The tier and the ceiling are DIFFERENT NUMBERS. Over tier warns and
+            bills overage; over ceiling stops. Setting them equal would block a
+            month-end close over a billing threshold.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [state, remainingToTier, remainingToCeiling]
+                properties:
+                  state:
+                    type: string
+                    enum: [within_tier, over_tier_billing_overage, approaching_ceiling, over_ceiling]
+                  remainingToTier: { type: number }
+                  remainingToCeiling: { type: number }
+        '402':
+          description: |
+            Lease expired beyond grace. In-flight work still completes — halting
+            mid-run wastes spend already incurred and entitlement already drawn.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ---------------------------------------------------------------- F7
+  /model/resolve:
+    post:
+      tags: [F7 Model Gateway]
+      operationId: resolveModel
+      x-capability: 'exempt: no human principal — the only executable enforcement of invariant 7, called by the engine before a model call it already holds authority for'
+      summary: Which model, in which region, and may we use it here?
+      description: |
+        The ONLY path to an LLM. Enforces residency in the engine rather than
+        the console, because under BYOA the console is the customer's and we
+        cannot audit it.
+
+        Resolves against what THIS ACCOUNT can actually reach, not against the
+        catalogue's optimism — Bedrock model access is granted per account and
+        per region.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [purpose, maxDataClass]
+              properties:
+                purpose:
+                  type: string
+                  enum: [extraction, explanation, proposal, scoring, admission]
+                maxDataClass: { $ref: '#/components/schemas/DataClass' }
+      responses:
+        '200':
+          description: A model that is permitted, available and in-region.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [modelId, region, viaFallback]
+                properties:
+                  modelId: { type: string }
+                  region: { type: string }
+                  viaFallback:
+                    type: boolean
+                    description: True when the primary was unavailable.
+        '409':
+          description: |
+            No permitted model. Includes the case that matters most — a
+            `global.*` inference profile was configured and is refused outright,
+            because residency must survive inference.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ---------------------------------------------------------------- F8
+  /objects:
+    post:
+      tags: [F8 Object Store]
+      operationId: putObject
+      x-capability: 'exempt: no human principal — the engine storing bytes it already holds; the browser path is createUpload on the capability tier, which is gated'
+      summary: Store a blob under the tenant prefix, with the right key.
+      description: |
+        The ONLY path to object storage. The tenant prefix is the FIRST path
+        segment so an IAM condition on `s3:prefix` is expressible — a tenant id
+        buried mid-path cannot be constrained.
+
+        Lifecycle is derived from the retention class, never configured beside
+        it. Two settings expressing one obligation drift, and the direction that
+        matters is the one nobody notices.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [retentionClass, contentType, bytesBase64]
+              properties:
+                retentionClass: { $ref: '#/components/schemas/RetentionClass' }
+                contentType: { type: string }
+                bytesBase64: { type: string }
+      responses:
+        '201':
+          description: Stored.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [storageRef, bucket, key]
+                properties:
+                  storageRef: { type: string }
+                  bucket: { type: string }
+                  key:
+                    type: string
+                    description: |
+                      Returned so the caller can register it with F5. A blob
+                      holding a classified value and no SubjectLocation is
+                      unreachable at erasure.
+
+  # ---------------------------------------------------------------- F9
+  /audit/events:
+    post:
+      tags: [F9 Audit]
+      operationId: recordAudit
+      x-capability: 'exempt: no human principal — invariant 10 says an act with no authorisation is unrecordable, so gating the RECORDER on a capability would make the record refusable'
+      summary: What changed, and who looked.
+      description: |
+        `before` and `after` carry the values that changed, which makes an audit
+        event a BUSINESS record — PII-bearing and erasable — despite having
+        operational volume. Filing it with the movable, PII-free set because it
+        is append-only and high-volume is how an erasure obligation quietly
+        becomes unmeetable.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/AuditEventInput'
+                - $ref: '#/components/schemas/DataAccessEventInput'
+      responses:
+        '204': { description: Recorded. }
+
+  # ---------------------------------------------------------------- F10
+  /telemetry/spans:
+    post:
+      tags: [F10 Telemetry]
+      operationId: emitSpan
+      x-capability: 'exempt: no human principal — a span the engine emits about itself; telemetry is the resource class with no capability, argued separately at section 11.9a'
+      summary: Emit a span with the allow-list already applied.
+      description: |
+        An ALLOW-LIST, never a deny-list. Anything not named is dropped, because
+        the leak is rarely a field called `passport_number` — it is
+        `definition.name`, `cost_center`, `vendor`, a filename: all mundane, all
+        customer-authored, all revealing when read across tenants.
+
+        Under BYOA this is the contract boundary, not internal hygiene. It
+        decides what support can ever diagnose.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name, attributes]
+              properties:
+                name: { type: string }
+                attributes:
+                  type: object
+                  additionalProperties: true
+                errorCode:
+                  $ref: '#/components/schemas/ErrorCode'
+                  description: |
+                    Under a `minimum` telemetry profile this is the ONLY
+                    diagnostic signal that survives. It is why the enum must be
+                    exhaustive before launch.
+      responses:
+        '202': { description: Accepted. Dropped attributes are not reported back. }
+
+  # ---------------------------------------------------------------- F11
+  /tags/resolve:
+    post:
+      tags: [F11 Tags]
+      operationId: resolveTags
+      x-capability: 'exempt: no human principal — tag resolution over a TagPolicy the tenant already authored, performed inside a run'
+      summary: Resolve tags by precedence and yield the cost centre.
+      description: |
+        Origins in precedence order, most specific first. Free-form tags do not
+        roll up — one typo becomes a new cost centre, and a chargeback report
+        nobody trusts is worse than none.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                intake: { type: object, additionalProperties: { type: string } }
+                documentType: { type: object, additionalProperties: { type: string } }
+                definition: { type: object, additionalProperties: { type: string } }
+      responses:
+        '200':
+          description: Resolved tags and the single chargeback key's value.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [tags, costCenter, violations]
+                properties:
+                  tags: { type: object, additionalProperties: { type: string } }
+                  costCenter:
+                    type: [string, 'null']
+                    description: Null when the tenant does not do chargeback.
+                  violations:
+                    type: array
+                    items: { type: string }
+
+  # ---------------------------------------------------------------- F12
+  /sanitise:
+    post:
+      tags: [F12 Sanitisation]
+      operationId: sanitiseContent
+      x-capability: 'exempt: no human principal — invariant 6 says ingested content is data and never instruction, and this is the engine sanitising it before anything reads it'
+      summary: Deterministic hygiene. No model, no credentials, no egress.
+      description: |
+        OUT OF PROCESS BY NECESSITY. The parser must hold no credentials, have
+        no network egress and no database reach, and a process boundary is the
+        only place that is enforceable.
+
+        This does NOT stop prompt injection — nothing does. It removes the whole
+        class of non-text vectors and every low-effort attempt, deterministically
+        and cheaply.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [storageRef, kind]
+              properties:
+                storageRef: { type: string }
+                kind:
+                  type: string
+                  enum: [email_body, attachment, uploaded_document, connector_payload]
+      responses:
+        '200':
+          description: |
+            A cleaned artefact plus what was found. The original is retained
+            separately as evidence — sanitisation is for what the model reads,
+            not for the record.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [cleanRef, findings, senderAuthenticated]
+                properties:
+                  cleanRef: { type: string }
+                  findings:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                        - active_content_stripped
+                        - encoding_normalised
+                        - metadata_stripped
+                        - remote_resource_removed
+                        - macro_detected
+                        - archive_depth_exceeded
+                  senderAuthenticated:
+                    type: [boolean, 'null']
+                    description: SPF/DKIM/DMARC. Null for non-email kinds.
+        '422':
+          description: Rejected by structure — macro, executable, unexpected type.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ---------------------------------------------------------------- F13
+  /tools/invoke:
+    post:
+      tags: [F13 Tool Broker]
+      operationId: invokeTool
+      x-capability: 'exempt: no human principal — an agent tool call, clamped by mintAgentGrant and TOOL_CAPABILITY rather than by anything on this wire'
+      summary: The only path to a tool. Checks the step's declared scope.
+      description: |
+        EXISTS BECAUSE A COMPONENT MUST NOT ENFORCE ITS OWN LIMITS. The agent
+        runtime is a third-party framework; without this broker our tool
+        boundary lives inside someone else's code and "bounded by the step" is a
+        comment rather than a control.
+
+        Mirrors F7, which is the only path to a model, for the same reason.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [procedureStepId, tool, arguments]
+              properties:
+                procedureStepId: { type: string }
+                tool: { type: string }
+                arguments: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: Tool result.
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+        '403':
+          description: |
+            Not in the step's declared toolScope. Also the response when an
+            admitting step — which must carry no tools at all — attempts one.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ---------------------------------------------------------------- F14
+  /authoring/validate:
+    post:
+      tags: [F14 Authoring Validator]
+      operationId: validateProcedure
+      x-capability: 'exempt: no human principal — a pure validation of a procedure whose AUTHORING is gated by author_procedure on a surface that does not exist yet'
+      summary: The six gates, at the point of persistence.
+      description: |
+        NOT IN THE BUILDER UI. A gate in an interface is bypassed by the first
+        caller who uses the API instead, so this runs where the procedure is
+        stored.
+
+        Present in BOTH planes. Pack authoring goes through the control plane,
+        but the tenant-scoped agent builder authors procedures that are never
+        packed and never signed — they would otherwise cross no gate at all.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [procedure]
+              properties:
+                procedure:
+                  type: object
+                  additionalProperties: true
+                  description: |
+                    A Procedure, as defined in model/domain.ts.
+
+                    NOTE WHAT IS ABSENT. This request carried an
+                    `admittingStepIds` array until 5 Aug — a caller-supplied
+                    list that the validator checked its tool-scope rule against,
+                    and therefore a list an empty array switched the rule off
+                    with. It was removed from the model the same day and the
+                    contract kept it for a few hours longer. Admitting steps are
+                    derived from the graph; there is nothing to declare.
+      responses:
+        '200':
+          description: |
+            Violations and warnings, separately. Gate 4 (policy fit) WARNS
+            rather than rejects — a procedure may legitimately be authored ahead
+            of a policy change, and a validator that blocks that gets worked
+            around.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [violations, warnings, stamp]
+                properties:
+                  violations:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProcedureViolation' }
+                  warnings:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProcedureViolation' }
+                  stamp:
+                    type: [object, 'null']
+                    description: |
+                      Null when violations are present. Otherwise the proof of
+                      what was validated: graph hash, validator version, time.
+                    additionalProperties: false
+                    properties:
+                      graphHash: { type: string }
+                      validatorVersion: { type: string }
+                      validatedAt: { type: string, format: date-time }
+
+components:
+
+  securitySchemes:
+    sessionContext:
+      type: apiKey
+      in: cookie
+      name: __Host-reconcile_session
+      description: |
+        THE SESSION HANDLE, AS AN `HttpOnly` COOKIE — G386, 19 Sep 2026.
+
+        ⚠️ THIS SCHEME READ `in: header` / `name: X-Session` UNTIL THAT RULING
+        AND IS CORRECTED RATHER THAN DUPLICATED, because a second scheme would
+        leave four tiers declaring two credentials for one session and every
+        `security:` list in this file would have to choose between them.
+
+        The ruling: *"`Set-Cookie`, `HttpOnly` `Secure` `SameSite=Lax`, on the
+        tenant host, in production. Page script cannot read it, so the
+        exfiltration class `frontend/src/api/plane.ts`'s origin allowlist
+        exists to guard STOPS BEING POSSIBLE rather than being blocked."*
+
+        🛑 `X-Session` IS NOT DECLARED ANYWHERE ANY MORE AND THAT IS
+        DELIBERATE. It survives in exactly one place —
+        `server/dev/session-header.ts` — reachable only through a dynamic
+        import that runs when `RECONCILE_LOCAL_TEST_AUTH` is exactly `1`, so a
+        deployed plane holds no code that reads it. **A local-only channel
+        behind a flag is not part of the contract**; declaring it here would
+        publish a second way in and invite a client to use it. G192's own
+        argument, one channel over.
+
+        ⚠️ AND CSRF IS NOW A LIVE CONCERN THE HEADER DESIGN DID NOT HAVE. A
+        custom header is never attached by a cross-site form; a cookie is
+        attached by the browser. `SameSite=Lax` keeps it off every cross-site
+        `POST`, `PUT`, `PATCH` and `DELETE` — which is every state-changing
+        operation served today — and it is **not** a complete answer: a
+        state-changing `GET` reached by a top-level navigation would carry it,
+        and there is none only because nobody has written one.
+        `server/data-plane/session-cookie.ts` states the bound precisely. No
+        `csrfToken` is declared here, and minting one is a ruling.
+
+        ⚠️ THE CONTROL-PLANE TIER IS UNCHANGED AND STILL CARRIES A HEADER. That
+        is not an oversight: its credential is a machine channel secret read
+        from `RECONCILE_CONTROL_*`, not a person's session, and no browser is
+        involved. Two different credentials that happened to share a header
+        name now differ in the contract as they always differed in fact.
+  responses:
+    Unauthenticated:
+      description: No valid session.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+    Denied:
+      description: Authenticated, and not permitted.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+    IdempotencyConflict:
+      description: Same key, different payload.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  schemas:
+
+
+
+    TenantContext:
+      type: object
+      additionalProperties: false
+      required: [tenantId, environment, residency, deploymentMode]
+      properties:
+        tenantId:
+          type: string
+          description: |
+            The ONLY place this appears in this document, and it is an output.
+        environment:
+          type: string
+          enum: [sandbox, evaluation, production]
+        residency: { type: string }
+        deploymentMode:
+          type: string
+          enum: [hosted, byoa]
+
+    # RoleKey — DELETED 7 Aug 2026, with `ROLE_KEYS` in model/domain.ts.
+    #
+    #   RoleKey: { type: string, enum: [viewer, operator, approver, tenant_admin, partner_admin] }
+    #
+    # A five-member enum doing two jobs — a stakeholder's relationship to the
+    # work, and a capability — plus a third hiding in `partner_admin`, which was
+    # an ORGANISATION baked into a role name. On the wire the cost was concrete:
+    # a bare `'approver'` is satisfied by any pack's role keyed `approver`, and
+    # role identity is `(packId, key)`. A KYC reviewer approving an AP write-off
+    # was one string comparison away.
+    #
+    # Its three referents here migrated separately, because they were asking
+    # three different questions:
+    #   - `resolveMembership.role`      -> `roleId`, an opaque `Role` address
+    #   - `NodeAwaitingHuman.role`      -> `requires: CapabilityRequirement`
+    #                                      (capability.openapi.yaml)
+    #   - `decidableBy.minimumRoleToAdmit` -> `capabilityToAdmit`
+    #                                      (capability.openapi.yaml)
+    # Do not reintroduce it as a convenience enum for a picker. A role list is a
+    # tenant-scoped query against composed roles, not a constant.
+
+    DataClass:
+      type: string
+      enum: [public, internal, personal, sensitive_personal]
+
+    # ---- FieldPath — G214, G243, G244 --------------------------------------
+    #
+    # THE WIRE FORM OF A FIELD PATH, DECLARED ONCE HERE AND `$ref`d BY EVERY
+    # OTHER TIER. It mirrors `FieldPath` in `model/kernel.ts`, which stopped
+    # being `= string` under G214 on 22 Aug 2026.
+    #
+    # 🛑 UNTIL G244, 23 Aug 2026, ALL FOUR TIERS STILL DESCRIBED A PLAIN STRING
+    # AND `tools/check-wire-mirror.mjs` REPORTED `DRIFT (0)` THROUGHOUT — and it
+    # was not broken. It is a line scanner that compares literal-union enums and
+    # does not resolve `$ref` (G109's `$ref` half is open and the checker says so
+    # in its own header), so it was reporting truthfully about the pairs it can
+    # reach, and this divergence was not one of them. A green control over a
+    # divergence it cannot see is recorded here because nothing else records it.
+    #
+    # ⚠️ DO NOT RESTATE THESE THREE SCHEMAS IN ANOTHER TIER. `Meter` here and the
+    # `errors.yaml` vocabulary are `$ref`d across files for the same reason: a
+    # transcribed schema is a schema that drifts, and this one drifted for a day.
+
+    FieldSegment:
+      description: |
+        ONE STEP of a `FieldPath`, applied left to right from the root of a
+        document. Mirrors `FieldSegment` in `model/kernel.ts`.
+
+        A discriminated union rather than a bare `string | number`, so the two
+        kinds cannot be confused by a reader that later relaxes a `typeof`, and
+        so the index rule below is carried on the VALUE rather than in prose.
+
+        🛑 THE ARRAY-INDEX RULE IS EXPLICIT BECAUSE IT IS THE ONE A CLIENT WOULD
+        OTHERWISE INVENT A SPELLING FOR. `{"kind":"key","key":"0"}` addresses the
+        STRING PROPERTY `"0"` of an object; `{"kind":"index","index":0}`
+        addresses the FIRST ELEMENT of an array. They are different segments and
+        they never coincide.
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [kind, key]
+          properties:
+            kind: { type: string, enum: [key] }
+            key:
+              type: string
+              description: |
+                One own-property of a JSON object, matched by EXACT BYTES. No
+                normalisation, no case folding, no trimming — a counterparty key
+                is compared as given or it is not compared at all.
+        - type: object
+          additionalProperties: false
+          required: [kind, index]
+          properties:
+            kind: { type: string, enum: [index] }
+            index:
+              type: integer
+              minimum: 0
+              description: |
+                One element of a JSON array, by ZERO-BASED position.
+      discriminator:
+        propertyName: kind
+
+    FieldPath:
+      type: array
+      minItems: 1
+      items: { $ref: '#/components/schemas/FieldSegment' }
+      description: |
+        A NON-EMPTY, ORDERED list of segments addressing EXACTLY ONE position in
+        a document. Mirrors `FieldPath` in `model/kernel.ts`, which is branded so
+        that only `parseFieldPath()` in `model/field-path.ts` can produce one —
+        a path arriving over the wire is parsed at that seam like any other
+        external input, and is refused there rather than trusted here.
+
+        🛑 THERE IS NO WILDCARD, NO SLICE, NO FILTER AND NO DESCENT OPERATOR, AND
+        G243 REFUSED ADDING ONE. A `FieldSpec` must name ONE field: G222 rules
+        that an outbound `DataClass` is the MAXIMUM over the `FieldSpec` classes
+        carried, and a maximum over a set is computable only if each path names
+        one field. An `each` segment would widen one `FieldSpec` to N keys and
+        needs a ruling of its own. Do not add `[]`, `each` or `*` to this schema.
+
+        ⚠️ WHY NOT A DOTTED STRING — PRESERVED AS THE REJECTED ALTERNATIVE,
+        because it is the cheapest thing to read on a screen and someone will
+        propose it again. THE KEYS ARE COUNTERPARTY-CONTROLLED. A dotted path
+        breaks on any key containing a dot, which is legal JSON and therefore
+        will happen, and ITS FAILURE MODE IS THE BAD ONE: given a document
+        holding both a literal key `payer.ref` and a nested `payer` → `ref`, it
+        silently addresses the WRONG key rather than refusing. JSON Pointer
+        (RFC 6901) is the respectable alternative — a standard, with defined
+        escaping, legible in a trace — and was refused because its correctness
+        lives in a parse-and-unescape step AT EVERY BOUNDARY, and correctness
+        that lives at call sites is correctness that drifts. A token list has no
+        escaping problem because there is nothing to escape.
+
+    FieldPathKey:
+      type: string
+      description: |
+        A `FieldPath` COLLAPSED TO AN IDENTITY TOKEN, used where a path has to be
+        a JSON object's PROPERTY NAME and an array therefore cannot be. Mirrors
+        `FieldPathKey` in `model/kernel.ts`, produced by `fieldPathKey()` in
+        `model/field-path.ts`, which is length-prefixed and therefore injective.
+
+        It exists because a path is an ARRAY, and an array keys a map by
+        REFERENCE — two structurally identical paths would be two different
+        entries, and the classification lookup that invariant 4 rests on would
+        silently miss.
+
+        🛑 IT IS NOT A SECOND GRAMMAR AND MUST NOT BE PARSED. There is no inverse
+        anywhere in this repository and there must not be one — nothing takes a
+        `FieldPathKey` and returns a `FieldPath`. A reader that needs to know
+        which entry is which computes the token FORWARD from the `FieldSpec`
+        paths it was given, which is exactly what `addressableKeys()` does in the
+        model: it builds the set from the DECLARATIONS and never from the
+        document, so a payload key with no `FieldSpec` is not merely unclassified
+        but unaddressable — G106, failing closed.
+
+        🛑 OPEN QUESTION, FLAGGED BY G244 RATHER THAN ANSWERED BY IT. Carrying
+        this token ACROSS A BOUNDARY asks every client to implement the encoding
+        a second time, and a second implementation of the representation is the
+        thing G214 exists to prevent. The alternative — every path-keyed object
+        becoming an array of `{path, value}` entries, so the `FieldPath` itself
+        crosses and the token never does — is a BREAKING wire restructure that
+        nobody has ruled, and inventing it here would be a contract decision
+        taken by a mirroring commit. The three sites that key by this token are
+        `applyCeiling`'s `values` (this file), and `Document.extracted` and
+        `Document.lines[].fields` in `capability.openapi.yaml`.
+
+    AgentAction:
+      type: string
+      enum: [classify, extract, explain, propose_resolution, execute_resolution, notify, close_exception]
+
+    PolicySubject:
+      type: object
+      description: Discriminated union. Mirrors PolicySubject in model/policy.ts.
+      additionalProperties: true
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum: [exception, run, document, correspondence, procedure_step]
+
+    SubjectLocation:
+      type: object
+      description: |
+        Mirrors SubjectLocation in model/governance.ts — ELEVEN variants, checked
+        against the union on 8 Aug 2026.
+
+        blob, correspondence_message and trace were added on 5 Aug, without which
+        exports, page renders and vendor replies were unreachable by the erasure
+        index.
+
+        `notification` was added to the model after that and was MISSING here
+        until 7 Aug 2026. A subject's name carried out in a weekly digest or an
+        approval mail could be registered in the model and rejected at the
+        boundary — an erasure index the API will not accept a write to is an
+        erasure index with a hole in it, through the one channel where the copy
+        is already outside our control.
+      additionalProperties: true
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum:
+            - source_document
+            - match_group_key
+            - explanation_observed
+            - audit_event
+            - observed_label
+            - score_rationale
+            - blob
+            - correspondence_message
+            - trace
+            - notification
+            - bi_dataset
+
+    Meter:
+      type: string
+      enum:
+        - input_tokens
+        - output_tokens
+        - documents_processed
+        - pages_extracted
+        - reconciliations_run
+        - exceptions_raised
+        - storage_gb_month
+        - api_calls
+
+    PackKey:
+      type: string
+      description: |
+        THE CLOSED PACK-KEY VOCABULARY. G224, 22 Aug 2026.
+
+        Mirrors `PACK_KEYS` in `model/domain.ts`, pinned by the `pack_keys`
+        pair in `tools/check-wire-mirror.mjs`. THE PLATFORM PRE-REGISTERS
+        EVERY PACK KEY — a partner cannot mint one — which is what lets
+        `packVersionsInForce` close its key space with `propertyNames` on both
+        the attestation body and the heartbeat, the way `totals` already
+        closes against `Meter`.
+
+        Honest today rather than aspirational, and G224 records that as the
+        condition: partner pack authorship is not in v1, every pack carries
+        `authoredBy: null` and `signature: null`, so closing this takes
+        nothing from anybody. Partner-mints-platform-countersigns is the right
+        long-run answer and was refused only on sequencing — it needs the
+        signing seam G110's publication half was to provide, which is unbuilt
+        and blocked on an `administration.openapi.yaml` that does not exist.
+
+        These are `SolutionPack.key` values, NOT `SolutionPack.id` values.
+      enum:
+        - finance_ap
+        - kyc_identity
+        - credit_underwriting
+        - medical_records
+
+    RetentionClass:
+      type: string
+      enum:
+        - source_document
+        - export
+        - page_render
+        - exception
+        - match_group
+        - approval
+        - audit_event
+        - policy_evaluation
+        - usage_record
+        - data_access_event
+        - score_result
+        - observed_label
+        - trace
+        # G233, 23 Aug 2026 — the fourteenth. APPENDED, not inserted: the
+        # wire-mirror checker compares this enum against RETENTION_CLASSES as a
+        # SEQUENCE, so equal sets in a different order are still drift.
+        - held_work
+
+    UsageEvent:
+      type: object
+      additionalProperties: false
+      required: [idempotencyKey, at, meter, quantity]
+      properties:
+        idempotencyKey:
+          type: string
+          description: Provider request id where one exists.
+        at: { type: string, format: date-time }
+        meter: { $ref: '#/components/schemas/Meter' }
+        quantity: { type: number }
+        runId: { type: [string, 'null'] }
+        model: { type: [string, 'null'] }
+        costCenter: { type: [string, 'null'] }
+
+    AuditEventInput:
+      type: object
+      additionalProperties: false
+      required: [kind, subjectType, subjectId]
+      properties:
+        kind: { type: string, const: change }
+        subjectType: { type: string }
+        subjectId: { type: string }
+        before: { type: object, additionalProperties: true }
+        after: { type: object, additionalProperties: true }
+
+    DataAccessEventInput:
+      type: object
+      additionalProperties: false
+      required: [kind, subjectType, subjectId, maxDataClass]
+      properties:
+        kind: { type: string, const: access }
+        subjectType: { type: string }
+        subjectId: { type: string }
+        maxDataClass: { $ref: '#/components/schemas/DataClass' }
+
+    ProcedureViolation:
+      type: object
+      additionalProperties: false
+      required: [stepId, rule, detail]
+      properties:
+        stepId: { type: string }
+        rule:
+          type: string
+          enum:
+            - untrusted_to_outbound_without_human
+            - admitting_agent_carries_tools
+            - unknown_step_kind
+            - edge_unresolved
+            - branch_edges_malformed
+            - tool_not_in_catalogue
+            - disposition_not_in_family
+            - autonomy_exceeds_tenant_policy
+        detail: { type: string }
+
+# ------------------------------------------------------------- reason codes
+    #
+    # 🛑 A LOCAL COPY OF `errors.yaml#/components/schemas/ErrorCode`, GENERATED
+    # FROM IT, AND THE COPY IS A RULING RATHER THAN AN OVERSIGHT. The owner,
+    # 21 Sep 2026: *"Stop `$ref`-ing `errors.yaml` from success bodies. A
+    # success body carries its own closed enum rather than pointing at the error
+    # taxonomy."* `server/contract/bundle.ts` is NOT changed and its refusal of
+    # external pointers stands — that refusal is the thing that made a success
+    # body pointing here unserialisable, and it is deliberate.
+    #
+    # ⚠️ WHAT IT COST, NAMED RATHER THAN DISCOVERED: this is a SECOND HOME for a
+    # closed vocabulary, which is `db/migrations/0002`'s *"third place to
+    # drift"*. It is a MIRROR rather than a fork, and the thing that makes it one
+    # is `tests/contracts/success-body-error-codes.test.ts`, which asserts SET
+    # EQUALITY WITH `errors.yaml` IN BOTH DIRECTIONS and compares ORDER —
+    # `db/migrations/0008`'s precedent for seeded reference data, and
+    # `tests/contracts/field-path-wire.test.ts` §3's precedent for a structural
+    # copy this same bundler refusal already forced on `FieldPath`.
+    #
+    # ⚠️ IT IS NOT NARROWED, AND THE NON-NARROWING IS A DECISION WITH A
+    # MEASUREMENT BEHIND IT. Only FIVE of these members can be produced into a
+    # success body today — `BLOCKER_CODE` in
+    # `server/data-plane/resolution-vocabulary.ts` is a TOTAL
+    # `Record<ApprovalBlocker, string>` over four, and `unavailableFor`'s
+    # producer writes two literals. A narrowed copy was refused for three
+    # measured reasons: `decidableBy.blockedBy` has NO producer at all, so any
+    # subset there is a guess; at `fast-json-stringify@7.0.1` an `enum` nested
+    # in a `oneOf` IS ENFORCED, so an under-guess on `unavailableFor` is a 500
+    # in production rather than a documentation error; and a narrow set has no
+    # mechanically checkable completeness direction, which is the whole control.
+    # **This slice changes the POINTER, not the SURFACE.** Narrowing is a second
+    # ruling and needs producers most of these fields do not have.
+    #
+    # ⚠️ IT IS APPENDED AT THE END OF `components.schemas` DELIBERATELY, AND NOT
+    # PLACED ALPHABETICALLY. `docs/contracts/README.md` records that roughly
+    # sixty citations in this record address these files as `file.yaml:NNN`;
+    # inserting 88 lines anywhere above would shift every one of them into
+    # the resolving-but-wrong class `tools/check-citations.mjs` structurally
+    # cannot catch.
+    #
+    # DERIVED, NEVER HAND-TYPED. Regenerate and diff:
+    #   node -e "const y=require('yaml'),f=require('fs');\
+    #     const p=(x)=>y.parse(f.readFileSync(x,'utf8')).components.schemas.ErrorCode.enum;\
+    #     console.log(JSON.stringify(p('docs/contracts/errors.yaml'))===\
+    #       JSON.stringify(p('docs/contracts/<this file>')))"
+
+    ErrorCode:
+      type: string
+      description: |
+        Closed and shared. Listed alphabetically; any tier may return any code.
+
+        A LOCAL COPY of `errors.yaml`'s enum of the same name, kept identical to
+        it — members and order — by
+        `tests/contracts/success-body-error-codes.test.ts`. Read the comment
+        block above before changing a member here: this file is the MIRROR and
+        `errors.yaml` is the AUTHORITY.
+      enum:
+        - access_grant_absent
+        - adjustment_currency_mismatch
+        - admission_already_decided
+        - admission_class_above_agent_ceiling
+        - admission_role_insufficient
+        - admission_second_person_required
+        - admitting_step_carries_tools
+        - approval_quorum_unmet
+        - approval_rejection_reason_required
+        - approval_second_approver_required
+        - approval_segregation_violation
+        - attestation_chain_broken
+        - attestation_sequence_gap
+        - attestation_signature_invalid
+        - autonomy_override_reason_required
+        - bound_negative
+        - bound_not_a_number
+        - bound_not_an_integer
+        - bound_zero
+        - bounds_not_configured
+        - capability_not_held
+        - classification_ceiling_exceeded
+        - connection_disabled
+        - data_plane_decommissioned
+        - data_plane_unknown
+        - definition_not_active
+        - disposition_not_offered
+        - disposition_requires_adjustment
+        - document_type_unknown
+        - domain_claimed_by_more_than_one_connection
+        - domain_not_claimed
+        - domain_not_verified
+        - entitlement_ceiling_breached
+        - entitlement_exhausted
+        - entitlement_expired
+        - exception_already_resolved
+        - export_class_excluded
+        - export_destination_not_allowed
+        - export_forbidden_by_policy
+        - idempotency_conflict
+        - idle_exceeds_lifetime
+        - lease_revoked
+        - membership_absent
+        - message_not_admitted
+        - model_provider_throttled
+        - model_residency_violation
+        - model_unavailable_in_account
+        - non_synthetic_ingest_refused
+        - outbound_channel_not_permitted
+        - outbound_endpoint_unverified
+        - pack_not_entitled
+        - pack_version_unsupported
+        - period_closed
+        - policy_bundle_version_unsupported
+        - policy_denied
+        - policy_redacted
+        - policy_requires_approval
+        - proposal_not_executable
+        - proposal_superseded
+        - rate_limited
+        - recommendation_superseded
+        - required_evidence_missing
+        - resolution_not_configured
+        - resource_not_found
+        - retention_class_unknown
+        - reversal_window_expired
+        - sanitisation_rejected
+        - schema_version_unsupported
+        - sender_unverified
+        - sequence_regressed
+        - session_idle_exceeds_ceiling
+        - session_invalid
+        - session_lifetime_exceeds_ceiling
+        - sign_in_attempt_challenge_mismatch
+        - sign_in_attempt_connection_mismatch
+        - sign_in_attempt_handle_mismatch
+        - sign_in_attempt_replayed
+        - signature_key_unknown
+        - slot_fill_incomplete
+        - step_awaiting_reply
+        - step_not_current
+        - subject_location_unregistered
+        - tag_vocabulary_violation
+        - tenant_context_missing
+        - tenant_suspended
+        - tool_out_of_scope
+        - trigger_not_enabled
+        - upload_expired
+        - upstream_unavailable
+        - user_disabled
+        - validation_failed

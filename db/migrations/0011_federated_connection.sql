@@ -1,0 +1,280 @@
+-- =====================================================================
+-- 0011 — THE BROKER HANDLE. G304 / G305 / G306 (19 Sep 2026), applying G302.
+--
+-- **THE ONE BLOCKER WITH A NAMED CAUSE, AND THIS IS THE NAME.**
+-- `docs/build/deploy-handoff.md` §5a item 1, verbatim:
+--
+--     "**`tenant.identity_connection` has no column that can hold a Cognito
+--      provider name.** Seven columns, none a broker handle. G299 said Cognito
+--      is *"free to force a second migration"*; **this is it**, and it belongs
+--      to `db/`, not `infra/`."
+--
+-- G299 wrote the invitation on its own face — *"Cognito is wired later as the
+-- thing that POPULATES them, and is FREE TO FORCE A SECOND MIGRATION — which
+-- is why this file writes the narrowest column set the readers need and not a
+-- guess at a token claim set."* **This file takes that invitation and keeps
+-- that rule.** It adds TWO columns and refuses three more by name.
+--
+-- ⚠️ IT CREATES NO TABLE. It is the first migration in this directory that
+--    only `ALTER`s — 0008 was the first to `ALTER POLICY` another migration's
+--    control; this is the first to add a column to another migration's table.
+--    The consequence is worth stating because a reader will look for the
+--    section and not find it: **there is no `ENABLE`/`FORCE ROW LEVEL SECURITY`
+--    block below and there must not be one.** 0009 enabled AND forced RLS on
+--    `tenant.identity_connection`, a column added to a table inherits the
+--    table's policies, and `identity_connection_rls` narrows the ROW rather
+--    than the column list. Re-issuing `ENABLE`/`FORCE` here would be a second
+--    statement of a property one file already owns — the copy that drifts,
+--    §5.3 — and it would read as though this file had decided something 0009
+--    decided. `tests/db/identity-substrate.test.ts` §6f asserts the inherited
+--    property against THESE columns rather than trusting the inheritance.
+--
+-- RULINGS THIS APPLIES (docs/HANDOFF.md §3):
+--   G302  Cognito is a BROKER for external IdPs, and each connection becomes
+--         an `identity_connection` row. This is the column that lets one.
+--   G304  the handle is a PAIR — `(broker_issuer, broker_ref)` — because a
+--         provider name is unique WITHIN ONE POOL and nowhere else. The
+--         uniqueness index below is the whole of the ruling in executable
+--         form.
+--   G305  a PROTOCOL declares whether its door is brokered, and a row that
+--         disagrees with its protocol is REFUSED by the reader, never
+--         defaulted. `model/domain.ts`'s `PROTOCOL_IS_BROKERED`.
+--   G306  the audience, the JWKS URI and the claim map are NOT stored here.
+--         They are read by token verification and by nothing else; they land
+--         in the commit that verifies a token. See the refusal block below.
+--   G97   every branded id is `text`. Neither column is branded at all — R1,
+--         *"the string AWS mints stays a string"* — and both are `text`.
+--   G100  unchanged: the policy this table already carries denies on NULL, and
+--         these columns are inside that row, not beside it.
+--   G88   forward-only. There is no `down`. **A stored shape is a stored
+--         commitment**, which is why two columns land and five do not.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 WHY THE HANDLE IS TWO COLUMNS AND NOT ONE. THIS IS G304 AND IT IS THE
+--    ONLY DECISION IN THIS FILE THAT COULD HAVE GONE THE OTHER WAY QUIETLY.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- A Cognito provider name — `ProviderName`, the thing an operator types when
+-- they attach a customer's Entra or Okta to a user pool — is unique **within
+-- that pool**. It is not unique anywhere else. Two pools may each carry a
+-- provider called `acme-entra`:
+--
+--   · staging and production, which this repository already runs as separate
+--     accounts and separate stacks (`docs/tech-stack.md`);
+--   · two regions, which G297 has just made a first-class part of the host
+--     grammar — `{tenant}.us-west-2.reconcileai.app`;
+--   · a BYOA estate under G36/G276, where the pool is the CUSTOMER's.
+--
+-- 🛑 SO A BARE PROVIDER NAME IS A KEY THAT CAN COLLIDE ACROSS POOLS, AND A
+--    COLLIDED BROKER HANDLE RESOLVES TO THE WRONG CONNECTION — which resolves
+--    to the wrong `owner`, which resolves to the wrong `orgClass`. **G289 has
+--    already priced that exact outcome**, and the price is quoted here rather
+--    than referred to, because the whole argument for the second column is
+--    that the cheap version reaches it by a different road:
+--
+--        "Defaulting it to `customer` routes a partner down the customer arm
+--         PAST the live-grant check, the `partnerId` check, revocation, expiry
+--         and `PARTNER_CAPABILITY_MASK` — five controls deleted by one
+--         assignment."
+--
+--    A default is not the only way to get a wrong `orgClass`. **A colliding
+--    key is another**, and it arrives without anybody writing a default.
+--
+-- THE ISSUER IS THEREFORE THE NAMESPACE. `https://cognito-idp.<region>.
+-- amazonaws.com/<poolId>` — the pool's own issuer, which is what a token's
+-- `iss` claim carries and is therefore the one value that will be available at
+-- the moment the handle has to be resolved.
+--
+-- ⚠️ THIS IS `Role.key` ONE FILE OVER, AND 0009 ARGUES IT AT LENGTH ALREADY:
+--    *"two packs shipping `approver` still collide unless `(packId, key)` is
+--    the uniqueness constraint in the schema."* Same shape, same repair, and
+--    the repair is a partial unique index for the same portability reason —
+--    see the index below, which does NOT need 0009's `NULLS NOT DISTINCT`
+--    problem because both columns are null together or not at all.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 WHAT IS **NOT** ADDED, AND WHY EACH IS REFUSED BY NAME. G306.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- `0004_subject_ledger.sql` refused a column ahead of its reader at length and
+-- this repository treats the shape as a defect rather than as forward
+-- planning. The task of this file is the narrowest column set a reader in THIS
+-- COMMIT genuinely needs. These are the five that did not make it:
+--
+--   `audience`          — the app client id a token's `aud` must match. Read
+--                         by TOKEN VERIFICATION and by nothing else. Nothing
+--                         in this repository verifies a token: `grep -rn
+--                         'jwtVerify\|createRemoteJWKSet\|verifyIdToken'
+--                         server/` returns nothing. A stored audience that no
+--                         verifier consults is the appearance of a check —
+--                         0004's sentence exactly: *"a `NOT NULL` column no
+--                         code path populates is not enforcement of invariant
+--                         10; it is the appearance of it."*
+--   `jwks_uri`          — derivable from the issuer by a fixed suffix, so
+--                         storing it is a second copy of the issuer that can
+--                         disagree with it. §5.3.
+--   `claim_map`         — which token claim carries the subject, the email, the
+--                         groups. It is a real need and it is a RULING nobody
+--                         has taken; a `jsonb` column here would be that
+--                         ruling taken by a migration, quietly.
+--   `attribute_mapping` — the same, on Cognito's side of the wire.
+--   `enabled_at`        — a lifecycle column. G301 left the grant lifecycle
+--                         open BY NAME and this file does not open it sideways.
+--
+-- **Each of the five lands with the thing that reads it.** That is 0002's
+-- sentence, applied for the fourth time in this directory: *"They land with
+-- the schemas that publish them."*
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 NO `CHECK` CONSTRAINT ON THE PAIRING, AND THE ABSENCE IS 0009's OWN
+--    DECISION RATHER THAN AN OVERSIGHT. READ THIS BEFORE ADDING ONE.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- The obvious constraint is `CHECK ((broker_issuer IS NULL) = (broker_ref IS
+-- NULL))`, and it is one line, and it makes half a handle unrepresentable.
+-- **0009 faced the identical choice on `owner_kind`/`owner_partner_id`/
+-- `owner_account_id` and declined it, and its reason applies here without
+-- amendment:**
+--
+--     "There is no `CHECK` making the pairing exclusive … a malformed row —
+--      `owner_kind = 'partner'` with a NULL `owner_partner_id` — is possible
+--      in this table and is **REFUSED BY THE READER**"
+--
+-- and, on the foreign key it also declined:
+--
+--     "the constraint would delete a control rather than add one … the refusal
+--      becomes untestable, and a refusal nothing exercises is the shape
+--      `docs/HANDOFF.md` §5.6 catalogues."
+--
+-- 🛑 THE PAIRING RULE IS WIDER THAN A `CHECK` CAN EXPRESS ANYWAY, AND THAT IS
+--    THE DECIDING HALF. The rule is not *"both or neither"*; it is **"non-null
+--    exactly when `PROTOCOL_IS_BROKERED[protocol]`"** — which is a fact about
+--    `model/domain.ts`'s total `Record`, not about this table. Writing half of
+--    it as a `CHECK` would put a SECOND, WEAKER statement of the rule in the
+--    schema, where it would look authoritative and would pass rows the reader
+--    refuses. A partial rule that reads as a complete one is worse than none.
+--
+-- ⚠️ AND THE COST IS NAMED, AS 0009 NAMES ITS OWN: a malformed row can be
+--    written by anything holding the migrator credential, and nothing in the
+--    database says it is wrong. What says so is the reader, on every request,
+--    with a name — `broker_unresolvable`, refused rather than defaulted.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 NO BACKFILL, AND THE REASON IS A DERIVATION RATHER THAN AN ASSUMPTION.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- Adding a coherence rule to an existing table normally owes a backfill: every
+-- `oidc` and `saml` row that predates this file becomes unreadable the moment
+-- the reader starts enforcing G305. **This table has no such rows, and that is
+-- checkable rather than hopeful.** 0009 grants the app role `SELECT` and
+-- nothing else on `tenant.identity_connection`, so no serving process has ever
+-- been able to write one; the only writer in the repository is
+-- `server/dev/identity-seed.ts`, which runs as the migrator behind G192's flag
+-- and is updated in this same commit. Derive both halves:
+--
+--     grep -c 'GRANT SELECT ON tenant.identity_connection' db/migrations/0009_identity_substrate.sql
+--     grep -rln 'INSERT INTO tenant.identity_connection' server/ tests/
+--
+-- **If that second command ever returns a production path, this paragraph is
+-- wrong and a backfill is owed.** It is written as a command for that reason.
+--
+-- ⚠️ A NEW COLUMN ON AN EXISTING TABLE IS NULL FOR EVERY EXISTING ROW, AND
+--    UNDER G305 A NULL PAIR ON AN `oidc` ROW IS A REFUSAL, NOT A DEFAULT. That
+--    is the safe direction and it is the one this file wants: a door that the
+--    broker does not know about refuses everybody who comes through it, by
+--    name, rather than authenticating them on a connection no token can
+--    actually name.
+-- =====================================================================
+
+
+-- ---------------------------------------------------------------------
+-- THE TWO COLUMNS.
+--
+-- ⚠️ BOTH NULLABLE AT THE SCHEMA LEVEL AND NEITHER OPTIONAL IN THE MODEL. The
+--    nullability is `cognito_pool`'s — that arm legitimately carries no handle
+--    — and NOT a statement that a brokered row may omit one. The schema cannot
+--    say "non-null exactly when the protocol is brokered" without the `CHECK`
+--    refused above; the reader can, and does.
+--
+-- ⚠️ NO DEFAULT. A default on either column would mint a broker handle for
+--    every row that did not ask for one, and a minted handle is a key — under
+--    the index below it would be a key that collides on its second row. A
+--    column whose default participates in a uniqueness constraint is a trap
+--    that fires exactly once, on the second insert, in production.
+-- ---------------------------------------------------------------------
+
+ALTER TABLE tenant.identity_connection
+  -- The broker's own issuer. `https://cognito-idp.<region>.amazonaws.com/<poolId>`
+  -- for a Cognito pool. STORED VERBATIM AND NEVER PARSED — no region is read
+  -- out of it, no pool id, no account. G179's *"a LOOKUP, never a parse"*,
+  -- applied to a string that visibly invites one.
+  ADD COLUMN broker_issuer text,
+  -- The name the broker gives THIS directory. Cognito's `ProviderName`.
+  -- Meaningless without the issuer above; see the index.
+  ADD COLUMN broker_ref    text;
+
+
+-- ---------------------------------------------------------------------
+-- 🛑 ONE BROKER HANDLE NAMES AT MOST ONE CONNECTION. THIS IS G304 AS A
+--    PREDICATE, AND IT IS THE ONE THING IN THIS FILE THE DATABASE ENFORCES.
+--
+-- Two connections sharing `(broker_issuer, broker_ref)` is the state in which
+-- one token resolves to two organisations. `mayRouteToConnection()` already
+-- refuses the same shape one axis over and names it:
+-- `domain_claimed_by_more_than_one_connection` — *"Two connections with a
+-- verified claim on one domain IS the takeover state — picking either picks an
+-- `orgClass` for the user, which is the reach invariant 2 exists to close."*
+--
+-- **A shared broker handle is that sentence with `broker handle` substituted
+-- for `domain`, and it is worse in one respect: a domain claim is refused at
+-- ROUTING time by a function that can see both claims, whereas a broker handle
+-- is resolved by a lookup that would see one row and never know there was a
+-- second.** The database is the only place that can see both. So it is here.
+--
+-- ⚠️ PARTIAL, ON `broker_ref IS NOT NULL`, AND THE PREDICATE MATTERS FOR THE
+--    REASON 0009 SPELLS OUT: under the SQL default two rows of NULLs are
+--    DISTINCT, so an unbrokered pool would not collide with another one — but
+--    a plain `UNIQUE (broker_issuer, broker_ref)` would also admit a row with
+--    an issuer and a NULL ref beside another with the same issuer and a NULL
+--    ref, which is two half-handles in one namespace. The predicate says
+--    plainly WHICH rows this rule is about: the ones that carry a handle.
+--
+--    🛑 AND UNLIKE 0009's CASE THIS NEEDS NO `NULLS NOT DISTINCT` AND SO NEEDS
+--    NO POSTGRESQL 15 FLOOR. 0009 recorded the red — `42601 syntax error at or
+--    near "NULLS"` on the 14.18 developer database — and the repair there was
+--    two partial indexes. Here one suffices, because the two columns are null
+--    together: the predicate selects exactly the rows for which both are
+--    present, so there is no NULL left inside the index for the SQL default to
+--    have an opinion about.
+-- ---------------------------------------------------------------------
+
+CREATE UNIQUE INDEX identity_connection_broker_handle_uniq
+  ON tenant.identity_connection (broker_issuer, broker_ref)
+  WHERE broker_ref IS NOT NULL;
+
+
+-- ---------------------------------------------------------------------
+-- GRANTS — AND THERE ARE NONE, WHICH IS A DECISION AND NOT AN OMISSION.
+--
+-- 0009 grants `tenant_rw` `SELECT` on `tenant.identity_connection` **by name**,
+-- and a column-less `GRANT SELECT ON <table>` covers every column the table
+-- ever has, including ones added afterwards. So the app role can already read
+-- these two and nothing here needs to say so.
+--
+-- 🛑 THE HALF THAT IS NOT INHERITED IS THE ONE WORTH STATING: `SELECT` AND
+--    NOTHING ELSE IS STILL ALL THE APP ROLE HOLDS, so **no serving process can
+--    write a broker handle.** That is deliberate and it is the same argument
+--    0009 makes about `role_assignment`, one door over: a request path that
+--    could write `broker_ref` could point an existing connection at a broker it
+--    controls, and every token that broker issued would then resolve to this
+--    row's `owner` — **an org-class forgery with no default and no
+--    misconfiguration anywhere in it.** The writer, when it exists, is an
+--    operator surface on the administration tier, and it arrives with its own
+--    `WITH CHECK` in the same commit as itself. 0009's rule, verbatim: *"The
+--    commit that grants a write here owes the `WITH CHECK` in the same commit
+--    as the writer."*
+--
+-- ⚠️ SO THERE IS NO `WITH CHECK` IN THIS FILE EITHER, FOR THE SAME REASON THERE
+--    IS NONE IN 0009: there is no write for one to constrain. This is NOT
+--    0010's case — 0010 owed a `WITH CHECK` because 0010 granted `INSERT`.
+-- ---------------------------------------------------------------------

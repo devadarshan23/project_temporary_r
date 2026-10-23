@@ -1,0 +1,38 @@
+openapi: 3.1.0
+info:
+  title: wire-mirror fixture — STRAY WORKTREE (a contract that is not in the tree)
+  version: 0.0.0
+  description: |
+    Fixture for tools/check-wire-mirror.mjs. NOT a real contract, and
+    DELIBERATELY WRONG.
+
+    It exists to be COPIED, by tests/tools/wire-mirror-discovery.test.mjs, into
+    a `.claude/worktrees/<name>/docs/contracts/` path inside a scratch tree —
+    the exact shape an agent session's parked git worktree takes on a real
+    checkout, and gitignored there by `.gitignore:27`.
+
+    `FixtureLocation` carries `delta`, which the fixture model does not declare,
+    standing in for a stray worktree whose contracts are one commit behind the
+    current `model/`. A discovery that reads the DISK compares this against the
+    current model and goes red for a change that touched neither side. A
+    discovery that reads the TRACKED TREE never sees it.
+
+    The masking half of the same defect is witnessed with `mirrored.openapi.yaml`
+    copied to the same path: a stray copy that still agrees adds PASSING
+    comparisons and inflates `pairsCompared`, so the gate reports more coverage
+    than the tree has.
+paths: {}
+components:
+  schemas:
+    FixtureLocation:
+      type: object
+      additionalProperties: true
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          enum:
+            - alpha
+            - bravo
+            - charlie
+            - delta

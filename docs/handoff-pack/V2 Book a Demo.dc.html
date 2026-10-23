@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@200;300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./public.css">
+</helmet>
+
+<a class="skip" href="#form">Skip to the form</a>
+
+<header class="pchrome">
+  <a href="./V1 Landing.dc.html" style="text-decoration:none">
+    <span class="logo" style="--logo-size:1.0625rem"><span class="mascot" style="--mascot-size:1em"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span><span>Reconcile</span><span class="badge">AI</span></span>
+  </a>
+  <nav>
+    <ul class="pnav">
+      <li><a href="./V1 Landing.dc.html"><span class="mono" aria-hidden="true">‹</span>&nbsp;Back to the site</a></li>
+      <li><a href="./V1 Landing.dc.html#how">How it reads</a></li>
+      <li><a href="./V1 Landing.dc.html#platform">The platform</a></li>
+      <li><a href="./V1 Landing.dc.html#runs">Where it runs</a></li>
+    </ul>
+  </nav>
+  <span class="sp"></span>
+  <a class="btn btn--quiet" href="./V1 Landing.dc.html#signin">Sign in</a>
+</header>
+
+<main>
+
+  <section class="band">
+    <div class="wrapper split split--hero">
+      <div class="side" style="position:static">
+        <span class="eyebrow">Book a demo</span>
+        <h1>Bring us one exception type.</h1>
+        <p class="stand">Forty-five minutes, guided end to end on your own use
+        case — not a slide deck — and you leave with a bespoke ROI report. Run
+        it in your own AWS account and your documents never leave it.</p>
+      </div>
+
+      <div class="main" style="margin-top:0">
+        <p class="small">Bring one exception type. We show a document read
+        field by field with a confidence each, a field parked below the floor,
+        a match group, an exception with the candidates it ruled out, and a
+        proposal stopping at an authority limit — on your documents, not a
+        seeded story.</p>
+        <div class="acts">
+          <a class="btn btn--lg" href="#form">Start with your use case</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrapper split">
+      <div class="side">
+        <span class="eyebrow">What you get</span>
+        <h2>A guided tour of your own reconciliation, and an ROI report to keep.</h2>
+      </div>
+      <div class="main cols" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,calc(var(--u)*62)),1fr));margin-top:0">
+        <div class="panel">
+          <span class="tag">A guided tour, on your use case</span>
+          <p class="small">We take the documents, languages, exception types
+          and systems you select below and walk the whole path with you — read,
+          match, exception, proposal — narrated by the person who would run
+          your deployment.</p>
+        </div>
+        <div class="panel">
+          <span class="tag">A bespoke ROI report, free</span>
+          <p class="small">Your volumes and exception mix costed: hours spent
+          on each exception type today, what falls away when the machine does
+          the first pass, and which of your types are not reconcilable from the
+          documents you have. Written, yours to circulate, no obligation.</p>
+        </div>
+        <div class="panel" data-pick="true">
+          <span class="tag">Your data never leaves your AWS account</span>
+          <p class="small">Deploy into your own account and the documents, the
+          models and the audit trail stay inside your boundary — we hold no
+          copy. Residency, retention and support access stay under your
+          control. The hosted tenant is there when you would rather we ran
+          it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band--sheet" id="form">
+    <div class="wrapper">
+
+      <sc-if value="{{ onStepOne }}" hint-placeholder-val="{{ true }}">
+        <div class="split">
+          <div class="side">
+            <span class="eyebrow">Step one of two</span>
+            <h2>What you are reconciling.</h2>
+            <p class="small">Your time is worth more than a generic
+            walkthrough, so we start here: these answers let us tailor the demo
+            to your landscape before you arrive. Every one of them is a button,
+            and you can start from a typical setup and adjust it.</p>
+          </div>
+
+          <div class="form main">
+            <div class="headstart">
+              <button class="btn" type="button" onClick="{{ typical }}">Start from a typical setup</button>
+              <span class="small">{{ answeredNote }}</span>
+            </div>
+
+            <div class="group">
+              <span class="glab">Your documents <span class="gnote">{{ docsNote }}</span></span>
+              <div class="field full">
+                <span>Which documents do you reconcile?</span>
+                <div class="choices">
+                  <sc-for list="{{ docTypes }}" as="d" hint-placeholder-count="7">
+                    <button class="choice" type="button" aria-pressed="{{ d.on }}" onClick="{{ d.toggle }}">{{ d.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+              <div class="field full">
+                <span>Which languages do they arrive in?
+                  <span class="hint">Pick every one you see, including the rare ones.</span>
+                </span>
+                <div class="choices">
+                  <sc-for list="{{ langs }}" as="l" hint-placeholder-count="8">
+                    <button class="choice" type="button" aria-pressed="{{ l.on }}" onClick="{{ l.toggle }}">{{ l.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+              <div class="field full">
+                <span>Roughly how many a month?</span>
+                <div class="choices">
+                  <sc-for list="{{ volumes }}" as="v" hint-placeholder-count="4">
+                    <button class="choice" type="button" aria-pressed="{{ v.on }}" onClick="{{ v.pick }}">{{ v.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+
+            <div class="group">
+              <span class="glab">Your exceptions <span class="gnote">{{ excNote }}</span></span>
+              <div class="field full">
+                <span>Which exception types hurt most?</span>
+                <div class="choices">
+                  <sc-for list="{{ kinds }}" as="k" hint-placeholder-count="5">
+                    <button class="choice" type="button" aria-pressed="{{ k.on }}" onClick="{{ k.toggle }}">{{ k.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+              <div class="field full">
+                <span>Which systems hold the evidence?
+                  <span class="hint">Pick the ones you recognise. We will ask about the rest on the call.</span>
+                </span>
+                <div class="choices">
+                  <sc-for list="{{ systems }}" as="y" hint-placeholder-count="9">
+                    <button class="choice" type="button" aria-pressed="{{ y.on }}" onClick="{{ y.toggle }}">{{ y.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+
+            <div class="group">
+              <span class="glab">Where it runs <span class="gnote">{{ runNote }}</span></span>
+              <div class="field full">
+                <span>Where do the documents need to sit?
+                  <span class="hint">In your own AWS account, nothing ever leaves your boundary. Hosted by us is faster to start. Either way we tailor the session to it.</span>
+                </span>
+                <div class="choices">
+                  <sc-for list="{{ modes }}" as="m" hint-placeholder-count="3">
+                    <button class="choice" type="button" aria-pressed="{{ m.on }}" onClick="{{ m.pick }}">{{ m.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+
+            <div class="full acts" style="margin-top:0">
+              <button class="btn btn--lg" type="button" data-commit onClick="{{ next }}" aria-disabled="{{ nextDisabled }}">Continue</button>
+            </div>
+            <p class="small full" style="margin-top:0">{{ oneNote }}</p>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onStepTwo }}" hint-placeholder-val="{{ false }}">
+        <div class="split">
+          <div class="side">
+            <span class="eyebrow">Step two of two</span>
+            <h2>Who you are, and when.</h2>
+            <p class="small">Now that we know what to prepare, four fields and
+            a time. The paragraph at the end is optional.</p>
+          </div>
+
+          <div class="form main">
+            <label class="field">
+              <span>Your name</span>
+              <input type="text" value="{{ name }}" onInput="{{ onName }}" placeholder="Aisyah Rahman">
+            </label>
+            <label class="field">
+              <span>Work email</span>
+              <input type="email" value="{{ email }}" onInput="{{ onEmail }}" placeholder="you@company.com">
+            </label>
+            <label class="field">
+              <span>Company</span>
+              <input type="text" value="{{ company }}" onInput="{{ onCompany }}" placeholder="Meridian Group Pte Ltd">
+            </label>
+            <label class="field">
+              <span>Phone
+                <span class="hint">So we can reach you if the call link fails. Country code first.</span>
+              </span>
+              <span class="phone">
+                <select class="mono" value="{{ dial }}" onChange="{{ onDial }}">
+                  <sc-for list="{{ dials }}" as="d" hint-placeholder-count="6">
+                    <option value="{{ d.code }}">{{ d.label }}</option>
+                  </sc-for>
+                </select>
+                <input type="tel" class="mono" value="{{ phone }}" onInput="{{ onPhone }}" placeholder="9123 4567">
+              </span>
+            </label>
+            <label class="field">
+              <span>Referral code
+                <span class="hint">If a partner introduced us, their code matches the deal they registered in advance.</span>
+              </span>
+              <input type="text" class="mono" value="{{ code }}" onInput="{{ onCode }}" placeholder="optional">
+            </label>
+            <label class="field full">
+              <span>Anything you want us to open with?
+                <span class="hint">Optional. Plain words are better than a list of systems.</span>
+              </span>
+              <textarea value="{{ what }}" onInput="{{ onWhat }}" placeholder="Supplier invoices against goods receipts across two ERPs, monthly, in spreadsheets."></textarea>
+            </label>
+
+            <sc-if value="{{ offerSlots }}" hint-placeholder-val="{{ true }}">
+            <div class="field full" style="padding-top:calc(var(--u)*5);border-top:1px solid var(--rule-strong)">
+              <span>Pick a slot <span class="hint">Times shown in your local timezone. One slot is already taken.</span></span>
+              <div class="slots">
+                <sc-for list="{{ slots }}" as="s" hint-placeholder-count="6">
+                  <button class="slot" type="button" aria-pressed="{{ s.on }}" aria-disabled="{{ s.gone }}" onClick="{{ s.pick }}">{{ s.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+            </sc-if>
+
+            <div class="full acts" style="margin-top:0">
+              <button class="btn btn--lg" type="button" data-commit onClick="{{ submit }}" aria-disabled="{{ submitDisabled }}">Book it</button>
+              <button class="btn btn--lg" type="button" onClick="{{ back }}">Back</button>
+            </div>
+            <p class="small full" style="margin-top:0">{{ twoNote }}</p>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ booked }}" hint-placeholder-val="{{ false }}">
+        <div class="split">
+          <div class="side">
+            <span class="eyebrow">Booked</span>
+            <h2>{{ confirmTitle }}</h2>
+          </div>
+          <div class="main">
+          <p class="stand">{{ confirmLine }}</p>
+
+          <div class="answer" role="status" style="margin-top:calc(var(--u)*8)">
+            <b>What happens now.</b> {{ nextSteps }}
+          </div>
+
+          <ul class="list">
+            <sc-for list="{{ receipt }}" as="r" hint-placeholder-count="3">
+              <li><span class="mk">{{ r.mk }}</span><span><b>{{ r.t }}</b> {{ r.d }}</span></li>
+            </sc-for>
+          </ul>
+
+          <div class="acts">
+            <a class="btn btn--lg" href="./V1 Landing.dc.html">Back to the site</a>
+            <button class="btn btn--lg" type="button" onClick="{{ reset }}">Book another</button>
+          </div>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </section>
+
+  <footer class="pfoot">
+    <div class="wrapper">
+      <div class="rows">
+        <span class="logo" style="--logo-size:1.0625rem"><span class="mascot" style="--mascot-size:1em"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span><span>Reconcile</span><span class="badge">AI</span></span>
+        <ul>
+          <li><a href="./V1 Landing.dc.html#how">How it reads</a></li>
+          <li><a href="./V1 Landing.dc.html#platform">The platform</a></li>
+          <li><a href="./V1 Landing.dc.html#runs">Where it runs</a></li>
+        </ul>
+        <ul>
+          <li><a href="./V1 Landing.dc.html">The landing page</a></li>
+          <li><a href="./V1 Landing.dc.html#signin">Sign in</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: {&quot;width&quot;: 1240},
+  &quot;showSlots&quot;: {&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Form&quot;,&quot;label&quot;:&quot;Offer slot picking&quot;},
+  &quot;requireCompany&quot;: {&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Form&quot;,&quot;label&quot;:&quot;Company is required to continue&quot;}
+}">
+class Component extends DCLogic {
+  state = {
+    step:1, name:'', email:'', company:'', code:'', what:'',
+    dial:'+65', phone:'',
+    docTypes:[], langs:[], kinds:[], systemList:[],
+    volume:null, mode:null, slot:null, booked:false
+  };
+
+  DIALS = [
+    {code:'+65', label:'+65 SG'}, {code:'+60', label:'+60 MY'},
+    {code:'+62', label:'+62 ID'}, {code:'+63', label:'+63 PH'},
+    {code:'+66', label:'+66 TH'}, {code:'+84', label:'+84 VN'},
+    {code:'+673', label:'+673 BN'}, {code:'+855', label:'+855 KH'},
+    {code:'+856', label:'+856 LA'}, {code:'+95', label:'+95 MM'},
+    {code:'+852', label:'+852 HK'}, {code:'+61', label:'+61 AU'},
+    {code:'+91', label:'+91 IN'}, {code:'+81', label:'+81 JP'},
+    {code:'+44', label:'+44 UK'}, {code:'+1', label:'+1 US/CA'}
+  ];
+  DOCTYPES = ['Supplier invoices','Purchase orders','Goods receipts','Bank statements','Credit notes','Customs and shipping','Contracts'];
+  LANGS = ['English','Bahasa Indonesia','Bahasa Melayu','Mandarin','Tagalog','Thai','Vietnamese','Tamil','Khmer','Burmese','Japanese','Korean'];
+  SYSTEMS = ['SAP','Oracle','NetSuite','Microsoft Dynamics','Coupa','Bank feeds','Supplier portal','Shared inbox','Spreadsheets'];
+  KINDS = ['Duplicate payments','Unaccounted charges','FX variance','Intercompany','Ingestion backlog'];
+  VOLUMES = ['Under 1,000','1,000 – 10,000','10,000 – 100,000','More than 100,000'];
+  MODES = ['Hosted by you is fine','In our own AWS account — data never leaves it','Not decided yet'];
+  /* Illustrative. A real calendar would come from the scheduling system; the
+     taken slot is here because a grid with nothing unavailable teaches a
+     visitor nothing about what they are choosing. */
+  SLOTS = [
+    {label:'Tue 09:30', gone:false},
+    {label:'Tue 14:00', gone:true},
+    {label:'Wed 11:00', gone:false},
+    {label:'Wed 16:30', gone:false},
+    {label:'Thu 10:00', gone:false},
+    {label:'Fri 15:00', gone:false}
+  ];
+
+  /* Illustrative registry. A code that matches a registration is how a partner
+     gets credit — registration-first, so attribution is a match rather than a
+     claim made after the fact. */
+  REGISTRATIONS = {'MRD-114':'Meridian Partners', 'APX-208':'Apex Advisory'};
+
+  /* One toggle builder for every multi-select, so the chip groups behave
+     identically and stay in step with the counts shown on each group. */
+  chips(list, key){
+    const sel = this.state[key];
+    return list.map(v => ({
+      label: v,
+      on: sel.indexOf(v) !== -1 ? 'true' : 'false',
+      toggle: ()=> this.setState(p => ({
+        [key]: p[key].indexOf(v) !== -1 ? p[key].filter(x => x !== v) : p[key].concat([v])
+      }))
+    }));
+  }
+
+  renderVals(){
+    const s = this.state;
+    const email = s.email.trim();
+    const validEmail = /^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(email);
+    const needCompany = this.props.requireCompany !== false;
+    const offerSlots = this.props.showSlots !== false;
+    const contactReady = s.name.trim().length > 1 && validEmail
+      && (!needCompany || s.company.trim().length > 1);
+    const oneReady = s.docTypes.length > 0 && s.kinds.length > 0;
+    const answered = [s.docTypes.length, s.langs.length, s.kinds.length,
+      s.systemList.length, s.volume !== null ? 1 : 0, s.mode !== null ? 1 : 0]
+      .filter(Boolean).length;
+    const partner = this.REGISTRATIONS[s.code.trim().toUpperCase()] || null;
+    const slotLabel = s.slot === null ? null : this.SLOTS[s.slot].label;
+
+    const receipt = [
+      {mk:'›', t:'A confirmation is on its way to ' + (email || 'your work email') + '.',
+       d:'It carries the slot, who you will be speaking to, and the two questions we would like you to bring an answer to.'},
+      {mk:'›', t:'Your ROI report follows within two working days.',
+       d:'Your volumes and exception mix costed, and a written view of which types are reconcilable from the documents you already have. Free, yours to circulate, no obligation.'},
+      {mk:'…', t:'The session runs on our seeded tenant.',
+       d:'Real reconciliation, synthetic documents, reset every night — so nothing you see belongs to another customer, and nothing you say stays in it. Your own deployment, if you choose it, runs inside your AWS account and we hold no copy.'}
+    ];
+    if(partner){
+      receipt.splice(1, 0, {mk:'›', t:'Referral matched to ' + partner + '.',
+        d:'Your code matches a deal they registered in advance, so the introduction is credited to them without either of us having to argue about it later.'});
+    } else if(s.code.trim()){
+      receipt.splice(1, 0, {mk:'✕', t:'That referral code does not match a registration.',
+        d:'We have kept it on the record and we will ask. A referral with no registration behind it is a conversation rather than a credit — which is deliberate, and it is why partners register deals up front.'});
+    }
+
+    return {
+      showForm: true,
+      onStepOne: !s.booked && s.step === 1,
+      onStepTwo: !s.booked && s.step === 2,
+      booked: s.booked,
+
+      name:s.name, email:s.email, company:s.company, code:s.code,
+      what:s.what, dial:s.dial, phone:s.phone, dials:this.DIALS,
+      onDial:  (e)=> this.setState({dial:e.target.value}),
+      onPhone: (e)=> this.setState({phone:e.target.value}),
+
+      docTypes: this.chips(this.DOCTYPES, 'docTypes'),
+      langs:    this.chips(this.LANGS, 'langs'),
+      systems:  this.chips(this.SYSTEMS, 'systemList'),
+      docsNote: s.docTypes.length
+        ? s.docTypes.length + ' selected · ' + (s.langs.length || 'no') + ' language' + (s.langs.length === 1 ? '' : 's')
+        : 'three questions',
+      excNote: s.kinds.length
+        ? s.kinds.length + ' type' + (s.kinds.length === 1 ? '' : 's') + ' · ' + (s.systemList.length || 'no') + ' system' + (s.systemList.length === 1 ? '' : 's')
+        : 'two questions',
+      runNote: s.mode === null ? 'one question' : 'answered',
+      answeredNote: answered === 0
+        ? 'One click loads the setup most teams like yours start from — adjust anything.'
+        : (answered >= 6
+            ? 'All six answered. Your demo is fully tailored.'
+            : answered + ' of 6 answered — ' + (6 - answered) + ' to go, and the demo gets sharper with each one.'),
+      typical: ()=> this.setState({
+        docTypes:['Supplier invoices','Purchase orders','Goods receipts'],
+        langs:['English','Bahasa Indonesia','Mandarin'],
+        kinds:['Duplicate payments','Unaccounted charges'],
+        systemList:['SAP','Bank feeds','Spreadsheets'],
+        volume:1, mode:0
+      }),
+
+      onName:    (e)=> this.setState({name:e.target.value}),
+      onEmail:   (e)=> this.setState({email:e.target.value}),
+      onCompany: (e)=> this.setState({company:e.target.value}),
+      onCode:    (e)=> this.setState({code:e.target.value}),
+      onWhat:    (e)=> this.setState({what:e.target.value}),
+
+      nextDisabled: oneReady ? undefined : 'true',
+      next: ()=>{ if(oneReady) this.setState({step:2}); },
+      back: ()=> this.setState({step:1}),
+      /* G3715 — THE OWNER'S RULING (4 Oct 2026): "Switch to 'send': copy says
+         'until you send it', amend V2's two notes; no calendar integration."
+         Both notes said "Nothing … is stored until you book." */
+      oneNote: oneReady
+        ? 'That is enough to build the demo around. Contact details next.'
+        : '› A document type and an exception type, and we can prepare. Nothing here is sent until you send it.',
+
+      kinds: this.chips(this.KINDS, 'kinds'),
+      volumes: this.VOLUMES.map((v,i)=>({
+        label:v, on: s.volume === i ? 'true' : 'false', pick: ()=> this.setState({volume:i})
+      })),
+      modes: this.MODES.map((m,i)=>({
+        label:m, on: s.mode === i ? 'true' : 'false', pick: ()=> this.setState({mode:i})
+      })),
+      slots: this.SLOTS.map((sl,i)=>({
+        label:sl.label,
+        gone: sl.gone ? 'true' : undefined,
+        on: s.slot === i ? 'true' : 'false',
+        pick: ()=>{ if(!sl.gone) this.setState({slot:i}); }
+      })),
+
+      offerSlots,
+      submitDisabled: (contactReady && (!offerSlots || s.slot !== null)) ? undefined : 'true',
+      twoNote: !contactReady
+        ? '› Name, a work email and a company. Nothing is sent until you send it.'
+        : ((offerSlots && s.slot === null)
+            ? '› Pick a slot to book.'
+            : (partner
+                ? 'Referral code recognised — ' + partner + '.'
+                : (s.mode === 1
+                    ? 'Noted: your own AWS account, where your data never leaves your boundary. We will bring the engineer who runs that deployment.'
+                    : (offerSlots ? 'Ready to book.' : 'Ready to send — we will come back with times.')))),
+      submit: ()=>{ if(contactReady && (!offerSlots || s.slot !== null)) this.setState({booked:true}); },
+
+      confirmTitle: slotLabel
+        ? ('You are booked for ' + slotLabel + '.')
+        : 'Your request is in.',
+      confirmLine: (s.name.trim().split(' ')[0] || 'Thanks')
+        + ' — forty-five minutes, and we will open with your own exception type rather than ours.',
+      nextSteps: partner
+        ? 'Your details go to our CRM and the introduction is credited to ' + partner + '. A named person owns this from here, not a queue.'
+        : 'Your details go to our CRM, where a named person owns them from here rather than a queue.',
+      receipt,
+
+      reset: ()=> this.setState({
+        step:1, name:'', email:'', company:'', code:'', what:'',
+        dial:'+65', phone:'',
+        docTypes:[], langs:[], kinds:[], systemList:[],
+        volume:null, mode:null, slot:null, booked:false
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

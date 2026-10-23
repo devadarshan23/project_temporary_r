@@ -1,0 +1,20 @@
+<!doctype html><meta charset="utf-8"><title>fixture · the ring kept</title>
+<link rel="stylesheet" href="../../../../docs/handoff-pack/tokens.css">
+<!-- THE NEGATIVE CONTROL, and it is not decoration. A detector that flags every
+     element would "catch" ring-erased.html while asserting nothing about rings
+     at all. These three carry their own edge AND keep the ring.
+
+     ⚠️ HOW THEY KEEP IT CHANGED ON 22 Aug 2026, G240. Two of them used to
+     compose `var(--focus-ring)` after their own edge — "the repair shape this
+     kernel now supports" — and that token is retired with the box-shadow ring.
+     They now do what the third always did: declare their own edge and inherit
+     the kernel's outline untouched. THAT IS THE WHOLE BEHAVIOURAL CLAIM OF G240
+     in three elements — an element may mind its own edge and say nothing about
+     focus, and the ring is still there. The audit must report this file CLEAN. -->
+<style>
+  .kept{box-shadow:inset 0 0 0 1px var(--rule-strong)}
+  input.kept-attr{box-shadow:inset 0 0 0 1px var(--rule-strong)}
+</style>
+<button class="kept">owns an edge, says nothing about focus</button>
+<input class="kept-attr" aria-label="owns an edge on an attribute selector">
+<button>declares nothing and inherits the kernel ring</button>

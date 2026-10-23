@@ -1,0 +1,40 @@
+/**
+ * THE CAPTURED RED — G1209, transcribed from tests/db/identity-substrate.test.ts
+ * as it stood at 15fcd10e~1, before the repair.
+ *
+ * This is not an invented shape. Both intervals, the frozen clock and the way
+ * that clock reaches the evaluator are the real ones, so the flip date this
+ * fixture yields is the flip date the suite really broke on:
+ * 2026-09-20T12:00:00.000Z.
+ *
+ * ⚠️ It is a .txt and not a .ts DELIBERATELY. `tests/tsconfig.json` is
+ * `"include": ["**\/*.ts"]`, so a .ts fixture is compiled by `typecheck:tests`
+ * and this one would not compile — it has no imports and its locals are unused.
+ * Read as text and handed to `auditFile()`, it is exercised without being built,
+ * which is what `tests/tools/fixtures/skip-census/*.fixture.mjs` does one
+ * directory over.
+ */
+
+const NOW = '2026-09-19T12:00:00.000Z' as Timestamp
+
+async function seed(): Promise<void> {
+  await mig.query(
+    `INSERT INTO tenant.role_assignment
+       (tenant_id, id, user_id, role_id, role_version,
+        granted_by, granted_at, expires_at, revoked_at)
+     VALUES
+       ($1, 'ras_live',    $2, 'rol_ap_approver', 3, 'usr_admin', now(), NULL, NULL),
+       ($1, 'ras_revoked', $2, 'rol_ap_approver', 3, 'usr_admin', now(), NULL, now()),
+       ($1, 'ras_expired', $2, 'rol_ap_approver', 3, 'usr_admin',
+           now() - interval '2 days', now() - interval '1 day', NULL),
+       ($1, 'ras_moved',   $2, 'rol_ap_approver', 2, 'usr_admin', now(), NULL, NULL)
+     ON CONFLICT DO NOTHING`,
+    [ACME, MEI, GLOBEX, ANA],
+  )
+}
+
+const verdict = decide({
+  principal,
+  capability: 'approve_resolution',
+  now: NOW,
+})

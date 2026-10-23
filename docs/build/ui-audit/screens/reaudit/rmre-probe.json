@@ -1,0 +1,2536 @@
+{
+  "arrive": {
+    "theme": "light",
+    "litCount": 1,
+    "lits": [
+      {
+        "el": "button.cell.lit.lit--running[def_bank_to_erp]",
+        "bgImage": "radial-gradient(120% 90% at 18% 0%, rgba(202, 246, 65, 0.34) 0%, rgba(",
+        "bgColor": "rgba(138, 75, 42, 0.06)",
+        "shadow": "rgba(0, 134, 106, 0.22) 0px 0px 0px 1px inset, rgb(0, 48, 63) 0px -2px 0px 0px inset",
+        "overflow": "hidden",
+        "after": "sweep 17s display:block"
+      }
+    ],
+    "mascots": [
+      {
+        "energy": null,
+        "fs": "17px",
+        "d1": "none 0s",
+        "d3": "none matrix(1, 0, 0, 1, -2.83594, 0)",
+        "where": "span.logo"
+      },
+      {
+        "energy": "working",
+        "fs": "12.5px",
+        "d1": "mascot-cascade 4.8s",
+        "d3": "mascot-cascade-mid matrix(1.19331, 0, 0, 1.19331, -2.1875, 0)",
+        "where": "span.nm"
+      }
+    ],
+    "animated": [
+      {
+        "sel": "span#_r_0_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_1_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_2_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_3_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_4_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_5_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_6_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_7_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "button.cell.lit.lit--running[def_bank_to_erp]",
+        "pseudo": "::after",
+        "anim": "sweep 17s cubic-bezier(0.4, 0, 0.25, 1) infinite delay 0s",
+        "trans": ""
+      },
+      {
+        "sel": "i.d1",
+        "pseudo": "",
+        "anim": "mascot-cascade 4.8s ease-in-out infinite delay 0s",
+        "trans": ""
+      },
+      {
+        "sel": "i.d2",
+        "pseudo": "",
+        "anim": "mascot-cascade 4.8s ease-in-out infinite delay 0.2s",
+        "trans": ""
+      },
+      {
+        "sel": "i.d3",
+        "pseudo": "",
+        "anim": "mascot-cascade-mid 4.8s ease-in-out infinite delay 0.4s",
+        "trans": ""
+      },
+      {
+        "sel": "span#_r_8_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_f_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_g_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_h_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_a_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_b_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_c_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_d_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_e_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      }
+    ]
+  },
+  "selectReading": {
+    "theme": "light",
+    "litCount": 1,
+    "lits": [
+      {
+        "el": "button.cell.lit.lit--running[def_bank_to_erp]",
+        "bgImage": "radial-gradient(120% 90% at 18% 0%, rgba(202, 246, 65, 0.46) 0%, rgba(",
+        "bgColor": "rgba(138, 75, 42, 0.06)",
+        "shadow": "rgba(0, 134, 106, 0.22) 0px 0px 0px 1px inset, rgb(0, 48, 63) 0px -2px 0px 0px inset",
+        "overflow": "hidden",
+        "after": "sweep 17s display:block"
+      }
+    ],
+    "mascots": [
+      {
+        "energy": null,
+        "fs": "17px",
+        "d1": "none 0s",
+        "d3": "none matrix(1, 0, 0, 1, -2.83594, 0)",
+        "where": "span.logo"
+      },
+      {
+        "energy": "working",
+        "fs": "12.5px",
+        "d1": "mascot-cascade 4.8s",
+        "d3": "mascot-cascade-mid matrix(1, 0, 0, 1, -2.1875, 0)",
+        "where": "span.nm"
+      }
+    ],
+    "animated": [
+      {
+        "sel": "span#_r_0_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_1_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_2_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_3_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_4_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_5_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_6_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_7_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "button.cell.lit.lit--running[def_bank_to_erp]",
+        "pseudo": "::after",
+        "anim": "sweep 17s cubic-bezier(0.4, 0, 0.25, 1) infinite delay 0s",
+        "trans": ""
+      },
+      {
+        "sel": "i.d1",
+        "pseudo": "",
+        "anim": "mascot-cascade 4.8s ease-in-out infinite delay 0s",
+        "trans": ""
+      },
+      {
+        "sel": "i.d2",
+        "pseudo": "",
+        "anim": "mascot-cascade 4.8s ease-in-out infinite delay 0.2s",
+        "trans": ""
+      },
+      {
+        "sel": "i.d3",
+        "pseudo": "",
+        "anim": "mascot-cascade-mid 4.8s ease-in-out infinite delay 0.4s",
+        "trans": ""
+      },
+      {
+        "sel": "span#_r_8_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_f_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_g_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_h_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_a_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_b_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_c_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_d_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_e_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      }
+    ]
+  },
+  "cellHover": "all",
+  "threeway": {
+    "theme": "light",
+    "litCount": 1,
+    "lits": [
+      {
+        "el": "button.cell.lit.lit--running[def_bank_to_erp]",
+        "bgImage": "radial-gradient(120% 90% at 18% 0%, rgba(202, 246, 65, 0.34) 0%, rgba(",
+        "bgColor": "rgba(0, 0, 0, 0)",
+        "shadow": "rgba(0, 134, 106, 0.22) 0px 0px 0px 1px inset",
+        "overflow": "hidden",
+        "after": "sweep 17s display:block"
+      }
+    ],
+    "mascots": [
+      {
+        "energy": null,
+        "fs": "17px",
+        "d1": "none 0s",
+        "d3": "none matrix(1, 0, 0, 1, -2.83594, 0)",
+        "where": "span.logo"
+      },
+      {
+        "energy": "working",
+        "fs": "12.5px",
+        "d1": "mascot-cascade 4.8s",
+        "d3": "mascot-cascade-mid matrix(1.07659, 0, 0, 1.07659, -2.03906, 0)",
+        "where": "span.nm"
+      }
+    ],
+    "animated": [
+      {
+        "sel": "span#_r_0_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_1_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_2_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_3_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_4_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_5_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_6_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_7_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "button.cell.lit.lit--running[def_bank_to_erp]",
+        "pseudo": "::after",
+        "anim": "sweep 17s cubic-bezier(0.4, 0, 0.25, 1) infinite delay 0s",
+        "trans": ""
+      },
+      {
+        "sel": "i.d1",
+        "pseudo": "",
+        "anim": "mascot-cascade 4.8s ease-in-out infinite delay 0s",
+        "trans": ""
+      },
+      {
+        "sel": "i.d2",
+        "pseudo": "",
+        "anim": "mascot-cascade 4.8s ease-in-out infinite delay 0.2s",
+        "trans": ""
+      },
+      {
+        "sel": "i.d3",
+        "pseudo": "",
+        "anim": "mascot-cascade-mid 4.8s ease-in-out infinite delay 0.4s",
+        "trans": ""
+      },
+      {
+        "sel": "span#_r_8_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_f_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_g_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_h_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_i_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_j_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_k_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_l_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_m_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_a_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_b_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_c_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_d_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_e_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      }
+    ]
+  },
+  "openRow": {
+    "theme": "light",
+    "litCount": 1,
+    "lits": [
+      {
+        "el": "div.evid.lit",
+        "bgImage": "radial-gradient(120% 90% at 18% 0%, rgba(202, 246, 65, 0.34) 0%, rgba(",
+        "bgColor": "rgb(255, 255, 255)",
+        "shadow": "rgba(0, 134, 106, 0.22) 0px 0px 0px 1px inset",
+        "overflow": "visible",
+        "after": "none 0s display:inline"
+      }
+    ],
+    "mascots": [
+      {
+        "energy": null,
+        "fs": "17px",
+        "d1": "none 0s",
+        "d3": "none matrix(1, 0, 0, 1, -2.83594, 0)",
+        "where": "span.logo"
+      },
+      {
+        "energy": "working",
+        "fs": "12.5px",
+        "d1": "mascot-cascade 4.8s",
+        "d3": "mascot-cascade-mid matrix(1.10891, 0, 0, 1.10891, -2.03906, 0)",
+        "where": "span.nm"
+      }
+    ],
+    "animated": [
+      {
+        "sel": "span#_r_0_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_1_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_2_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_3_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_4_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_5_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_6_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_7_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "i.d1",
+        "pseudo": "",
+        "anim": "mascot-cascade 4.8s ease-in-out infinite delay 0s",
+        "trans": ""
+      },
+      {
+        "sel": "i.d2",
+        "pseudo": "",
+        "anim": "mascot-cascade 4.8s ease-in-out infinite delay 0.2s",
+        "trans": ""
+      },
+      {
+        "sel": "i.d3",
+        "pseudo": "",
+        "anim": "mascot-cascade-mid 4.8s ease-in-out infinite delay 0.4s",
+        "trans": ""
+      },
+      {
+        "sel": "span#_r_8_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_f_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_g_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_h_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_i_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_j_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_k_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_l_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_n_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_o_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_p_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_q_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_m_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_a_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_b_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_c_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_d_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_e_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      }
+    ]
+  },
+  "takeFound": true,
+  "modalMid": {
+    "ov": "modal-in 0.42s linear(0 0%, 0.231 10%, 0.624  translate=0px 11.0967px",
+    "scrim": "fade-in 0.12s opacity=0.4172",
+    "litCount": 1
+  },
+  "toastMid": {
+    "anim": "toast-in 0.42s linear(0 0%, 0.231 10%, 0.624 ",
+    "translate": "0px 16px",
+    "borderLeft": "1px rgb(164, 184, 187)",
+    "kind": "undo",
+    "modalGone": true,
+    "litCount": 1,
+    "html": "<div class=\"toast\" data-kind=\"undo\"><div class=\"toast-l\"><p class=\"toast-t\">Taken over — the line is with you now.</p><p class=\"toast-b\">It was with a colleague.</p><div class=\"toast-a\"><button class=\"btn btn--small\" type=\"button\">Undo</button></div></div><button class=\"btn btn--small btn--quiet\" type=\"button\">Dismiss</button></div>"
+  },
+  "toastAfterDismiss30ms": 0,
+  "tip": "opacity 0.12s linear",
+  "toggle": [
+    "system:true",
+    "light:false",
+    "dark:false"
+  ],
+  "afterDark": {
+    "theme": "dark",
+    "stored": "dark",
+    "body": "rgb(0, 26, 34)"
+  },
+  "afterReload": "dark",
+  "explicitDarkIgnoresOS": "dark",
+  "reduce-arrive": {
+    "theme": "light",
+    "litCount": 1,
+    "lits": [
+      {
+        "el": "button.cell.lit.lit--running[def_bank_to_erp]",
+        "bgImage": "radial-gradient(120% 90% at 18% 0%, rgba(202, 246, 65, 0.34) 0%, rgba(",
+        "bgColor": "rgba(138, 75, 42, 0.06)",
+        "shadow": "rgba(0, 134, 106, 0.22) 0px 0px 0px 1px inset, rgb(0, 48, 63) 0px -2px 0px 0px inset",
+        "overflow": "hidden",
+        "after": "sweep 1e-06s display:none"
+      }
+    ],
+    "mascots": [
+      {
+        "energy": null,
+        "fs": "17px",
+        "d1": "none 1e-06s",
+        "d3": "none matrix(1, 0, 0, 1, -2.83594, 0)",
+        "where": "span.logo"
+      },
+      {
+        "energy": "working",
+        "fs": "12.5px",
+        "d1": "none 1e-06s",
+        "d3": "none matrix(1, 0, 0, 1, -2.1875, 0)",
+        "where": "span.nm"
+      }
+    ],
+    "animated": [
+      {
+        "sel": "html.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "head.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "meta.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "meta.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "title.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "script.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "link.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "link.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "script.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "link.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "body.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div#root.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.app",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "header.chrome",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "a.mark",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.logo",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.mascot",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "i.d1",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "i.d2",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "i.d3",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.badge",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.tenant",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.cc",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_0_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "nav.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "ul.dests",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "li.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "a.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "li.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "a.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_1_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "li.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "a.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_2_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "span.door",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_3_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.palbtn",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "kbd.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_4_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "button.abtn",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.cnt",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.sp",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.meterbtn",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.spent",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.met",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.q",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_5_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "details.disc.acct",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "summary.whoami",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.init",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.sub",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.sr-only",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "ul.acctmenu",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "li.acctwho",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "b.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "li.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.acctitem",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.cnt",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "li.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.acctitem",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_6_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "li.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.acctitem",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_7_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "li.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.theme-toggle",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#theme-toggle-label.theme-toggle-l",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.theme-toggle-b",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.theme-toggle-b",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.theme-toggle-b",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "li.sep",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "li.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "a.acctitem",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "li.sep",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "li.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.acctitem",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "main#route-root.route",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.close",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div#register.strip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.cell.lit.lit--running[def_bank_to_erp]",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.cell.lit.lit--running[def_bank_to_erp]",
+        "pseudo": "::after",
+        "anim": "sweep 1e-06s cubic-bezier(0.4, 0, 0.25, 1) 1 delay 0s",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.nm",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.mascot",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "i.d1",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "i.d2",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "i.d3",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.st",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.says",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.account",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.when",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.cell[def_intercompany]",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.nm",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.st",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.says",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.account",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.when",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.cell[def_card_settlement]",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.nm",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.st",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.says",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.account",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.when",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.cell[def_three_way_match]",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.nm",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.st",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.says",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.account",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.when",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.cell.addcell",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.nm",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.st",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.when",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_8_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "div.intake",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.lab",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "ul.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "li.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.via",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_f_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "span.when",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "p.cap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.arrive",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.runline",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "a.labbtn",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.lab",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.pen",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_g_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "h1.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "b.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.period",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.cur",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.note",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.figs",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.fig",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.k",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.v",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.fig",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.k",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.v",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.fig",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.k",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.v",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.fig",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.k",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.v",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.fig",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.k",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.v",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.met",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_h_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "section.register-c1",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.triage",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.trirow",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.fac",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.lab",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.choice",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.to",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.choice",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.to",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.choice",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.to",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.choice",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.to",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.fac",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.lab",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.choice",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.choice",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.choice",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.choice",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "p.count",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.reg",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "table.regt",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "thead.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "tr.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "th.c-ref",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "th.c-line",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "th.num.c-val",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "th.tier-mid.c-var",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "th.tier-wide.c-conf",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "th.tier-wide.c-state",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "th.num.tier-wide.c-act",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "tbody.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.stated",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.lab",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "h2.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "p.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.statusbar",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.bit",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "b.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.bit",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.conn",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "i.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "i.",
+        "pseudo": "::after",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_a_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "span.sp",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.keys",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "kbd.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "kbd.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.keys-soon",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "kbd.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "kbd.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "kbd.",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_b_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "button.bit",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_c_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "nav.tabbar",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "a.tab",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "a.tab",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_d_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "span.tipwrap",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "a.tab",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "span#_r_e_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 1e-06s linear"
+      },
+      {
+        "sel": "div.toasts",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.toasts-slot",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      },
+      {
+        "sel": "div.toasts-slot",
+        "pseudo": "",
+        "anim": "",
+        "trans": "all 1e-06s ease"
+      }
+    ]
+  },
+  "reduce-modal": {
+    "ov": null,
+    "scrim": null
+  },
+  "ERROR reduce": "TimeoutError: page.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-confirm-assign=\"exc_parity_0006\"]')\u001b[22m\n",
+  "osDark": {
+    "theme": "dark",
+    "body": "rgb(0, 26, 34)",
+    "litImage": "radial-gradient(120% 90% at 18% 0%, rgba(202, 246, 65, 0.26) 0%, rgba(82, 198, 227, 0.16) 38%, rgba(82, 198, 227, 0) 74%",
+    "mascotColor": "rgb(34, 168, 138)"
+  },
+  "osFlipLight": "light",
+  "bootScript": [
+    "http://127.0.0.1:8080/theme-boot.js",
+    "http://127.0.0.1:8080/assets/index-D22P8Efd.js"
+  ],
+  "page /close/finding/exc_parity_0001": {
+    "theme": "light",
+    "litCount": 0,
+    "lits": [],
+    "mascots": [
+      {
+        "energy": null,
+        "fs": "17px",
+        "d1": "none 0s",
+        "d3": "none matrix(1, 0, 0, 1, -2.83594, 0)",
+        "where": "span.logo"
+      }
+    ],
+    "animated": [
+      {
+        "sel": "span#_r_0_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_1_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_2_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_3_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_4_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_5_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_6_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_7_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_a_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_8_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_9_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      }
+    ]
+  },
+  "page /close/run/run_parity_0006": {
+    "theme": "light",
+    "litCount": 0,
+    "lits": [],
+    "mascots": [
+      {
+        "energy": null,
+        "fs": "17px",
+        "d1": "none 0s",
+        "d3": "none matrix(1, 0, 0, 1, -2.83594, 0)",
+        "where": "span.logo"
+      }
+    ],
+    "animated": [
+      {
+        "sel": "span#_r_0_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_1_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_2_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_3_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_4_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_5_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_6_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_7_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_8_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_9_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      },
+      {
+        "sel": "span#_r_a_.tip",
+        "pseudo": "",
+        "anim": "",
+        "trans": "opacity 0.12s linear"
+      }
+    ]
+  },
+  "page /signin": {
+    "theme": "light",
+    "litCount": 0,
+    "lits": [],
+    "mascots": [
+      {
+        "energy": null,
+        "fs": "17px",
+        "d1": "none 0s",
+        "d3": "none matrix(1, 0, 0, 1, -2.83594, 0)",
+        "where": "span.logo"
+      }
+    ],
+    "animated": [
+      {
+        "sel": "button.btn.btn--primary",
+        "pseudo": "",
+        "anim": "",
+        "trans": "background-color, color 0.12s, 0.12s linear, linear"
+      }
+    ]
+  }
+}

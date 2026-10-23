@@ -1,0 +1,2439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReconcileAI — planning companion</title>
+<!--
+  Self-contained. No CDN, no build step, no dependency.
+
+  Reads   GET  /model-graph.json     (derived by tools/planner/extract.mjs --write)
+          GET  /api/state            (docs/planning-state.json)
+  Writes  POST /api/mutate           a FLAT envelope: { action, ...fields }
+          -> 200 with the FULL new state, either bare or as { state: {...} }.
+          -> non-2xx with { error: "message" } is surfaced to the operator verbatim.
+
+  The envelope is flat and closed: serve.mjs rejects any field it does not
+  recognise for the action, so this page must send exactly these and no more.
+
+    setGapStatus      { gapId, disposition, note?, owner? }
+    setModuleNote     { module, note? }
+    addPlannedModule  { name, purpose?, holds? }          status defaults to proposed
+    setPlannedModule  { name, status }
+    addPlannedEdge    { from, field, to, typedAs?, why? }
+    removePlannedEdge { index }
+    addDecision       { question, choice?, rationale? }   the server mints the id
+    setDecision       { id, status?, choice?, rationale? }
+
+  Every one of them appends exactly one entry to state.log.
+
+  There is deliberately no removePlannedModule and no removeDecision. Retiring
+  either is a status — `dropped` and `superseded` — because a plan you deleted
+  leaves no trace of having been considered, and the log is the point.
+-->
+<style>
+/* ─── tokens ────────────────────────────────────────────────────────────────
+   Values from docs/design-tokens.md. The status triad (emerald / amber / deep
+   red) is the product's output vocabulary; nothing else in this tool competes
+   with it, so modules are distinguished by position and by a low-chroma
+   blue→violet band that deliberately avoids the green, amber and red hues.    */
+:root,
+:root[data-theme="light"] {
+  --primary:        rgb(19, 81, 205);
+  --primary-hover:  #0f45b0;
+  --primary-lift:   #1a5fd4;
+  --primary-wash:   #eef3fd;
+  --primary-edge:   #c3d5f6;
+
+  --surface:        #ffffff;
+  --surface-2:      #f8fafc;
+  --surface-3:      #f1f5f9;
+  --surface-tint:   #F3F6FB;
+  --rule:           #e2e8f0;
+  --edge:           #cbd5e1;
+
+  --quiet:          #94a3b8;
+  --label:          #64748b;
+  --body:           #475569;
+  --ink:            #1e293b;
+
+  --good:           #059669;  --good-wash: #e6f7f1;  --good-edge: #a7e3cd;
+  --warn:           #d97706;  --warn-wash: #fdf3e0;  --warn-edge: #f0d6a4;
+  --bad:            #b91c1c;  --bad-wash:  #fee2e2;  --bad-edge:  #f2bcbc;
+
+  --shadow-1: 0 1px 2px rgba(15,23,42,.06), 0 1px 3px rgba(15,23,42,.05);
+  --shadow-2: 0 4px 12px rgba(15,23,42,.08), 0 1px 3px rgba(15,23,42,.06);
+  --shadow-3: 0 12px 32px rgba(15,23,42,.14), 0 2px 8px rgba(15,23,42,.08);
+
+  --canvas-bg:      #fbfcfe;
+  --canvas-grid:    #eef2f7;
+  color-scheme: light;
+}
+:root[data-theme="dark"] { color-scheme: dark; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { color-scheme: dark; }
+}
+/* dark palette, applied both by preference and by explicit toggle */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --primary:        #5a8cea;
+    --primary-hover:  #7aa4f0;
+    --primary-lift:   #8fb4f4;
+    --primary-wash:   #16233c;
+    --primary-edge:   #2b4472;
+
+    --surface:        #0f172a;
+    --surface-2:      #131f36;
+    --surface-3:      #1a2740;
+    --surface-tint:   #16233c;
+    --rule:           #26344d;
+    --edge:           #33455f;
+
+    --quiet:          #64748b;
+    --label:          #94a3b8;
+    --body:           #cbd5e1;
+    --ink:            #e8eef7;
+
+    --good:           #34d399;  --good-wash: #0d2b22;  --good-edge: #1d5943;
+    --warn:           #fbbf24;  --warn-wash: #2e2410;  --warn-edge: #6b4f16;
+    --bad:            #f87171;  --bad-wash:  #331717;  --bad-edge:  #7a2c2c;
+
+    --shadow-1: 0 1px 2px rgba(0,0,0,.4);
+    --shadow-2: 0 4px 12px rgba(0,0,0,.45);
+    --shadow-3: 0 14px 36px rgba(0,0,0,.55);
+
+    --canvas-bg:      #0b1322;
+    --canvas-grid:    #16203247;
+  }
+}
+:root[data-theme="dark"] {
+  --primary:        #5a8cea;
+  --primary-hover:  #7aa4f0;
+  --primary-lift:   #8fb4f4;
+  --primary-wash:   #16233c;
+  --primary-edge:   #2b4472;
+
+  --surface:        #0f172a;
+  --surface-2:      #131f36;
+  --surface-3:      #1a2740;
+  --surface-tint:   #16233c;
+  --rule:           #26344d;
+  --edge:           #33455f;
+
+  --quiet:          #64748b;
+  --label:          #94a3b8;
+  --body:           #cbd5e1;
+  --ink:            #e8eef7;
+
+  --good:           #34d399;  --good-wash: #0d2b22;  --good-edge: #1d5943;
+  --warn:           #fbbf24;  --warn-wash: #2e2410;  --warn-edge: #6b4f16;
+  --bad:            #f87171;  --bad-wash:  #331717;  --bad-edge:  #7a2c2c;
+
+  --shadow-1: 0 1px 2px rgba(0,0,0,.4);
+  --shadow-2: 0 4px 12px rgba(0,0,0,.45);
+  --shadow-3: 0 14px 36px rgba(0,0,0,.55);
+
+  --canvas-bg:      #0b1322;
+  --canvas-grid:    #16203247;
+}
+
+:root {
+  --font-ui: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --r-xs: 4px; --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px; --r-pill: 999px;
+  --s-05: 4px; --s-1: 8px; --s-15: 12px; --s-2: 16px; --s-25: 20px; --s-3: 24px; --s-4: 32px; --s-6: 48px;
+  --hdr-h: 56px;
+  --panel-w: 440px;
+}
+
+/* ─── reset ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--font-ui);
+  font-size: 14px; font-weight: 500; line-height: 1.5;
+  color: var(--body); background: var(--surface-2);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+h1,h2,h3,h4 { margin: 0; color: var(--ink); font-weight: 700; letter-spacing: -.01em; }
+h2 { font-size: 18px; }
+h3 { font-size: 14px; }
+p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: none; padding: 0; }
+a { color: var(--primary); }
+code, .mono, .id { font-family: var(--font-mono); font-size: .92em; letter-spacing: -.01em; }
+
+:where(button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--primary-lift);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+/* ─── header ────────────────────────────────────────────────────────────── */
+.app-hdr {
+  position: sticky; top: 0; z-index: 40;
+  height: var(--hdr-h);
+  display: flex; align-items: center; gap: var(--s-2);
+  padding: 0 var(--s-2);
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+}
+.brand { display: flex; align-items: baseline; gap: var(--s-1); flex: none; }
+.brand-name {
+  font-family: var(--font-ui); font-weight: 800; font-size: 15px;
+  color: var(--ink); letter-spacing: -.02em; white-space: nowrap;
+}
+.brand-sub { font-size: 11px; color: var(--quiet); font-family: var(--font-mono); white-space: nowrap; }
+.brand-mark {
+  width: 10px; height: 10px; border-radius: 3px; align-self: center;
+  background: var(--primary); box-shadow: 0 0 0 3px var(--primary-wash);
+}
+
+.tabs { display: flex; gap: 2px; background: var(--surface-3); padding: 3px; border-radius: var(--r-md); flex: none; }
+.tabs button {
+  padding: 5px 12px; border-radius: var(--r-sm);
+  font-size: 13px; font-weight: 600; color: var(--label);
+  display: flex; align-items: center; gap: 6px;
+}
+.tabs button:hover { color: var(--ink); }
+.tabs button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-1); }
+.tabs .tab-count {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  padding: 1px 5px; border-radius: var(--r-pill);
+  background: var(--surface-3); color: var(--label);
+}
+.tabs button[aria-selected="true"] .tab-count { background: var(--primary-wash); color: var(--primary); }
+.tab-count.is-alert { background: var(--bad-wash); color: var(--bad); }
+
+.hdr-right { margin-left: auto; display: flex; align-items: center; gap: var(--s-1); min-width: 0; }
+
+.search { position: relative; display: flex; align-items: center; }
+.search input {
+  width: 220px; max-width: 32vw;
+  padding: 6px 10px 6px 30px;
+  background: var(--surface-2); border: 1px solid var(--rule); border-radius: var(--r-md);
+  font-size: 13px;
+}
+.search input::placeholder { color: var(--quiet); }
+.search svg { position: absolute; left: 9px; width: 14px; height: 14px; color: var(--quiet); pointer-events: none; }
+
+.prov {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 10px; border-radius: var(--r-md);
+  background: var(--surface-2); border: 1px solid var(--rule);
+  font-family: var(--font-mono); font-size: 11px; color: var(--label);
+  white-space: nowrap;
+}
+.prov b { color: var(--ink); font-weight: 700; }
+.prov.is-stale { background: var(--warn-wash); border-color: var(--warn-edge); color: var(--warn); }
+.icon-btn {
+  width: 30px; height: 30px; display: grid; place-items: center;
+  border: 1px solid var(--rule); border-radius: var(--r-md); background: var(--surface-2); color: var(--label);
+}
+.icon-btn:hover { color: var(--ink); border-color: var(--edge); }
+.icon-btn svg { width: 15px; height: 15px; }
+
+/* The header is the one row that cannot wrap, so it is what would otherwise
+   force the body to scroll sideways. It sheds ornament instead, in this order.
+   These must stay after the rules they override — same specificity, so source
+   order decides. */
+@media (max-width: 1240px) { .brand-sub { display: none; } }
+@media (max-width: 1100px) {
+  .brand-name { display: none; }
+  .search input { width: 150px; }
+  .prov .prov-time { display: none; }
+}
+@media (max-width: 860px) {
+  .tabs { overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs .tab-count { display: none; }
+  .tabs button { padding: 5px 9px; }
+  .search input { width: 104px; }
+  .app-hdr { gap: var(--s-1); padding: 0 var(--s-1); }
+  .app-main { padding: var(--s-15); }
+}
+
+/* ─── banner / toasts ───────────────────────────────────────────────────── */
+.banner {
+  display: flex; align-items: flex-start; gap: var(--s-15);
+  /* an author `display` beats the UA rule for [hidden], so restate it */
+  padding: 10px var(--s-2);
+  background: var(--warn-wash); border-bottom: 1px solid var(--warn-edge);
+  color: var(--warn); font-size: 13px;
+}
+.banner[hidden] { display: none; }
+.banner.is-bad { background: var(--bad-wash); border-bottom-color: var(--bad-edge); color: var(--bad); }
+.banner b { display: block; color: inherit; }
+.banner code {
+  display: inline-block; margin-top: 3px; padding: 2px 7px;
+  background: var(--surface); border: 1px solid currentColor; border-radius: var(--r-xs);
+  color: var(--ink); opacity: .95;
+}
+.toasts {
+  position: fixed; right: var(--s-2); bottom: var(--s-2); z-index: 90;
+  display: flex; flex-direction: column; gap: var(--s-1); align-items: flex-end;
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto; max-width: 420px;
+  padding: 10px var(--s-15); border-radius: var(--r-md);
+  background: var(--surface); border: 1px solid var(--rule); border-left: 3px solid var(--edge);
+  box-shadow: var(--shadow-3); font-size: 13px; color: var(--body);
+}
+.toast b { display: block; color: var(--ink); font-size: 12px; }
+.toast.is-bad { border-left-color: var(--bad); }
+.toast.is-good { border-left-color: var(--good); }
+.toast .toast-detail { font-family: var(--font-mono); font-size: 11px; color: var(--label); margin-top: 3px; word-break: break-word; }
+
+/* ─── layout ────────────────────────────────────────────────────────────── */
+.app-main { padding: var(--s-3); max-width: 100%; }
+body.panel-open .app-main { padding-right: var(--s-3); }
+@media (min-width: 1180px) {
+  body.panel-open .app-main { padding-right: calc(var(--panel-w) + var(--s-3)); }
+}
+.view[hidden] { display: none; }
+.view-head { display: flex; align-items: flex-start; gap: var(--s-2); flex-wrap: wrap; margin-bottom: var(--s-2); }
+.view-head .lede { max-width: 62ch; font-size: 13px; color: var(--label); }
+.view-head h2 + .lede { margin-top: 4px; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-1);
+}
+.card-hd {
+  display: flex; align-items: center; gap: var(--s-1); flex-wrap: wrap;
+  padding: var(--s-15) var(--s-2); border-bottom: 1px solid var(--rule);
+}
+.card-hd h3 { flex: none; }
+.card-bd { padding: var(--s-2); }
+.scroll-x { overflow-x: auto; max-width: 100%; }
+
+/* ─── summary strip ─────────────────────────────────────────────────────── */
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); gap: var(--s-15); margin-bottom: var(--s-3); }
+.stat {
+  padding: var(--s-15); border-radius: var(--r-lg);
+  background: var(--surface); border: 1px solid var(--rule); box-shadow: var(--shadow-1);
+  text-align: left;
+}
+.stat .k { font-size: 11px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--label); }
+.stat .v { font-family: var(--font-mono); font-size: 26px; font-weight: 700; color: var(--ink); line-height: 1.15; margin-top: 4px; }
+.stat .n { font-size: 11px; color: var(--quiet); margin-top: 2px; }
+.stat.is-bad .v { color: var(--bad); }
+.stat.is-warn .v { color: var(--warn); }
+.stat.is-good .v { color: var(--good); }
+button.stat:hover { border-color: var(--edge); box-shadow: var(--shadow-2); }
+
+/* ─── matrix ────────────────────────────────────────────────────────────── */
+table.matrix { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 860px; }
+table.matrix th, table.matrix td { text-align: left; padding: 0; }
+/* Not sticky: `.scroll-x` makes the card its own scrollport, so a sticky
+   header offsets against the card rather than the page and lands on top of
+   the first row. Fifteen rows do not need a frozen header. */
+table.matrix thead th {
+  background: var(--surface); border-bottom: 1px solid var(--rule);
+  padding: var(--s-1) var(--s-15);
+  font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--label);
+  white-space: nowrap;
+}
+table.matrix thead th.col-mod { text-align: left; }
+table.matrix tbody tr { border-bottom: 1px solid var(--rule); }
+table.matrix tbody tr:hover td { background: var(--surface-2); }
+table.matrix td { border-bottom: 1px solid var(--rule); vertical-align: middle; }
+td.mod-cell { padding: var(--s-1) var(--s-15); min-width: 250px; }
+.mod-name { display: flex; align-items: center; gap: 8px; }
+.mod-swatch { width: 8px; height: 22px; border-radius: 2px; flex: none; }
+.mod-name .id { font-size: 13px; font-weight: 600; color: var(--ink); }
+.mod-meta { font-size: 11px; color: var(--quiet); margin-top: 2px; padding-left: 16px; }
+.mod-purpose {
+  font-size: 12px; color: var(--label); margin-top: 3px; padding-left: 16px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  max-width: 46ch;
+}
+.mod-note-flag { color: var(--primary); font-size: 11px; font-weight: 600; }
+
+button.cell {
+  width: 100%; min-width: 96px; height: 54px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 var(--s-15);
+  border-left: 1px solid var(--rule);
+  background: transparent;
+}
+button.cell:hover { background: var(--surface-3); }
+.cell-mark { width: 14px; height: 14px; border-radius: 3px; flex: none; position: relative; }
+.cell--present  .cell-mark { background: var(--good); }
+.cell--partial  .cell-mark { background: linear-gradient(135deg, var(--warn) 0 50%, transparent 50% 100%); border: 1.5px solid var(--warn); }
+.cell--absent   .cell-mark { border: 1.5px solid var(--bad); background: transparent; }
+.cell--absent   .cell-mark::after {
+  content: ""; position: absolute; inset: -1.5px;
+  background: linear-gradient(to bottom right, transparent calc(50% - 1px), var(--bad) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px));
+}
+.cell--planned  .cell-mark { border: 1.5px dashed var(--primary); background: transparent; }
+.cell--unknown  .cell-mark { border: 1.5px dotted var(--quiet); background: transparent; }
+.cell-num { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--ink); }
+.cell--absent .cell-num { color: var(--bad); }
+.cell--unknown .cell-num { color: var(--quiet); }
+.cell-sub { font-size: 10px; color: var(--quiet); text-transform: uppercase; letter-spacing: .4px; }
+.cell-txt { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
+
+.legend { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; font-size: 11px; color: var(--label); }
+.legend .li { display: flex; align-items: center; gap: 6px; }
+
+/* ─── graph ─────────────────────────────────────────────────────────────── */
+.graph-wrap { display: grid; grid-template-columns: 236px 1fr; gap: var(--s-2); align-items: start; }
+@media (max-width: 900px) { .graph-wrap { grid-template-columns: 1fr; } }
+.graph-rail { display: flex; flex-direction: column; gap: var(--s-15); }
+.rail-sec { padding: var(--s-15); }
+.rail-sec h3 { font-size: 10px; letter-spacing: .6px; text-transform: uppercase; color: var(--label); margin-bottom: var(--s-1); }
+.chk { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 12px; color: var(--body); cursor: pointer; }
+.chk input { accent-color: var(--primary); width: 14px; height: 14px; flex: none; }
+.chk .sw { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+.chk .ct { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--quiet); }
+.chk:hover { color: var(--ink); }
+.rail-actions { display: flex; gap: 6px; margin-top: var(--s-1); }
+.mini-btn {
+  padding: 3px 9px; font-size: 11px; font-weight: 600; color: var(--label);
+  border: 1px solid var(--rule); border-radius: var(--r-sm); background: var(--surface-2);
+}
+.mini-btn:hover { color: var(--ink); border-color: var(--edge); }
+.mini-btn[aria-pressed="true"] { background: var(--primary-wash); border-color: var(--primary-edge); color: var(--primary); }
+
+.canvas-box {
+  position: relative; border-radius: var(--r-lg); overflow: hidden;
+  border: 1px solid var(--rule); background: var(--canvas-bg); box-shadow: var(--shadow-1);
+}
+#gcanvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+#gcanvas.is-dragging { cursor: grabbing; }
+.canvas-overlay {
+  position: absolute; left: var(--s-15); bottom: var(--s-15);
+  display: flex; gap: var(--s-15); flex-wrap: wrap; align-items: flex-end;
+  pointer-events: none;
+}
+.edge-legend {
+  pointer-events: auto;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  border: 1px solid var(--rule); border-radius: var(--r-md);
+  padding: 8px 10px; font-size: 11px; color: var(--label);
+  display: flex; flex-direction: column; gap: 5px;
+  backdrop-filter: blur(6px);
+}
+.edge-legend .li { display: flex; align-items: center; gap: 7px; }
+.edge-legend svg { width: 34px; height: 8px; flex: none; }
+.canvas-tools { position: absolute; right: var(--s-15); top: var(--s-15); display: flex; gap: 6px; }
+.graph-tip {
+  position: absolute; pointer-events: none; z-index: 3;
+  padding: 6px 9px; border-radius: var(--r-sm);
+  background: var(--ink); color: var(--surface);
+  font-family: var(--font-mono); font-size: 11px; white-space: nowrap;
+  box-shadow: var(--shadow-2); opacity: 0; transition: opacity .1s;
+}
+:root[data-theme="dark"] .graph-tip, :root:not([data-theme="light"]) .graph-tip { color: var(--surface); }
+
+/* ─── gaps ──────────────────────────────────────────────────────────────── */
+.filterbar { display: flex; gap: var(--s-1); flex-wrap: wrap; align-items: center; margin-bottom: var(--s-2); }
+.filterbar select, .filterbar input {
+  padding: 5px 9px; font-size: 12px;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-md);
+}
+.filterbar .fl { font-size: 11px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: var(--quiet); }
+
+.gapgroup { margin-bottom: var(--s-3); }
+.gapgroup > .card-hd { gap: var(--s-15); }
+.kind-badge {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: var(--r-xs);
+  background: var(--surface-3); color: var(--label);
+}
+.needs-you {
+  font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+  padding: 2px 8px; border-radius: var(--r-pill);
+  background: var(--primary-wash); color: var(--primary); border: 1px solid var(--primary-edge);
+}
+.kind-note { flex-basis: 100%; font-size: 12px; color: var(--label); max-width: 78ch; }
+
+.subgroup-hd {
+  padding: var(--s-1) var(--s-2);
+  background: var(--surface-2); border-bottom: 1px solid var(--rule);
+  font-size: 11px; font-weight: 700; letter-spacing: .4px; color: var(--label);
+  display: flex; align-items: center; gap: 8px;
+}
+.subgroup-hd .sg-why { font-weight: 500; letter-spacing: 0; color: var(--quiet); }
+
+.gap-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: var(--s-15); padding: var(--s-15) var(--s-2); border-bottom: 1px solid var(--rule); }
+.gap-row:last-child { border-bottom: none; }
+.gap-row:hover { background: var(--surface-2); }
+.gap-row.d-accepted { box-shadow: inset 3px 0 0 var(--good); }
+.gap-row.d-rejected { box-shadow: inset 3px 0 0 var(--quiet); opacity: .72; }
+.gap-row.d-deferred { box-shadow: inset 3px 0 0 var(--warn); }
+.gap-row.d-done     { box-shadow: inset 3px 0 0 var(--good); opacity: .72; }
+.gap-subject { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.gap-subject .id { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.gap-detail { font-size: 12.5px; color: var(--body); margin-top: 3px; max-width: 84ch; }
+.gap-meta { display: flex; gap: var(--s-15); flex-wrap: wrap; align-items: center; margin-top: 6px; font-size: 11px; color: var(--quiet); font-family: var(--font-mono); }
+.gap-meta .ev { color: var(--label); }
+.gap-ctl { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; min-width: 260px; }
+.seg { display: flex; border: 1px solid var(--rule); border-radius: var(--r-md); overflow: hidden; background: var(--surface); }
+.seg button { padding: 4px 9px; font-size: 11px; font-weight: 600; color: var(--label); border-right: 1px solid var(--rule); }
+.seg button:last-child { border-right: none; }
+.seg button:hover { background: var(--surface-3); color: var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.seg button[data-d="accepted"][aria-pressed="true"] { background: var(--good); color: #fff; }
+.seg button[data-d="rejected"][aria-pressed="true"] { background: var(--quiet); color: #fff; }
+.seg button[data-d="deferred"][aria-pressed="true"] { background: var(--warn); color: #fff; }
+.seg button[data-d="done"][aria-pressed="true"]     { background: var(--good); color: #fff; }
+.seg button[data-d="open"][aria-pressed="true"]     { background: var(--surface-3); color: var(--ink); }
+.noterow { display: flex; gap: 6px; width: 100%; }
+.noterow input {
+  padding: 4px 8px; font-size: 12px; min-width: 0;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-sm);
+}
+.noterow input.note-i { flex: 1 1 auto; }
+.noterow input.own-i { flex: 0 0 88px; }
+.saved-hint { font-size: 10px; color: var(--good); font-family: var(--font-mono); height: 12px; }
+
+.sev { font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; padding: 1px 6px; border-radius: var(--r-xs); }
+.sev-serious  { background: var(--bad-wash);  color: var(--bad); }
+.sev-moderate { background: var(--warn-wash); color: var(--warn); }
+.sev-minor    { background: var(--surface-3); color: var(--label); }
+
+/* ─── plan ──────────────────────────────────────────────────────────────── */
+.plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--s-2); align-items: start; }
+.form-row { display: grid; gap: var(--s-1); grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.field label { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--quiet); }
+.field input, .field textarea, .field select {
+  padding: 6px 9px; font-size: 13px; width: 100%;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-md);
+}
+.field textarea { resize: vertical; min-height: 54px; font-family: inherit; }
+.field .mono-in { font-family: var(--font-mono); }
+.btn {
+  padding: 7px 14px; border-radius: var(--r-md); font-size: 13px; font-weight: 600;
+  background: var(--primary); color: #fff;
+}
+.btn:hover { background: var(--primary-hover); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.btn-ghost { background: var(--surface); color: var(--body); border: 1px solid var(--rule); }
+.btn-ghost:hover { background: var(--surface-3); color: var(--ink); }
+.btn-danger { background: transparent; color: var(--bad); border: 1px solid var(--bad-edge); }
+.btn-danger:hover { background: var(--bad-wash); }
+
+.item { padding: var(--s-15) var(--s-2); border-bottom: 1px solid var(--rule); }
+.item:last-child { border-bottom: none; }
+.item-hd { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.item-hd .id { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.item-body { font-size: 12.5px; color: var(--body); margin-top: 4px; }
+.item-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.pill {
+  font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase;
+  padding: 2px 8px; border-radius: var(--r-pill); border: 1px solid var(--rule); color: var(--label); background: var(--surface-2);
+}
+.pill.p-agreed, .pill.p-decided { background: var(--good-wash); color: var(--good); border-color: var(--good-edge); }
+.pill.p-building { background: var(--primary-wash); color: var(--primary); border-color: var(--primary-edge); }
+.pill.p-done { background: var(--good-wash); color: var(--good); border-color: var(--good-edge); }
+.pill.p-dropped, .pill.p-superseded { background: var(--surface-3); color: var(--quiet); }
+.pill.p-open, .pill.p-proposed { background: var(--warn-wash); color: var(--warn); border-color: var(--warn-edge); }
+
+.log { max-height: 460px; overflow-y: auto; }
+.log-row { display: grid; grid-template-columns: 128px 132px minmax(0,1fr); gap: var(--s-1); padding: 6px var(--s-2); border-bottom: 1px solid var(--rule); font-size: 12px; }
+.log-row:nth-child(odd) { background: var(--surface-2); }
+.log-row .lt { font-family: var(--font-mono); font-size: 11px; color: var(--quiet); }
+.log-row .la { font-family: var(--font-mono); font-size: 11px; color: var(--primary); font-weight: 600; }
+.log-row .ld { color: var(--body); word-break: break-word; }
+.log-row .ld b { font-family: var(--font-mono); font-weight: 700; color: var(--ink); }
+
+.empty { padding: var(--s-3); text-align: center; color: var(--quiet); font-size: 13px; }
+.empty b { display: block; color: var(--label); margin-bottom: 4px; }
+
+/* ─── detail panel ──────────────────────────────────────────────────────── */
+.panel {
+  position: fixed; z-index: 50; top: var(--hdr-h); right: 0; bottom: 0;
+  width: min(var(--panel-w), 96vw);
+  background: var(--surface); border-left: 1px solid var(--rule);
+  box-shadow: var(--shadow-3);
+  display: flex; flex-direction: column;
+}
+.panel[hidden] { display: none; }
+.panel-hd {
+  display: flex; align-items: flex-start; gap: var(--s-1);
+  padding: var(--s-15) var(--s-2); border-bottom: 1px solid var(--rule); flex: none;
+}
+.panel-hd .kicker { font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--quiet); }
+.panel-hd h3 { font-size: 16px; margin-top: 2px; word-break: break-word; }
+.panel-bd { padding: var(--s-2); overflow-y: auto; flex: 1 1 auto; }
+.panel-sec { margin-bottom: var(--s-25); }
+.panel-sec > h4 { font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--quiet); margin-bottom: var(--s-1); }
+.kv { display: grid; grid-template-columns: 118px minmax(0,1fr); gap: 4px var(--s-1); font-size: 12.5px; }
+.kv dt { color: var(--quiet); }
+.kv dd { margin: 0; color: var(--ink); word-break: break-word; }
+.derivation {
+  padding: var(--s-1) var(--s-15); border-radius: var(--r-md);
+  background: var(--surface-2); border: 1px solid var(--rule);
+  font-size: 12px; color: var(--body);
+}
+.derivation b { color: var(--ink); }
+.chiplist { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip {
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 2px 7px; border-radius: var(--r-xs);
+  background: var(--surface-2); border: 1px solid var(--rule); color: var(--body);
+}
+.chip.c-bare { background: var(--warn-wash); border-color: var(--warn-edge); color: var(--warn); }
+.chip.c-dangling { background: var(--bad-wash); border-color: var(--bad-edge); color: var(--bad); }
+.chip.c-typed { background: var(--surface-2); }
+.chip button { color: inherit; opacity: .6; margin-left: 4px; }
+.chip button:hover { opacity: 1; }
+button.chip:hover { border-color: var(--edge); }
+.linklist { display: flex; flex-direction: column; gap: 2px; }
+.linklist button {
+  text-align: left; padding: 4px 8px; border-radius: var(--r-sm);
+  font-size: 12px; color: var(--body); width: 100%;
+  display: flex; align-items: baseline; gap: 8px;
+}
+.linklist button:hover { background: var(--surface-2); color: var(--ink); }
+.linklist .id { color: var(--ink); font-weight: 600; }
+.linklist .mut { color: var(--quiet); font-size: 11px; margin-left: auto; }
+
+.unknown { color: var(--quiet); font-style: italic; }
+.vis-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.boot { position: fixed; inset: 0; display: grid; place-items: center; padding: var(--s-4); background: var(--surface-2); z-index: 100; }
+.boot[hidden] { display: none; }
+.boot .box { max-width: 560px; text-align: left; }
+.boot h2 { margin-bottom: var(--s-1); }
+.boot p { color: var(--label); font-size: 13px; margin-bottom: var(--s-15); }
+.boot pre {
+  margin: 0 0 var(--s-1); padding: var(--s-15);
+  background: var(--ink); color: #e2e8f0; border-radius: var(--r-md);
+  font-family: var(--font-mono); font-size: 12.5px; overflow-x: auto;
+}
+</style>
+</head>
+<body>
+
+<div id="boot" class="boot" hidden><div class="box card" style="padding:24px"></div></div>
+
+<header class="app-hdr">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-name">Planning companion</span>
+    <span class="brand-sub">model/</span>
+  </div>
+
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button role="tab" id="tab-matrix" data-view="matrix" aria-selected="true" aria-controls="view-matrix">Matrix <span class="tab-count" data-c="matrix"></span></button>
+    <button role="tab" id="tab-graph"  data-view="graph"  aria-selected="false" aria-controls="view-graph">Graph <span class="tab-count" data-c="graph"></span></button>
+    <button role="tab" id="tab-gaps"   data-view="gaps"   aria-selected="false" aria-controls="view-gaps">Gaps <span class="tab-count" data-c="gaps"></span></button>
+    <button role="tab" id="tab-plan"   data-view="plan"   aria-selected="false" aria-controls="view-plan">Plan <span class="tab-count" data-c="plan"></span></button>
+  </nav>
+
+  <div class="hdr-right">
+    <label class="search">
+      <span class="vis-hidden">Search</span>
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
+      <input id="q" type="search" placeholder="Search  /" autocomplete="off" spellcheck="false">
+    </label>
+    <div id="prov" class="prov" title="Provenance of /model-graph.json"></div>
+    <button id="theme" class="icon-btn" title="Toggle light / dark" aria-label="Toggle light or dark theme">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3 3l1.1 1.1M11.9 11.9 13 13M13 3l-1.1 1.1M4.1 11.9 3 13"/></svg>
+    </button>
+  </div>
+</header>
+
+<div id="banner" class="banner" hidden></div>
+
+<main class="app-main">
+  <section class="view" id="view-matrix" role="tabpanel" aria-labelledby="tab-matrix"></section>
+  <section class="view" id="view-graph"  role="tabpanel" aria-labelledby="tab-graph"  hidden></section>
+  <section class="view" id="view-gaps"   role="tabpanel" aria-labelledby="tab-gaps"   hidden></section>
+  <section class="view" id="view-plan"   role="tabpanel" aria-labelledby="tab-plan"   hidden></section>
+</main>
+
+<aside id="panel" class="panel" hidden aria-label="Detail"></aside>
+<div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+
+<script type="module">
+/* ══════════════════════════════════════════════════════════════════════════
+   ReconcileAI planning companion
+   Reads a derived graph, writes the owner's decisions through the state server.
+   Nothing here invents data: a field the graph does not carry renders as
+   "unknown", and every derived cell states how it was derived.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const h  = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
+const UNKNOWN = '<span class="unknown">unknown</span>';
+
+const VIEWS = ['matrix', 'graph', 'gaps', 'plan'];
+const DISPOSITIONS = ['open', 'accepted', 'rejected', 'deferred', 'done'];
+const MODULE_STATUSES = ['proposed', 'agreed', 'building', 'done', 'dropped'];
+const DECISION_STATUSES = ['open', 'decided', 'superseded'];
+
+/* Nine kinds. Labels and the honest note about what the detector can and
+   cannot settle — a detector never decides taste, and two of these are taste. */
+const KINDS = {
+  brand_without_interface: {
+    label: 'Phantom brand',
+    note: 'An Id<\'X\'> whose brand X matches no exported interface. The compiler never resolves a phantom brand, so tsc passes clean and every edge through it points at nothing.',
+    decides: 'detector',
+  },
+  reference_without_type: {
+    label: 'Untyped reference',
+    note: 'An id-shaped field typed as string rather than a branded Id. Some are deliberate deferrals and say so in a comment; the rest are drift. The note below is the field\'s own preceding comment where the extractor found one.',
+    decides: 'you',
+  },
+  entity_without_identity: {
+    label: 'No identity of its own',
+    note: 'Carries branded references but has no id: field. Many of these are legitimately value objects. Some are not — a minting record with no id makes everything that points at it unaddressable. The detector cannot tell which is which; you can.',
+    decides: 'you',
+  },
+  entity_unreferenced: {
+    label: 'Nothing points at it',
+    note: 'Zero inbound typed edges. Three different situations wear this one shape — terminal by design, referenced through an untyped field, or genuinely unwired — and they are separated below as far as the source allows.',
+    decides: 'you',
+  },
+  types_without_operations: {
+    label: 'Types with no operations',
+    note: 'The module\'s entities appear in no operationId and no path across the contracts. A designed stack with no way to administer it.',
+    decides: 'detector',
+  },
+  capability_without_contract: {
+    label: 'Capability with no contract',
+    note: 'A member of the capability set that appears in no contract file. The authorisation model and the API surface have drifted apart.',
+    decides: 'detector',
+  },
+  resource_class_without_capability: {
+    label: 'Resource class with no capability',
+    note: 'No capability maps to this class in CAPABILITY_RESOURCE_CLASS. An empty class can legitimately be a statement rather than a gap — only you decide which.',
+    decides: 'you',
+  },
+  module_specified_not_written: {
+    label: 'Specified, not written',
+    note: 'Named in the documentation, with no file in model/.',
+    decides: 'detector',
+  },
+  no_administration_tier: {
+    label: 'No administration tier',
+    note: 'Held against the contracts as a whole, not against any one module.',
+    decides: 'detector',
+  },
+};
+const KIND_ORDER = [
+  'entity_without_identity', 'entity_unreferenced', 'reference_without_type',
+  'resource_class_without_capability', 'brand_without_interface',
+  'types_without_operations', 'capability_without_contract',
+  'module_specified_not_written', 'no_administration_tier',
+];
+
+/* ─── application state ──────────────────────────────────────────────────── */
+const S = {
+  graph: null, IX: null, state: null,
+  view: 'matrix', q: '', sel: null,
+  serverOk: true, banner: null,
+  gapF: { module: '', disposition: '', kind: '' },
+  graphF: { modules: new Set(), kinds: new Set(['typed', 'bare', 'dangling']), unrefOnly: false },
+};
+
+/* ─── transport ──────────────────────────────────────────────────────────── */
+async function getJSON(url) {
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) { const e = new Error(`HTTP ${r.status} ${r.statusText}`); e.status = r.status; throw e; }
+  return r.json();
+}
+
+function normState(s) {
+  const o = (v) => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+  const a = (v) => Array.isArray(v) ? v : [];
+  return {
+    version: isNum(s.version) ? s.version : 1,
+    updatedAt: s.updatedAt ?? null,
+    gapStatus: o(s.gapStatus),
+    moduleNotes: o(s.moduleNotes),
+    plannedModules: a(s.plannedModules),
+    plannedEdges: a(s.plannedEdges),
+    decisions: a(s.decisions),
+    log: a(s.log),
+  };
+}
+function unwrapState(body) {
+  if (!body || typeof body !== 'object') return null;
+  const s = (body.state && typeof body.state === 'object') ? body.state : body;
+  const looksRight = ['gapStatus', 'log', 'decisions', 'plannedModules', 'moduleNotes'].some(k => k in s);
+  return looksRight ? normState(s) : null;
+}
+
+/* Every mutation goes straight to the file and adopts whatever the server
+   returns. There is deliberately no local copy that could drift from disk. */
+/** `fields` are spread into the envelope; undefined and '' are dropped, because
+    the server rejects unknown fields and treats an absent optional as absent. */
+async function mutate(action, fields) {
+  if (!S.serverOk) {
+    toast('bad', 'Not saved', 'the state server is not reachable — start it with: node tools/planner/serve.mjs');
+    return false;
+  }
+  const envelope = { action };
+  for (const [k, v] of Object.entries(fields || {})) {
+    if (v === undefined || v === null) continue;
+    if (typeof v === 'string' && v.trim() === '') continue;
+    envelope[k] = typeof v === 'string' ? v.trim() : v;
+  }
+  let r, text;
+  try {
+    r = await fetch('/api/mutate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(envelope),
+    });
+    text = await r.text();
+  } catch (e) {
+    S.serverOk = false; renderBanner();
+    toast('bad', `${action} was not saved`, e.message || 'the request never reached the server');
+    return false;
+  }
+  let body = null;
+  try { body = text ? JSON.parse(text) : null; } catch { /* leave null, reported below */ }
+  if (!r.ok) {
+    const msg = (body && (body.error || body.message)) || (text || '').slice(0, 300) || r.statusText;
+    toast('bad', `${action} rejected — HTTP ${r.status}`, msg);
+    return false;
+  }
+  const next = unwrapState(body);
+  if (!next) {
+    toast('bad', `${action} returned no state`, 'the server answered 200 but the body was not a planning-state document, so nothing on screen can be trusted to match the file — reload');
+    return false;
+  }
+  S.state = next;
+  return true;
+}
+
+/* ─── toasts ─────────────────────────────────────────────────────────────── */
+function toast(tone, title, detail) {
+  const n = document.createElement('div');
+  n.className = 'toast' + (tone === 'bad' ? ' is-bad' : tone === 'good' ? ' is-good' : '');
+  n.innerHTML = `<b>${h(title)}</b>${detail ? `<div class="toast-detail">${h(detail)}</div>` : ''}`;
+  $('#toasts').appendChild(n);
+  setTimeout(() => { n.style.transition = 'opacity .3s'; n.style.opacity = '0'; setTimeout(() => n.remove(), 320); },
+    tone === 'bad' ? 9000 : 2600);
+}
+
+/* ─── text utilities ─────────────────────────────────────────────────────── */
+function tokenize(str) {
+  return String(str || '')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .split(/[^A-Za-z0-9]+/)
+    .filter(Boolean)
+    .map(t => t.toLowerCase());
+}
+const sing = (t) => (t.length > 3 && t.endsWith('s') && !t.endsWith('ss')) ? t.slice(0, -1) : t;
+
+/** contiguous token-run match, tolerant of a plural on the final token */
+function containsRun(hay, needle) {
+  if (!needle.length || needle.length > hay.length) return false;
+  outer: for (let i = 0; i <= hay.length - needle.length; i++) {
+    for (let j = 0; j < needle.length; j++) {
+      const a = hay[i + j], b = needle[j];
+      if (a !== b && sing(a) !== sing(b)) continue outer;
+    }
+    return true;
+  }
+  return false;
+}
+
+function relTime(iso) {
+  const t = Date.parse(iso || '');
+  if (!Number.isFinite(t)) return null;
+  const s = Math.round((Date.now() - t) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
+  return `${Math.floor(s / 86400)} d ago`;
+}
+function shortTime(iso) {
+  const t = Date.parse(iso || '');
+  if (!Number.isFinite(t)) return String(iso ?? '');
+  const d = new Date(t);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+/* Modules get a hue, not a status colour. The band is 190°–330° — cyan through
+   blue to violet — chosen because it steps around emerald, amber and red, which
+   docs/design-tokens.md reserves for the product's own output. */
+function moduleHue(i, n) { return 196 + ((i * 360 / Math.max(n, 1)) % 134); }
+function moduleColor(name) {
+  const i = S.IX ? S.IX.moduleOrder.indexOf(name) : -1;
+  const n = S.IX ? Math.max(S.IX.moduleOrder.length, 1) : 1;
+  if (i < 0) return 'hsl(215 12% 60%)';
+  const dark = document.documentElement.classList.contains('is-dark');
+  return `hsl(${moduleHue(i, n).toFixed(1)} 48% ${dark ? 62 : 46}%)`;
+}
+
+/* ─── index: everything derived from the graph, computed once ────────────── */
+function buildIndex(g) {
+  const arr = (v) => Array.isArray(v) ? v : [];
+  const nodes = arr(g.nodes), edges = arr(g.edges), gaps = arr(g.gaps);
+  const modules = arr(g.modules), idTypes = arr(g.idTypes);
+  const hasOps = Array.isArray(g.contractOperations);
+  const hasCaps = Array.isArray(g.capabilities);
+  const hasRcs = Array.isArray(g.resourceClasses);
+  const ops = arr(g.contractOperations), caps = arr(g.capabilities), rcs = arr(g.resourceClasses);
+  const crc = (g.capabilityResourceClass && typeof g.capabilityResourceClass === 'object') ? g.capabilityResourceClass : {};
+
+  const byName = new Map();
+  for (const n of nodes) if (n && n.name && !byName.has(n.name)) byName.set(n.name, n);
+
+  const moduleOrder = modules.map(m => m.name);
+  for (const n of nodes) if (n && n.module && !moduleOrder.includes(n.module)) moduleOrder.push(n.module);
+
+  const byModule = new Map(moduleOrder.map(m => [m, []]));
+  for (const n of nodes) { if (!byModule.has(n.module)) byModule.set(n.module, []); byModule.get(n.module).push(n); }
+
+  /* edge indices */
+  const inTyped = new Map(), inAny = new Map(), outAll = new Map(), bareTo = new Map();
+  const bump = (m, k, e) => { if (!k) return; if (!m.has(k)) m.set(k, []); m.get(k).push(e); };
+  for (const e of edges) {
+    bump(outAll, e.from, e);
+    const target = e.to || null;
+    if (target) {
+      bump(inAny, target, e);
+      if (e.kind === 'typed') bump(inTyped, target, e);
+      if (e.kind === 'bare') bump(bareTo, target, e);
+    }
+    /* a bare edge often carries no resolved target; the field name is the only
+       clue there is, so record it as an inference and label it as one */
+    if (e.kind === 'bare' && !target && e.field) {
+      const guess = inferTarget(e.field);
+      if (guess && byName.has(guess)) bump(bareTo, guess, Object.assign({}, e, { _inferredTo: guess }));
+    }
+  }
+
+  const gapsByModule = new Map(), gapsByKind = new Map(), gapsBySubject = new Map();
+  for (const gp of gaps) {
+    bump(gapsByModule, gp.module, gp);
+    bump(gapsByKind, gp.kind, gp);
+    bump(gapsBySubject, gp.subject, gp);
+  }
+
+  /* contract-operation haystacks, tokenised once */
+  const opTokens = ops.map(o => ({ op: o, t: tokenize(`${o.operationId || ''} ${o.path || ''}`) }));
+  const capTokens = caps.map(c => ({ cap: c, t: tokenize(c) }));
+  const tiers = [...new Set(ops.map(o => o.tier).filter(Boolean))];
+
+  /* entity -> the operations and capabilities that name it */
+  const entityOps = new Map(), entityCaps = new Map();
+  for (const n of nodes) {
+    const nt = tokenize(n.name);
+    if (nt.length === 0) continue;
+    entityOps.set(n.name, opTokens.filter(x => containsRun(x.t, nt)).map(x => x.op));
+    entityCaps.set(n.name, capTokens.filter(x => containsRun(x.t, nt)).map(x => x.cap));
+  }
+
+  const capsInContract = new Set();
+  for (const { cap, t } of capTokens) if (opTokens.some(x => containsRun(x.t, t))) capsInContract.add(cap);
+
+  return {
+    nodes, edges, gaps, modules, idTypes, ops, caps, rcs, crc, tiers,
+    hasOps, hasCaps, hasRcs,
+    byName, byModule, moduleOrder,
+    inTyped, inAny, outAll, bareTo,
+    gapsByModule, gapsByKind, gapsBySubject,
+    entityOps, entityCaps, capsInContract,
+  };
+}
+
+/** `endpointIds` -> `Endpoint`. A hint, always presented as one. */
+function inferTarget(field) {
+  const base = String(field || '').replace(/(Ids|Id|IDs|ID|ids|id)$/, '');
+  if (!base) return null;
+  return base.charAt(0).toUpperCase() + base.slice(1);
+}
+
+/* ─── matrix derivation ──────────────────────────────────────────────────── */
+const COLUMNS = ['TYPES', 'OPERATIONS', 'CAPABILITIES', 'CONTRACTS', 'GOVERNANCE'];
+const STRUCTURAL_KINDS = ['brand_without_interface', 'reference_without_type', 'entity_without_identity'];
+
+function cellsFor(modName) {
+  const IX = S.IX;
+  const nodes = IX.byModule.get(modName) || [];
+  const ents = nodes.filter(n => n.kind === 'entity');
+  const vos = nodes.filter(n => n.kind === 'value_object');
+  const gaps = IX.gapsByModule.get(modName) || [];
+  const gapsOfKind = (k) => gaps.filter(gp => gp.kind === k);
+
+  /* TYPES */
+  const structural = gaps.filter(gp => STRUCTURAL_KINDS.includes(gp.kind));
+  const types = {
+    col: 'TYPES', n: nodes.length, sub: `${ents.length} ent · ${vos.length} vo`,
+    state: nodes.length === 0 ? 'absent' : structural.length ? 'partial' : 'present',
+    how: nodes.length === 0
+      ? 'No entity or value object in the graph carries this module.'
+      : `${nodes.length} declared type${nodes.length === 1 ? '' : 's'}: ${ents.length} entit${ents.length === 1 ? 'y' : 'ies'} and ${vos.length} value object${vos.length === 1 ? '' : 's'}. ` +
+        (structural.length ? `${structural.length} structural type gap${structural.length === 1 ? '' : 's'} against them, so this reads partial rather than present.` : 'No structural type gap against them.'),
+    gaps: structural,
+  };
+
+  /* OPERATIONS — entity coverage across contract operations */
+  let operations;
+  if (!IX.hasOps) {
+    operations = { col: 'OPERATIONS', n: null, sub: 'no contracts', state: 'unknown', gaps: [],
+      how: 'The graph carries no contractOperations array, so nothing about the operation surface can be derived.' };
+  } else {
+    const covered = ents.filter(n => (IX.entityOps.get(n.name) || []).length > 0);
+    const matched = new Set();
+    for (const n of nodes) for (const o of (IX.entityOps.get(n.name) || [])) matched.add(o.operationId || o.path);
+    operations = {
+      col: 'OPERATIONS', n: covered.length, sub: `of ${ents.length} type${ents.length === 1 ? '' : 's'}`,
+      state: ents.length === 0 ? 'absent' : covered.length === 0 ? 'absent' : covered.length < ents.length ? 'partial' : 'present',
+      how: `${matched.size} of ${IX.ops.length} contract operations name one of this module's types; ${covered.length} of ${ents.length} entities are reachable through at least one. ` +
+           (covered.length === 0 ? 'No administration or runtime surface exists for any of them.' : ''),
+      gaps: gapsOfKind('types_without_operations'),
+      ops: [...matched],
+    };
+  }
+
+  /* CAPABILITIES */
+  let capabilities;
+  if (!IX.hasCaps) {
+    capabilities = { col: 'CAPABILITIES', n: null, sub: 'no capability set', state: 'unknown', gaps: [],
+      how: 'The graph carries no capabilities array.' };
+  } else {
+    const capSet = new Set();
+    for (const n of nodes) for (const c of (IX.entityCaps.get(n.name) || [])) capSet.add(c);
+    const covered = ents.filter(n => (IX.entityCaps.get(n.name) || []).length > 0);
+    capabilities = {
+      col: 'CAPABILITIES', n: capSet.size, sub: `${covered.length}/${ents.length} types`,
+      state: capSet.size === 0 ? 'absent' : (ents.length && covered.length < ents.length) ? 'partial' : 'present',
+      how: `${capSet.size} of ${IX.caps.length} capabilities name a type in this module, reaching ${covered.length} of its ${ents.length} entities. Matched on the capability's own tokens against the type name — a capability that governs a type without naming it will not be seen here.`,
+      gaps: gapsOfKind('capability_without_contract'),
+      caps: [...capSet],
+    };
+  }
+
+  /* CONTRACTS — how many tiers actually cover it */
+  let contracts;
+  if (!IX.hasOps) {
+    contracts = { col: 'CONTRACTS', n: null, sub: 'no contracts', state: 'unknown', gaps: [],
+      how: 'The graph carries no contractOperations array.' };
+  } else {
+    const tset = new Set();
+    for (const n of nodes) for (const o of (IX.entityOps.get(n.name) || [])) if (o.tier) tset.add(o.tier);
+    const admin = (S.IX.gapsByKind.get('no_administration_tier') || []);
+    contracts = {
+      col: 'CONTRACTS', n: tset.size, sub: tset.size ? [...tset].join(' · ') : 'no tier',
+      state: tset.size === 0 ? 'absent' : tset.size === 1 ? 'partial' : 'present',
+      how: `Covered by ${tset.size} of the ${IX.tiers.length} contract tier${IX.tiers.length === 1 ? '' : 's'} present in the graph` +
+           (tset.size ? ` (${[...tset].join(', ')}).` : '.') +
+           (admin.length ? ' There is no administration tier anywhere in the contracts, which caps every module in this column.' : ''),
+      gaps: admin,
+      tiers: [...tset],
+    };
+  }
+
+  /* GOVERNANCE */
+  const scoped = nodes.filter(n => n.tenantScoped === true);
+  const unscopedKnown = nodes.filter(n => n.tenantScoped === false);
+  const rcSet = new Set();
+  if (capabilities.caps) for (const c of capabilities.caps) { const rc = IX.crc[c]; if (rc) rcSet.add(rc); }
+  const govGaps = gaps.filter(gp => ['resource_class_without_capability', 'module_specified_not_written'].includes(gp.kind));
+  const governance = {
+    col: 'GOVERNANCE', n: scoped.length, sub: rcSet.size ? `${rcSet.size} class${rcSet.size === 1 ? '' : 'es'}` : 'no class',
+    state: (scoped.length === 0 && rcSet.size === 0) ? 'absent'
+         : (scoped.length > 0 && rcSet.size > 0) ? 'present' : 'partial',
+    how: `${scoped.length} of ${nodes.length} types are tenant-scoped` +
+         (unscopedKnown.length ? `, ${unscopedKnown.length} explicitly are not` : '') +
+         (nodes.length - scoped.length - unscopedKnown.length > 0 ? `, ${nodes.length - scoped.length - unscopedKnown.length} do not say` : '') +
+         `. ${rcSet.size} resource class${rcSet.size === 1 ? '' : 'es'} reach this module through the capabilities that name its types.`,
+    gaps: govGaps,
+    classes: [...rcSet],
+  };
+
+  return { TYPES: types, OPERATIONS: operations, CAPABILITIES: capabilities, CONTRACTS: contracts, GOVERNANCE: governance };
+}
+
+/* ─── matrix view ────────────────────────────────────────────────────────── */
+function renderMatrix() {
+  const IX = S.IX, root = $('#view-matrix');
+  const q = S.q.toLowerCase();
+
+  const totalTyped = IX.edges.filter(e => e.kind === 'typed').length;
+  const totalBare = IX.edges.filter(e => e.kind === 'bare').length;
+  const totalDangling = IX.edges.filter(e => e.kind === 'dangling').length;
+  const openGaps = IX.gaps.filter(gp => dispositionOf(gp.id) === 'open').length;
+  const needsYou = IX.gaps.filter(gp => dispositionOf(gp.id) === 'open' && KINDS[gp.kind] && KINDS[gp.kind].decides === 'you').length;
+
+  const rows = IX.moduleOrder
+    .map(name => ({ name, mod: IX.modules.find(m => m.name === name) || null, planned: false }))
+    .concat((S.state?.plannedModules || []).map(p => ({ name: p.name, mod: null, planned: true, plan: p })))
+    .filter(r => !q || r.name.toLowerCase().includes(q) ||
+      String(r.mod?.purpose || r.plan?.purpose || '').toLowerCase().includes(q) ||
+      (IX.byModule.get(r.name) || []).some(n => n.name.toLowerCase().includes(q)));
+
+  root.innerHTML = `
+    <div class="summary">
+      ${stat('Modules', IX.moduleOrder.length, `${(S.state?.plannedModules || []).length} planned on top`, '')}
+      ${stat('Types', IX.nodes.length, `${IX.nodes.filter(n => n.kind === 'entity').length} entities · ${IX.nodes.filter(n => n.kind === 'value_object').length} value objects`, '')}
+      ${stat('Typed edges', totalTyped, `of ${IX.edges.length} references`, 'good')}
+      ${stat('Untyped', totalBare, 'id-shaped fields typed as string', totalBare ? 'warn' : '')}
+      ${stat('Dangling', totalDangling, 'reference resolves to no type', totalDangling ? 'bad' : '')}
+      ${stat('Open gaps', openGaps, `${needsYou} wait on your judgement`, openGaps ? 'bad' : 'good')}
+    </div>
+
+    <div class="view-head">
+      <div>
+        <h2>Module matrix</h2>
+        <p class="lede">What each module has and what it is missing. A cell is derived from the graph, never asserted — click one to see the derivation and the evidence behind it.</p>
+      </div>
+      <div class="legend" style="margin-left:auto">
+        ${legendItem('present', 'complete')}
+        ${legendItem('partial', 'partial')}
+        ${legendItem('absent', 'absent')}
+        ${legendItem('planned', 'planned')}
+        ${legendItem('unknown', 'not in graph')}
+      </div>
+    </div>
+
+    <div class="card scroll-x">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th class="col-mod" scope="col">Module</th>
+            ${COLUMNS.map(c => `<th scope="col">${c}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.length ? rows.map(rowHTML).join('') : `<tr><td colspan="6"><div class="empty"><b>Nothing matches “${h(S.q)}”</b>Clear the search to see all modules.</div></td></tr>`}
+        </tbody>
+      </table>
+    </div>`;
+
+  root.querySelectorAll('button.cell').forEach(b => b.addEventListener('click', () => {
+    select({ type: 'cell', module: b.dataset.mod, col: b.dataset.col });
+  }));
+  root.querySelectorAll('button.mod-open').forEach(b => b.addEventListener('click', () => {
+    select({ type: 'module', module: b.dataset.mod });
+  }));
+  root.querySelectorAll('button.stat[data-goto]').forEach(b => b.addEventListener('click', () => setView(b.dataset.goto)));
+}
+
+function stat(k, v, n, tone) {
+  return `<div class="stat${tone ? ' is-' + tone : ''}"><div class="k">${h(k)}</div><div class="v">${isNum(v) ? v : '—'}</div><div class="n">${h(n)}</div></div>`;
+}
+function legendItem(state, label) {
+  return `<span class="li"><span class="cell--${state}" style="display:inline-flex"><span class="cell-mark"></span></span>${h(label)}</span>`;
+}
+
+function rowHTML(r) {
+  const IX = S.IX;
+  const note = S.state?.moduleNotes?.[r.name];
+  if (r.planned) {
+    const p = r.plan || {};
+    return `<tr>
+      <td class="mod-cell">
+        <button class="mod-open" data-mod="${h(r.name)}" style="text-align:left;width:100%">
+          <span class="mod-name"><span class="mod-swatch" style="background:var(--primary);opacity:.5"></span><span class="id">${h(r.name)}</span> <span class="pill p-${h(p.status || 'proposed')}">${h(p.status || 'proposed')}</span></span>
+          <div class="mod-meta">planned — not written</div>
+          ${p.purpose ? `<div class="mod-purpose">${h(p.purpose)}</div>` : ''}
+        </button>
+      </td>
+      ${COLUMNS.map(() => `<td><div class="cell cell--planned" style="display:flex;align-items:center;gap:10px;height:54px;padding:0 16px;border-left:1px solid var(--rule)"><span class="cell-mark"></span><span class="cell-sub">planned</span></div></td>`).join('')}
+    </tr>`;
+  }
+  const cells = cellsFor(r.name);
+  const nodes = IX.byModule.get(r.name) || [];
+  const m = r.mod;
+  return `<tr>
+    <td class="mod-cell">
+      <button class="mod-open" data-mod="${h(r.name)}" style="text-align:left;width:100%">
+        <span class="mod-name"><span class="mod-swatch" style="background:${moduleColor(r.name)}"></span><span class="id">${h(r.name)}</span>${note?.note ? ` <span class="mod-note-flag">● noted</span>` : ''}</span>
+        <div class="mod-meta">${m?.file ? `<span class="mono">${h(m.file)}</span>` : '<span class="unknown">file unknown</span>'}${isNum(m?.lines) ? ` · ${m.lines} lines` : ''} · ${nodes.length} types</div>
+        ${m?.purpose ? `<div class="mod-purpose">${h(m.purpose)}</div>` : `<div class="mod-purpose unknown">purpose unknown — no header comment in the graph</div>`}
+      </button>
+    </td>
+    ${COLUMNS.map(c => {
+      const cell = cells[c];
+      return `<td><button class="cell cell--${cell.state}" data-mod="${h(r.name)}" data-col="${c}"
+        aria-label="${h(r.name)} ${c}: ${cell.state}${isNum(cell.n) ? ', ' + cell.n : ''}">
+        <span class="cell-mark" aria-hidden="true"></span>
+        <span class="cell-txt"><span class="cell-num">${isNum(cell.n) ? cell.n : '?'}</span><span class="cell-sub">${h(cell.sub)}</span></span>
+      </button></td>`;
+    }).join('')}
+  </tr>`;
+}
+
+/* ══ GRAPH ═══════════════════════════════════════════════════════════════════
+   Canvas, not hand-authored SVG: 128 nodes and 172 edges need a layout that
+   is computed, and the thing this view exists to show — which references are
+   typed, which are bare strings, and which resolve to nothing at all — has to
+   survive being drawn 300 times a second while the simulation settles.        */
+const G = {
+  canvas: null, ctx: null, box: null, tip: null,
+  dpr: 1, w: 0, h: 0,
+  nodes: [], links: [], byName: new Map(),
+  tx: 0, ty: 0, k: 1,
+  alpha: 0, raf: 0,
+  hover: null, drag: null, pan: null, kbIndex: -1,
+  built: false, ro: null,
+};
+
+function buildGraphModel() {
+  const IX = S.IX;
+  G.nodes = []; G.links = []; G.byName = new Map();
+
+  const add = (name, module, kind, extra) => {
+    if (G.byName.has(name)) return G.byName.get(name);
+    const n = Object.assign({
+      name, module, kind, x: 0, y: 0, vx: 0, vy: 0, deg: 0, phantom: false,
+    }, extra || {});
+    G.nodes.push(n); G.byName.set(name, n);
+    return n;
+  };
+
+  for (const n of IX.nodes) add(n.name, n.module, n.kind, { src: n, tenantScoped: n.tenantScoped, line: n.line });
+
+  for (const e of IX.edges) {
+    const from = G.byName.get(e.from);
+    if (!from) continue;
+    let toName = e.to || null;
+    let inferred = false;
+    if (!toName || !G.byName.has(toName)) {
+      if (!toName && e.field) { const guess = inferTarget(e.field); if (guess) { toName = guess; inferred = true; } }
+    }
+    if (!toName) toName = `${e.from}.${e.field}`;
+    let to = G.byName.get(toName);
+    if (!to) {
+      /* the reference names something that is not a type in this model —
+         drawn as a phantom so the break is visible rather than invisible */
+      to = add(toName, from.module, 'phantom', { phantom: true, phantomKind: e.kind });
+    }
+    const link = { from, to, e, kind: e.kind || 'typed', inferred, curve: 0 };
+    G.links.push(link);
+    from.deg++; to.deg++;
+  }
+
+  /* parallel-edge separation */
+  const seen = new Map();
+  for (const l of G.links) {
+    const k = [l.from.name, l.to.name].sort().join('::');
+    const n = (seen.get(k) || 0); seen.set(k, n + 1);
+    l.curve = n === 0 ? 0 : (n % 2 ? 1 : -1) * Math.ceil(n / 2) * 16;
+  }
+
+  layoutSeed();
+  G.alpha = 1;
+  G.built = true;
+}
+
+function layoutSeed() {
+  const mods = S.IX.moduleOrder;
+  const R = 460 + mods.length * 30;
+  const anchors = new Map();
+  mods.forEach((m, i) => {
+    const a = (i / Math.max(mods.length, 1)) * Math.PI * 2 - Math.PI / 2;
+    anchors.set(m, { x: Math.cos(a) * R, y: Math.sin(a) * R * 0.72 });
+  });
+  G.anchors = anchors;
+  for (const n of G.nodes) {
+    const a = anchors.get(n.module) || { x: 0, y: 0 };
+    const t = Math.random() * Math.PI * 2, r = Math.random() * 70;
+    n.x = a.x + Math.cos(t) * r; n.y = a.y + Math.sin(t) * r;
+    n.vx = 0; n.vy = 0;
+  }
+}
+
+function tick() {
+  const nodes = G.nodes, links = G.links;
+  const a = G.alpha;
+
+  for (let i = 0; i < nodes.length; i++) {
+    const p = nodes[i];
+    /* the module anchor is the dominant force: this is a grouped layout that
+       relaxes, not a hairball that happens to have colours */
+    const anc = G.anchors.get(p.module) || { x: 0, y: 0 };
+    p.vx += (anc.x - p.x) * 0.075 * a;
+    p.vy += (anc.y - p.y) * 0.075 * a;
+    for (let j = i + 1; j < nodes.length; j++) {
+      const q = nodes[j];
+      let dx = q.x - p.x, dy = q.y - p.y;
+      let d2 = dx * dx + dy * dy;
+      if (d2 === 0) { dx = Math.random() - .5; dy = Math.random() - .5; d2 = .25; }
+      const near = p.module === q.module;
+      const strength = (near ? 1300 : 2200) * a;
+      if (d2 < 90000) {
+        const d = Math.sqrt(d2), f = strength / d2;
+        const ux = dx / d, uy = dy / d;
+        p.vx -= ux * f; p.vy -= uy * f;
+        q.vx += ux * f; q.vy += uy * f;
+      }
+    }
+  }
+  for (const l of links) {
+    const dx = l.to.x - l.from.x, dy = l.to.y - l.from.y;
+    const d = Math.hypot(dx, dy) || 1;
+    /* a cross-module spring pulls two clusters together, so it is kept weak —
+       the reference still shows as a line, without collapsing the grouping */
+    const same = l.from.module === l.to.module;
+    const ideal = same ? 70 : 320;
+    const f = (d - ideal) * (same ? 0.02 : 0.0025) * a;
+    const ux = dx / d, uy = dy / d;
+    l.from.vx += ux * f; l.from.vy += uy * f;
+    l.to.vx -= ux * f; l.to.vy -= uy * f;
+  }
+  for (const p of nodes) {
+    if (p === G.drag) { p.vx = 0; p.vy = 0; continue; }
+    p.vx *= 0.82; p.vy *= 0.82;
+    p.x += Math.max(-30, Math.min(30, p.vx));
+    p.y += Math.max(-30, Math.min(30, p.vy));
+  }
+  G.alpha = Math.max(0, a - 0.006);
+}
+
+function fitGraph() {
+  const vis = visibleNodes();
+  if (!vis.length) return;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const n of vis) { x0 = Math.min(x0, n.x); y0 = Math.min(y0, n.y); x1 = Math.max(x1, n.x); y1 = Math.max(y1, n.y); }
+  const pad = 70;
+  const k = Math.min((G.w - pad * 2) / Math.max(x1 - x0, 1), (G.h - pad * 2) / Math.max(y1 - y0, 1));
+  G.k = Math.max(0.16, Math.min(2.4, k));
+  G.tx = G.w / 2 - ((x0 + x1) / 2) * G.k;
+  G.ty = G.h / 2 - ((y0 + y1) / 2) * G.k;
+}
+
+function nodeVisible(n) {
+  const F = S.graphF;
+  if (!F.modules.has(n.module)) return false;
+  if (n.phantom) return F.kinds.has(n.phantomKind || 'dangling');
+  if (F.unrefOnly && !isUnreferenced(n)) return false;
+  if (S.q) return n.name.toLowerCase().includes(S.q.toLowerCase());
+  return true;
+}
+function isUnreferenced(n) {
+  if (n.phantom) return false;
+  return ((S.IX.inTyped.get(n.name) || []).length === 0);
+}
+function visibleNodes() { return G.nodes.filter(nodeVisible); }
+function linkVisible(l) {
+  if (!S.graphF.kinds.has(l.kind)) return false;
+  return nodeVisible(l.from) && nodeVisible(l.to);
+}
+
+const EDGE_STYLE = {
+  typed:    { dash: [],      width: 1.1, alpha: 0.75 },
+  bare:     { dash: [5, 4],  width: 1.6, alpha: 0.95 },
+  dangling: { dash: [2, 4],  width: 1.8, alpha: 1 },
+};
+function edgeColor(kind) {
+  const cs = getComputedStyle(document.documentElement);
+  if (kind === 'bare') return cs.getPropertyValue('--warn').trim();
+  if (kind === 'dangling') return cs.getPropertyValue('--bad').trim();
+  return cs.getPropertyValue('--edge').trim();
+}
+
+function nodeRadius(n) { return Math.max(4, Math.min(13, 4 + Math.sqrt(n.deg) * 2.1)); }
+
+function draw() {
+  const ctx = G.ctx; if (!ctx) return;
+  const cs = getComputedStyle(document.documentElement);
+  ctx.save();
+  ctx.setTransform(G.dpr, 0, 0, G.dpr, 0, 0);
+  ctx.clearRect(0, 0, G.w, G.h);
+  ctx.translate(G.tx, G.ty); ctx.scale(G.k, G.k);
+
+  const colors = { typed: edgeColor('typed'), bare: edgeColor('bare'), dangling: edgeColor('dangling') };
+  const sel = S.sel && S.sel.type === 'node' ? S.sel.name : null;
+  const focusName = G.hover ? G.hover.name : sel;
+
+  /* Module labels sit under everything, placed above each cluster's actual
+     top edge rather than at a fixed offset from the anchor — otherwise a
+     cluster that drifts leaves its label inside the node cloud. */
+  ctx.font = `700 ${13 / G.k}px ${cs.getPropertyValue('--font-mono')}`;
+  ctx.textAlign = 'center';
+  const extent = new Map();
+  for (const n of G.nodes) {
+    if (!nodeVisible(n) || n.phantom) continue;
+    const e = extent.get(n.module);
+    if (!e) extent.set(n.module, { minY: n.y, sx: n.x, c: 1 });
+    else { e.minY = Math.min(e.minY, n.y); e.sx += n.x; e.c++; }
+  }
+  for (const [m, a] of G.anchors) {
+    if (!S.graphF.modules.has(m)) continue;
+    const e = extent.get(m);
+    const x = e ? e.sx / e.c : a.x;
+    const y = (e ? e.minY : a.y) - 22 / G.k;
+    ctx.fillStyle = moduleColor(m); ctx.globalAlpha = 0.5;
+    ctx.fillText(m, x, y);
+  }
+  ctx.globalAlpha = 1;
+
+  for (const l of G.links) {
+    if (!linkVisible(l)) continue;
+    const st = EDGE_STYLE[l.kind] || EDGE_STYLE.typed;
+    const focused = focusName && (l.from.name === focusName || l.to.name === focusName);
+    ctx.beginPath();
+    ctx.setLineDash(st.dash.map(v => v));
+    ctx.lineWidth = (focused ? st.width * 2.1 : st.width) / Math.max(G.k, .5);
+    ctx.strokeStyle = colors[l.kind] || colors.typed;
+    ctx.globalAlpha = focusName ? (focused ? 1 : 0.1) : st.alpha;
+
+    const mx = (l.from.x + l.to.x) / 2, my = (l.from.y + l.to.y) / 2;
+    const dx = l.to.x - l.from.x, dy = l.to.y - l.from.y;
+    const d = Math.hypot(dx, dy) || 1;
+    const cx = mx - (dy / d) * l.curve, cy = my + (dx / d) * l.curve;
+    ctx.moveTo(l.from.x, l.from.y);
+    ctx.quadraticCurveTo(cx, cy, l.to.x, l.to.y);
+    ctx.stroke();
+
+    /* arrowhead */
+    const r = nodeRadius(l.to) + 2;
+    const ax = l.to.x - (l.to.x - cx) / (Math.hypot(l.to.x - cx, l.to.y - cy) || 1) * r;
+    const ay = l.to.y - (l.to.y - cy) / (Math.hypot(l.to.x - cx, l.to.y - cy) || 1) * r;
+    const ang = Math.atan2(l.to.y - cy, l.to.x - cx);
+    const hs = (focused ? 8 : 6) / Math.max(G.k, .5);
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(ax - Math.cos(ang - .4) * hs, ay - Math.sin(ang - .4) * hs);
+    ctx.lineTo(ax - Math.cos(ang + .4) * hs, ay - Math.sin(ang + .4) * hs);
+    ctx.closePath();
+    ctx.fillStyle = colors[l.kind] || colors.typed;
+    ctx.fill();
+  }
+  ctx.setLineDash([]); ctx.globalAlpha = 1;
+
+  const surface = cs.getPropertyValue('--surface').trim();
+  const ink = cs.getPropertyValue('--ink').trim();
+  const bad = cs.getPropertyValue('--bad').trim();
+  const warn = cs.getPropertyValue('--warn').trim();
+
+  const vis = visibleNodes();
+  for (const n of vis) {
+    const r = nodeRadius(n);
+    const dim = focusName && n.name !== focusName &&
+      !G.links.some(l => linkVisible(l) && ((l.from.name === focusName && l.to === n) || (l.to.name === focusName && l.from === n)));
+    ctx.globalAlpha = dim ? 0.22 : 1;
+
+    if (n.phantom) {
+      ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+      ctx.setLineDash([2.5, 2.5]);
+      ctx.lineWidth = 1.6 / Math.max(G.k, .5);
+      ctx.strokeStyle = n.phantomKind === 'bare' ? warn : bad;
+      ctx.fillStyle = surface; ctx.fill(); ctx.stroke();
+      ctx.setLineDash([]);
+    } else {
+      /* an entity that nothing typed points at wears an outer ring */
+      if (isUnreferenced(n)) {
+        ctx.beginPath(); ctx.arc(n.x, n.y, r + 4 / Math.max(G.k, .6), 0, Math.PI * 2);
+        ctx.setLineDash([1.5, 3]);
+        ctx.lineWidth = 1.2 / Math.max(G.k, .5);
+        ctx.strokeStyle = warn; ctx.stroke(); ctx.setLineDash([]);
+      }
+      ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+      if (n.kind === 'value_object') {
+        ctx.fillStyle = surface; ctx.fill();
+        ctx.lineWidth = 2 / Math.max(G.k, .5); ctx.strokeStyle = moduleColor(n.module); ctx.stroke();
+      } else {
+        ctx.fillStyle = moduleColor(n.module); ctx.fill();
+      }
+      if (n.name === sel) {
+        ctx.beginPath(); ctx.arc(n.x, n.y, r + 6 / Math.max(G.k, .6), 0, Math.PI * 2);
+        ctx.lineWidth = 2 / Math.max(G.k, .5);
+        ctx.strokeStyle = cs.getPropertyValue('--primary').trim(); ctx.stroke();
+      }
+    }
+  }
+
+  /* labels last, and only where they can be read */
+  ctx.textAlign = 'left';
+  ctx.font = `600 ${11 / G.k}px ${cs.getPropertyValue('--font-mono')}`;
+  for (const n of vis) {
+    const show = n === G.hover || n.name === sel || G.k > 1.05 || (G.k > 0.62 && n.deg >= 5) || n.phantom;
+    if (!show) continue;
+    ctx.globalAlpha = (n === G.hover || n.name === sel) ? 1 : 0.82;
+    const r = nodeRadius(n);
+    const label = n.name;
+    const tw = ctx.measureText(label).width;
+    ctx.fillStyle = surface; ctx.globalAlpha *= 0.82;
+    ctx.fillRect(n.x + r + 3 / G.k, n.y - 7 / G.k, tw + 4 / G.k, 13 / G.k);
+    ctx.globalAlpha = (n === G.hover || n.name === sel) ? 1 : 0.9;
+    ctx.fillStyle = n.phantom ? (n.phantomKind === 'bare' ? warn : bad) : ink;
+    ctx.fillText(label, n.x + r + 5 / G.k, n.y + 3.5 / G.k);
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+
+function loop() {
+  if (G.alpha > 0.005) { for (let i = 0; i < 2; i++) tick(); }
+  draw();
+  G.raf = requestAnimationFrame(loop);
+}
+
+function resizeCanvas() {
+  if (!G.canvas) return;
+  const rect = G.box.getBoundingClientRect();
+  G.dpr = Math.min(window.devicePixelRatio || 1, 2);
+  G.w = Math.max(rect.width, 120); G.h = Math.max(rect.height, 120);
+  G.canvas.width = Math.round(G.w * G.dpr);
+  G.canvas.height = Math.round(G.h * G.dpr);
+  G.canvas.style.width = G.w + 'px'; G.canvas.style.height = G.h + 'px';
+}
+
+function toWorld(cx, cy) { return { x: (cx - G.tx) / G.k, y: (cy - G.ty) / G.k }; }
+function pick(cx, cy) {
+  const p = toWorld(cx, cy);
+  let best = null, bd = Infinity;
+  for (const n of visibleNodes()) {
+    const d = Math.hypot(n.x - p.x, n.y - p.y);
+    const r = nodeRadius(n) + 6 / G.k;
+    if (d < r && d < bd) { best = n; bd = d; }
+  }
+  return best;
+}
+
+function renderGraph() {
+  const IX = S.IX, root = $('#view-graph');
+  const F = S.graphF;
+  const counts = {};
+  for (const m of IX.moduleOrder) counts[m] = (IX.byModule.get(m) || []).length;
+  const kindCount = k => IX.edges.filter(e => (e.kind || 'typed') === k).length;
+  const unref = IX.nodes.filter(n => (IX.inTyped.get(n.name) || []).length === 0).length;
+
+  root.innerHTML = `
+    <div class="view-head">
+      <div>
+        <h2>Reference graph</h2>
+        <p class="lede">Every reference between types. A solid line is typed; a dashed amber line is an id-shaped field carrying a bare string; a dotted red line resolves to no type at all. Hollow rings are value objects, dashed circles are targets that do not exist.</p>
+      </div>
+    </div>
+    <div class="graph-wrap">
+      <div class="graph-rail">
+        <div class="card rail-sec">
+          <h3>Edge kind</h3>
+          ${['typed', 'bare', 'dangling'].map(k => `
+            <label class="chk"><input type="checkbox" data-ek="${k}" data-fk="ek-${k}" ${F.kinds.has(k) ? 'checked' : ''}>
+              <span class="sw" style="background:${k === 'typed' ? 'var(--edge)' : k === 'bare' ? 'var(--warn)' : 'var(--bad)'}"></span>
+              ${k}<span class="ct">${kindCount(k)}</span></label>`).join('')}
+          <label class="chk" style="margin-top:8px;border-top:1px solid var(--rule);padding-top:8px">
+            <input type="checkbox" data-unref data-fk="unref" ${F.unrefOnly ? 'checked' : ''}>
+            only unreferenced<span class="ct">${unref}</span></label>
+        </div>
+        <div class="card rail-sec">
+          <h3>Module</h3>
+          <div class="rail-actions">
+            <button class="mini-btn" data-mods="all" data-fk="mods-all">all</button>
+            <button class="mini-btn" data-mods="none" data-fk="mods-none">none</button>
+          </div>
+          <div style="margin-top:8px;max-height:46vh;overflow-y:auto">
+          ${IX.moduleOrder.map(m => `
+            <label class="chk"><input type="checkbox" data-mod="${h(m)}" data-fk="gm-${h(m)}" ${F.modules.has(m) ? 'checked' : ''}>
+              <span class="sw" style="background:${moduleColor(m)}"></span>
+              <span class="mono">${h(m)}</span><span class="ct">${counts[m] || 0}</span></label>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="canvas-box" id="gbox" style="height:calc(100vh - var(--hdr-h) - 190px);min-height:440px">
+        <canvas id="gcanvas" tabindex="0" role="application"
+          aria-label="Reference graph. Use left and right arrow keys to step through types, Enter to open the selected type."></canvas>
+        <div class="canvas-tools">
+          <button class="mini-btn" data-fit data-fk="g-fit">fit</button>
+          <button class="mini-btn" data-relayout data-fk="g-relayout">re-lay out</button>
+        </div>
+        <div class="canvas-overlay">
+          <div class="edge-legend">
+            <span class="li"><svg viewBox="0 0 34 8"><line x1="0" y1="4" x2="34" y2="4" stroke="var(--edge)" stroke-width="1.6"/></svg> typed reference</span>
+            <span class="li"><svg viewBox="0 0 34 8"><line x1="0" y1="4" x2="34" y2="4" stroke="var(--warn)" stroke-width="2" stroke-dasharray="5 4"/></svg> bare string id</span>
+            <span class="li"><svg viewBox="0 0 34 8"><line x1="0" y1="4" x2="34" y2="4" stroke="var(--bad)" stroke-width="2" stroke-dasharray="2 4"/></svg> resolves to nothing</span>
+          </div>
+        </div>
+        <div class="graph-tip" id="gtip"></div>
+      </div>
+    </div>`;
+
+  G.canvas = $('#gcanvas'); G.ctx = G.canvas.getContext('2d');
+  G.box = $('#gbox'); G.tip = $('#gtip');
+  if (!G.built) buildGraphModel();
+  resizeCanvas();
+  fitGraph();
+  wireCanvas();
+  if (!G.raf) loop();
+
+  root.querySelectorAll('[data-ek]').forEach(i => i.addEventListener('change', () => {
+    i.checked ? F.kinds.add(i.dataset.ek) : F.kinds.delete(i.dataset.ek);
+    draw();
+  }));
+  root.querySelectorAll('[data-mod]').forEach(i => i.addEventListener('change', () => {
+    i.checked ? F.modules.add(i.dataset.mod) : F.modules.delete(i.dataset.mod);
+    draw();
+  }));
+  $('[data-unref]', root).addEventListener('change', (e) => { F.unrefOnly = e.target.checked; draw(); });
+  $('[data-mods="all"]', root).addEventListener('click', () => { F.modules = new Set(IX.moduleOrder); renderGraph(); });
+  $('[data-mods="none"]', root).addEventListener('click', () => { F.modules = new Set(); renderGraph(); });
+  $('[data-fit]', root).addEventListener('click', () => { fitGraph(); draw(); });
+  $('[data-relayout]', root).addEventListener('click', () => { layoutSeed(); G.alpha = 1; });
+
+  if (G.ro) G.ro.disconnect();
+  G.ro = new ResizeObserver(() => { resizeCanvas(); draw(); });
+  G.ro.observe(G.box);
+}
+
+function wireCanvas() {
+  const c = G.canvas;
+  const local = (ev) => { const r = c.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; };
+
+  c.onmousemove = (ev) => {
+    const p = local(ev);
+    if (G.drag) {
+      const w = toWorld(p.x, p.y);
+      G.drag.x = w.x; G.drag.y = w.y; G.alpha = Math.max(G.alpha, 0.35);
+      return;
+    }
+    if (G.pan) { G.tx = G.pan.tx + (p.x - G.pan.x); G.ty = G.pan.ty + (p.y - G.pan.y); draw(); return; }
+    const n = pick(p.x, p.y);
+    if (n !== G.hover) { G.hover = n; draw(); }
+    if (n) {
+      G.tip.style.opacity = '1';
+      G.tip.style.left = (p.x + 14) + 'px';
+      G.tip.style.top = (p.y + 14) + 'px';
+      G.tip.textContent = n.phantom ? `${n.name} — not a type in this model` : `${n.name} · ${n.module} · ${n.kind}`;
+    } else { G.tip.style.opacity = '0'; }
+  };
+  c.onmousedown = (ev) => {
+    const p = local(ev);
+    const n = pick(p.x, p.y);
+    if (n) { G.drag = n; c.classList.add('is-dragging'); }
+    else { G.pan = { x: p.x, y: p.y, tx: G.tx, ty: G.ty }; c.classList.add('is-dragging'); }
+  };
+  window.addEventListener('mouseup', () => { G.drag = null; G.pan = null; if (G.canvas) G.canvas.classList.remove('is-dragging'); });
+  c.onmouseleave = () => { G.hover = null; if (G.tip) G.tip.style.opacity = '0'; draw(); };
+  c.onclick = (ev) => {
+    const p = local(ev);
+    const n = pick(p.x, p.y);
+    if (n) selectNode(n); else select(null);
+  };
+  c.ondblclick = () => { fitGraph(); draw(); };
+  c.onwheel = (ev) => {
+    ev.preventDefault();
+    const p = local(ev);
+    const w = toWorld(p.x, p.y);
+    const f = Math.exp(-ev.deltaY * 0.0016);
+    G.k = Math.max(0.12, Math.min(4, G.k * f));
+    G.tx = p.x - w.x * G.k; G.ty = p.y - w.y * G.k;
+    draw();
+  };
+  c.onkeydown = (ev) => {
+    const vis = visibleNodes();
+    if (!vis.length) return;
+    if (ev.key === 'ArrowRight' || ev.key === 'ArrowDown') { ev.preventDefault(); G.kbIndex = (G.kbIndex + 1) % vis.length; selectNode(vis[G.kbIndex]); centreOn(vis[G.kbIndex]); }
+    else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowUp') { ev.preventDefault(); G.kbIndex = (G.kbIndex - 1 + vis.length) % vis.length; selectNode(vis[G.kbIndex]); centreOn(vis[G.kbIndex]); }
+    else if (ev.key === 'Enter' && G.kbIndex >= 0) { ev.preventDefault(); selectNode(vis[G.kbIndex]); }
+  };
+}
+function centreOn(n) { G.tx = G.w / 2 - n.x * G.k; G.ty = G.h / 2 - n.y * G.k; draw(); }
+function selectNode(n) { select({ type: 'node', name: n.name, phantom: !!n.phantom, module: n.module }); draw(); }
+
+/* ══ GAPS ════════════════════════════════════════════════════════════════════ */
+function dispositionOf(id) {
+  const r = S.state?.gapStatus?.[id];
+  const d = r && r.disposition;
+  return DISPOSITIONS.includes(d) ? d : 'open';
+}
+function gapRecord(id) {
+  const r = S.state?.gapStatus?.[id] || {};
+  return { disposition: dispositionOf(id), note: r.note || '', owner: r.owner || '', at: r.at || null };
+}
+
+/* entity_unreferenced wears one shape over three situations. This separates
+   them as far as the source allows, and says which is an inference. */
+/* Each bucket is decided by outbound degree and by whether a bare field names
+   the type — both mechanical. None of them asserts a verdict, because the
+   extractor's own detail says it cannot tell terminal-by-design from unwired,
+   and repeating a guess as a heading would launder it into a fact. */
+const UNREF_BUCKETS = {
+  untyped: {
+    label: 'Referenced, but through an untyped field',
+    why: 'An id-shaped string field elsewhere names this type. It is not orphaned in the model — only in the type system. Type the field and the edge appears.',
+  },
+  terminal_shape: {
+    label: 'Nothing points at it — but it points at others',
+    why: 'The shape of an append-only record: it references, nothing references it. AuditEvent and its kin are legitimately terminal and look exactly like this. So does a type someone forgot to wire up. You decide which.',
+  },
+  isolated: {
+    label: 'Nothing points at it, and it points at nothing',
+    why: 'No reference in either direction, typed or bare. Either it has not been wired up yet, or it is dead.',
+  },
+};
+function unrefBucket(gap) {
+  const bare = S.IX.bareTo.get(gap.subject) || [];
+  if (bare.length) return 'untyped';
+  const out = (S.IX.outAll.get(gap.subject) || []).length;
+  return out > 0 ? 'terminal_shape' : 'isolated';
+}
+
+function filteredGaps() {
+  const q = S.q.toLowerCase();
+  return S.IX.gaps.filter(gp => {
+    if (S.gapF.module && gp.module !== S.gapF.module) return false;
+    if (S.gapF.kind && gp.kind !== S.gapF.kind) return false;
+    if (S.gapF.disposition && dispositionOf(gp.id) !== S.gapF.disposition) return false;
+    if (q && !`${gp.subject || ''} ${gp.detail || ''} ${gp.evidence || ''} ${gp.module || ''} ${gp.kind || ''}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderGaps() {
+  const IX = S.IX, root = $('#view-gaps');
+  const all = IX.gaps;
+  const shown = filteredGaps();
+  const byDisp = Object.fromEntries(DISPOSITIONS.map(d => [d, all.filter(gp => dispositionOf(gp.id) === d).length]));
+  const needsYou = all.filter(gp => dispositionOf(gp.id) === 'open' && KINDS[gp.kind]?.decides === 'you').length;
+
+  const groups = KIND_ORDER
+    .map(k => ({ kind: k, items: shown.filter(gp => gp.kind === k) }))
+    .concat([...new Set(shown.map(gp => gp.kind))].filter(k => !KIND_ORDER.includes(k)).map(k => ({ kind: k, items: shown.filter(gp => gp.kind === k) })))
+    .filter(g => g.items.length);
+
+  root.innerHTML = `
+    <div class="summary">
+      ${stat('Gaps found', all.length, `${shown.length} shown by the current filter`, '')}
+      ${stat('Waiting on you', needsYou, 'kinds a detector cannot settle', needsYou ? 'bad' : 'good')}
+      ${stat('Open', byDisp.open, 'no disposition yet', byDisp.open ? 'warn' : 'good')}
+      ${stat('Accepted', byDisp.accepted, 'agreed to be a real gap', 'good')}
+      ${stat('Deferred', byDisp.deferred, 'real, but not now', 'warn')}
+      ${stat('Rejected + done', byDisp.rejected + byDisp.done, 'settled', 'good')}
+    </div>
+
+    <div class="view-head">
+      <div>
+        <h2>Gaps</h2>
+        <p class="lede">Nine kinds, each mechanically detected from source. Setting a disposition writes to <span class="mono">docs/planning-state.json</span> immediately — there is no save button to forget.</p>
+      </div>
+    </div>
+
+    <div class="filterbar">
+      <span class="fl">Module</span>
+      <select data-f="module" data-fk="gf-module">
+        <option value="">all</option>
+        ${[...new Set(all.map(gp => gp.module).filter(Boolean))].sort().map(m => `<option value="${h(m)}" ${S.gapF.module === m ? 'selected' : ''}>${h(m)}</option>`).join('')}
+      </select>
+      <span class="fl">Kind</span>
+      <select data-f="kind" data-fk="gf-kind">
+        <option value="">all</option>
+        ${[...new Set(all.map(gp => gp.kind))].map(k => `<option value="${h(k)}" ${S.gapF.kind === k ? 'selected' : ''}>${h(KINDS[k]?.label || k)}</option>`).join('')}
+      </select>
+      <span class="fl">Disposition</span>
+      <select data-f="disposition" data-fk="gf-disp">
+        <option value="">all</option>
+        ${DISPOSITIONS.map(d => `<option value="${d}" ${S.gapF.disposition === d ? 'selected' : ''}>${d}</option>`).join('')}
+      </select>
+      <button class="mini-btn" data-clearf data-fk="gf-clear">clear</button>
+    </div>
+
+    ${groups.length ? groups.map(groupHTML).join('') : `<div class="card"><div class="empty"><b>No gap matches the current filter</b>Clear the filter, or the search box.</div></div>`}`;
+
+  wireGapControls(root);
+  root.querySelectorAll('.filterbar select').forEach(s => s.addEventListener('change', () => {
+    S.gapF[s.dataset.f] = s.value; withFocus(renderGaps);
+  }));
+  $('[data-clearf]', root).addEventListener('click', () => { S.gapF = { module: '', disposition: '', kind: '' }; renderGaps(); });
+}
+
+function groupHTML(g) {
+  const meta = KINDS[g.kind] || { label: g.kind, note: 'This kind is not one of the nine this page knows about; it is shown as the graph reported it.', decides: 'detector' };
+  let body;
+  if (g.kind === 'entity_unreferenced') {
+    const buckets = { untyped: [], terminal_shape: [], isolated: [] };
+    for (const gp of g.items) buckets[unrefBucket(gp)].push(gp);
+    body = Object.entries(buckets).filter(([, v]) => v.length).map(([k, v]) => `
+      <div class="subgroup-hd">${h(UNREF_BUCKETS[k].label)} <span class="mono" style="color:var(--quiet)">${v.length}</span>
+        <span class="sg-why">${h(UNREF_BUCKETS[k].why)}</span></div>
+      ${v.map(gapRowHTML).join('')}`).join('');
+  } else {
+    body = g.items.map(gapRowHTML).join('');
+  }
+  return `<section class="card gapgroup">
+    <div class="card-hd">
+      <h3>${h(meta.label)}</h3>
+      <span class="kind-badge">${h(g.kind)}</span>
+      <span class="mono" style="color:var(--quiet);font-size:12px">${g.items.length}</span>
+      ${meta.decides === 'you' ? '<span class="needs-you">you decide</span>' : ''}
+      <p class="kind-note">${h(meta.note)}</p>
+    </div>
+    ${body}
+  </section>`;
+}
+
+function gapRowHTML(gp) {
+  const rec = gapRecord(gp.id);
+  const deferralHint = gp.kind === 'reference_without_type' &&
+    /defer|deliberate|intentional|on purpose|for now|until|not yet|by design/i.test(`${gp.detail || ''}`);
+  return `<div class="gap-row d-${rec.disposition}" data-gap="${h(gp.id)}">
+    <div>
+      <div class="gap-subject">
+        <button class="id" data-open-gap="${h(gp.id)}" data-fk="gs-${h(gp.id)}">${h(gp.subject || '(no subject)')}</button>
+        ${gp.severity ? `<span class="sev sev-${h(gp.severity)}">${h(gp.severity)}</span>` : ''}
+        ${deferralHint ? '<span class="pill" style="background:var(--primary-wash);color:var(--primary);border-color:var(--primary-edge)">documented deferral</span>' : ''}
+      </div>
+      <div class="gap-detail">${gp.detail ? h(gp.detail) : UNKNOWN}</div>
+      <div class="gap-meta">
+        <span class="ev">${gp.evidence ? h(gp.evidence) : 'evidence unknown'}</span>
+        ${gp.module ? `<span>${h(gp.module)}</span>` : ''}
+        ${isNum(gp.affects) ? `<span>affects ${gp.affects}</span>` : ''}
+        ${rec.at ? `<span title="${h(rec.at)}">set ${h(relTime(rec.at) || shortTime(rec.at))}</span>` : ''}
+      </div>
+    </div>
+    <div class="gap-ctl">
+      <div class="seg" role="group" aria-label="Disposition for ${h(gp.subject || gp.id)}">
+        ${DISPOSITIONS.map(d => `<button data-d="${d}" data-gapid="${h(gp.id)}" data-fk="gd-${h(gp.id)}-${d}"
+          aria-pressed="${rec.disposition === d}">${d}</button>`).join('')}
+      </div>
+      <div class="noterow">
+        <input class="note-i" type="text" placeholder="note" value="${h(rec.note)}" data-note="${h(gp.id)}" data-fk="gn-${h(gp.id)}" aria-label="Note">
+        <input class="own-i" type="text" placeholder="owner" value="${h(rec.owner)}" data-owner="${h(gp.id)}" data-fk="go-${h(gp.id)}" aria-label="Owner">
+      </div>
+      <div class="saved-hint" data-hint="${h(gp.id)}"></div>
+    </div>
+  </div>`;
+}
+
+function wireGapControls(root) {
+  root.querySelectorAll('[data-gapid]').forEach(b => b.addEventListener('click', async () => {
+    const id = b.dataset.gapid;
+    const rec = gapRecord(id);
+    const ok = await mutate('setGapStatus', { gapId: id, disposition: b.dataset.d, note: rec.note, owner: rec.owner });
+    if (ok) { withFocus(() => { renderGaps(); renderPanel(); renderTabCounts(); }); }
+  }));
+  /* the whole record goes every time: setGapStatus replaces, it does not patch */
+  const saveText = async (id, patch, hintEl) => {
+    const rec = gapRecord(id);
+    const ok = await mutate('setGapStatus',
+      Object.assign({ gapId: id, disposition: rec.disposition, note: rec.note, owner: rec.owner }, patch));
+    if (ok && hintEl) { hintEl.textContent = 'saved'; setTimeout(() => { hintEl.textContent = ''; }, 1800); renderTabCounts(); }
+  };
+  root.querySelectorAll('[data-note]').forEach(i => i.addEventListener('change', () =>
+    saveText(i.dataset.note, { note: i.value }, root.querySelector(`[data-hint="${CSS.escape(i.dataset.note)}"]`))));
+  root.querySelectorAll('[data-owner]').forEach(i => i.addEventListener('change', () =>
+    saveText(i.dataset.owner, { owner: i.value }, root.querySelector(`[data-hint="${CSS.escape(i.dataset.owner)}"]`))));
+  root.querySelectorAll('[data-open-gap]').forEach(b => b.addEventListener('click', () =>
+    select({ type: 'gap', id: b.dataset.openGap })));
+}
+
+/* ══ PLAN ════════════════════════════════════════════════════════════════════ */
+function renderPlan() {
+  const root = $('#view-plan');
+  const st = S.state || normState({});
+  const q = S.q.toLowerCase();
+  const match = (s) => !q || String(s).toLowerCase().includes(q);
+
+  const mods = st.plannedModules.filter(p => match(`${p.name} ${p.purpose} ${(p.holds || []).join(' ')}`));
+  const edges = st.plannedEdges.map((e, i) => ({ e, i })).filter(({ e }) => match(`${e.from} ${e.field} ${e.to} ${e.typedAs} ${e.why}`));
+  const decs = st.decisions.filter(d => match(`${d.question} ${d.choice} ${d.rationale} ${d.id}`));
+  const log = st.log.slice().reverse().filter(l => match(`${l.action} ${l.target} ${l.detail}`));
+
+  root.innerHTML = `
+    <div class="view-head">
+      <div>
+        <h2>Plan</h2>
+        <p class="lede">Your additions, not the extractor's. Everything here is written to <span class="mono">docs/planning-state.json</span> as you type it, so the assistant can read the decisions back and update the documentation, the model and the module contracts to match.</p>
+      </div>
+    </div>
+
+    <div class="plan-grid">
+      <section class="card">
+        <div class="card-hd"><h3>Planned modules</h3><span class="mono" style="color:var(--quiet)">${st.plannedModules.length}</span></div>
+        <div class="card-bd">
+          <form data-form="module">
+            <div class="field"><label for="pm-name">name</label><input class="mono-in" id="pm-name" name="name" placeholder="inference" required data-fk="pm-name"></div>
+            <div class="field" style="margin-top:8px"><label for="pm-purpose">purpose</label><input id="pm-purpose" name="purpose" placeholder="one line — what it is for" data-fk="pm-purpose"></div>
+            <div class="field" style="margin-top:8px"><label for="pm-holds">holds (comma separated)</label><input class="mono-in" id="pm-holds" name="holds" placeholder="ModelRoute, InferenceBudget" data-fk="pm-holds"></div>
+            <div style="margin-top:12px"><button class="btn" type="submit" data-fk="pm-add">Add module</button></div>
+          </form>
+        </div>
+        ${mods.length ? mods.map(plannedModuleHTML).join('') : `<div class="empty"><b>No planned module yet</b>Add the ones the documentation names but <span class="mono">model/</span> does not contain.</div>`}
+      </section>
+
+      <section class="card">
+        <div class="card-hd"><h3>Planned edges</h3><span class="mono" style="color:var(--quiet)">${st.plannedEdges.length}</span></div>
+        <div class="card-bd">
+          <form data-form="edge">
+            <div class="form-row">
+              <div class="field"><label for="pe-from">from</label><input class="mono-in" id="pe-from" name="from" placeholder="Solution" required data-fk="pe-from"></div>
+              <div class="field"><label for="pe-field">field</label><input class="mono-in" id="pe-field" name="field" placeholder="endpointIds" required data-fk="pe-field"></div>
+            </div>
+            <div class="form-row" style="margin-top:8px">
+              <div class="field"><label for="pe-to">to</label><input class="mono-in" id="pe-to" name="to" placeholder="Endpoint" required data-fk="pe-to"></div>
+              <div class="field"><label for="pe-typed">typedAs</label><input class="mono-in" id="pe-typed" name="typedAs" placeholder="EndpointId[]" data-fk="pe-typed"></div>
+            </div>
+            <div class="field" style="margin-top:8px"><label for="pe-why">why</label><input id="pe-why" name="why" placeholder="what typing it buys, or what deferring it costs" data-fk="pe-why"></div>
+            <div style="margin-top:12px"><button class="btn" type="submit" data-fk="pe-add">Add edge</button></div>
+          </form>
+        </div>
+        ${edges.length ? edges.map(plannedEdgeHTML).join('') : `<div class="empty"><b>No planned edge yet</b>An untyped reference in the Gaps view usually becomes one of these.</div>`}
+      </section>
+
+      <section class="card" style="grid-column:1/-1">
+        <div class="card-hd"><h3>Decisions</h3><span class="mono" style="color:var(--quiet)">${st.decisions.length}</span></div>
+        <div class="card-bd">
+          <form data-form="decision">
+            <div class="field"><label for="pd-q">question</label><input id="pd-q" name="question" placeholder="Does an empty resource class stay empty?" required data-fk="pd-q"></div>
+            <div class="field" style="margin-top:8px"><label for="pd-c">choice</label><input id="pd-c" name="choice" placeholder="the answer, in one line" data-fk="pd-c"></div>
+            <div class="field" style="margin-top:8px"><label for="pd-r">rationale</label><textarea id="pd-r" name="rationale" placeholder="why — this is the part the documentation will quote" data-fk="pd-r"></textarea></div>
+            <div style="margin-top:12px"><button class="btn" type="submit" data-fk="pd-add">Record decision</button></div>
+          </form>
+        </div>
+        ${decs.length ? decs.map(decisionHTML).join('') : `<div class="empty"><b>No decision recorded yet</b>A gap you reject or defer is usually worth a decision saying why.</div>`}
+      </section>
+
+      <section class="card" style="grid-column:1/-1">
+        <div class="card-hd"><h3>Log</h3><span class="mono" style="color:var(--quiet)">${st.log.length}</span>
+          <p class="kind-note">Append-only, newest first. This is the session as the assistant will read it.</p></div>
+        <div class="log">
+          ${log.length ? log.map(l => `<div class="log-row">
+            <span class="lt" title="${h(l.at)}">${h(shortTime(l.at))}</span>
+            <span class="la">${h(l.action)}</span>
+            <span class="ld">${l.target ? `<b>${h(l.target)}</b> ` : ''}${h(l.detail || '')}</span>
+          </div>`).join('') : `<div class="empty"><b>Nothing logged yet</b>Every change you make appears here.</div>`}
+        </div>
+      </section>
+    </div>`;
+
+  wirePlan(root);
+}
+
+function plannedModuleHTML(p) {
+  return `<div class="item" data-pm="${h(p.name)}">
+    <div class="item-hd">
+      <span class="id">${h(p.name)}</span>
+      <span class="pill p-${h(p.status || 'proposed')}">${h(p.status || 'proposed')}</span>
+      <div class="item-actions">
+        <select data-pm-status="${h(p.name)}" data-fk="pms-${h(p.name)}" aria-label="Status for ${h(p.name)}" style="padding:3px 6px;font-size:11px;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--surface)">
+          ${MODULE_STATUSES.map(s => `<option ${s === (p.status || 'proposed') ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="item-body">${p.purpose ? h(p.purpose) : UNKNOWN}</div>
+    ${(p.holds || []).length ? `<div class="chiplist" style="margin-top:6px">${p.holds.map(x => `<span class="chip">${h(x)}</span>`).join('')}</div>` : ''}
+    ${p.at ? `<div class="gap-meta" style="margin-top:6px"><span>${h(shortTime(p.at))}</span></div>` : ''}
+  </div>`;
+}
+function plannedEdgeHTML({ e, i }) {
+  return `<div class="item">
+    <div class="item-hd">
+      <span class="id">${h(e.from)}<span style="color:var(--quiet)">.</span>${h(e.field)}</span>
+      <span style="color:var(--quiet)">→</span>
+      <span class="id">${h(e.to)}</span>
+      ${e.typedAs ? `<span class="chip c-typed">${h(e.typedAs)}</span>` : ''}
+      <div class="item-actions"><button class="mini-btn btn-danger" data-pe-del="${i}" data-fk="ped-${i}">remove</button></div>
+    </div>
+    <div class="item-body">${e.why ? h(e.why) : UNKNOWN}</div>
+    ${e.at ? `<div class="gap-meta" style="margin-top:6px"><span>${h(shortTime(e.at))}</span></div>` : ''}
+  </div>`;
+}
+function decisionHTML(d) {
+  return `<div class="item">
+    <div class="item-hd">
+      <span class="id">${h(d.question || '(no question)')}</span>
+      <span class="pill p-${h(d.status || 'open')}">${h(d.status || 'open')}</span>
+      <div class="item-actions">
+        <select data-dec-status="${h(d.id)}" data-fk="ds-${h(d.id)}" aria-label="Status" style="padding:3px 6px;font-size:11px;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--surface)">
+          ${DECISION_STATUSES.map(s => `<option ${s === (d.status || 'open') ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="item-body"><b style="color:var(--ink)">${d.choice ? h(d.choice) : '<span class="unknown">no choice recorded</span>'}</b></div>
+    ${d.rationale ? `<div class="item-body" style="color:var(--label)">${h(d.rationale)}</div>` : ''}
+    <div class="gap-meta" style="margin-top:6px"><span class="mono">${h(d.id || '')}</span>${d.at ? `<span>${h(shortTime(d.at))}</span>` : ''}</div>
+  </div>`;
+}
+
+function wirePlan(root) {
+  const f = (sel) => root.querySelector(sel);
+  f('[data-form="module"]').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const d = Object.fromEntries(new FormData(ev.target).entries());
+    if (!d.name.trim()) return;
+    const holds = d.holds.split(',').map(s => s.trim()).filter(Boolean);
+    const ok = await mutate('addPlannedModule', { name: d.name, purpose: d.purpose, holds: holds.length ? holds : undefined });
+    if (ok) { ev.target.reset(); renderPlan(); renderTabCounts(); toast('good', 'Module planned', d.name.trim()); }
+  });
+  f('[data-form="edge"]').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const d = Object.fromEntries(new FormData(ev.target).entries());
+    const ok = await mutate('addPlannedEdge', { from: d.from, field: d.field, to: d.to, typedAs: d.typedAs, why: d.why });
+    if (ok) { ev.target.reset(); renderPlan(); toast('good', 'Edge planned', `${d.from.trim()}.${d.field.trim()} → ${d.to.trim()}`); }
+  });
+  f('[data-form="decision"]').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const d = Object.fromEntries(new FormData(ev.target).entries());
+    /* the server mints the decision id — the page must not invent one */
+    const ok = await mutate('addDecision', { question: d.question, choice: d.choice, rationale: d.rationale });
+    if (ok) { ev.target.reset(); renderPlan(); toast('good', 'Decision recorded', d.question.trim().slice(0, 60)); }
+  });
+  root.querySelectorAll('[data-pm-status]').forEach(s => s.addEventListener('change', async () => {
+    if (await mutate('setPlannedModule', { name: s.dataset.pmStatus, status: s.value })) withFocus(renderPlan);
+  }));
+  root.querySelectorAll('[data-pe-del]').forEach(b => b.addEventListener('click', async () => {
+    if (await mutate('removePlannedEdge', { index: Number(b.dataset.peDel) })) renderPlan();
+  }));
+  root.querySelectorAll('[data-dec-status]').forEach(s => s.addEventListener('change', async () => {
+    if (await mutate('setDecision', { id: s.dataset.decStatus, status: s.value })) withFocus(renderPlan);
+  }));
+}
+
+/* ══ DETAIL PANEL ════════════════════════════════════════════════════════════ */
+function select(sel) {
+  S.sel = sel;
+  document.body.classList.toggle('panel-open', !!sel);
+  renderPanel();
+  writeHash();
+}
+function selKey(sel) {
+  if (!sel) return '';
+  if (sel.type === 'node') return `n:${sel.name}`;
+  if (sel.type === 'gap') return `g:${sel.id}`;
+  if (sel.type === 'module') return `m:${sel.module}`;
+  if (sel.type === 'cell') return `c:${sel.module}:${sel.col}`;
+  return '';
+}
+function selFromKey(key) {
+  if (!key) return null;
+  const [t, ...rest] = key.split(':');
+  const v = rest.join(':');
+  if (t === 'n') return { type: 'node', name: v };
+  if (t === 'g') return { type: 'gap', id: v };
+  if (t === 'm') return { type: 'module', module: v };
+  if (t === 'c') { const [m, c] = v.split(':'); return { type: 'cell', module: m, col: c }; }
+  return null;
+}
+
+function renderPanel() {
+  const p = $('#panel');
+  if (!S.sel) { p.hidden = true; p.innerHTML = ''; return; }
+  let kicker = '', title = '', body = '';
+  try {
+    if (S.sel.type === 'module') ({ kicker, title, body } = panelModule(S.sel.module));
+    else if (S.sel.type === 'cell') ({ kicker, title, body } = panelCell(S.sel.module, S.sel.col));
+    else if (S.sel.type === 'node') ({ kicker, title, body } = panelNode(S.sel.name));
+    else if (S.sel.type === 'gap') ({ kicker, title, body } = panelGap(S.sel.id));
+  } catch (e) {
+    kicker = 'error'; title = 'Could not build this panel';
+    body = `<div class="derivation">${h(e.message)}</div>`;
+  }
+  p.hidden = false;
+  p.innerHTML = `
+    <div class="panel-hd">
+      <div style="min-width:0">
+        <div class="kicker">${h(kicker)}</div>
+        <h3 class="${S.sel.type === 'node' || S.sel.type === 'module' ? 'mono' : ''}">${h(title)}</h3>
+      </div>
+      <button class="icon-btn" data-close style="margin-left:auto;flex:none" aria-label="Close detail (Esc)" data-fk="panel-close">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+      </button>
+    </div>
+    <div class="panel-bd">${body}</div>`;
+  $('[data-close]', p).addEventListener('click', () => select(null));
+  wirePanel(p);
+}
+
+function panelModule(name) {
+  const IX = S.IX;
+  const m = IX.modules.find(x => x.name === name) || null;
+  const planned = (S.state?.plannedModules || []).find(x => x.name === name) || null;
+  const nodes = IX.byModule.get(name) || [];
+  const gaps = IX.gapsByModule.get(name) || [];
+  const note = S.state?.moduleNotes?.[name]?.note || '';
+
+  if (!m && planned) {
+    return { kicker: 'planned module', title: name, body: `
+      <div class="panel-sec"><div class="derivation">Not written. Nothing in <span class="mono">model/</span> carries this name, so every column is <b>planned</b> rather than derived.</div></div>
+      <div class="panel-sec"><h4>Purpose</h4><div>${planned.purpose ? h(planned.purpose) : UNKNOWN}</div></div>
+      ${(planned.holds || []).length ? `<div class="panel-sec"><h4>Holds</h4><div class="chiplist">${planned.holds.map(x => `<span class="chip">${h(x)}</span>`).join('')}</div></div>` : ''}
+      ${moduleNoteHTML(name, note)}` };
+  }
+
+  const cells = cellsFor(name);
+  return { kicker: 'module', title: name, body: `
+    <div class="panel-sec">
+      <dl class="kv">
+        <dt>file</dt><dd class="mono">${m?.file ? h(m.file) : UNKNOWN}</dd>
+        <dt>lines</dt><dd class="mono">${isNum(m?.lines) ? m.lines : UNKNOWN}</dd>
+        <dt>entities</dt><dd class="mono">${nodes.filter(n => n.kind === 'entity').length}${isNum(m?.entities) && m.entities !== nodes.filter(n => n.kind === 'entity').length ? ` <span class="unknown">(module header says ${m.entities})</span>` : ''}</dd>
+        <dt>value objects</dt><dd class="mono">${nodes.filter(n => n.kind === 'value_object').length}${isNum(m?.valueObjects) && m.valueObjects !== nodes.filter(n => n.kind === 'value_object').length ? ` <span class="unknown">(header says ${m.valueObjects})</span>` : ''}</dd>
+        <dt>gaps</dt><dd class="mono">${gaps.length}</dd>
+      </dl>
+    </div>
+    <div class="panel-sec"><h4>Purpose</h4><div>${m?.purpose ? h(m.purpose) : `<span class="unknown">No header comment was captured for this module.</span>`}</div></div>
+    <div class="panel-sec"><h4>Columns</h4>
+      <div class="linklist">${COLUMNS.map(c => `<button data-cell="${h(name)}|${c}" data-fk="pc-${c}">
+        <span class="cell--${cells[c].state}" style="display:inline-flex"><span class="cell-mark"></span></span>
+        <span>${c}</span><span class="mut">${isNum(cells[c].n) ? cells[c].n : '?'} · ${h(cells[c].sub)}</span></button>`).join('')}</div>
+    </div>
+    ${gaps.length ? `<div class="panel-sec"><h4>Gaps in this module</h4><div class="linklist">${gaps.map(gapLinkHTML).join('')}</div></div>` : ''}
+    <div class="panel-sec"><h4>Types</h4><div class="chiplist">
+      ${nodes.length ? nodes.map(n => `<button class="chip" data-node="${h(n.name)}" data-fk="pt-${h(n.name)}">${h(n.name)}</button>`).join('') : `<span class="unknown">none in the graph</span>`}
+    </div></div>
+    ${moduleNoteHTML(name, note)}` };
+}
+
+function moduleNoteHTML(name, note) {
+  return `<div class="panel-sec">
+    <h4>Your note on this module</h4>
+    <div class="field">
+      <textarea data-modnote="${h(name)}" data-fk="mn-${h(name)}" placeholder="what this module is for, what is missing, what you decided" rows="4">${h(note)}</textarea>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+        <button class="btn" data-modnote-save="${h(name)}" data-fk="mns-${h(name)}">Save note</button>
+        <span class="saved-hint" data-modhint></span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function panelCell(modName, col) {
+  const cells = cellsFor(modName);
+  const cell = cells[col];
+  if (!cell) return { kicker: 'cell', title: `${modName} · ${col}`, body: `<div class="derivation">Unknown column.</div>` };
+  const lists = [];
+  if (cell.ops?.length) lists.push(['Operations that name a type here', cell.ops.map(o => `<span class="chip">${h(o)}</span>`).join('')]);
+  if (cell.caps?.length) lists.push(['Capabilities that name a type here', cell.caps.map(c => `<span class="chip">${h(c)}</span>`).join('')]);
+  if (cell.tiers?.length) lists.push(['Contract tiers', cell.tiers.map(t => `<span class="chip">${h(t)}</span>`).join('')]);
+  if (cell.classes?.length) lists.push(['Resource classes reached', cell.classes.map(t => `<span class="chip">${h(t)}</span>`).join('')]);
+  return {
+    kicker: `${modName} · ${col.toLowerCase()}`,
+    title: cell.state === 'unknown' ? 'Not derivable from this graph' : `${cell.state}${isNum(cell.n) ? ` — ${cell.n}` : ''}`,
+    body: `
+      <div class="panel-sec">
+        <h4>How this was derived</h4>
+        <div class="derivation">${h(cell.how)}</div>
+      </div>
+      ${lists.map(([t, html]) => `<div class="panel-sec"><h4>${h(t)}</h4><div class="chiplist">${html}</div></div>`).join('')}
+      ${cell.gaps?.length ? `<div class="panel-sec"><h4>Gaps behind this cell</h4><div class="linklist">${cell.gaps.map(gapLinkHTML).join('')}</div></div>`
+        : `<div class="panel-sec"><h4>Gaps behind this cell</h4><div class="unknown">None recorded against this column.</div></div>`}
+      <div class="panel-sec"><button class="btn btn-ghost" data-module="${h(modName)}" data-fk="pcm">Open the whole module</button></div>`,
+  };
+}
+
+function panelNode(name) {
+  const IX = S.IX;
+  const n = IX.byName.get(name);
+  const gn = G.byName.get(name);
+  if (!n) {
+    /* A phantom: the graph references it, but no type declares it. Inbound
+       comes from the built graph where possible, because that is the only
+       place a target inferred from a field name is resolved. */
+    const inbound = (G.built && G.byName.has(name))
+      ? G.links.filter(l => l.to.name === name).map(l => l.inferred ? Object.assign({}, l.e, { _inferredTo: name }) : l.e)
+      : IX.edges.filter(e => e.to === name);
+    return { kicker: 'not a type in this model', title: name, body: `
+      <div class="panel-sec"><div class="derivation">Nothing in <span class="mono">model/</span> declares this name. It is drawn because ${inbound.length || 'one or more'} reference${inbound.length === 1 ? '' : 's'} point${inbound.length === 1 ? 's' : ''} at it — which is exactly the failure a phantom brand produces: the compiler never resolves the brand, so <span class="mono">tsc</span> passes and the reference silently addresses nothing.</div></div>
+      ${inbound.length ? `<div class="panel-sec"><h4>Referenced by</h4><div class="linklist">${inbound.map(edgeLinkHTML).join('')}</div></div>` : ''}
+      ${(IX.gapsBySubject.get(name) || []).length ? `<div class="panel-sec"><h4>Gaps</h4><div class="linklist">${(IX.gapsBySubject.get(name) || []).map(gapLinkHTML).join('')}</div></div>` : ''}` };
+  }
+  const out = IX.outAll.get(name) || [];
+  const inT = IX.inTyped.get(name) || [];
+  const bare = IX.bareTo.get(name) || [];
+  const gaps = IX.gapsBySubject.get(name) || [];
+  const brands = IX.idTypes.filter(t => t.brand === name || t.resolvesTo === name);
+  const unref = inT.length === 0;
+
+  return { kicker: `${n.kind === 'value_object' ? 'value object' : n.kind} · ${n.module}`, title: name, body: `
+    <div class="panel-sec"><dl class="kv">
+      <dt>module</dt><dd class="mono">${h(n.module)}</dd>
+      <dt>kind</dt><dd class="mono">${h(n.kind)}</dd>
+      <dt>tenant scoped</dt><dd class="mono">${n.tenantScoped === true ? 'yes' : n.tenantScoped === false ? 'no' : UNKNOWN}</dd>
+      <dt>declared at</dt><dd class="mono">${isNum(n.line) ? `${h((IX.modules.find(m => m.name === n.module) || {}).file || n.module)}:${n.line}` : UNKNOWN}</dd>
+      <dt>degree</dt><dd class="mono">${gn ? gn.deg : out.length + inT.length}</dd>
+    </dl></div>
+    ${unref ? `<div class="panel-sec"><div class="derivation" style="border-color:var(--warn-edge);background:var(--warn-wash);color:var(--warn)">
+        <b>No typed reference points at this type.</b> ${bare.length
+          ? `It is not orphaned in the model — ${bare.length} id-shaped field${bare.length === 1 ? '' : 's'} below name${bare.length === 1 ? 's' : ''} it as a bare string${bare.some(e => e._inferredTo) ? ', at least one of which is inferred from the field name rather than stated' : ''}. Typing the field restores the edge.`
+          : 'And no untyped field names it either — so it is terminal by design, or it is not wired up.'}
+      </div></div>` : ''}
+    ${brands.length ? `<div class="panel-sec"><h4>Id types</h4><div class="linklist">${brands.map(t => `
+      <button data-node="${h(t.resolvesTo || t.brand)}" data-fk="pb-${h(t.name)}"><span class="id">${h(t.name)}</span>
+      <span class="mut">brand ${h(t.brand)}${t.resolvesTo ? ` → ${h(t.resolvesTo)}` : ' → unresolved'}${isNum(t.line) ? ` · ${h(t.declaredIn || '')}:${t.line}` : ''}</span></button>`).join('')}</div></div>` : ''}
+    <div class="panel-sec"><h4>Points at (${out.length})</h4>
+      <div class="linklist">${out.length ? out.map(edgeLinkHTML).join('') : '<span class="unknown">nothing</span>'}</div></div>
+    <div class="panel-sec"><h4>Pointed at, typed (${inT.length})</h4>
+      <div class="linklist">${inT.length ? inT.map(edgeLinkHTML).join('') : '<span class="unknown">nothing</span>'}</div></div>
+    ${bare.length ? `<div class="panel-sec"><h4>Named by an untyped field (${bare.length})</h4>
+      <div class="linklist">${bare.map(edgeLinkHTML).join('')}</div></div>` : ''}
+    ${gaps.length ? `<div class="panel-sec"><h4>Gaps</h4><div class="linklist">${gaps.map(gapLinkHTML).join('')}</div></div>` : ''}` };
+}
+
+function edgeLinkHTML(e) {
+  const kind = e.kind || 'typed';
+  return `<button data-edge="${h(e.from)}|${h(e.field)}" data-fk="pe-${h(e.from)}-${h(e.field)}">
+    <span class="id">${h(e.from)}<span style="color:var(--quiet)">.</span>${h(e.field)}</span>
+    <span class="chip c-${kind}" style="margin-left:6px">${h(kind)}</span>
+    <span class="mut">${e.to ? h(e.to) : (e._inferredTo ? `${h(e._inferredTo)} (inferred)` : 'no target')}${e.typedAs ? ` · ${h(e.typedAs)}` : ''}${e.cardinality ? ` · ${h(e.cardinality)}` : ''}</span>
+  </button>`;
+}
+function gapLinkHTML(gp) {
+  const d = dispositionOf(gp.id);
+  return `<button data-gap="${h(gp.id)}" data-fk="pg-${h(gp.id)}">
+    <span class="id">${h(gp.subject || gp.id)}</span>
+    <span class="mut">${h(KINDS[gp.kind]?.label || gp.kind)} · ${d}</span></button>`;
+}
+
+function panelGap(id) {
+  const gp = S.IX.gaps.find(x => x.id === id);
+  if (!gp) return { kicker: 'gap', title: id, body: `<div class="derivation">No gap with this id is in the current graph. Your disposition for it is still in the state file — regenerate the graph, or the id has changed.</div>` };
+  const rec = gapRecord(id);
+  const meta = KINDS[gp.kind] || { label: gp.kind, note: '', decides: 'detector' };
+  const subjNode = S.IX.byName.get(gp.subject);
+  return { kicker: meta.label, title: gp.subject || gp.id, body: `
+    ${meta.decides === 'you' ? `<div class="panel-sec"><div class="derivation" style="border-color:var(--primary-edge);background:var(--primary-wash);color:var(--primary)"><b>This one waits on you.</b> The detector can find the shape but cannot settle whether it is a defect.</div></div>` : ''}
+    <div class="panel-sec"><h4>What was detected</h4><div>${gp.detail ? h(gp.detail) : UNKNOWN}</div></div>
+    <div class="panel-sec"><h4>What this kind means</h4><div class="derivation">${h(meta.note)}</div></div>
+    <div class="panel-sec"><dl class="kv">
+      <dt>id</dt><dd class="mono">${h(gp.id)}</dd>
+      <dt>kind</dt><dd class="mono">${h(gp.kind)}</dd>
+      <dt>module</dt><dd class="mono">${gp.module ? h(gp.module) : UNKNOWN}</dd>
+      <dt>evidence</dt><dd class="mono">${gp.evidence ? h(gp.evidence) : UNKNOWN}</dd>
+      <dt>affects</dt><dd class="mono">${isNum(gp.affects) ? gp.affects : UNKNOWN}</dd>
+      <dt>severity</dt><dd class="mono">${gp.severity ? h(gp.severity) : UNKNOWN}</dd>
+      <dt>set</dt><dd class="mono">${rec.at ? h(shortTime(rec.at)) : 'never'}</dd>
+    </dl></div>
+    <div class="panel-sec"><h4>Disposition</h4>
+      <div class="seg" role="group" aria-label="Disposition">
+        ${DISPOSITIONS.map(d => `<button data-gapid="${h(gp.id)}" data-d="${d}" data-fk="pd-${d}" aria-pressed="${rec.disposition === d}">${d}</button>`).join('')}
+      </div>
+      <div class="noterow" style="margin-top:8px">
+        <input class="note-i" type="text" placeholder="note" value="${h(rec.note)}" data-note="${h(gp.id)}" data-fk="pgn" aria-label="Note">
+        <input class="own-i" type="text" placeholder="owner" value="${h(rec.owner)}" data-owner="${h(gp.id)}" data-fk="pgo" aria-label="Owner">
+      </div>
+      <div class="saved-hint" data-hint="${h(gp.id)}"></div>
+    </div>
+    ${subjNode ? `<div class="panel-sec"><button class="btn btn-ghost" data-node="${h(gp.subject)}" data-fk="pgs">Open ${h(gp.subject)} in the graph</button></div>` : ''}` };
+}
+
+function wirePanel(p) {
+  p.querySelectorAll('[data-node]').forEach(b => b.addEventListener('click', () => {
+    const name = b.dataset.node;
+    select({ type: 'node', name });
+    if (S.view === 'graph') { const n = G.byName.get(name); if (n) { centreOn(n); } }
+  }));
+  p.querySelectorAll('[data-gap]').forEach(b => b.addEventListener('click', () => select({ type: 'gap', id: b.dataset.gap })));
+  p.querySelectorAll('[data-module]').forEach(b => b.addEventListener('click', () => select({ type: 'module', module: b.dataset.module })));
+  p.querySelectorAll('[data-cell]').forEach(b => b.addEventListener('click', () => {
+    const [m, c] = b.dataset.cell.split('|'); select({ type: 'cell', module: m, col: c });
+  }));
+  p.querySelectorAll('[data-edge]').forEach(b => b.addEventListener('click', () => {
+    const [from] = b.dataset.edge.split('|'); select({ type: 'node', name: from });
+  }));
+  wireGapControls(p);
+  const saveNote = p.querySelector('[data-modnote-save]');
+  if (saveNote) saveNote.addEventListener('click', async () => {
+    const name = saveNote.dataset.modnoteSave;
+    const ta = p.querySelector(`[data-modnote="${CSS.escape(name)}"]`);
+    if (await mutate('setModuleNote', { module: name, note: ta.value })) {
+      const hint = p.querySelector('[data-modhint]');
+      if (hint) { hint.textContent = 'saved'; setTimeout(() => { hint.textContent = ''; }, 1800); }
+      if (S.view === 'matrix') renderMatrix();
+      if (S.view === 'plan') renderPlan();
+    }
+  });
+}
+
+/* ══ SHELL ═══════════════════════════════════════════════════════════════════ */
+function withFocus(fn) {
+  const a = document.activeElement;
+  const key = a && a.dataset ? a.dataset.fk : null;
+  const pos = (a && typeof a.selectionStart === 'number') ? a.selectionStart : null;
+  fn();
+  if (!key) return;
+  const t = document.querySelector(`[data-fk="${CSS.escape(key)}"]`);
+  if (!t) return;
+  t.focus({ preventScroll: true });
+  if (pos != null && typeof t.setSelectionRange === 'function') { try { t.setSelectionRange(pos, pos); } catch { /* not a text input */ } }
+}
+
+function renderCurrent() {
+  if (S.view === 'matrix') renderMatrix();
+  else if (S.view === 'graph') renderGraph();
+  else if (S.view === 'gaps') renderGaps();
+  else if (S.view === 'plan') renderPlan();
+  renderTabCounts();
+}
+
+function setView(v, { push = true } = {}) {
+  if (!VIEWS.includes(v)) v = 'matrix';
+  S.view = v;
+  VIEWS.forEach(x => {
+    $('#view-' + x).hidden = x !== v;
+    $('#tab-' + x).setAttribute('aria-selected', String(x === v));
+  });
+  renderCurrent();
+  if (push) writeHash();
+}
+
+function renderTabCounts() {
+  const IX = S.IX;
+  const openGaps = IX.gaps.filter(gp => dispositionOf(gp.id) === 'open').length;
+  const set = (k, v, alert) => {
+    const el = document.querySelector(`.tab-count[data-c="${k}"]`);
+    el.textContent = v; el.classList.toggle('is-alert', !!alert);
+  };
+  set('matrix', IX.moduleOrder.length + (S.state?.plannedModules?.length || 0));
+  set('graph', IX.nodes.length);
+  set('gaps', openGaps, openGaps > 0);
+  set('plan', (S.state?.plannedModules?.length || 0) + (S.state?.plannedEdges?.length || 0) + (S.state?.decisions?.length || 0));
+}
+
+let hashLock = false;
+function writeHash() {
+  const k = selKey(S.sel);
+  const next = '#' + S.view + (k ? '/' + encodeURIComponent(k) : '');
+  if (location.hash !== next) { hashLock = true; location.hash = next; setTimeout(() => { hashLock = false; }, 0); }
+}
+function readHash() {
+  const raw = decodeURIComponent(location.hash.replace(/^#/, ''));
+  const [v, ...rest] = raw.split('/');
+  const view = VIEWS.includes(v) ? v : 'matrix';
+  const sel = selFromKey(rest.join('/'));
+  S.sel = sel;
+  document.body.classList.toggle('panel-open', !!sel);
+  setView(view, { push: false });
+  renderPanel();
+}
+
+function renderProvenance() {
+  const el = $('#prov'), g = S.graph;
+  const commit = g.sourceCommit || null;
+  const gen = g.generatedAt || null;
+  const t = Date.parse(gen || '');
+  const stale = Number.isFinite(t) && (Date.now() - t) > 6 * 3600 * 1000;
+  el.className = 'prov' + (stale ? ' is-stale' : '');
+  el.setAttribute('role', 'button');
+  el.setAttribute('tabindex', '0');
+  el.dataset.fk = 'prov';
+  el.title = `model-graph.json — generated ${gen || 'unknown'}, source commit ${commit || 'unknown'}.\nRegenerate: node tools/planner/extract.mjs`;
+  el.innerHTML = `<b>${commit ? h(commit) : 'commit unknown'}</b>` +
+    `<span class="prov-time">${gen ? ` · ${h(relTime(gen) || shortTime(gen))}` : ' · <span class="unknown">generated unknown</span>'}${stale ? ' · stale' : ''}</span>`;
+  const announce = () => toast(stale ? 'bad' : '', stale ? 'This graph may be stale' : 'Graph provenance',
+    `generated ${gen || 'unknown'} from ${commit || 'an unknown commit'} — regenerate with: node tools/planner/extract.mjs --write`);
+  el.onclick = announce;
+  el.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); announce(); } };
+}
+
+function renderBanner() {
+  const b = $('#banner');
+  if (S.serverOk) { b.hidden = true; b.innerHTML = ''; return; }
+  b.hidden = false;
+  b.className = 'banner is-bad';
+  b.innerHTML = `<div><b>The state server is not running, so nothing you change here can be saved.</b>
+    The graph below is read-only. Start the server, then reload:
+    <code>node tools/planner/serve.mjs</code></div>`;
+}
+
+/* ─── theme ──────────────────────────────────────────────────────────────── */
+const THEME_KEY = 'reconcile-planner-theme';
+function applyTheme(pref) {
+  const root = document.documentElement;
+  if (pref === 'light' || pref === 'dark') root.setAttribute('data-theme', pref);
+  else root.removeAttribute('data-theme');
+  const dark = (pref === 'dark') || (!pref && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  root.classList.toggle('is-dark', dark);
+  if (G.ctx) draw();
+}
+function initTheme() {
+  let pref = null;
+  try { pref = localStorage.getItem(THEME_KEY); } catch { /* private mode */ }
+  applyTheme(pref);
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    let p = null; try { p = localStorage.getItem(THEME_KEY); } catch { /* ignore */ }
+    if (!p) applyTheme(null);
+  });
+  $('#theme').addEventListener('click', () => {
+    const dark = document.documentElement.classList.contains('is-dark');
+    const next = dark ? 'light' : 'dark';
+    try { localStorage.setItem(THEME_KEY, next); } catch { /* ignore */ }
+    applyTheme(next);
+    if (S.view === 'matrix' || S.view === 'graph') renderCurrent();
+  });
+}
+
+/* ─── boot ───────────────────────────────────────────────────────────────── */
+function showBoot(html) {
+  const b = $('#boot');
+  b.hidden = false;
+  b.querySelector('.box').innerHTML = html;
+}
+
+async function boot() {
+  initTheme();
+
+  try {
+    S.graph = await getJSON('/model-graph.json');
+  } catch (e) {
+    showBoot(`
+      <h2>There is no graph to show yet</h2>
+      <p><span class="mono">/model-graph.json</span> could not be read — ${h(e.message)}.
+         This page renders only what the extractor derived from <span class="mono">model/</span>; it does not guess.</p>
+      <pre>node tools/planner/extract.mjs --write
+node tools/planner/serve.mjs</pre>
+      <p>Then reload. If the server is running and this still fails, the extractor has not written
+         <span class="mono">docs/model-graph.json</span>.</p>`);
+    return;
+  }
+  if (!Array.isArray(S.graph.nodes) || !Array.isArray(S.graph.modules)) {
+    showBoot(`<h2>The graph is not in the expected shape</h2>
+      <p><span class="mono">/model-graph.json</span> parsed, but it carries no <span class="mono">nodes</span> or no
+         <span class="mono">modules</span> array. Rather than invent a shape, this page stops here.</p>
+      <pre>node tools/planner/extract.mjs --write</pre>`);
+    return;
+  }
+
+  S.IX = buildIndex(S.graph);
+  S.graphF.modules = new Set(S.IX.moduleOrder);
+
+  try {
+    const raw = await getJSON('/api/state');
+    S.state = unwrapState(raw) || normState({});
+  } catch (e) {
+    S.serverOk = false;
+    S.state = normState({});
+  }
+
+  renderProvenance();
+  renderBanner();
+  wireShell();
+  readHash();
+}
+
+function wireShell() {
+  $$('.tabs button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+
+  const q = $('#q');
+  q.dataset.fk = 'q';
+  let t = 0;
+  q.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      S.q = q.value.trim();
+      if (S.view === 'graph') draw();
+      else withFocus(renderCurrent);
+    }, 130);
+  });
+
+  window.addEventListener('hashchange', () => { if (!hashLock) readHash(); });
+
+  window.addEventListener('keydown', (ev) => {
+    const inField = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '');
+    if (ev.key === '/' && !inField && !ev.metaKey && !ev.ctrlKey) { ev.preventDefault(); q.focus(); q.select(); }
+    else if (ev.key === 'Escape') {
+      if (document.activeElement === q) { q.blur(); }
+      else if (S.sel) { select(null); }
+    }
+  });
+}
+
+boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+{
+  "$schema": "https://design-tokens.org/schema.json",
+  "$description": "ReconcileAI design system — the canonical token interchange. Generated from design/system/tokens.css, which remains the source of truth. Do not hand-edit: add the token to tokens.css and regenerate. Every $description here is the token's ONE JOB; a token used outside its job is a finding, not a variation.",
+  "ground": {
+    "$type": "color",
+    "$description": "Three grounds only, plus two hover grounds. A fourth ground is a finding, not a decision.",
+    "paper":      { "$value": "#ffffff", "$description": "The sheet everything sits on." },
+    "sheet":      { "$value": "#f1f7f7", "$description": "A panel ON the sheet. 1.08:1 against paper — barely there, and meant to be." },
+    "tileHover":  { "$value": "#e7f0f0", "$description": "A pointer is over a tile. A ground change, never a hue change. 1.16:1." },
+    "rowHover":   { "$value": "#f8fbfb", "$description": "A pointer is over a register row. 1.04:1." }
+  },
+  "ink": {
+    "$type": "color",
+    "$description": "One ramp, ordered by contrast on ground.paper. Pick a step by its job, never by how it looks. Ratios are stated paper / sheet.",
+    "ink":        { "$value": "#00303f", "$description": "14.05 / 12.97. Everything that must be read. The wordmark navy." },
+    "refused":    { "$value": "#4a6166", "$description": "6.57 / 6.07. REFUSED or never built — a control that was never usable, and the sentence naming what refused it. Never cleared work." },
+    "muted":      { "$value": "#566d72", "$description": "5.49 / 5.07. Supporting text. Nothing else." },
+    "recede":     { "$value": "#607478", "$description": "4.92 / 4.54. CLEARED work, deliberately quieted. Never refused work. BELOW AA on sheet — not for text on a panel." },
+    "ruleStrong": { "$value": "#a4b8bb", "$description": "2.07 / 1.91. The hairline between sections. Never text." },
+    "rule":       { "$value": "#cfdedf", "$description": "1.38 / 1.28. The hairline between rows. Never text. THE VISIBLE FLOOR — nothing in the system is deliberately fainter." },
+    "onInk":      { "$value": "#ffffff", "$description": "14.05 on ink. Text on an ink ground." },
+    "onInk2":     { "$value": "#bcccd0", "$description": "8.49 on ink. Secondary text on an ink ground." }
+  },
+  "agent": {
+    "$type": "color",
+    "$description": "THE AGENT RULE. Means the machine MEASURED something, and nothing else. Not matched, good, passed or safe. MAY: a bar, tick or fill whose length states a number the machine produced — today that is the meter and only the meter. MAY NOT: a link, a hover, a citation, an activity indicator, or anything captioned as measuring nothing.",
+    "agent":     { "$value": "#00866a", "$description": "4.55 / 4.20. The mark. BELOW AA on sheet — fine for a 3px bar as a graphic object, not fine for text." },
+    "agentDeep": { "$value": "#014751", "$description": "10.39 / 9.59. Agent TEXT, and the committing button's hover. Reached almost nowhere, on purpose." },
+    "track":     { "$value": "rgba(0,134,106,.16)", "$description": "The meter's unfilled remainder." }
+  },
+  "accent": {
+    "$type": "color",
+    "$description": "ONE accent, and its one job is WAYFINDING: where you are, and what Enter would run. Deliberately NOT in the brand's green family — a second green reads as a second agent state. It REINFORCES and never carries: remove it and wayfinding still works, which is the test. MAY NOT: a status, a severity, a hover, a measurement, a chart series, a button ground, or anything on an ink surface.",
+    "accent":      { "$value": "#8a4b2a", "$description": "6.73 / 6.21. The active destination's underline, the palette's selected row edge." },
+    "accentDeep":  { "$value": "#6d3a20", "$description": "9.06 / 8.36. Accent TEXT — the current crumb. Reached almost nowhere: an accent that has to be read is usually a state wearing a disguise." },
+    "accentQuiet": { "$value": "rgba(138,75,42,.06)", "$description": "The selected row's ground. Paired with the 2px edge, never used alone." }
+  },
+  "lit": {
+    "$type": "color",
+    "$description": "THE LUMINOUS TOUCH — AI has shone light on an object. A SOURCE WITH FALLOFF, never a fill. Lime is the hot centre, cyan the falloff; both are unusable as marks (1.25:1, 1.99:1) and excellent as light. Never more than one lit thing per view: one light is legible, six lights are wallpaper.",
+    "hot":      { "$value": "rgba(202,246,65,.34)", "$description": "The hot centre at 0%. Composites on paper to rgb(237,252,190) — a 24.3% channel span, far inside the range where a lime reads as LIGHT rather than as a STATUS." },
+    "mid":      { "$value": "rgba(82,198,227,.22)", "$description": "The falloff at 38%. Composites to rgb(217,242,249), 12.5%." },
+    "out":      { "$value": "rgba(82,198,227,0)",   "$description": "Nothing, by 74%." },
+    "hotHover": { "$value": "rgba(202,246,65,.46)", "$description": "The hot centre, hovered." },
+    "midHover": { "$value": "rgba(82,198,227,.30)", "$description": "The falloff, hovered." },
+    "edge":     { "$value": "rgba(0,134,106,.22)",  "$description": "The inset hairline around a lit thing." }
+  },
+  "hatch": {
+    "$type": "color",
+    "$value": "rgba(0,48,63,.18)",
+    "$description": "The not-built stripe. 1.42:1 on both light grounds — deliberately just above ink.rule at 1.38, because at the previous .055 it composited to 1.11:1 and sat BELOW the faintest line the system declares. The alpha form is what makes it ground-independent: an alpha composite scales the ground rather than displacing it."
+  },
+  "mark": {
+    "$description": "The only two gradients in the system. A gradient that is not the mark is a finding — a gradient on a surface is an elevation claim without an elevation scale.",
+    "from":   { "$type": "color", "$value": "#50c6e9", "$description": "Measured from the brand sheet." },
+    "to":     { "$type": "color", "$value": "#72c34e", "$description": "Measured from the brand sheet." },
+    "radius": { "$type": "dimension", "$value": "0", "$description": "Square under R2. The single revert point — the brand sheet's own corner is .09em." },
+    "gradient":      { "$type": "gradient", "$value": [{ "color": "{mark.from}", "position": 0 }, { "color": "{mark.to}", "position": 1 }], "$description": "90°, for the badge." },
+    "gradientGlyph": { "$type": "gradient", "$value": [{ "color": "{mark.from}", "position": 0 }, { "color": "{mark.to}", "position": 1 }], "$description": "135°, for the standalone glyph. Two tokens and not one: the badge and the glyph run at different angles, and a single token would force one back inline." },
+    "clearSpace": { "$type": "dimension", "$value": "1em", "$description": "The badge's own width on every side. In em so it travels with the mark at any size." },
+    "minSize":    { "$type": "dimension", "$value": "16px", "$description": "Of badge. Below this the two letterforms in the gradient stop resolving and the mark should be the glyph alone." }
+  },
+  "face": {
+    "$type": "fontFamily",
+    "$description": "TWO FACES AND NO THIRD. Sans carries language; mono carries anything a person compares against another instance of itself. The division is R9, not taste — a third family would have to say what it is FOR, and both jobs are taken.",
+    "sans": { "$value": ["IBM Plex Sans", "system-ui", "sans-serif"], "$description": "Every sentence, label, control and heading." },
+    "mono": { "$value": ["IBM Plex Mono", "ui-monospace", "monospace"], "$description": "A figure, a reference, a hash, a key-cap. With tabular-nums, always." }
+  },
+  "size": {
+    "$type": "dimension",
+    "$description": "SIX STEPS. s5 does not exist: nothing in the system is between a title and a figure, and minting the step is how a fifth heading level arrives without anybody deciding to add one. THE THREE SMALL STEPS DO NOT SCALE WITH THE VIEWPORT — a 14px body is 14px everywhere, because it is already at the readable floor. Only the three above body are fluid, and they clamp with a rem floor rather than a vw one, because a pure vw value ignores the reader's font-size setting and fails 1.4.4 while looking responsive.",
+    "s1": { "$value": "0.6875rem",  "$description": "11px. Micro — a section label, a state name, the not-built word. Uppercase, tracked, always. FIXED." },
+    "s2": { "$value": "0.78125rem", "$description": "12.5px. Label, caption, table cell, control, note. The workhorse. FIXED." },
+    "s3": { "$value": "0.875rem",   "$description": "14px. Body, the document default. FIXED." },
+    "s4": { "$value": "clamp(1rem,.94rem + .3vw,1.0625rem)", "$description": "16→17px. Title — an overlay head, a route state, a lede." },
+    "s6": { "$value": "clamp(1.75rem,1.2rem + 2.75vw,2.5rem)", "$description": "28→40px. Figure — the one number a screen is about. Monospaced and tabular under R9." },
+    "s7": { "$value": "clamp(2.25rem,1.1rem + 5.75vw,6rem)", "$description": "36→96px. Display. One per page, lowercase." }
+  },
+  "weight": {
+    "$type": "fontWeight",
+    "$description": "SIX WEIGHTS, EACH WITH ONE JOB. Six was not chosen, it was measured — the tree already used all six while the system claimed to have no weight scale. A weight is NEVER used for emphasis outside its job: 500 on a sentence of prose is the figure weight appearing where no figure is, and it reads as a rendering accident.",
+    "display": { "$value": 200, "$description": "size.s7 only. Nothing else is ever this light." },
+    "lede":    { "$value": 300, "$description": "The one lede paragraph, and the size.s6 figure." },
+    "body":    { "$value": 400, "$description": "Everything that is a sentence." },
+    "figure":  { "$value": 500, "$description": "A monospaced thing that must not look bold — a key-cap, a token name, a reference." },
+    "emph":    { "$value": 600, "$description": "Emphasis, and EVERY uppercase micro label." },
+    "mark":    { "$value": 700, "$description": "The wordmark and the glyph. Nothing else." }
+  },
+  "tracking": {
+    "$type": "dimension",
+    "$description": "PAIRED WITH THE STEP, NOT CHOSEN AT THE CALL SITE. Body and label track at 0. Both values are optical corrections for size, which is why neither is available to a step that did not ask for one. In em and not rem: tracking must scale with the type it is tracking.",
+    "micro":   { "$value": ".1em",    "$description": "size.s1, uppercase. Non-negotiable — at 11px the letters close up to the point of illegibility without it." },
+    "title":   { "$value": "-.01em",  "$description": "size.s4." },
+    "display": { "$value": "-.035em", "$description": "size.s7 — without it, gaps open between letterforms at display size." },
+    "mark":    { "$value": "-.025em", "$description": "The wordmark, set tighter than any running text. It is not running text." }
+  },
+  "leading": {
+    "$type": "number",
+    "$description": "THREE VALUES, AND THE SMALLEST TYPE GETS THE LOOSEST LEADING. That is the reverse of the instinct and it is the whole rule: a 12.5px note is read in long paragraphs at a size where lines are easy to lose. All three are UNITLESS multipliers, so a reader's 1.5x override under 1.4.12 multiplies rather than replaces them.",
+    "display": { "$value": 0.95, "$description": "size.s7. Sub-single, deliberately — its lines are three words long." },
+    "body":    { "$value": 1.45, "$description": "size.s3 and size.s4." },
+    "note":    { "$value": 1.55, "$description": "size.s2 prose." }
+  },
+  "measureText": {
+    "$type": "dimension",
+    "$description": "LINES, in characters — not the page measure, which is a width in rem. Never set a text measure in px or rem: a ch measure holds when the step changes, and a fixed measure silently becomes 120 characters at size.s2 and 50 at size.s4.",
+    "text": { "$value": "80ch", "$description": "Body and note prose, and it is the ceiling. Past about eighty characters the eye loses the start of the next line." },
+    "lede": { "$value": "64ch", "$description": "The one lede. Shorter because it is bigger." },
+    "act":  { "$value": "56ch", "$description": "A sentence a person must ACT on: a route state, a dialog's consequence, an error. Short enough to be read once." }
+  },
+  "space": {
+    "$type": "dimension",
+    "$description": "One unit, in rem, so every gap scales with the reader's setting. Every gap is a multiple of it, written calc(u*n) so the multiple stays legible at the call site. THE HALF-UNIT IS THE FLOOR — a quarter-unit is a finding. No half-unit token is minted: every site already spells that value one way, and a token would create a second spelling.",
+    "u":      { "$value": "0.25rem", "$description": "4px at a 16px root." },
+    "gutter": { "$value": "clamp(1.25rem,.85rem + 2vw,3.5rem)", "$description": "20→56px. The page's own edge." }
+  },
+  "target": {
+    "$type": "dimension",
+    "$description": "WCAG 2.2 AA 2.5.8 Target Size (Minimum). Declared once as a rule so a new control cannot be born under the floor. In rem, so a reader who raises their font size gets a bigger target — a px floor satisfies the criterion as written and fails the person it was written for. NONE of 2.5.8's three exceptions is used anywhere in this system: each is an argument a reviewer has to accept rather than a measurement.",
+    "min": { "$value": "1.5rem", "$description": "24px. The floor — what a chip, an inline remove and a table sort control get. A floor, not a design target." },
+    "base": { "$value": "2rem", "$description": "32px. What the system's controls actually are." },
+    "touch": { "$value": "2.75rem", "$description": "44px. The phone shell's tab bar only — a primary destination reached with a thumb at the bottom edge of a phone." }
+  },
+  "layout": {
+    "$type": "dimension",
+    "$description": "FOUR TIERS, and the tier names are jobs rather than devices: a 900px browser window on a desktop is the MID tier, and calling it 'tablet' is how a layout ends up keyed on a guess about hardware. 320px is the floor and it is a 1.4.10 Reflow requirement, not a choice. THE THREE BREAKPOINTS ARE CONSTANTS, NOT USABLE TOKENS — a custom property cannot be read inside @media, so each is still written literally at its site. They are declared so each number has one home and a fourth has to argue with them.",
+    "measure":  { "$value": "73.75rem", "$description": "1180px. A page of content. Does NOT grow above the ultra tier — a line of text that keeps widening eventually exceeds every text measure. Never rewritten in terms of the entry-tier form column, which is 25.5rem and moves for different reasons." },
+    "colMin":   { "$value": "15.5rem",  "$description": "248px. The floor of an auto-fit grid column." },
+    "bpNarrow": { "$value": "720px",    "$description": "narrow → mid. Below it: the phone shell, one column, the register triages." },
+    "bpMid":    { "$value": "1080px",   "$description": "mid → wide." },
+    "bpWide":   { "$value": "1440px",   "$description": "wide → ultra. Above it the drawer becomes an inline third column and stops being an overlay." }
+  },
+  "motion": {
+    "$description": "ONE SPRING. The two-duration scale it replaced carried the enter/exit asymmetry in its numbers; the spring carries it in the CURVE — it arrives fast, overshoots 9%, and settles, so the overshoot is what says it landed. A LEAVING ELEMENT DOES NOT BOUNCE: spring on the way in, fade on the way out.",
+    "spring":  { "$type": "cubicBezier", "$value": "linear(0, .231 10%, .624 20%, .922 30%, 1.067 40%, 1.094 50%, 1.067 60%, 1.030 70%, 1.005 80%, .995 90%, 1)", "$description": "A real damped spring — zeta 0.6, omega-n 18 rad/s — sampled at eleven points and written as an easing function. Runs on the compositor as an ordinary CSS transition, needs no runtime, and cannot disagree with itself between two components. What it gives up is interruptibility: it restarts rather than retargeting from its current velocity. That trade is why it is one token and not a library." },
+    "tSpring": { "$type": "duration", "$value": "420ms", "$description": "The spring's settle time. Anything that MOVES, on the way in." },
+    "tFade":   { "$type": "duration", "$value": "120ms", "$description": "Opacity and colour only. NOT a second spring: an opacity change has no distance to ease across, so a spring on it is mathematically meaningless — the overshoot clamps at 1 and the curve degenerates. The same argument the 1.5px hollow dot makes." },
+    "ambient": {
+      "$description": "THE AMBIENT TEMPO RULE. Motion in SECONDS means 'this is live'; motion in MILLISECONDS means 'you did that'. The two budgets never mix. FOUR ANIMATIONS EXIST IN THIS SYSTEM AND A FIFTH IS A FINDING.",
+      "sweep": { "$type": "duration", "$value": "17s",  "$description": "Light passing across a running job. 88% of the cycle is at rest, and the rest fraction rather than the duration is what makes it read as ambient. A faster pass was built, read as a marquee, and was slowed deliberately." },
+      "alive": { "$type": "duration", "$value": "3.6s", "$description": "The connection light breathing. Under reduced motion the halo settles at .3 and not 0 — a down light has an opacity-0 halo AND a hollow centre, and stopping a live halo at 0 collapses two differences into one." },
+      "lv":    { "$type": "duration", "$value": "1.4s", "$description": "The agent's level bars. The idle bars are held separately under reduced motion so the difference between working and idle survives the setting." }
+    }
+  },
+  "depth": {
+    "$description": "THE SURFACE RULE. No elevation scale, no shadow palette, no decorative gradient. A surface separates by RULE or by GROUND. The two scrims are the only exception, and they exist because a modal must dim what it blocks. Border weight is deliberately NOT tokenised: 1px is the only edge weight and never varies; 1.5px occurs once as geometric compensation for a hollow dot; 2px is EMPHASIS, which is a rule (the 1px edge DOUBLED, switched to full ink, never a hue change) rather than a size.",
+    "scrim":       { "$type": "color",  "$value": "rgba(0,48,63,.38)", "$description": "Behind a drawer or a modal." },
+    "sheetShadow": { "$type": "shadow", "$value": { "offsetX": "0", "offsetY": "1px", "blur": "0", "spread": "0", "color": "{ink.ruleStrong}" }, "$description": "Not a shadow — a hairline under a panel, which is why it is spelled this way. Allowed under the surface rule." }
+  },
+  "layer": {
+    "$type": "number",
+    "$description": "FOUR LAYERS, and the ORDER is the decision rather than the numbers. Spaced by ten so a component can sit between two without reopening the scale. Replaces a bare z-index:99 on the skip link and the 2, 3, 4, 5 and 30 the bundle carried on comparable layers, kept consistent with that 99 by hand.",
+    "popover": { "$value": 20, "$description": "A tooltip or a menu — anchored to something." },
+    "overlay": { "$value": 30, "$description": "A drawer — over the register, never away from it." },
+    "modal":   { "$value": 40, "$description": "A dialog and its scrim — blocks what is under it. The toast rides here too." },
+    "skip":    { "$value": 99, "$description": "The skip link. Highest, because it is the one control that must be reachable when something else has gone wrong." }
+  },
+  "dark": {
+    "$description": "THE DARK THEME — a DIMMED LIGHT THEME: one dark ground, and every other step recomputed against it. Not an inversion and not a filter. Each step keeps its NAME and its JOB, so no component branches on the theme; a component that needs to know which theme it is in is a component with two designs. TWO STEPS INVERT THEIR DIRECTION: onInk and onInk2 are 'text on an ink ground', and here an ink ground is a LIGHT panel, so they become dark values. The name still describes the job; only the value moved.",
+    "$type": "color",
+    "paper":      { "$value": "#001a22", "$description": "The dark ground." },
+    "sheet":      { "$value": "#012b35", "$description": "1.35:1 · a panel ON it." },
+    "tileHover":  { "$value": "#023b47" },
+    "rowHover":   { "$value": "#01222c" },
+    "ink":        { "$value": "#e8f2f3", "$description": "15.74:1." },
+    "refused":    { "$value": "#879ea2", "$description": "6.36:1." },
+    "muted":      { "$value": "#7d9498", "$description": "5.60:1." },
+    "recede":     { "$value": "#718a8e", "$description": "4.89:1." },
+    "ruleStrong": { "$value": "#22505d", "$description": "2.03:1." },
+    "rule":       { "$value": "#123540", "$description": "1.37:1 · the floor, holding the same relationship it has in the light theme." },
+    "onInk":      { "$value": "#001a22", "$description": "15.74:1 on dark.ink. Inverted in direction, unchanged in job." },
+    "onInk2":     { "$value": "#1d4a55", "$description": "8.52:1 on dark.ink." },
+    "agent":      { "$value": "#14a082", "$description": "5.45:1. LIGHTENED — the light theme's hex is 1.5:1 here and unusable. The hue family is preserved so the mark still reads as the same mark, and the new value is BETTER than the light theme's 4.55 because the green no longer competes with white." },
+    "agentDeep":  { "$value": "#86dcc5", "$description": "11.15:1 · agent TEXT." },
+    "accent":     { "$value": "#d99a74", "$description": "7.54:1." },
+    "accentDeep": { "$value": "#eec0a3", "$description": "10.62:1 · accent TEXT." },
+    "hatch":      { "$value": "rgba(232,242,243,.16)", "$description": "1.55:1. INVERTS OR IT DISAPPEARS — a dark stripe on a dark ground is the not-built defect in its purest form: a refused control rendering as an ordinary one." },
+    "scrim":      { "$value": "rgba(0,10,14,.62)" }
+  }
+}

@@ -1,0 +1,531 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE SHELL'S TREATMENTS — the chrome bar, the three destinations, the register.
+
+   THE KERNEL REMAINS THE ONLY PLACE A VALUE IS DECLARED, exactly as
+   frontend/src/bridge.css requires. Every colour below is `var(--…)`, every
+   length is a multiple of `var(--u)` or a kernel type step. Nothing here states
+   a hex, a px colour or a rem. A rule that restated a value would hold its own
+   copy of the palette, pass every visual review, and drift the first time a
+   token moved.
+
+   ─── WHY THIS FILE EXISTS AT ALL, RATHER THAN TAILWIND UTILITIES ────────────
+
+   These are SYSTEM RULES, not layout. `design/system/shell.html` already
+   declares every one of them — `.bar`, `.dest`, `.ctl`, `.menu` — and this file
+   is those rules ported to the app, in the same relationship `Meter.tsx` and
+   `Connection.tsx` have to the kernel's `.meter` and `.conn`. Layout stays in
+   Tailwind utilities on the components; treatment lives here.
+
+   🛑 AND THE ONE RULE THAT COULD NOT HAVE BEEN A UTILITY IS THE ACTIVE
+   DESTINATION. `--shadow-*: initial` in bridge.css deletes Tailwind's shadow
+   scale under THE FLAT SHEET RULE, and reaching past the fence with an
+   arbitrary `shadow-[inset_0_-2px_0_var(--ink)]` would put a shape value on an
+   element instead of in a rule — the second spelling the bridge exists to
+   prevent. The fence is not adjusted. The rule is written where the design
+   record already writes it: `design/system/shell.html:219`, verbatim.
+
+   ─── CASCADE ───────────────────────────────────────────────────────────────
+
+   ⚠️ THIS SHEET IS UNLAYERED, LIKE THE KERNEL, AND IT IS IMPORTED AFTER IT.
+   bridge.css §1 measures why the kernel is unlayered and warns that unlayered
+   component CSS then competes with it directly. That is true of this file, so
+   the rule it implies is obeyed mechanically rather than by memory:
+
+     🛑 NOTHING IN THIS FILE MAY DECLARE `background` OR `background-image` ON
+     `.nb`, ON `.lit`, OR ON ANY ANCESTOR SELECTOR THAT COULD REACH ONE.
+
+   That is the 16 Aug 2026 defect — a plain unlayered `background:` erasing the
+   hatch — and the doubled `.nb.nb` guard is a SPECIFICITY defence that a rule of
+   equal specificity declared LATER would beat on source order alone. The
+   register's rows are styled by element and by class, never by a selector that
+   descends into a mark's own box.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── PRIMITIVE · THE CHROME BAR ───────────────────────────────────────────
+   Nine controls and nothing else (Navigation.dc.html:451). It never leaves.
+
+   ⚠️ IT WRAPS, AND THE WRAP IS NOT COSMETIC. Seven of the nine controls carry a
+   not-built mark, and a mark renders its refusing decision as VISIBLE TEXT
+   (NotBuilt.tsx, failure 3) — so a control in this build is taller than the
+   28px `.ctl` of the drawn design. Letting the bar wrap is what keeps the marks
+   at their natural size instead of compressing the reasons out of reach. */
+.bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: calc(var(--u) * 2) calc(var(--u) * 4);
+  padding: calc(var(--u) * 2) calc(var(--u) * 4);
+  background: var(--paper);
+  box-shadow: var(--sheet-shadow);
+}
+
+.bar .right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 2);
+  flex-wrap: wrap;
+}
+
+/* ─── A REFUSED CHROME CONTROL ─────────────────────────────────────────────
+   🛑 ONE LINE, AND IT IS A DESIGN RULE RATHER THAN AN ACCOMMODATION.
+   `design/system/shell.html` gives every control `height:calc(var(--u)*7)` — a
+   chrome control is bar-height. A refusal that WRAPS has stopped being a label
+   beside a control and become a paragraph, and a paragraph in a chrome bar is a
+   panel. So the mark, its label and its reason all sit on one line: keep the
+   reason short enough to fit, and a reason that does not fit is a reason that
+   belongs on the route rather than in the bar.
+
+   ⚠️ IT HAS A SECOND CONSEQUENCE WORTH NAMING, BECAUSE IT IS WHY THIS RULE IS
+   LOAD-BEARING AND NOT COSMETIC. A boxed sibling that is ≥80×48 and carries a
+   figure — and `G200` is a figure — is, at three across, indistinguishable from
+   A ROW OF SUMMARY TILES, which is the first of the two things
+   Navigation.dc.html:462 argues OUT of this product. One-line marks stay under
+   a tile's height by construction, so the bar cannot drift into the shape the
+   record refuses. Relying on the marks happening to differ in height would be a
+   rule keyed on a convenient landmark instead of on the property it protects.
+
+   ⚠️ THE PADDING-RIGHT IS THE PLATE'S ROOM, AND THE FIGURE IS MEASURED RATHER
+   THAN GUESSED. The kernel pins `.nb::after` to the mark's top-right corner and
+   renders `attr(data-nb)` into it; without the reserve the plate lands ON the
+   label, which it did. Measured on the rendered page:
+
+     getComputedStyle(document.querySelector('.bar .nb'), '::after').width
+     → 128.44px, plus 6px padding each side = ~140px
+
+   38 units is 152px, which clears that with room for a wider G row. Reproduce
+   it after changing the plate's text or type size; do not trust this number. */
+.bar .nb {
+  padding: calc(var(--u) * 1) calc(var(--u) * 38) calc(var(--u) * 1) calc(var(--u) * 2);
+  white-space: nowrap;
+}
+
+/* The reason sits BESIDE the label rather than under it — see above. `NotBuilt`
+   renders it `block`; that is right on a route surface and wrong in a bar. */
+.bar .nb small {
+  display: inline;
+  margin-left: calc(var(--u) * 2);
+}
+
+/* CONTROL 1 · THE WORDMARK — the hard reset. A button, because it acts. */
+.mark {
+  background: none;
+  border: 0;
+  padding: calc(var(--u) * 1) 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* CONTROL 2 · THE ENTITY SWITCHER · CONTROL 9 · THE ACCOUNT MENU
+   Same disclosure mechanics, so one rule set — as the design record has it. */
+.disc {
+  position: relative;
+  display: inline-flex;
+}
+
+.ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--u) * 2);
+  height: calc(var(--u) * 7);
+  padding: 0 calc(var(--u) * 2);
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
+  font: inherit;
+  font-size: var(--s2);
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ctl:hover { background: var(--tile-hover); }
+.ctl[aria-disabled="true"] { color: var(--muted); background: var(--sheet); cursor: default; }
+.ctl.sq { width: calc(var(--u) * 7); padding: 0; justify-content: center; }
+.ctl .car { font-size: var(--s1); color: var(--muted); }
+
+.avatar {
+  width: calc(var(--u) * 7);
+  height: calc(var(--u) * 7);
+  flex: none;
+  background: var(--sheet);
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--s2);
+  font-weight: var(--w-emph);
+  color: var(--ink);
+}
+
+/* THE ACCOUNT MENU, as a native `<details>`.
+   🛑 NATIVE, BECAUSE THE BUILT PAGE CARRIES NO SCRIPT. `prerender.tsx` emits
+   static markup — a module script cannot load over `file://` — so a disclosure
+   driven by JavaScript would put the Setup door in the DOM and leave it
+   unreachable by a person. `<details>` opens with a click and with Enter, with
+   no script at all, which is the difference between a control and a picture. */
+.disc[open] > summary { background: var(--sheet); }
+
+.menu {
+  position: absolute;
+  top: calc(100% + var(--u));
+  right: 0;
+  z-index: var(--z-popover);
+  min-width: min(calc(var(--u) * 66), 100%);
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--ink);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu li { margin: 0; }
+
+.menu .it {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 3);
+  width: 100%;
+  padding: calc(var(--u) * 2) calc(var(--u) * 4);
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: var(--s2);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu .it:hover { background: var(--row-hover); }
+
+/* 🛑 `role="separator"` IS ON THE MARKUP AND IT IS LOAD-BEARING TWICE OVER.
+   It is the ARIA a divider should carry anyway — and it is what keeps a 1px
+   filled element out of the ONE LINE count, which
+   `tests/design/shell.test.ts` names as a priced hole rather than an oversight.
+   Furniture that DIVIDES is not an indicator that MEASURES. */
+.menu .sep { height: 1px; background: var(--rule); }
+
+.menu .who { padding: calc(var(--u) * 3) calc(var(--u) * 4); box-shadow: inset 0 -1px 0 var(--rule); }
+.menu .who b { display: block; font-size: var(--s3); font-weight: var(--w-emph); }
+
+/* THE THEME TOGGLE (RV-13, G3392 — `components/ThemeToggle.tsx`), styled to sit
+   as one row of the account menu or anywhere else: a micro label and three
+   word-buttons. The pressed one takes the INK GROUND, the kernel's one
+   "selected" treatment for a segment; no hue, no dot, no check glyph. */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1);
+  padding: calc(var(--u) * 2) calc(var(--u) * 4);
+}
+.theme-toggle-l {
+  flex: 1;
+  font-size: var(--s1);
+  letter-spacing: var(--tr-micro);
+  text-transform: uppercase;
+  font-weight: var(--w-emph);
+  color: var(--muted);
+}
+.theme-toggle-b {
+  font: inherit;
+  font-size: var(--s1);
+  line-height: var(--lh-solid);
+  /* N-03 (G3477) — a 23px box was one pixel under the WCAG 2.5.8 floor the
+     kernel names (`--target-min`, 24px). The kernel's own button rule sets a
+     min-WIDTH only, so the height is stated here. */
+  min-height: var(--target-min);
+  padding: calc(var(--u) * 1.5) calc(var(--u) * 2);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
+  cursor: pointer;
+}
+.theme-toggle-b:hover { color: var(--ink); }
+.theme-toggle-b[aria-pressed='true'] { background: var(--ink); color: var(--on-ink); box-shadow: none; }
+
+/* ─── CONTROL 3 · THE THREE DESTINATIONS ───────────────────────────────────
+   🛑 ACTIVE IS AN INSET BOX-SHADOW UNDERLINE. NEVER A LEFT BORDER: a left
+   border is a sidebar's grammar and there is no sidebar
+   (design/system/shell.html, control 3). The treatment is fixed at
+   `inset 0 -2px 0` by Navigation.dc.html:374 and is copied, not paraphrased.
+
+   🛑 AND IT IS DRIVEN BY `aria-current="page"` ALONE. No `.active` class, no
+   second selector, nothing a route can set independently. That is what reduces
+   "inside Setup, NO destination is underlined" (Navigation.dc.html:386-398) to
+   a single property of the Setup route: it sets no `aria-current`, and there is
+   no other way for a destination to acquire the mark. A second selector would
+   be a second rule somebody has to remember.
+
+   ⚠️ BOTH CITATIONS ABOVE ARE TAG PATHS SINCE G264 — `git show
+   archive/pre-handoff-pack:design/system/shell.html` and
+   `…:Mockups/rec/Navigation.dc.html`. Control 3 is "Three destinations" in
+   BOTH records, so no renumbering applies here; controls 5 and 8 swap and
+   `ChromeBar.tsx`'s header carries that.
+
+   🛑 THE PACK SPECIFIES A THIRD CHANNEL THIS RULE DOES NOT SHIP, AND IT IS
+   NAMED RATHER THAN QUIETLY ADOPTED. `docs/handoff-pack/Handoff
+   Specification.dc.html`'s `<Shell>` table, row **Active**: *"Three channels:
+   `--w-emph` weight, a 2px bottom edge, and **`--accent`** on that edge. The
+   first two work without the third."* The rule below ships the first two and
+   paints the edge `--ink`. Derive it:
+   `grep -n 'Three channels' 'docs/handoff-pack/Handoff Specification.dc.html'`.
+   ⚠️ IT IS NOT SWEPT, BECAUSE CHANGING A COLOUR IS A DESIGN DECISION AND NOT A
+   CITATION REPAIR: the archive fixed this edge at `--ink` and the pack asks
+   for `--accent`, and the pack's own sentence concedes the treatment is
+   correct without it. **A ruling is owed on which edge colour stands; until it
+   is taken the tree holds two of the three channels and says so here.** */
+.dest { display: flex; gap: calc(var(--u) * 5); align-items: center; }
+
+.dest a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: var(--s3);
+  padding-bottom: calc(var(--u) * 1);
+  white-space: nowrap;
+}
+
+.dest a:hover { color: var(--ink); }
+
+.dest a[aria-current="page"] {
+  color: var(--ink);
+  font-weight: var(--w-emph);
+  box-shadow: inset 0 -2px 0 var(--ink);
+}
+
+/* CONTROL 5 · NOTIFICATIONS (this component's DOM position — see
+   `ChromeBar.tsx`'s header) — the count is a COUNT, not an unread dot.
+   ⚠️ THIS CITED `design/system/shell.html, control 5` UNTIL 19 Sep 2026, and
+   BOTH halves were wrong: the path is deleted, and in the pack that NUMBER is
+   the token meter. The rule's pack home is the Design System's chrome-bar row
+   named **Notifications** — "No unread dot — that is a second dot" — and
+   **R3**, "No second line, and no second dot." Cite it by content:
+   `grep -n 'No unread dot' docs/handoff-pack/*.dc.html`. */
+.bell .n {
+  font-family: var(--face-mono);
+  font-size: var(--s1);
+  font-weight: var(--w-emph);
+  font-variant-numeric: tabular-nums;
+}
+
+.bell--zero .n { color: var(--muted); }
+
+/* CONTROL 7 · THE COMMAND PALETTE TRIGGER */
+.kbd { font-family: var(--face-mono); font-size: var(--s1); color: var(--muted); }
+
+/* CONTROL 8 · THE TOKEN METER's caption. The meter itself is the kernel's. */
+.tok { display: inline-flex; align-items: baseline; gap: calc(var(--u) * 2); }
+.tok .w { font-size: var(--s1); color: var(--muted); }
+
+/* 🛑 A METER NARROWER THAN ITS OWN SCORE CANNOT STATE ONE, AND THIS IS A LENGTH
+   RATHER THAN A TREATMENT. The kernel gives `.meter` `display:inline-block`, so
+   it sizes to its figure — and the fill is `width: var(--score)` of THAT. At the
+   21% this control carries, the fill came out ~8px: a nub, not a measurement.
+   THE ONE LINE RULE says the meter is the only line in the system precisely
+   because it is a measurement always; a fill too short to read as a length fails
+   the rule from the other side, by drawing a bar that states nothing.
+
+   ⚠️ AND THE CEILING MATTERS AS MUCH AS THE FLOOR. `Specimen.tsx` records a
+   meter stretched to the full width of a view reading as a PROGRESS BAR — the
+   one thing THE ONE LINE RULE forbids it to be mistaken for — with every
+   detector still green. So this is a floor on an inline control in a bar, in
+   kernel units, and not a width. */
+.tok .meter { min-width: calc(var(--u) * 20); }
+
+/* ─── THE REGISTER ─────────────────────────────────────────────────────────
+   The register IS the summary. There is no page above it, and no row of tiles
+   restating what it already shows (Navigation.dc.html:462).
+
+   ⚠️ IT IS A `<table>` BECAUSE IT IS TABULAR, and for no other reason. The rows
+   carry `data-run` rather than a class, because that states the row's SUBJECT —
+   a class name is a styling decision and would change for styling reasons. */
+.register { width: 100%; border-collapse: collapse; }
+
+.register caption {
+  text-align: left;
+  font-size: var(--s1);
+  letter-spacing: var(--tr-micro);
+  text-transform: uppercase;
+  font-weight: var(--w-emph);
+  color: var(--muted);
+  padding-bottom: calc(var(--u) * 2);
+}
+
+.register th {
+  text-align: left;
+  font-size: var(--s1);
+  letter-spacing: var(--tr-micro);
+  text-transform: uppercase;
+  font-weight: var(--w-emph);
+  color: var(--muted);
+  padding: calc(var(--u) * 2) calc(var(--u) * 3);
+  box-shadow: inset 0 -1px 0 var(--rule-strong);
+  white-space: nowrap;
+}
+
+.register td {
+  padding: calc(var(--u) * 3);
+  font-size: var(--s2);
+  color: var(--ink);
+  vertical-align: top;
+  box-shadow: inset 0 -1px 0 var(--rule);
+}
+
+.register tbody tr:hover td { background: var(--row-hover); }
+
+.register .num { font-family: var(--face-mono); font-variant-numeric: tabular-nums; }
+
+/* THE STATUS WORD. Never a hue, never a dot, never a pill that only differs by
+   colour — G153 requires an `incomplete` run to READ differently from a
+   `completed` one, and every state in this system carries a word. `incomplete`
+   takes the full ink and the label's weight; the rest recede. That is FORM, and
+   it survives greyscale printing and a colour-blind reader alike. */
+.register .state { font-weight: var(--w-body); color: var(--muted); white-space: nowrap; }
+.register .state[data-state="incomplete"] { font-weight: var(--w-emph); color: var(--ink); }
+.register .state[data-state="failed"] { font-weight: var(--w-emph); color: var(--ink); }
+/* G4033 — a refused run produced nothing, which an operator must act on: the
+   same full-ink FORM as `failed`, told apart by its WORD, never by a hue. */
+.register .state[data-state="refused"] { font-weight: var(--w-emph); color: var(--ink); }
+
+/* THE ABSENT ACCOUNT. `null` is not `[]` and this is where the difference is
+   drawn: the cell says so in words rather than leaving an empty box, because
+   SILENCE READS AS FINE. `server/data-plane/runs.ts` refuses to fabricate `[]`
+   in the handler; this refuses to fabricate a clean close one layer up. */
+.register .account { color: var(--muted); font-size: var(--s1); white-space: nowrap; }
+
+/* THE DRILL-DOWN. A run id that opens the run — `getRun`.
+   ⚠️ IT IS A BUTTON THAT LOOKS LIKE THE ID IT OPENS, and it is underlined
+   because that is the one place an underline is not a status mark: THE ONE LINE
+   RULE governs painted rules and bars, and `text-decoration` on a link is the
+   web's own affordance for "this goes somewhere". Drawing it as a `.ctl` box
+   would put nine chrome-weight boxes in the register's first column. */
+.register .open {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ONE RUN, OPENED. A description list, because that is what it is. */
+.detail {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: calc(var(--u) * 1) calc(var(--u) * 4);
+  margin: 0;
+  padding: calc(var(--u) * 4);
+  background: var(--sheet);
+  font-size: var(--s2);
+}
+
+.detail dt { font-size: var(--s1); letter-spacing: var(--tr-micro); text-transform: uppercase; color: var(--muted); font-weight: var(--w-emph); }
+.detail dd { margin: 0; color: var(--ink); }
+
+.route { padding: calc(var(--u) * 6); display: flex; flex-direction: column; gap: calc(var(--u) * 6); }
+
+/* ── C9 · SETUP — G2875, 2 Oct 2026 ────────────────────────────────────────
+   The pack's own `.abtn`, `.choice` and `.reasons` (docs/handoff-pack/app.css),
+   carried over by VALUE and scoped under `.setup`, because the frontend does
+   not import the pack's PAGE sheet and must not: it styles every pack surface
+   at once. Every value below is a kernel token — no colour, size or duration
+   is written here that `tokens.css` does not declare. */
+.setup .paneh { display: flex; align-items: center; justify-content: space-between; gap: calc(var(--u) * 3); }
+.setup .reasons {
+  display: grid;
+  gap: calc(var(--u) * 3);
+  padding-top: calc(var(--u) * 4);
+  border-top: 1px solid var(--rule-strong);
+  max-width: var(--measure);
+}
+.setup .choices { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 2); }
+.setup .choice {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 3);
+  font: inherit;
+  font-size: var(--s2);
+  color: var(--ink);
+  min-height: var(--target);
+  padding: 0 calc(var(--u) * 3);
+  background-color: var(--paper);
+  border: 0;
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
+  cursor: pointer;
+}
+.setup .choice .to { color: var(--muted); font-size: var(--s1); }
+.setup .choice[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--ink); font-weight: var(--w-emph); }
+.setup .fields { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 3); }
+.setup .field { display: flex; flex-direction: column; gap: calc(var(--u) * 1); min-width: calc(var(--u) * 50); }
+.setup .field input {
+  font: inherit;
+  font-size: var(--s2);
+  color: var(--ink);
+  min-height: var(--target);
+  padding: 0 calc(var(--u) * 2);
+  background-color: var(--paper);
+  border: 0;
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
+}
+.setup .field input:focus-visible { box-shadow: inset 0 0 0 1px var(--ink); }
+.setup .acts { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 2); }
+.setup .acts-cell { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 2); }
+.setup .abtn {
+  font: inherit;
+  font-size: var(--s2);
+  min-height: var(--target);
+  padding: 0 calc(var(--u) * 4);
+  cursor: pointer;
+  border: 0;
+  color: var(--ink);
+  background-color: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
+  white-space: nowrap;
+}
+.setup .abtn:hover { background-color: var(--tile-hover); }
+.setup .abtn[data-commit] { background-color: var(--ink); color: var(--on-ink); font-weight: var(--w-emph); box-shadow: none; }
+.setup .abtn[data-commit]:hover { background-color: var(--accent-deep); }
+.setup .abtn[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--ink); font-weight: var(--w-emph); }
+.setup .abtn[aria-disabled="true"] { color: var(--refused); background-color: var(--sheet); cursor: default; }
+/* RV-17 (G3483): Setup now sits in `.page` (secondary.css), whose `.reasons`
+   goes two-column at 1080px for the finding's reason grid. A Setup form is a
+   column of rows, each already laid out by `.choices` or `.fields`, so it stays
+   one column — the extra class out-ranks `.page .reasons`. */
+.page.setup .reasons { grid-template-columns: minmax(0, 1fr); }
+.page.setup .paneh { margin-bottom: calc(var(--u) * 2); }
+/* G4074 — A FORM OPENED INSIDE THE SOURCES TABLE DOES NOT SCROLL SIDEWAYS WITH IT.
+   ⚠️ RETIRED 4 Oct 2026 — U-26, G4171. The rule that stood here pinned a form
+   in a `colSpan` row to the scroller's visible width (`.tblwrap` an inline-size
+   container, `td[colspan] > form` sticky at the gutter). Its own comment named
+   its successor: *"The pack draws no table-row form at any width … Moving the
+   forms out of the table is the more pack-faithful shape."* That move is made
+   in Setup.tsx — the forms are `.reasons` blocks under the pane head, as
+   `C1 Close.dc.html#work` (`showSetup`) draws them — so there is no table-row
+   form left for the rule to select, and a selector with no subject is deleted
+   rather than kept. `.page .tblwrap{position:relative}` (secondary.css, the
+   other half of G4074) is untouched: the sr-only "Acts" label still needs it.
+   Two `.reasons` may stand together now (the declare form and a row's form);
+   the second keeps its own rule and gap from the first. */
+.page.setup .reasons + .reasons { margin-top: calc(var(--u) * 4); }
+/* …and the table under it keeps its distance from the form's acts. */
+.page.setup .reasons[data-act-form] { margin-bottom: calc(var(--u) * 6); }
+/* U-28 · G4175 — a document type's reference beside its label, drawn only
+   where the label does not tell it apart. Mono because it is an identifier,
+   never upper-cased (`.page .choice .to` would turn `dty_…` into `DTY_…`, which
+   is not the reference), and free to wrap so a long one cannot widen a 390
+   page. Kernel tokens only. */
+:is(.setup, .close) .choice .ref {
+  font-family: var(--face-mono);
+  font-size: var(--s1);
+  font-weight: var(--w-body);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+:is(.setup, .close) .choice[aria-pressed="true"] .ref { color: var(--ink); }
+

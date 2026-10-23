@@ -1,0 +1,60 @@
+#!/bin/sh
+# ReconcileAI — regenerate the derived C4 artefacts after every commit.
+#
+# Regenerates, in order:
+#   docs/c4-components.mmd   Level 3 module graph, as Mermaid
+#   docs/c4-data.json        Levels 3-4 and the built DB schema, as data
+#   docs/c4.html             the rendered page (template + data)
+#
+# and commits them only if they actually changed.
+#
+# This is a LOCAL, opt-in git hook rather than a CI step, for three reasons
+# tied to this repo's own rules:
+#
+#   1. .github/workflows/check.yml runs with `permissions: contents: read` and
+#      is enforced by tests/ci/gate.test.ts to run exactly one command (G108).
+#      A CI step that pushes a commit needs contents: write — scope creep the
+#      gate exists to refuse.
+#   2. tools/check-c4-freshness.mjs is the CI-side backstop: it fails the build
+#      if this hook was never installed, or a commit landed some other way.
+#      Regeneration is local; detection is in CI. Never both writing.
+#   3. Nothing generated here embeds a timestamp or a commit hash, so
+#      regeneration is byte-stable. That is what makes the loop below
+#      self-terminating: after this hook's own commit, the next post-commit run
+#      produces identical bytes, finds no diff, and exits without committing.
+#
+# Install (once per clone — which is why this lives in tools/, not .git/hooks):
+#   git config core.hooksPath tools/githooks
+#
+# Uninstall:
+#   git config --unset core.hooksPath
+
+set -eu
+
+cd "$(git rev-parse --show-toplevel)"
+
+ARTEFACTS='docs/c4-components.mmd docs/c4-data.json docs/c4.html'
+
+# The data extractor needs the pinned `typescript` devDependency and exits 2
+# with instructions when it is absent. A contributor who has not run `npm ci`
+# should not have their commit blocked by a diagram — skip with a note and let
+# `npm run check` be the thing that insists.
+if ! node tools/planner/extract-c4-data.mjs >/dev/null 2>&1; then
+  echo "post-commit: skipped C4 regeneration (run 'npm ci' — typescript is not installed)."
+  exit 0
+fi
+
+node tools/planner/render-c4-components.mjs --write >/dev/null
+node tools/planner/extract-c4-data.mjs --write >/dev/null
+node tools/planner/render-c4-page.mjs --write >/dev/null
+
+# `git diff --quiet` reports only tracked changes — an untracked file (any of
+# these on its very first write) looks like no diff and would make this hook a
+# permanent silent no-op. `git status --porcelain` reports both.
+if [ -z "$(git status --porcelain -- $ARTEFACTS)" ]; then
+  exit 0
+fi
+
+git add $ARTEFACTS
+git commit --quiet -m "chore: regenerate C4 diagram artefacts [auto]"
+echo "post-commit: regenerated C4 artefacts (new commit $(git rev-parse --short HEAD))"

@@ -1,0 +1,125 @@
+# =====================================================================
+# BUILD AND PUSH THE CI IMAGE — G258, on ARM, by digest.
+#
+# This is NOT the gate. It builds the machine the gate runs on, and it runs on a
+# curated CodeBuild image because it needs a docker daemon that the gate image
+# deliberately does not carry. The two files are kept apart for that reason:
+# `buildspec-gate.yml` may never grow a step, and this one is allowed to have
+# phases, because nothing here makes a claim about the repository's correctness.
+#
+# ┌─ WHAT THE CDK SIDE OWES THIS FILE (assumed here, built by another slice) ──┐
+# │ · A CodeBuild project with `environmentType: ARM_CONTAINER` and            │
+# │   `privileged: true` — the docker daemon. The curated ARM image            │
+# │   `aws/codebuild/amazonlinux2-aarch64-standard:3.0` carries docker and the │
+# │   AWS CLI; this file assumes both and asserts the architecture below.       │
+# │ · An ECR repository with enhanced scanning on push, the Build stage failing │
+# │   on CRITICAL or HIGH (G262). This file does not create it.                 │
+# │ · These environment variables, set by the project:                          │
+# │       AWS_ACCOUNT_ID    the account the ECR repository lives in             │
+# │       AWS_DEFAULT_REGION CodeBuild sets this; used for the registry host    │
+# │       IMAGE_REPO_NAME   e.g. reconcile/ci-image                             │
+# │       IMAGE_TAG         a tag for humans. THE PIPELINE MUST CONSUME THE     │
+# │                         DIGEST, NOT THIS TAG — see post_build.              │
+# │ · AWS Signer, if G262's signing half is taken for this image too            │
+# │   (docs/tech-stack.md §13.1 says it is). 🛑 NOT DONE HERE, AND NAMED RATHER │
+# │   THAN OMITTED: signing needs a signing profile ARN that does not exist     │
+# │   yet, and inventing one would be a line that looks like a control.          │
+# └────────────────────────────────────────────────────────────────────────────┘
+#
+# ⚠️ THE BUILD CONTEXT IS THE REPOSITORY ROOT. The Dockerfile copies
+# `package.json` so the Node and playwright versions are derived from the
+# repository's own pins rather than restated — see its step 3 and step 5. A build
+# run from inside `infra/ci-image/` cannot see that file and fails.
+# =====================================================================
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      # 🛑 THE ARCHITECTURE IS ASSERTED, NOT CONFIGURED-AND-HOPED. G252's whole
+      #    point is that a bare FROM resolves to the BUILDER's architecture; a
+      #    project accidentally created as LINUX_CONTAINER would otherwise build
+      #    an arm64 image under emulation, slowly, and only the `--platform`
+      #    flag would stand between that and an x86 gate image.
+      - |
+        if [ "$(uname -m)" != "aarch64" ]; then
+          echo "🛑 THIS PROJECT IS NOT ARM. uname -m says $(uname -m)."
+          echo "   G252 pins ARM64 everywhere: environmentType must be ARM_CONTAINER."
+          exit 1
+        fi
+      - docker --version
+      # One block, because a shell variable set by one buildspec command is not
+      # guaranteed to reach the next. The registry host is written to a file and
+      # every later command re-reads it.
+      - |
+        test -n "$AWS_ACCOUNT_ID"
+        test -n "$AWS_DEFAULT_REGION"
+        test -n "$IMAGE_REPO_NAME"
+        test -n "$IMAGE_TAG"
+        REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+        printf '%s' "$REGISTRY" > /tmp/registry
+        aws ecr get-login-password --region "$AWS_DEFAULT_REGION" \
+          | docker login --username AWS --password-stdin "$REGISTRY"
+
+  build:
+    commands:
+      # `--platform linux/arm64` AND a digest-pinned, arm64-only base in the
+      # Dockerfile. Belt and braces on purpose: the flag states the intent, and
+      # the pinned child manifest makes a wrong builder an error rather than a
+      # silently different image.
+      # `--pull` so a stale local copy of the base digest is never reused.
+      - |
+        REGISTRY="$(cat /tmp/registry)"
+        docker build \
+          --platform linux/arm64 \
+          --pull \
+          --file infra/ci-image/Dockerfile \
+          --tag "$REGISTRY/$IMAGE_REPO_NAME:$IMAGE_TAG" \
+          --tag "$REGISTRY/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION" \
+          .
+
+      # ⚠️ A RUNTIME SMOKE, AND IT IS NOT THE RED-FIRST WITNESS. The Dockerfile
+      #    already proved the cluster answers and chromium renders AT BUILD TIME,
+      #    inside buildkit. This proves the same two things in a plain container,
+      #    which is the shape the gate actually runs in. Neither of them proves
+      #    that an ABSENT dependency costs an exit code — that is a different
+      #    claim, it is G258's acceptance condition, and it is observed by hand
+      #    per `infra/ci-image/VERIFY.md` before this image is pointed at a
+      #    pipeline.
+      - |
+        docker run --rm --platform linux/arm64 \
+          "$(cat /tmp/registry)/$IMAGE_REPO_NAME:$IMAGE_TAG" \
+          bash -euo pipefail -c '
+            reconcile-pg-start
+            node /opt/reconcile-ci/pw/verify-chromium.mjs
+            node --version
+            postgres --version
+          '
+
+  post_build:
+    # ⚠️ EVERY COMMAND RE-READS `/tmp/registry` RATHER THAN SETTING A VARIABLE
+    #    ONCE. CodeBuild does not guarantee that a shell variable set by one
+    #    command survives into the next, and the failure mode is an empty
+    #    registry host — which produces a push to Docker Hub, not an error.
+    commands:
+      - docker push "$(cat /tmp/registry)/$IMAGE_REPO_NAME:$IMAGE_TAG"
+      - docker push "$(cat /tmp/registry)/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION"
+
+      # 🛑 THE DIGEST IS THE OUTPUT OF THIS BUILD. A TAG IS NOT. G262 pins images
+      #    by digest for the same reason G252 pins the base by digest: a tag is a
+      #    name that moves, and "which image is actually running" must be a hash.
+      #    The pipeline consumes this file; it must not consume `$IMAGE_TAG`.
+      - |
+        REGISTRY="$(cat /tmp/registry)"
+        DIGEST="$(docker inspect --format='{{index .RepoDigests 0}}' \
+          "$REGISTRY/$IMAGE_REPO_NAME:$IMAGE_TAG" | cut -d'@' -f2)"
+        test -n "$DIGEST"
+        printf '{"repository":"%s","tag":"%s","digest":"%s","commit":"%s"}\n' \
+          "$IMAGE_REPO_NAME" "$IMAGE_TAG" "$DIGEST" "$CODEBUILD_RESOLVED_SOURCE_VERSION" \
+          | tee ci-image-digest.json
+        echo "CI image pushed. Point every CodeBuild project at $IMAGE_REPO_NAME@$DIGEST"
+
+artifacts:
+  files:
+    - ci-image-digest.json
+  discard-paths: yes

@@ -1,0 +1,38 @@
+openapi: 3.1.0
+info:
+  title: wire-mirror fixture — PACK KEY DRIFT (the red witness for the `pack_keys` pair)
+  version: 0.0.0
+  description: |
+    Fixture for tools/check-wire-mirror.mjs. NOT a real contract, and
+    DELIBERATELY WRONG.
+
+    It exists because G109's amendment (11 Aug 2026) is not optional: a pair
+    is verified RED against a drifted fixture BEFORE it is pointed at the
+    tree. A pair registered green-first is a pair nobody has watched fail, and
+    a checker that has never failed is `docs/HANDOFF.md` §5.6 wearing the
+    uniform of the tools written to catch it.
+
+    DRIFT IN BOTH DIRECTIONS AT ONCE:
+      • MISSING  — `kyc_identity` is absent. A pack the model registers that
+                   the wire would refuse: a plane running it could not attest.
+      • EXTRA    — `partner_authored` is present. This is the exact shape G224
+                   exists to forbid — a key the platform never pre-registered,
+                   which is what an open `packVersionsInForce` accepted before
+                   `propertyNames` closed it.
+
+    ⚠️ THE MEMBER ORDER HERE IS ALSO DISTURBED AND THAT IS NOT WHAT THIS
+    FIXTURE WITNESSES. The sets differ, so missing/extra dominate and the
+    ordering never becomes the reason for the finding. The ORDER-ONLY drift —
+    equal sets, wrong sequence — is witnessed separately by
+    `pack-key-reordered.openapi.yaml`, because a fixture that claims a
+    property its own red run does not exercise is worse than no fixture.
+paths: {}
+components:
+  schemas:
+    PackKey:
+      type: string
+      enum:
+        - finance_ap
+        - medical_records
+        - credit_underwriting
+        - partner_authored

@@ -1,0 +1,5 @@
+# THE DEFENCE. Anchoring on the declaration's own column, because no sentence
+# in this file writes a gizmo key at the start of a line:
+#     grep -cE '^  gizmoId:' anchored.yaml
+  gizmoId: one
+  gizmoId: two

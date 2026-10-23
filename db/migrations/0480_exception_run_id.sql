@@ -1,0 +1,97 @@
+-- =====================================================================
+-- 0480 — AN EXCEPTION RECORDS THE RUN THAT RAISED IT.
+--        G3621–G3626 (3 Oct 2026). G3621 IS THE OWNER'S RULING, VERBATIM:
+--
+--   *"Add run id: exceptions record the run that raised them; the register,
+--    counts and 'Needs you' can scope to the selected run."*
+--
+-- It answers G954. `server/data-plane/reports.ts` refused `getDispositionMix`'s
+-- `periodId` because *"`tenant.exception` carries no period and no run"* and
+-- derived the absence: `grep -c 'period_id\|run_id'
+-- db/migrations/0015_exception_register.sql` → 0. That file is NOT edited
+-- (G88, forward-only); this one adds the column it lacked, and the period is
+-- reached through it — `exception.run_id` → `public.run.period_id` — rather
+-- than copied onto the exception as a second spelling of a run's fact (§5.3).
+--
+-- §1  ONE COLUMN: `tenant.exception.run_id`, the model's `Exception.runId`.
+--
+-- 🛑 NULLABLE, AND NULL MEANS *NOT RECORDED* — NEVER *NO RUN*, AND NEVER A
+--    GUESSED RUN. Staging holds exception rows (`db/seeds/staging-demo-data.sql`,
+--    `db/seeds/staging-mock-personas.sql`), so `ADD COLUMN … NOT NULL` with no
+--    default REFUSES TO APPLY — a failed deploy, `0420`'s measurement. The two
+--    ways round it are both an INVENTION and both are refused:
+--
+--      · A DEFAULT run id names a run that did not raise the row.
+--      · A BACKFILL BY JOIN has nothing honest to join on. `match_group_id`
+--        is *"minted per run"* and `0015` records it as *"a pointer for a later
+--        migration to land against and NOT a foreign key"* — there is no
+--        `match_group` table to read a run from — and joining on
+--        `(definition_id, definition_version, raised_at ≈ finished_at)` is a
+--        heuristic that picks a run when two runs of one definition finish
+--        close together, and nobody could later tell which rows it guessed.
+--
+--    So this migration WRITES NO ROW. A row stored before it carries `NULL`,
+--    and a run-scoped read (`listExceptions`/`getExceptionFacets` `runId`,
+--    `periodId`; `getDispositionMix` `periodId`) does not see it: it is
+--    OUTSIDE the question, as a null `valueAtRisk` is outside a money
+--    threshold. The unscoped reads are unchanged, so no row leaves the
+--    tenant-wide register or the chrome's "Needs you".
+--
+--    The two staging seeds are DATA, not migrations, and THEY do know the
+--    run: the demo generator projects each exception from one run's own
+--    residue (G3133), so it records that run and fills the column ONLY where
+--    none is held (G3352's shape). `exc_mock_bank` keeps `NULL` — no mock run
+--    of its definition raised it (`run_mock_3` records `exceptions_raised = 0`).
+--
+-- §2  A COMPOSITE FOREIGN KEY, `0007`'s SHAPE, SO A CROSS-TENANT RUN IS
+--     UNREPRESENTABLE RATHER THAN REFUSED.
+--
+--    `run`'s key is `(tenant_id, id)` — *"a cross-tenant reference has to be
+--    unrepresentable rather than merely unlikely"* (`0002`). A single-column
+--    `REFERENCES public.run (id)` would not compile, and a bare text column
+--    would let a row name another tenant's run. Under MATCH SIMPLE a NULL
+--    `run_id` is never checked, which is what makes §1's null arm legal.
+--
+--    🛑 ON DELETE NO ACTION, AND NEITHER `CASCADE` NOR `SET NULL`, ON
+--       G473's ARGUMENT: an exception is the record of a finding and of who
+--       acted on it. `0007`'s engine-account tables CASCADE because they ARE
+--       the run's account; an exception is not, and `0002` grants the app role
+--       a `DELETE ON run` that has no writer — under `CASCADE` that unused
+--       privilege would erase the register behind a run. Under NO ACTION a
+--       run that raised an exception cannot be deleted while the row stands.
+--       (A TENANT delete still removes both: `0015` and `0002` each cascade
+--       from `tenant.tenant`, and NO ACTION is checked at the end of the
+--       statement — `RESTRICT` would not be, and is refused for that reason.)
+--       `SET NULL` would forget which run raised a row, and on PostgreSQL 14
+--       would null `tenant_id` with it.
+--
+-- §3  ONE INDEX, `(tenant_id, run_id)`. Every run-scoped read narrows on it,
+--     and the queue's four orderings (`0015` §3) lead with `tenant_id` too.
+--
+-- ⚠️ NO NEW GRANT AND NO NEW WRITER. `0015` grants `SELECT` on the table and a
+--    table-level grant covers a column added later (`0011`'s, `0160` §6's and
+--    `0420`'s precedent). The app role holds `UPDATE` on `assigned_to` (`0015`)
+--    and seven resolution columns (`0059`) — **NOT on this one, and it must not
+--    be widened**: a path that could rewrite `run_id` could move a finding out
+--    of the run it was raised in, which is the scope the register, the counts
+--    and "Needs you" now read. The ruling says the ENGINE records it, and
+--    nothing in `server/` INSERTs an exception at all (measured:
+--    `grep -rn 'INSERT INTO tenant.exception' server/` → nothing) — so the
+--    writer that owes this column is the executor slice that first raises a
+--    persisted exception (G3623), and it lands with its own `GRANT INSERT`
+--    (`0004`, G511).
+--
+-- ⚠️ NO `ENABLE`/`FORCE` AND NO `ALTER POLICY`: `0015` owns the table's row
+--    level security and a column inherits it. `0059`/`0140`'s
+--    `exception_resolution_requires_record()` compares named columns, not the
+--    row, so it neither sees nor pins this one — and needs to pin nothing,
+--    because nothing holds `UPDATE` on it.
+-- =====================================================================
+
+ALTER TABLE tenant.exception ADD COLUMN run_id text;
+
+ALTER TABLE tenant.exception
+  ADD CONSTRAINT exception_raised_by_run
+  FOREIGN KEY (tenant_id, run_id) REFERENCES public.run (tenant_id, id);
+
+CREATE INDEX exception_by_run ON tenant.exception (tenant_id, run_id);

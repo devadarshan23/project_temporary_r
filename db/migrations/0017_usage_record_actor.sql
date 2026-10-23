@@ -1,0 +1,353 @@
+-- =====================================================================
+-- 0017 — THE METER STREAM GETS AN ACTOR KIND, SO ONE `CHECK` SHAPE COVERS
+--        ALL THREE OF INVARIANT 10's STREAMS. G387 (19 Sep 2026), AMENDING
+--        G317 AND OVERTURNING G376.
+--
+-- 🛑 THIS FILE OVERTURNS A REFUSAL THAT `0014_invariant_10_event_streams.sql`
+--    ARGUES ON ITS OWN FACE, AND IT SAYS SO HERE RATHER THAN LEAVING A READER
+--    TO FIND TWO FILES DISAGREEING.
+--
+-- `0014`'s `usage_record` header names three repairs and refuses all three.
+-- **Repair (2) — *"an invented `actor_kind` column"* — IS WHAT THIS FILE
+-- BUILDS.** The refusal was not wrong when it was written: it was a build
+-- slice declining to take a decision that was the owner's, which is why it
+-- marked G317 🟠 rather than ✅ and left `tests/db/event-streams.test.ts` §5a
+-- as a TRIPWIRE asserting the absence — *"so that adding the constraint is a
+-- RED TEST and a ruling rather than a quiet improvement"*. **This is that
+-- ruling.** The tripwire fires on this migration and is REPLACED with the
+-- positive assertion in the same commit, never deleted, exactly as its own
+-- text demands and exactly as `tests/http/authorisation-record.test.ts` §8
+-- was replaced when `0014` landed.
+--
+-- `CLAUDE.md`, verbatim, because a paraphrased invariant is a changed
+-- invariant:
+--
+--     "10. **An act with no authorisation is unrecordable.** `authorize()`
+--      mints an `AuthorizationGrant` and nothing else does; `AuditEvent`,
+--      `DataAccessEvent` and `UsageRecord` all carry its id, and
+--      `AUTHORIZATION_MAY_BE_ABSENT` says which actor kinds may leave it null
+--      (one: `system`). This does **not** make an unauthorised act impossible
+--      — nothing can, against root — it makes one visible or detectable,
+--      which is strictly more than the model had."
+--
+-- G317's own words on why the rule belongs in the schema: *"a nullable column
+-- with a review convention behind it is §5.6 wearing a schema."* On two of the
+-- three streams that has been true since `0014`. G387's argument for the
+-- third is one sentence and it is the whole ruling: **a constraint that holds
+-- on two of three records is a constraint a reader will believe holds on
+-- three.**
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 INVARIANT 3, RE-EXAMINED EXPLICITLY RATHER THAN WAVED THROUGH. THIS IS
+--    THE SECTION G387 REQUIRES ON THIS FILE'S FACE, AND IT IS THE REASON THE
+--    RULING EXISTS INSTEAD OF A PATCH.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- `CLAUDE.md`, verbatim:
+--
+--     "3. **The control plane publishes downward and never reads tenant
+--      data.**"
+--
+-- **`UsageRecord` IS THE ONE RECORD CLASS THAT SHIPS TO THE CONTROL PLANE.**
+-- `model/billing.ts` says it is safe to ship precisely because it is *"PII-free
+-- BY CONSTRUCTION — tenant, meter, quantity, model, cost centre, and no content
+-- field at all"*, and it chose an `AuthorizationGrantId` over a `UserId` for
+-- the spine because *"an `AuthorizationGrantId` is an opaque scalar that
+-- identifies nobody"* while a principal identifier *"would cross the plane
+-- boundary on every metered event and break invariant 3"*. **An actor is a
+-- principal attribute. Adding one re-opens that question, and G387 does not
+-- declare it harmless.**
+--
+-- 🛑 WHAT OF THE ACTOR CROSSES: **NOTHING. NOT THE KIND, AND NOT THE SPINE
+--    EITHER.** That is a MEASUREMENT of this tree and not a promise about a
+--    future one. The wire is `PlaneUsageEvent` in
+--    `docs/contracts/control-plane.openapi.yaml`, which describes itself as
+--    *"One metered fact, as it crosses … Mirrors the PII-free SUBSET of
+--    `UsageRecord`"* — a SUBSET, and the word is load-bearing. Derive the
+--    whole of what crosses, and do not read it from this comment:
+--
+--      sed -n '/    PlaneUsageEvent:/,/    UsageIngestAck:/p' \
+--        docs/contracts/control-plane.openapi.yaml | grep -E '^        [a-z]'
+--
+--    It is `tenantRef`, `idempotencyKey`, `sequence`, `at`, `recordedAt`,
+--    `meter`, `quantity`, `runId`, `model`, `costCenter`, `domain`, `packId`
+--    — TWELVE fields, and `actor_kind` is not among them. **Neither is
+--    `authorizationId`**, which is the fact worth pausing on: the spine
+--    column added on 5 Aug 2026, argued at length as safe to cross because it
+--    *"identifies nobody"*, **does not cross today either.** The plane
+--    boundary is narrower than the record, and this column sits on the side
+--    of it that stays in the data plane.
+--
+-- 🛑 WHAT WOULD HAVE TO HAPPEN FOR IT TO CROSS, so nobody does it by
+--    accident: somebody would have to ADD A PROPERTY to `PlaneUsageEvent`.
+--    `additionalProperties: false` is on that schema, so a shipper cannot
+--    smuggle a field the contract does not declare — the boundary refuses it
+--    rather than a reviewer noticing. **A commit that adds an actor field to
+--    that schema is a NEW RULING and this one does not authorise it.**
+--
+-- 🛑 AN ACTOR *KIND* IS A CLOSED VOCABULARY AND IS NOT A PERSON. It is one of
+--    the five members of `AuditActor['kind']` — `user`, `partner_staff`,
+--    `platform_staff`, `agent`, `system` — a fact about WHAT KIND OF THING
+--    acted, carrying no name, no id, no organisation and no free text. It
+--    does not narrow a population: over a tenant's meter stream it separates
+--    *"a person did this"* from *"machinery did this"*, which is the
+--    distinction `AUTHORIZATION_MAY_BE_ABSENT` already turns on and which the
+--    declaration already publishes in prose as *"NULL IS LEGITIMATE FOR
+--    MACHINE-ORIGINATED CONSUMPTION"*.
+--
+-- 🛑 AN ACTOR *ID* WOULD BE TENANT DATA ON A CONTROL-PLANE WIRE, AND THIS
+--    RULING DOES NOT TAKE THAT DECISION. `actor_user_id`,
+--    `actor_partner_id`, `actor_grant_id`, `actor_support_grant_id`,
+--    `actor_support_authorisation_id` and the agent's `on_behalf_of` block
+--    exist on `audit_event` and `data_access_event`, seventeen columns of
+--    them, and **none of them is added here.** `server/data-plane/
+--    event-stream-store.ts` states in its own voice that `actorValues()` —
+--    the function that produces those seventeen — is deliberately NOT called
+--    by `writeUsageRecord()`. **If a later slice finds it needs one, that is
+--    an owner's ruling and not a schema convenience.**
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 THE EXPOSURE IS **PROSPECTIVE**, AND IT IS ACCEPTED HERE, NOW, RATHER
+--    THAN AT THE MOMENT SOMEBODY WRITES A SHIPPER. READ THIS BEFORE QUOTING
+--    ANY SENTENCE ABOVE.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- **NOTHING SHIPS A USAGE RECORD TODAY. NOT "rarely". NOT "only in
+-- production". NOTHING.** Every clause below is a measurement of this tree,
+-- independently established by an adversarial read of the data layer and
+-- re-derived here:
+--
+--   · `writeUsageRecord()` has EXACTLY ONE caller set, and it is
+--     `tests/db/event-streams.test.ts`. There is no shipper, no job, no
+--     route. Derive: `grep -rn 'writeUsageRecord' server/ tests/`
+--   · The CONTROL-PLANE database has ONE table, `pack_catalogue`. Derive:
+--     `grep -h 'CREATE TABLE' db/migrations-control/*.sql`
+--   · The control plane mounts ONE operation, `listEntitledPacks`. Derive:
+--     `grep -n 'handlers:' server/control-plane/start.ts`
+--   · `shipUsageEvents` (`POST /usage/events`) and `recordUsage`
+--     (`POST /metering/record`) are DECLARED AND MOUNTED NOWHERE, and there
+--     is no outbound HTTP client in `server/` at all. Derive:
+--     `grep -rn 'handlers:' server/` and `grep -rnE 'fetch\(|http\.request' server/`
+--   · Consistent with all of it, and stated by `0014` as a collision it does
+--     not resolve: `shipped_at` is unsettable after insert, because there is
+--     no `UPDATE` grant. **A record whose "when did this ship" column can
+--     never be set is a record nothing ships.**
+--
+-- 🛑 **SO THE SENTENCE G387 RESTS ON — *"`UsageRecord` IS THE ONE RECORD
+--    CLASS THAT SHIPS TO THE CONTROL PLANE"* — IS A STATEMENT ABOUT WHAT THIS
+--    RECORD IS **DECLARED** TO DO, NOT ABOUT WHAT ANY CODE DOES.** *"It will
+--    ship"* is a different claim from *"it ships"*, and the invariant 3
+--    argument above depends on which is true. **It is the former.** The plane
+--    boundary this column is argued against **is not being crossed today by
+--    anything.**
+--
+-- ⚠️ **THAT IS NOT A LICENCE AND IT IS NOT A MITIGATION. IT IS THE REASON THE
+--    DECISION HAS TO BE TAKEN NOW.** G88 makes this migration FORWARD-ONLY,
+--    and `UsageRecord.authorizationId` already records what that costs on this
+--    exact record: *"⚠️ NOT BACKFILLABLE. Every record written before this
+--    field existed carries null and is indistinguishable from a legitimate
+--    machine sample."* **A column added to an append-only stream is a
+--    commitment made once**, so the invariant 3 exposure is being ACCEPTED at
+--    the moment the column is added rather than at the moment a shipper is
+--    written — and it is written here, in the file the shipper's author will
+--    read, rather than left for them to discover.
+--
+-- 🛑 **WHAT THE ABSENCE OF A SHIPPER DOES NOT MEAN: it is not an argument that
+--    the column is harmless.** It is an argument that the harm is DEFERRED and
+--    must be named. An actor **ID** remains a decision G387 does not take, and
+--    the absence of a wire is not a reason to take it quietly later.
+--
+--    **To the author of the first shipper: the KIND may cross if a ruling says
+--    so, and no ruling says so yet — `PlaneUsageEvent` does not declare it,
+--    `additionalProperties: false` refuses it, and adding the property is a
+--    NEW RULING. Nothing about this column being present in the data plane
+--    authorises putting it on the wire.**
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 INVARIANT 5 IS UNMOVED AND THIS COLUMN IS NOT A ROUTE TO A PRICE.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- `CLAUDE.md`, verbatim:
+--
+--     "5. **Money is always derived.** `UsageRecord` is immutable and unpriced
+--      — which is why `metering` is its own resource class: it has **no write
+--      mode**, and it cannot live in `commercial`, whose defining rule is that
+--      a partner may read it. A raw usage record is volume in the clear."
+--
+-- **THERE IS NO PRICE COLUMN, NO RATE, NO DERIVED TOTAL AND NO CURRENCY IN
+-- THIS FILE, AND THERE MUST NEVER BE ONE IN A SUCCESSOR.** An actor kind is
+-- not a rate and joins to nothing that is one: `MeterPrice` and `PriceTier`
+-- are both `@dropped-for-v1`, and no table in this database prices anything.
+-- `tests/db/event-streams.test.ts` §1d is the control and it is a
+-- COLUMN-NAME assertion over `information_schema`, so it sees this migration's
+-- column as it sees any other — it was re-witnessed RED against a
+-- `unit_price_minor numeric` on this table in the commit that added this file.
+--
+-- ⚠️ AND THE ONE THING A KIND COULD BECOME A ROUTE TO IS NAMED SO IT IS NOT
+--    DISCOVERED LATER: a partner may not read `metering` AT ALL, at any
+--    granularity, so "which kinds of actor spend on this tenant" is not a
+--    partner-visible question and must not become one through an aggregate.
+--    `docs/contracts/administration.openapi.yaml` already refuses a usage
+--    figure on a partner-facing response; nothing here widens that.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- ⚠️ `model` IS STILL THE LIVE RESIDENCY BYPASS, UNTOUCHED AND UNLAUNDERED.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- `usage_record.model` is a bare `string` reaching a model identity without
+-- passing `resolveModel()`, invariant 7's only executable enforcement, and
+-- `CLAUDE.md` lists it as such. **This file does not brand it** — that is a
+-- model ruling nobody has taken — **and it does not launder it**: nothing
+-- added here resolves it, joins it, or implies a catalogue ever saw it, and
+-- `audit_event.actor_model_id`, which IS a `ModelCatalogEntryId`, is still a
+-- different fact. *"No document may claim the sweep closed E5."*
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- RULINGS THIS APPLIES (docs/HANDOFF.md §3):
+--   G387  the meter stream gains an actor so one `CHECK` shape covers all
+--         three, with invariant 3 re-examined on this file's face.
+--   G317  `AUTHORIZATION_MAY_BE_ABSENT` enforced AT THE COLUMN. **Now on
+--         three of three.** The constraint is `audit_event`'s, verbatim.
+--   G301  append-only as a PRIVILEGE, inherited from `0010` through `0014`
+--         and NOT SOFTENED: `SELECT, INSERT`, no `UPDATE`, no `DELETE`.
+--   G100  every policy DENIES on NULL. Inherited from `0014` unchanged.
+--   G97   every branded id is `text`. There is no `uuid` in this file, and
+--         `actor_kind` is not an id at all.
+--   G101  transaction-mode pooling; `SET LOCAL` only. This file adds no
+--         helper and no pool.
+--   G88   FORWARD-ONLY. There is no `down`, and **`0014` IS NOT EDITED BY
+--         THIS FILE** — see the next block, which is the reason the column
+--         arrives here rather than in the file that argues against it.
+--
+-- ⚠️ SCHEMA-QUALIFIED THROUGHOUT, because 0003 requires it from 0004 on.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 THIS MIGRATION `ALTER`s ANOTHER MIGRATION'S TABLE. THAT IS PRECEDENTED
+--    AND IT IS ARGUED RATHER THAN SLIPPED PAST.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- `0008_staff_grant_selection.sql` was *"the first migration here that `ALTER
+-- POLICY`s another migration's control rather than creating its own"*, and
+-- the reason transfers: G88 makes migrations forward-only, so editing `0014`
+-- would rewrite history on every database that has already applied it.
+-- **`0014` therefore keeps its refusal on its face and this file keeps the
+-- overturning on its own**, which is what the record does everywhere else
+-- with a sentence that went false — it is corrected in the successor, not
+-- deleted from the original.
+--
+-- ⚠️ WHAT THE `ALTER` DOES NOT DISTURB, stated because it would be silent if
+--    it did: `ALTER TABLE … ADD COLUMN` does not drop, re-create or re-scope
+--    a policy, and `tenant.usage_record` keeps `0014`'s `ENABLE` **and**
+--    `FORCE` row level security and `usage_record_rls` — `0001`'s predicate
+--    VERBATIM on `USING` **and** on `WITH CHECK`, which is what makes a new
+--    column readable and writable by exactly one tenant with no further
+--    statement here. Nor does it change a grant: `0014`'s `GRANT SELECT,
+--    INSERT ON tenant.usage_record TO tenant_rw` is TABLE-level, so it
+--    already covers this column, and there is still no `UPDATE` and no
+--    `DELETE` — so nothing on a request path can amend or erase the actor it
+--    recorded any more than it can amend the meter.
+--    **All of that is re-witnessed rather than asserted**:
+--    `tests/db/event-streams.test.ts` §3 and §4 already run over
+--    `usage_record`, including the negative control that DROPS the policy,
+--    and §2's refusal arm now runs over this column.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 `NOT NULL` WITH NO `DEFAULT`, AND THE MIGRATION REFUSING TO APPLY IS THE
+--    CORRECT OUTCOME IF THIS TABLE HAS ROWS.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- On a table with rows, `ADD COLUMN … NOT NULL` with no default FAILS. **That
+-- is the fail-closed direction and it is chosen rather than tolerated.** The
+-- alternative — `DEFAULT 'system'` — would stamp an actor onto every existing
+-- row, and the declaration already records what that costs on this exact
+-- field: *"⚠️ NOT BACKFILLABLE. Every record written before this field existed
+-- carries null and is indistinguishable from a legitimate machine sample."*
+-- A default would make them indistinguishable **while looking like data**,
+-- which is worse: it is `0004_subject_ledger.sql`'s refused column arriving
+-- as a backfill — *"a `NOT NULL` column no code path populates is not
+-- enforcement of invariant 10; it is the appearance of it"*.
+--
+-- 🛑 AND `NOT NULL` IS NOT MERELY THE FAIL-CLOSED CHOICE ON A BACKFILL — IT IS
+--    HALF OF THE CONSTRAINT BELOW, AND THE HALF A READER WILL MISS.
+--
+--    `CHECK (authorization_id IS NOT NULL OR actor_kind = 'system')` with BOTH
+--    columns null evaluates to `false OR NULL`, which is **`NULL`** — and
+--    PostgreSQL treats a `CHECK` that evaluates to NULL as **SATISFIED**. So a
+--    nullable `actor_kind` would admit exactly the row invariant 10 forbids —
+--    an act with no authorisation and no actor — THROUGH the constraint
+--    written to refuse it, with the constraint still sitting on the table
+--    looking like a control. **That is §5.6 in three-valued logic, and the
+--    `NOT NULL` is what closes it.**
+--
+--    ⚠️ IT IS TRUE OF `0014`'s TWO CONSTRAINTS EQUALLY and that file does not
+--    say so; both of its tables declare `actor_kind text NOT NULL` and are
+--    therefore safe, but the reason is not written down there. It is written
+--    here, and it is WITNESSED rather than reasoned about:
+--    `tests/db/event-streams.test.ts` §2h drives a raw `INSERT` with both
+--    columns null, on all THREE tables, and requires the refusal. **Anybody
+--    dropping a `NOT NULL` on any of the three turns that red.**
+--
+-- ⚠️ THE TABLE IS EMPTY AT THIS COMMIT AND THE REASON IS NOT REASSURING:
+--    nothing on a request path writes it, so there are no rows anywhere for
+--    the column to be wrong about. Derive it rather than trusting it —
+--    `SELECT count(*) FROM tenant.usage_record` — and if a deployment has
+--    rows, this migration stopping is the ruling working, not a bug to
+--    default away.
+--
+-- 🛑 NO `CHECK` ENUMERATING THE FIVE ACTOR KINDS, for `0002_run.sql`'s reason
+--    in its own words — a third copy of a closed enum is *"a third place to
+--    drift, and the one nothing checks"*. The constraint below names the ONE
+--    member `AUTHORIZATION_MAY_BE_ABSENT` admits and transcribes no list,
+--    exactly as `0014`'s two do, and a sixth `AuditActor` variant is
+--    therefore DENIED a null here — the fail-closed direction, and the same
+--    direction `Record<AuditActor['kind'], boolean>` takes in the model,
+--    where it is a compile error until somebody decides.
+--    `tests/db/event-streams.test.ts` §2 derives both arms from that constant
+--    and requires the DATABASE to agree in both directions, on all three
+--    streams, so this paragraph is guarded by a test rather than by memory.
+-- =====================================================================
+
+
+-- THE DISCRIMINANT `0014` SAID THIS RECORD DID NOT HAVE.
+--
+-- `UsageRecord.actorKind`, typed `AuditActor['kind']` in `model/billing.ts` —
+-- INDEXED OFF THE UNION rather than restated, so a sixth variant widens the
+-- field and `AUTHORIZATION_MAY_BE_ABSENT` in one compile.
+--
+-- `text`, like every other closed-vocabulary column in this schema and like
+-- `audit_event.actor_kind` and `data_access_event.actor_kind`, which it is
+-- deliberately identical to IN NAME AND TYPE. The sameness is load-bearing
+-- rather than tidy: *"who / what / cost is ONE query"*, and a stream that
+-- spelled the discriminant differently would answer a different question.
+--
+-- ⚠️ AND THE SAMENESS STOPS HERE, WHICH IS THE POINT. `audit_event` carries
+--    SEVENTEEN actor columns; this table carries ONE. See the invariant 3
+--    block above before adding a second.
+ALTER TABLE tenant.usage_record
+  ADD COLUMN actor_kind text NOT NULL;
+
+
+/* 🛑 `audit_event_authorisation_present`, VERBATIM, ON THE THIRD STREAM.
+ *
+ * `authorizationIsWellFormed()` is `AUTHORIZATION_MAY_BE_ABSENT[actor.kind]`
+ * and nothing else. This is that function, made unrepresentable instead of
+ * remembered — and it is now the SAME SHAPE on all three streams, which is
+ * the whole of what G387 buys. A reader comparing the three should find them
+ * identical; if they are not, one of the three has quietly re-decided when an
+ * unauthorised act may be recorded.
+ *
+ * ⚠️ IT IS STATED A THIRD TIME RATHER THAN FACTORED, for `0014`'s reason on
+ *    the second: a `CREATE DOMAIN` carrying a predicate over ANOTHER column is
+ *    not expressible, and a trigger would be a third mechanism where two
+ *    suffice.
+ *
+ * 🛑 AND IT REMOVES NO WITNESS. `0009_identity_substrate.sql`'s trap is a
+ *    constraint that makes a READER's refusal untestable, because a reader
+ *    cannot be witnessed refusing a row the database will not store. Nothing
+ *    here is like that: `authorizationIsWellFormed()` is a pure function over
+ *    VALUES, and `tests/http/authorisation-record.test.ts` §1 witnesses all
+ *    five kinds with object literals and touches no database at all.
+ */
+ALTER TABLE tenant.usage_record
+  ADD CONSTRAINT usage_record_authorisation_present
+    CHECK (authorization_id IS NOT NULL OR actor_kind = 'system');

@@ -1,0 +1,7 @@
+{
+  "_README": ["A deliberately orphaned fixture."],
+  "_notes": ["A second underscore-prefixed key."],
+  "renderedZone": { "text": "a zone label the template really renders", "status": "DESIGNED", "ruling": null },
+  "renderedDatabase": { "text": "a database label the template really renders", "status": "PARTLY", "ruling": "G185" },
+  "strandedLabel": { "text": "an entry no placeholder names — this renders nowhere", "status": "DESIGNED", "ruling": null }
+}

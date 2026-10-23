@@ -1,0 +1,14 @@
+/* The SAFE direction. A frozen clock and a FUTURE-direction interval.
+ *
+ * `now() + interval 'N'` is monotone in the harmless direction: a value seeded
+ * at `wallclock + Δ` and intended to sit AFTER a frozen NOW satisfies that MORE
+ * strongly as the wall clock advances. It could only ever have been false in
+ * the past. 28 files in the tree carry one; none is at risk.
+ *
+ * Correct verdict: `half` — the clock is found, the interval is not matched. */
+
+const NOW = '2026-09-19T12:00:00.000Z' as Timestamp
+
+await mig.query(`UPDATE tenant.session SET expires_at = now() + interval '12 hours'`)
+
+const verdict = decide({ principal, capability: 'view_run', now: NOW })

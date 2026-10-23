@@ -1,0 +1,53 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE KERNEL'S TWO FACES, SELF-HOSTED — RV-01 / RV-02, G3391, 3 Oct 2026.
+
+   🛑 UNTIL THIS FILE THE PORTAL NEVER LOADED IBM PLEX. `tokens.css` declares
+   `--face-sans:'IBM Plex Sans',…` and `--face-mono:'IBM Plex Mono',…`, every
+   computed `font-family` SAID Plex, and `document.fonts` was EMPTY on every app
+   page — a canvas measure of `"IBM Plex Mono", serif` against bare `serif`
+   returned EQUAL widths. The declaration is not the rendered face; the money
+   column, the figures and the key-caps were drawn in whatever the visitor had.
+
+   WHY SELF-HOSTED AND NOT GOOGLE FONTS (which every pack page links):
+   · the CloudFront security-headers policy needs no `font-src` widening;
+   · no visitor IP is sent to a third party on every page load;
+   · the faces are a BUILD ARTEFACT, hashed by Vite under `dist/assets/`, so
+     a deploy cannot ship a page whose face moved under it.
+
+   THE WEIGHTS ARE THE KERNEL'S SIX JOBS AND NOTHING ELSE (`tokens.css` §TYPE,
+   `--w-display … --w-mark`):
+     Sans 200 display · 300 lede · 400 body · 600 emph · 700 mark
+     Mono 400 body-mono · 500 figure · 600 emph (the monogram)
+   ⚠️ NO SANS 500 AND NO ITALIC. `--w-figure` (500) is a MONOSPACED job, and the
+   kernel sets nothing italic; a stray use synthesises rather than downloading
+   a face no rule asked for.
+
+   `font-display:swap` — text is never invisible while a face loads; the
+   fallback in the kernel's stack paints first and is replaced.
+
+   LICENCE: SIL Open Font License 1.1, Copyright © 2017 IBM Corp. with Reserved
+   Font Name "Plex". The full text is `frontend/fonts/OFL.txt`, committed beside
+   the files as the licence requires. Source: npm `@ibm/plex-sans@1.1.0` and
+   `@ibm/plex-mono@2.5.0`, `fonts/complete/woff2/`, unmodified.
+
+   IMPORTED ONCE PER BUNDLE: by `frontend/src/main.tsx` (the portal) and by
+   `frontend/site/src/entry.tsx` (the apex site). It is a plain CSS import
+   rather than an `@import` inside `bridge.css` so Vite — not Tailwind — owns
+   the `url()` rewrite.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-weight:200;font-display:swap;
+  src:url('./IBMPlexSans-ExtraLight.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-weight:300;font-display:swap;
+  src:url('./IBMPlexSans-Light.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-weight:400;font-display:swap;
+  src:url('./IBMPlexSans-Regular.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-weight:600;font-display:swap;
+  src:url('./IBMPlexSans-SemiBold.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans';font-style:normal;font-weight:700;font-display:swap;
+  src:url('./IBMPlexSans-Bold.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;
+  src:url('./IBMPlexMono-Regular.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;
+  src:url('./IBMPlexMono-Medium.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;
+  src:url('./IBMPlexMono-SemiBold.woff2') format('woff2')}

@@ -1,0 +1,459 @@
+# =====================================================================
+# RULING 3, 16 Aug 2026 — TWO PROCESSES, TWO DATABASES, COMPOSE.
+# "The plane boundary is enforced by TOPOLOGY, not by review."
+#
+# ┌─ WHAT ENFORCES INVARIANT 3 HERE, IN ORDER OF STRENGTH ─────────────────────┐
+# │                                                                            │
+# │ 1 · TWO NETWORKS. `control-plane` is attached to `control-net` ONLY. It is  │
+# │     not on `data-net`, so the hostname `data-plane-db` DOES NOT RESOLVE     │
+# │     inside it — not "is refused", not "is unauthorised": does not resolve.  │
+# │     This is the one that survives a bug, a bad review and a new engineer.   │
+# │                                                                            │
+# │ 2 · TWO CREDENTIAL SETS. Different database, different role, different      │
+# │     password. `tests/http/plane-separation.test.ts` reads them out of the   │
+# │     `data-plane-db` block below and asserts that not one of them appears    │
+# │     anywhere in the `control-plane` block — because a control plane that    │
+# │     names a different host but carries the same password is one DNS entry   │
+# │     away from a cross-plane read.                                          │
+# │                                                                            │
+# │ 3 · TWO SCHEMAS. `db/migrations/` runs against the data database and        │
+# │     `db/migrations-control/` against the control one. There is no `tenant`  │
+# │     table in `reconcile_control` at all, so there is nothing for the        │
+# │     control plane to read even if 1 and 2 both failed.                     │
+# └────────────────────────────────────────────────────────────────────────────┘
+#
+# ⛔ RETIRED 5 Oct 2026 — G4320, THE OWNER'S "Full restore" RULING: "…then
+#   retire both control-DB credentials from the data plane." The box below
+#   describes `console-read-net` and the data plane's read-only control pool;
+#   BOTH ARE GONE. The data plane reaches the roster and the onboarding record
+#   only through the control plane's signed internal operations, over
+#   `internal-net` (G4310). The box is kept as the history it is.
+#
+# ┌─ 🛑 AND SINCE 20 Sep 2026 THERE IS A THIRD NETWORK, AND ITS NAME IS THE      ┐
+# │  ONLY REASON IT IS SAFE. **G1161, THE OWNER'S RULING:** "The data plane     │
+# │  gains a READ-ONLY control-database pool."                                  │
+# │                                                                            │
+# │  `console-read-net` joins EXACTLY TWO SERVICES — `data-plane` and           │
+# │  `control-plane-db` — and nothing else may be attached to it.               │
+# │                                                                            │
+# │  ⚠️ THE OBVIOUS EDIT WAS TO PUT `data-plane` ON `control-net`, AND IT IS    │
+# │  REFUSED. That network also carries `control-plane` itself, so the data     │
+# │  plane would resolve the control plane's HTTP listener — which is the       │
+# │  SigV4-pull shape the owner rejected, arriving as a hostname rather than    │
+# │  as a decision. `docs/build/deploy-handoff.md` §10.2 records it as the      │
+# │  alternative shape with "the first outbound client" as its named cost, and  │
+# │  `tests/http/console-roster-unreachable.test.ts` §1c still asserts that     │
+# │  `grep 'fetch('` over `server/` returns nothing. A route nobody can call    │
+# │  is still a route somebody will call.                                       │
+# │                                                                            │
+# │  ⚠️ AND THE DIRECTION IS UNCHANGED BY IT. Attaching `data-plane` to a       │
+# │  network does not attach `control-plane` to `data-net`: that service is on  │
+# │  `control-net` alone, so `data-plane-db` STILL DOES NOT RESOLVE inside it.  │
+# │  Invariant 3 — "the control plane publishes downward and never reads tenant │
+# │  data" — is held by fences 1, 2 and 3 above exactly as it was. What is      │
+# │  spent is G193's *by construction* in the OTHER direction, and              │
+# │  `db/control-read-scope.ts` names the census that replaces it rather than   │
+# │  calling the trade a wash.                                                  │
+# │                                                                            │
+# │  🛑 THE EDGE IS ONE NETWORK AND ONE ROLE. `reconcile_control_reader` holds  │
+# │  `SELECT` on ONE table (`db/migrations-control/0020_console_read_role.sql`) │
+# │  and `db/control-read-scope.ts` issues `BEGIN READ ONLY` on top of that.    │
+# │  The data plane does NOT get `RECONCILE_CONTROL_APP_PASSWORD`, which is     │
+# │  set two services below and reads everything this database publishes.       │
+# └────────────────────────────────────────────────────────────────────────────┘
+#
+# ┌─ AND WHAT ENFORCES INVARIANT 1 AGAINST A STRANGER, WHICH THIS FILE GOT      ┐
+# │  WRONG UNTIL 16 Aug 2026 AND IS CORRECTED RATHER THAN QUIETLY REWRITTEN.    │
+# │                                                                            │
+# │  Both planes were published as `"9080:9080"` and `"9070:9070"` — NO HOST    │
+# │  PREFIX, which binds 0.0.0.0 — with `RECONCILE_LOCAL_TEST_AUTH: "1"` set on │
+# │  both and no `RECONCILE_LOCAL_TEST_SECRET`, so the signing key was          │
+# │  `PUBLISHED_DEV_KEY`, a constant in a public repository. An adversarial     │
+# │  read minted its own token for `ten_globex` and was served that tenant's    │
+# │  rows in full; the control plane needed no credential at all. Docker's own  │
+# │  iptables rules sit ahead of most host firewalls, so "it is only local" was │
+# │  not what this file did.                                                    │
+# │                                                                            │
+# │  A · EVERY PUBLISHED PORT IS PREFIXED `127.0.0.1:`. The container still     │
+# │      binds 0.0.0.0 inside its own namespace — it must, or the publish has   │
+# │      nothing to forward to — and the HOST side reaches loopback only.       │
+# │  B · SET `RECONCILE_LOCAL_TEST_SECRET` BELOW IF YOU WANT PER-MACHINE        │
+# │      TOKENS. It is deliberately NOT set: making it a secret would invite    │
+# │      treating "we rotated it" as the control, and the controls are the FLAG │
+# │      and the LOOPBACK BINDING. See server/dev/test-token.ts.                │
+# │                                                                            │
+# │  `tests/http/local-stack-exposure.test.ts` fails if a service carrying the  │
+# │  flag ever publishes beyond loopback. It never skips.                       │
+# └────────────────────────────────────────────────────────────────────────────┘
+#
+# ┌─ 🛑 THE RUN QUEUE — R-B, 20 Sep 2026, AND **THIS BLOCK SAID THERE WAS
+# │  NONE UNTIL 21 Sep 2026.** IT IS CORRECTED RATHER THAN DELETED, BECAUSE
+# │  ITS PREMISE WAS FALSE AND IT IS THE KIND OF SENTENCE A READER QUOTES ON.
+# │
+# │  It read: *"THERE IS NO RUN QUEUE IN THIS STACK, AND THAT IS A DOCUMENTED
+# │  REFUSAL RATHER THAN AN OMISSION … an SQS-compatible service (ElasticMQ is
+# │  the usual one) … is refused on one ground, which is a fact about a machine
+# │  rather than an argument: **it could not be VERIFIED from the machine this
+# │  slice was built on.** Docker Hub answered neither a `docker pull` nor a
+# │  `docker manifest inspect` for that image within ten minutes."*
+# │
+# │  🛑 **THE PULL FINISHED. It took longer than the window somebody chose,
+# │  which is not the same fact as "could not be verified" — and a refusal
+# │  resting on a timeout is a refusal resting on a stopwatch.** The image is
+# │  `softwaremill/elasticmq-native:1.6.11`, 95.1MB, and it runs on
+# │  `darwin/arm64`. **So the service is HERE and the seam is verified against
+# │  it rather than against a fake**, which is what R-B's brief asked for and
+# │  what the refusal was costing.
+# │
+# │  ✅ **MEASURED, END TO END, AGAINST THIS STACK'S OWN SHAPE** — the real
+# │  `sqsRunQueuePublisher()` and `sqsRunQueueConsumer()`, a queue THIS FILE
+# │  declared rather than one the probe created, and a real PostgreSQL:
+# │
+# │    1 · queue PRE-DECLARED      -> http://localhost:9324/000000000000/run-admitted
+# │    3 · published over the wire -> ok
+# │    4 · received               -> message
+# │    5 · worker claim           -> reached
+# │    6 · deleted from the queue  -> ok
+# │    7 · cross-tenant claim      -> run_not_visible
+# │    8 · empty receive           -> none
+# │
+# │  **Line 7 is the one to read**: a message naming `ten_acme` and carrying
+# │  `ten_globex`'s run id came off a REAL queue and reached NOTHING, because
+# │  `run_rls` refused it. That is R-B's whole property, over the wire.
+# │
+# │  🛑 **THE QUEUES ARE DECLARED BY THIS FILE AND BY NOTHING IN `server/`.**
+# │  ElasticMQ starts with none, and the inline `configs:` block at the foot of
+# │  this file creates both — mirroring `infra/lib/run-queue-stack.ts`'s shape,
+# │  redrive policy and `maxReceiveCount` included. **Nothing in `server/` may
+# │  create a queue and nothing does**: a publisher that could create one is
+# │  `0004`'s *"a write privilege ahead of its writer"*, and the deployed grant
+# │  is `sqs:SendMessage` and `sqs:GetQueueAttributes` and nothing else.
+# │
+# │  ⚠️  **THE CREDENTIALS BELOW ARE DUMMIES AND MUST STAY DUMMIES**, and this
+# │  is the sentence that survived the correction unchanged. ElasticMQ verifies
+# │  no signature, so `local`/`local` authenticate nothing. **A REAL key here
+# │  would mean a `docker compose up` on a laptop could reach a live queue in
+# │  `000000000000`** — the same shape as the published test-token key this file
+# │  already fixed once, on 16 Aug 2026. `RECONCILE_RUN_QUEUE_ENDPOINT` is the
+# │  structural half: with the endpoint pointed at this container the SDK
+# │  cannot reach `sqs.us-west-2.amazonaws.com` even if a real key arrived.
+# │  `tests/http/run-queue-transport.test.ts` §8 asserts both halves.
+# │
+# │  ⚠️  AND `npm run check` STILL NEEDS NONE OF THIS. The gate proves the
+# │  publish against a recording publisher and the transport against a fake
+# │  dispatch, so it passes with no queue, no Docker and no AWS credentials —
+# │  `tests/reachability.ts`'s discipline, unchanged. **This stack is for a
+# │  person, not for the gate.**
+# └────────────────────────────────────────────────────────────────────────────┘
+#
+# ┌─ SEVEN SERVICES, AND TWO OF THEM EXIT — ⚠️ THIS SAID SIX UNTIL 21 Sep 2026;
+# │  the seventh is `run-queue`, which holds no credential of ours at all
+# │  `data-plane-migrate` and `control-plane-migrate` are ONE-SHOT JOBS. They   │
+# │  hold the superuser and the `LOGIN BYPASSRLS` migrator; the serving         │
+# │  services hold neither, and each waits on                                   │
+# │  `condition: service_completed_successfully`.                               │
+# │                                                                            │
+# │  ⚠️ THE `data-plane` SERVICE HELD BOTH OF THOSE FOR ITS WHOLE LIFE UNTIL    │
+# │  16 Aug 2026, because `main.ts` provisioned and migrated itself. The pool   │
+# │  connected as `reconcile_app`/NOBYPASSRLS throughout and that was never the │
+# │  problem: the fence was correct at the CONNECTION and undone at the         │
+# │  CREDENTIAL INVENTORY. Any `process.env` disclosure in the serving process  │
+# │  yielded BYPASSRLS and then superuser. See                                  │
+# │  `server/data-plane/migrate-main.ts` for the full argument, including why   │
+# │  the module graph — not this file — is the half that lasts.                 │
+# └────────────────────────────────────────────────────────────────────────────┘
+#
+# 🛑 THE SERVICE NAMES BELOW ARE PINNED BY `tests/http/plane-separation.test.ts`
+#    AND `tests/http/local-stack-exposure.test.ts`. Rename one and rename it
+#    there, in the same commit — "a topology nothing can name is a topology
+#    nothing can check."
+#
+# ⚠️ THIS IS A LOCAL DEVELOPMENT STACK. G101: phase one runs against a disposable
+#    PostgreSQL with NO AWS RESOURCE on the critical path. The passwords below are
+#    in plain text in a tracked file on purpose — they authenticate throwaway
+#    containers holding fixture data, bound to loopback, and pretending otherwise
+#    by moving them into a `.env` would suggest a secret-management posture this
+#    repository does not have. Nothing here is a deployment path; `db/provision.ts`
+#    says the same of itself in its own header.
+#
+#   docker compose up --build --wait
+#   TOKEN=$(node server/dev/mint-token.ts ten_acme)
+#   curl -sS -H "X-Session: $TOKEN" http://127.0.0.1:9080/v1/runs
+# =====================================================================
+
+name: reconcile
+
+services:
+
+  # ------------------------------------------------------------------ DATA
+  data-plane-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: reconcile_data
+      POSTGRES_USER: reconcile_data_admin
+      POSTGRES_PASSWORD: dataplane_local_admin_pw
+      # scram, not trust. The point of the exercise is that a credential is
+      # required and that the control plane does not hold this one.
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    networks: [data-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reconcile_data_admin -d reconcile_data"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - data-plane-pgdata:/var/lib/postgresql/data
+
+  # 🛑 THE ONLY SERVICE IN THIS STACK THAT HOLDS A SUPERUSER OR A BYPASSRLS
+  # ROLE, AND IT EXITS. `restart: "no"` is explicit rather than defaulted: a
+  # restart policy on a job that is supposed to terminate turns a one-shot into
+  # a process that holds these credentials forever, which is the thing being
+  # fixed. It publishes no port and is reachable from nothing.
+  data-plane-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "server/data-plane/migrate-main.ts"]
+    restart: "no"
+    depends_on:
+      data-plane-db:
+        condition: service_healthy
+    environment:
+      RECONCILE_DB_HOST: data-plane-db
+      RECONCILE_DB_PORT: "5432"
+      RECONCILE_DB_NAME: reconcile_data
+      # Superuser, for `db/provision.ts` only — creating a role with BYPASSRLS
+      # requires one, and a migration cannot mint the role it runs as.
+      # `adminClient()` supplies no password of its own, so PGPASSWORD is how it
+      # is consumed: implicitly, by the driver.
+      RECONCILE_DB_ADMIN: reconcile_data_admin
+      PGPASSWORD: dataplane_local_admin_pw
+      # The two LOGIN roles' passwords are SET by this job — `createRoles()`
+      # issues `ALTER ROLE … PASSWORD` for each — which is the other reason they
+      # belong here rather than beside a listener.
+      RECONCILE_APP_PASSWORD: dataplane_local_app_pw
+      RECONCILE_MIGRATOR_PASSWORD: dataplane_local_migrator_pw
+      # G3861 — `reconcile_engine`, the run worker's role (`db/migrations/0500`
+      # §1: `reconcile_app` plus INSERT on the two exception tables). Set here
+      # for the same reason as the two above. ⚠️ NO SERVICE IN THIS FILE
+      # AUTHENTICATES WITH IT: there is no local run-worker service, and the
+      # `data-plane` listener below must NEVER be given it — a serving process
+      # holding it could mint findings against itself (`0015`). A local worker
+      # is run by hand with this variable set.
+      RECONCILE_ENGINE_PASSWORD: dataplane_local_engine_pw
+      RECONCILE_DEV_SEED: "1"
+    networks: [data-net]
+
+  data-plane:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "server/data-plane/main.ts"]
+    depends_on:
+      data-plane-db:
+        condition: service_healthy
+      data-plane-migrate:
+        condition: service_completed_successfully
+      # `service_started` and not `service_healthy`: the image carries no shell
+      # and no curl to probe with, and ElasticMQ reports "started in 77 ms" —
+      # so a health check here would be a command that cannot run guarding a
+      # race that does not happen. If it ever does, the publisher's failure is
+      # CAUGHT (`runAfterCommit`) and the run still stands.
+      run-queue:
+        condition: service_started
+    environment:
+      # Where its database is. `data-plane-db` resolves on `data-net` and
+      # nowhere else.
+      RECONCILE_DB_HOST: data-plane-db
+      RECONCILE_DB_PORT: "5432"
+      RECONCILE_DB_NAME: reconcile_data
+      # 🛑 ONE CREDENTIAL, AND IT IS THE ROLE THAT SERVES REQUESTS. NOBYPASSRLS,
+      # owns nothing. There is deliberately no PGPASSWORD, no
+      # RECONCILE_MIGRATOR_PASSWORD and no RECONCILE_DB_ADMIN here: if this
+      # process were the owner or the migrator, every isolation assertion in
+      # `tests/http/` would pass with the policies doing nothing at all.
+      RECONCILE_APP_PASSWORD: dataplane_local_app_pw
+      # Inside the container's own namespace. The host side is loopback-only —
+      # see `ports:` below.
+      RECONCILE_HTTP_HOST: 0.0.0.0
+      RECONCILE_HTTP_PORT: "9080"
+      # 🛑 THE RUN QUEUE — R-B. The URL is the queue's OWN url as ElasticMQ
+      # reports it; the ENDPOINT is where a client must actually connect, and
+      # the two differ because the queue's url names `localhost` from inside
+      # its own container. `runQueueTarget()` reads both and is the only place
+      # in `server/` that knows this stack exists.
+      RECONCILE_RUN_QUEUE_URL: http://localhost:9324/000000000000/run-admitted
+      RECONCILE_RUN_QUEUE_ENDPOINT: http://run-queue:9324
+      # ⚠️ DUMMIES, AND THE ENDPOINT ABOVE IS WHAT MAKES THEM SAFE RATHER THAN
+      # THEIR VALUES: with it set, the SDK connects to the container on
+      # `data-net` and cannot reach `sqs.us-west-2.amazonaws.com` at all.
+      # ElasticMQ verifies no signature, so these authenticate nothing.
+      # **NEVER PUT A REAL KEY HERE** — see the header.
+      AWS_REGION: elasticmq
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+      # 🛑 RULING 2's FLAG. Present HERE, in a local development stack, and
+      # nowhere else. Its ABSENCE from a real task definition is the control —
+      # a thing an auditor can read — which is why it is an environment
+      # variable rather than a start-up option a caller passes.
+      RECONCILE_LOCAL_TEST_AUTH: "1"
+      # ⛔ G1161's RECONCILE_CONTROL_READ_* ARE RETIRED — G4320, 5 Oct 2026. This
+      # service holds NO control-database credential of any kind; it reaches
+      # the roster over the signed internal edge below.
+      # G4310 — the internal edge to the control plane, under the owner's
+      # "Full restore" ruling (5 Oct 2026). Signed with the LOCAL internal
+      # token because RECONCILE_LOCAL_TEST_AUTH is 1 here; deployed, it is
+      # SigV4 over sts:GetCallerIdentity, verified by the control plane.
+      RECONCILE_INTERNAL_CONTROL_PLANE_URL: http://control-plane:9070
+    ports:
+      # 🛑 THE `127.0.0.1:` PREFIX IS LOAD-BEARING AND IS THE FIX OF 16 Aug 2026.
+      # Without it Docker publishes on every host interface AND installs iptables
+      # rules ahead of the host firewall, so a flag-gated plane signing tokens
+      # with a published key becomes an unauthenticated read of any tenant for
+      # anyone who can route a packet here.
+      - "127.0.0.1:9080:9080"
+    # TWO NETWORKS. `internal-net` (G4310) joins this service to
+    # `control-plane`'s LISTENER and to nothing else — the owner's "Full
+    # restore" ruling, signed. `console-read-net` is RETIRED (G4320): no control
+    # database resolves inside this container any more.
+    networks: [data-net, internal-net]
+
+  # ------------------------------------------------------------- RUN QUEUE
+  #
+  # 🛑 IT HOLDS NO CREDENTIAL OF OURS AND REACHES NO DATABASE. It is on
+  # `data-net` because the data plane publishes to it; it is NOT on
+  # `control-net`, so invariant 3's topology argument at the head of this file
+  # is untouched — the control plane cannot resolve this hostname either.
+  #
+  # ⚠️  THE PUBLISHED PORT IS LOOPBACK-ONLY, like every other one here, and for
+  # the reason the banner at the head of this file gives: Docker's iptables
+  # rules sit ahead of most host firewalls. An unauthenticated queue on
+  # 0.0.0.0 is a stranger's write into this stack's engine.
+  #
+  # ⚠️  NO `volumes:`. The queue is in memory and a restart empties it — which
+  # is correct for a disposable local stack and is stated so nobody reads a
+  # lost message as a defect in the publisher. The recovery is the operator's
+  # second press, exactly as it is in AWS.
+  run-queue:
+    image: softwaremill/elasticmq-native:1.6.11
+    configs:
+      # The two queues, declared HERE because ElasticMQ starts with none and
+      # NOTHING IN `server/` MAY CREATE ONE. See the header.
+      - source: elasticmq
+        target: /opt/elasticmq.conf
+    ports:
+      - "127.0.0.1:9324:9324"
+    networks: [data-net]
+
+  # ------------------------------------------------------------------ CONTROL
+  control-plane-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: reconcile_control
+      POSTGRES_USER: reconcile_control_admin
+      POSTGRES_PASSWORD: controlplane_local_admin_pw
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    # `control-net` ALONE again since 5 Oct 2026 — G4320 retires G1161's
+    # `console-read-net`; only the control plane and its one-shot reach this.
+    networks: [control-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reconcile_control_admin -d reconcile_control"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - control-plane-pgdata:/var/lib/postgresql/data
+
+  # The control plane's own one-shot. Its admin owns every table the serving
+  # process reads — so a serving process holding it could rewrite the catalogue
+  # it publishes downward to the whole fleet, which is a supply-chain write and a
+  # worse shape than a read even though no customer's data is in this database.
+  control-plane-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "server/control-plane/migrate-main.ts"]
+    restart: "no"
+    depends_on:
+      control-plane-db:
+        condition: service_healthy
+    environment:
+      RECONCILE_CONTROL_DB_HOST: control-plane-db
+      RECONCILE_CONTROL_DB_PORT: "5432"
+      RECONCILE_CONTROL_DB_NAME: reconcile_control
+      RECONCILE_CONTROL_DB_ADMIN: reconcile_control_admin
+      RECONCILE_CONTROL_DB_ADMIN_PASSWORD: controlplane_local_admin_pw
+      # Set by this job, held by the serving one.
+      RECONCILE_CONTROL_APP_PASSWORD: controlplane_local_app_pw
+      RECONCILE_DEV_SEED: "1"
+    networks: [control-net]
+
+  # ⚠️ READ THIS BLOCK FOR WHAT IS NOT IN IT. No RECONCILE_DB_* of any kind, no
+  # `data-plane-db`, no data-plane password, no attachment to `data-net` — and,
+  # since 16 Aug 2026, no admin credential for its own database either.
+  # `server/control-plane/config.ts` reads only `RECONCILE_CONTROL_*` and imports
+  # neither `db/env.ts` nor `db/tenant-scope.ts`, so there is no code path in the
+  # process that could use one if it were here.
+  control-plane:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["node", "server/control-plane/main.ts"]
+    depends_on:
+      control-plane-db:
+        condition: service_healthy
+      control-plane-migrate:
+        condition: service_completed_successfully
+    environment:
+      RECONCILE_CONTROL_DB_HOST: control-plane-db
+      RECONCILE_CONTROL_DB_PORT: "5432"
+      RECONCILE_CONTROL_DB_NAME: reconcile_control
+      RECONCILE_CONTROL_APP_PASSWORD: controlplane_local_app_pw
+      RECONCILE_CONTROL_HTTP_HOST: 0.0.0.0
+      RECONCILE_CONTROL_HTTP_PORT: "9070"
+      # SigV4 is what the contract declares and nothing implements it, so this
+      # plane refuses everybody without the flag. WITH the flag it still requires
+      # a signature-verified local token — see server/control-plane/start.ts for
+      # why "flag on" meaning "no credential presented" was a live defect here.
+      RECONCILE_LOCAL_TEST_AUTH: "1"
+    ports:
+      - "127.0.0.1:9070:9070"
+    # G4310 — `internal-net` carries the data plane's signed calls IN, and
+    # its only other member is the data plane's LISTENER: the tenant database
+    # stays on `data-net` alone, so invariant 3's direction is untouched.
+    networks: [control-net, internal-net]
+
+# 🛑 THE QUEUE DECLARATION, INLINE, SO IT LIVES BESIDE THE ARGUMENT FOR IT.
+# Compose writes this into the container; there is no tracked file to fall out
+# of step with this one, and no top-level entry for `CLAUDE.md`'s naming control
+# to have to learn about.
+#
+# ⚠️  IT MIRRORS `infra/lib/run-queue-stack.ts` AND IS NOT A SECOND SOURCE OF
+# TRUTH FOR IT. The deployed queue is the CDK's; this is the local stand-in, and
+# the two agreeing on `maxReceiveCount` is a convenience rather than a control.
+# **What is NOT mirrored, deliberately: `enforceSSL`.** ElasticMQ speaks plain
+# HTTP on loopback, and pretending otherwise here would make a local green run
+# read as evidence about a property only the deployed queue policy holds.
+configs:
+  elasticmq:
+    content: |
+      include classpath("application.conf")
+      queues {
+        run-admitted {
+          deadLettersQueue { name = "run-admitted-dlq", maxReceiveCount = 5 }
+        }
+        run-admitted-dlq { }
+      }
+
+networks:
+  data-net:
+  control-net:
+  # ⛔ `console-read-net` (G1161) IS RETIRED — G4320, 5 Oct 2026.
+  # G4310 — data-plane → control-plane HTTP only. Two members, no database.
+  internal-net:
+
+volumes:
+  data-plane-pgdata:
+  control-plane-pgdata:

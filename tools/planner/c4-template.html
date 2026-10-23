@@ -1,0 +1,1545 @@
+<title>ReconcileAI — C4 model, four levels of zoom</title>
+<style>
+  :root {
+    --paper: #EDEEE7; --paper-1: #F6F7F1; --paper-2: #FBFBF7;
+    --ink: #20261F; --ink-soft: #5B6459; --ink-muted: #8B9186;
+    --border: #CBD1C4; --border-strong: #A8B09E;
+    --accent: #1D5C8A; --accent-soft: #D8E6EE;
+    --flag: #A3312A; --flag-soft: #F3DEDB;
+    --good: #2F6B4F; --good-soft: #DDEBE1; --warn: #8A5A12; --warn-soft: #F6E9D2;
+    --core-fill:#DCE8EF; --core-stroke:#1D5C8A; --core-text:#123A55; --core-sub:#2E5872;
+    --platform-fill:#E3ECE3; --platform-stroke:#3E7A5E; --platform-text:#204833; --platform-sub:#3E6152;
+    --proof-fill:#E7E4EE; --proof-stroke:#5C4E82; --proof-text:#332950; --proof-sub:#4F4470;
+    --found-fill:#F0EEE6; --found-stroke:#8B8371; --found-text:#3A362B; --found-sub:#5C5645;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    --font-sans: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --radius: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:#12140F; --paper-1:#191C15; --paper-2:#1F231A;
+      --ink:#E7E9E0; --ink-soft:#A6AC9E; --ink-muted:#6E756A;
+      --border:#2B2F26; --border-strong:#3C4235;
+      --accent:#6FB2DE; --accent-soft:#1B333F;
+      --flag:#E0847B; --flag-soft:#3A1F1D;
+      --good:#7FBE9C; --good-soft:#172A1F; --warn:#D9A75A; --warn-soft:#33280F;
+      --core-fill:#17303D; --core-stroke:#6FB2DE; --core-text:#CFE6F2; --core-sub:#9FC4DA;
+      --platform-fill:#16241C; --platform-stroke:#7FBE9C; --platform-text:#D7EBDE; --platform-sub:#A8CDB8;
+      --proof-fill:#211C2C; --proof-stroke:#A695CE; --proof-text:#E5DFF0; --proof-sub:#BBA9DA;
+      --found-fill:#22201A; --found-stroke:#9A9179; --found-text:#E8E3D5; --found-sub:#BDB6A2;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#12140F; --paper-1:#191C15; --paper-2:#1F231A;
+    --ink:#E7E9E0; --ink-soft:#A6AC9E; --ink-muted:#6E756A;
+    --border:#2B2F26; --border-strong:#3C4235;
+    --accent:#6FB2DE; --accent-soft:#1B333F;
+    --flag:#E0847B; --flag-soft:#3A1F1D;
+    --good:#7FBE9C; --good-soft:#172A1F; --warn:#D9A75A; --warn-soft:#33280F;
+    --core-fill:#17303D; --core-stroke:#6FB2DE; --core-text:#CFE6F2; --core-sub:#9FC4DA;
+    --platform-fill:#16241C; --platform-stroke:#7FBE9C; --platform-text:#D7EBDE; --platform-sub:#A8CDB8;
+    --proof-fill:#211C2C; --proof-stroke:#A695CE; --proof-text:#E5DFF0; --proof-sub:#BBA9DA;
+    --found-fill:#22201A; --found-stroke:#9A9179; --found-text:#E8E3D5; --found-sub:#BDB6A2;
+  }
+  :root[data-theme="light"] {
+    --paper: #EDEEE7; --paper-1: #F6F7F1; --paper-2: #FBFBF7;
+    --ink: #20261F; --ink-soft: #5B6459; --ink-muted: #8B9186;
+    --border: #CBD1C4; --border-strong: #A8B09E;
+    --accent: #1D5C8A; --accent-soft: #D8E6EE;
+    --flag: #A3312A; --flag-soft: #F3DEDB;
+    --good: #2F6B4F; --good-soft: #DDEBE1; --warn: #8A5A12; --warn-soft: #F6E9D2;
+    --core-fill:#DCE8EF; --core-stroke:#1D5C8A; --core-text:#123A55; --core-sub:#2E5872;
+    --platform-fill:#E3ECE3; --platform-stroke:#3E7A5E; --platform-text:#204833; --platform-sub:#3E6152;
+    --proof-fill:#E7E4EE; --proof-stroke:#5C4E82; --proof-text:#332950; --proof-sub:#4F4470;
+    --found-fill:#F0EEE6; --found-stroke:#8B8371; --found-text:#3A362B; --found-sub:#5C5645;
+  }
+
+  .rc-page { font-family: var(--font-sans); color: var(--ink); background: var(--paper); padding: 1.5rem 0; }
+  .rc-title { font: 600 20px var(--font-mono); letter-spacing: -0.01em; margin: 0 0 .9rem; }
+  .rc-titleblock { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--border-strong); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.2rem; background: var(--paper-1); }
+  .rc-field { padding: 10px 14px; border-left: 1px solid var(--border); }
+  .rc-field:first-child { border-left: none; }
+  .rc-field .k { font: 500 10px var(--font-mono); text-transform: uppercase; letter-spacing: .07em; color: var(--ink-muted); display: block; margin-bottom: 3px; }
+  .rc-field .v { font: 500 13px var(--font-mono); color: var(--ink); }
+  .rc-field .v.cmd { font-weight: 400; color: var(--ink-soft); font-size: 12px; }
+
+  .rc-honesty { border: 1px solid var(--border); border-radius: var(--radius); background: var(--paper-1); padding: .9rem 1.1rem; margin-bottom: 1.8rem; font-size: 13.5px; color: var(--ink-soft); }
+  .rc-honesty h2 { font: 500 14px var(--font-sans); color: var(--ink); margin: 0 0 .5rem; }
+  .rc-honesty ul { margin: 0; padding-left: 1.1rem; display: grid; gap: .35rem; }
+  code { font-family: var(--font-mono); font-size: 12px; color: var(--ink); background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+
+  .rc-level { margin-bottom: 0; scroll-margin-top: 10px; }
+  .rc-level-head { display: flex; align-items: baseline; gap: .6rem; margin-bottom: .7rem; flex-wrap: wrap; }
+  .rc-level-num { font: 600 11px var(--font-mono); color: var(--paper-1); background: var(--ink-soft); padding: 2px 8px; border-radius: 20px; letter-spacing: .04em; }
+  .rc-level-name { font: 600 16px var(--font-sans); }
+  .rc-level-tag { font: 400 12px var(--font-sans); color: var(--ink-muted); }
+
+  .rc-diagram-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--paper-1); padding: 4px; }
+  .rc-diagram-wrap svg { display: block; width: 100%; height: auto; }
+  #lvl1 .rc-diagram-wrap svg, #lvl2 .rc-diagram-wrap svg { min-width: 640px; }
+  figure.rc-figure { margin: 0; }
+  figcaption.rc-caption { font-size: 13px; color: var(--ink-soft); margin-top: .55rem; line-height: 1.6; }
+
+  .rc-zoom { display: flex; align-items: center; gap: .7rem; margin: 1.1rem 0 1.5rem 2.2rem; color: var(--accent); }
+  .rc-zoom .line { width: 1.5px; height: 22px; background: var(--accent); opacity: .5; }
+  .rc-zoom .txt { font: 500 12.5px var(--font-mono); text-transform: uppercase; letter-spacing: .05em; }
+
+  @keyframes rcPulse { 0% { outline-color: var(--accent); } 100% { outline-color: transparent; } }
+  .rc-level.rc-flash .rc-diagram-wrap, .rc-level.rc-flash .rc-detail { outline: 2px solid var(--accent); outline-offset: 3px; animation: rcPulse 1.4s ease-out; }
+  @media (prefers-reduced-motion: reduce) { .rc-level.rc-flash .rc-diagram-wrap, .rc-level.rc-flash .rc-detail { animation: none; } }
+
+  .zlabel { font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; fill: var(--ink-soft); }
+  .znote { font: 400 11px var(--font-sans); fill: var(--ink-muted); }
+  .zrect { fill: none; stroke: var(--border-strong); stroke-width: 1; stroke-dasharray: 4 4; }
+
+  .node rect { stroke-width: 1; transition: filter .12s ease; }
+  .node .title { font: 600 13px var(--font-mono); }
+  .node .sub { font: 400 11px var(--font-sans); }
+  .node { cursor: pointer; }
+  .node:hover rect { filter: brightness(1.07); }
+  .n-proof rect { fill: var(--proof-fill); stroke: var(--proof-stroke); }
+  .n-proof .title { fill: var(--proof-text); } .n-proof .sub { fill: var(--proof-sub); }
+  .n-platform rect { fill: var(--platform-fill); stroke: var(--platform-stroke); }
+  .n-platform .title { fill: var(--platform-text); } .n-platform .sub { fill: var(--platform-sub); }
+  .n-core rect { fill: var(--core-fill); stroke: var(--core-stroke); }
+  .n-core .title { fill: var(--core-text); } .n-core .sub { fill: var(--core-sub); }
+  .n-foundation rect { fill: var(--found-fill); stroke: var(--found-stroke); }
+  .n-foundation .title { fill: var(--found-text); } .n-foundation .sub { fill: var(--found-sub); }
+  .n-neutral rect { fill: var(--paper-2); stroke: var(--border-strong); }
+  .n-neutral .title { fill: var(--ink); } .n-neutral .sub { fill: var(--ink-soft); }
+  .n-undecided rect { fill: var(--paper-2); stroke: var(--ink-muted); stroke-dasharray: 3 3; }
+  .n-undecided .title { fill: var(--ink-soft); } .n-undecided .sub { fill: var(--ink-muted); }
+  .n-dropped rect { stroke-dasharray: 4 3; stroke: var(--flag); }
+  .n-dropped .title { fill: var(--flag); }
+  .n-zoomtarget rect { stroke-width: 2.25; }
+  .n-selected rect { stroke-width: 2.75; }
+
+  .tag rect { fill: var(--flag-soft); stroke: var(--flag); stroke-width: .75; }
+  .tag text { font: 600 9px var(--font-mono); fill: var(--flag); letter-spacing: .04em; }
+  .tag.built rect { fill: var(--good-soft); stroke: var(--good); }
+  .tag.built text { fill: var(--good); }
+  .tag.zoom rect { fill: var(--accent-soft); stroke: var(--accent); }
+  .tag.zoom text { fill: var(--accent); }
+  .tag.zoom { cursor: pointer; }
+
+  .edge { stroke: var(--core-stroke); stroke-width: 1.1; fill: none; }
+  .edge-agg { stroke: var(--ink-soft); stroke-width: 2; fill: none; }
+  .edge-proof { stroke: var(--ink-muted); stroke-width: 1.3; fill: none; stroke-dasharray: 5 4; }
+  .edge-flag { stroke: var(--flag); stroke-width: 1.3; fill: none; stroke-dasharray: 3 3; }
+  .edge-dim { stroke: var(--border-strong); stroke-width: .75; fill: none; opacity: .55; }
+  .edge-hot { stroke: var(--accent); stroke-width: 1.75; fill: none; }
+
+  .rc-hint { font-size: 12.5px; color: var(--ink-muted); margin: .5rem 0 .8rem; }
+
+  .rc-detail { border: 1px solid var(--border); border-radius: var(--radius); background: var(--paper-1); overflow: hidden; }
+  .rc-detail-head { padding: .85rem 1.1rem; border-bottom: 1px solid var(--border); background: var(--paper-2); display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap; }
+  .rc-detail-name { font: 600 15px var(--font-mono); }
+  .rc-detail-meta { font-size: 12px; color: var(--ink-muted); font-family: var(--font-mono); }
+  .rc-pill { font: 600 9.5px var(--font-mono); letter-spacing: .04em; padding: 2px 7px; border-radius: 3px; border: 1px solid var(--border-strong); color: var(--ink-soft); }
+  .rc-pill.drop { border-color: var(--flag); color: var(--flag); background: var(--flag-soft); }
+  .rc-pill.layer { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .rc-detail-doc { padding: .7rem 1.1rem 0; font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+  .rc-detail-body { padding: 1rem 1.1rem 1.2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; }
+  .rc-col h3 { font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-muted); margin: 0 0 .5rem; }
+  .rc-group { margin-bottom: 1rem; }
+  .rc-group-h { font: 600 11.5px var(--font-mono); color: var(--ink-soft); margin-bottom: .35rem; display: flex; gap: .4rem; align-items: baseline; }
+  .rc-group-h .n { font-weight: 400; color: var(--ink-muted); font-size: 10.5px; }
+  .rc-item { border-left: 2px solid var(--border-strong); padding: .3rem 0 .3rem .6rem; margin-bottom: .3rem; border-radius: 0; }
+  .rc-item.dropped { border-left-color: var(--flag); opacity: .72; }
+  .rc-item-n { font: 500 12.5px var(--font-mono); color: var(--ink); word-break: break-word; }
+  .rc-item.dropped .rc-item-n { color: var(--flag); }
+  .rc-item-s { font: 400 11.5px var(--font-mono); color: var(--ink-muted); word-break: break-word; margin-top: 1px; }
+  .rc-members { font: 400 11px var(--font-mono); color: var(--ink-muted); margin-top: 2px; word-break: break-word; }
+  .rc-scroll { max-height: 460px; overflow-y: auto; padding-right: .4rem; }
+  .rc-empty { font-size: 12.5px; color: var(--ink-muted); font-style: italic; }
+  .rc-relmap { width: 100%; height: auto; }
+
+  .rc-modlist { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .9rem; }
+  .rc-modbtn { font: 500 11.5px var(--font-mono); padding: 3px 9px; border-radius: 20px; border: 1px solid var(--border-strong); background: var(--paper-1); color: var(--ink-soft); cursor: pointer; }
+  .rc-modbtn:hover { border-color: var(--accent); color: var(--accent); }
+  .rc-modbtn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .rc-modbtn.drop { border-style: dashed; }
+
+  table.rc-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.rc-tbl th { text-align: left; font: 600 10.5px var(--font-mono); text-transform: uppercase; letter-spacing: .05em; color: var(--ink-muted); padding: 6px 10px; border-bottom: 1px solid var(--border-strong); }
+  table.rc-tbl td { padding: 5px 10px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); color: var(--ink-soft); vertical-align: top; }
+  table.rc-tbl td.nm { color: var(--ink); font-weight: 500; }
+  .rc-tblwrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--paper-1); }
+  .rc-tblcap { padding: .6rem 1rem; border-bottom: 1px solid var(--border); background: var(--paper-2); font: 600 12px var(--font-mono); display: flex; align-items: center; gap: .5rem; }
+
+  .rc-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .rc-card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--paper-1); padding: .8rem 1rem; }
+  .rc-card h4 { font: 600 12px var(--font-mono); margin: 0 0 .4rem; color: var(--ink); }
+  .rc-card ul { margin: 0; padding-left: 1.05rem; }
+  .rc-card li { font-size: 12.5px; color: var(--ink-soft); line-height: 1.55; font-family: var(--font-mono); }
+
+  .rc-tabs { display: flex; gap: .3rem; border-bottom: 1px solid var(--border-strong); margin-bottom: .9rem; }
+  .rc-tab { font: 500 12.5px var(--font-sans); padding: 7px 14px; border: 1px solid transparent; border-bottom: none; background: none; color: var(--ink-muted); cursor: pointer; border-radius: 6px 6px 0 0; margin-bottom: -1px; }
+  .rc-tab:hover { color: var(--ink); }
+  .rc-tab.on { background: var(--paper-1); border-color: var(--border-strong); border-bottom-color: var(--paper-1); color: var(--ink); font-weight: 600; }
+  .rc-tab .st { font: 500 9.5px var(--font-mono); letter-spacing: .04em; padding: 1px 5px; border-radius: 3px; margin-left: 6px; border: 1px solid var(--border-strong); }
+  .rc-tab.on .st.now { border-color: var(--good); color: var(--good); background: var(--good-soft); }
+  .rc-tab.on .st.next { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .rc-tabpanel[hidden] { display: none; }
+
+  .st-built rect { fill: var(--good-soft); stroke: var(--good); stroke-width: .75; }
+  .st-built text { fill: var(--good); }
+  .st-partly rect { fill: var(--warn-soft); stroke: var(--warn); stroke-width: .75; }
+  .st-partly text { fill: var(--warn); }
+  .st-designed rect { fill: none; stroke: var(--border-strong); stroke-width: .75; }
+  .st-designed text { fill: var(--ink-muted); }
+  .st-badge text { font: 600 8.5px var(--font-mono); letter-spacing: .03em; }
+  .tierlab { font: 600 9.5px var(--font-mono); letter-spacing: .08em; fill: var(--ink-muted); }
+
+  .rc-legend { display: flex; flex-wrap: wrap; gap: 1.1rem; align-items: center; margin: .2rem 0 .9rem; font-size: 12px; color: var(--ink-soft); }
+  .rc-legend .li { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .rc-legend .sw { font: 600 8.5px var(--font-mono); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border-strong); color: var(--ink-muted); }
+  .rc-legend .sw.b { border-color: var(--good); color: var(--good); background: var(--good-soft); }
+  .rc-legend .sw.p { border-color: var(--warn); color: var(--warn); background: var(--warn-soft); }
+
+  .plane-ctl rect { fill: var(--proof-fill); stroke: var(--proof-stroke); }
+  .plane-ctl .title { fill: var(--proof-text); } .plane-ctl .sub { fill: var(--proof-sub); }
+  .plane-data rect { fill: var(--core-fill); stroke: var(--core-stroke); }
+  .plane-data .title { fill: var(--core-text); } .plane-data .sub { fill: var(--core-sub); }
+  .zrect.ctl { stroke: var(--proof-stroke); }
+  .zrect.data { stroke: var(--core-stroke); }
+  .zlabel.ctl { fill: var(--proof-stroke); }
+  .zlabel.data { fill: var(--core-stroke); }
+
+  .rc-footer { margin-top: 1.6rem; font-size: 12px; color: var(--ink-muted); font-family: var(--font-mono); }
+  .rc-sechead { font: 600 16px var(--font-sans); margin: 2.2rem 0 .3rem; }
+  .rc-secsub { font-size: 13px; color: var(--ink-soft); margin: 0 0 .9rem; line-height: 1.6; }
+
+  @media (max-width: 820px) {
+    .rc-titleblock { grid-template-columns: repeat(2, 1fr); }
+    .rc-detail-body { grid-template-columns: 1fr; }
+    .rc-grid2 { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="rc-page">
+  <p class="rc-title">C4 model — four levels of zoom</p>
+
+  <div class="rc-titleblock">
+    <div class="rc-field"><span class="k">Project</span><span class="v">ReconcileAI · 1CloudHub</span></div>
+    <div class="rc-field"><span class="k">Method</span><span class="v">C4 (Simon Brown)</span></div>
+    <div class="rc-field"><span class="k">Auto-updates</span><span class="v" id="autoStat">L3 · L4 · DB · frontend · L2 badges</span></div>
+    <div class="rc-field"><span class="k">Verify</span><span class="v cmd">node tools/check-c4-freshness.mjs</span></div>
+  </div>
+
+  <div class="rc-honesty">
+    <h2>How each level stays honest — not all four are maintained the same way</h2>
+    <ul>
+      <li><strong>Levels 1 &amp; 2</strong> are hand-authored — but since 5 Oct 2026 (G4419) <strong>every container badge is printed from a predicate over the tree</strong>: served operations per contract tier (<code>tools/served-set.mjs</code>), files present, control-database tables, drawn screens. <code>check-c4-freshness.mjs</code> fails when a typed status contradicts its predicate. ⚠️ <strong>This bullet read <em>"Nothing below the system is deployed except the database, so every container carries its real status instead of being drawn as if it were live"</em> and is corrected rather than deleted (G4412)</strong>: the web application, both planes, the control database, the staff console and the partner portal were all serving while their badges said DESIGNED. Deployment as of 4 Oct 2026: staging runs <code>b2563cab</code> in <code>000000000000</code> / <code>us-west-2</code> — <code>docs/HANDOFF.md</code> §0a (G4121); this page asserts nothing about an account beyond that dated line.</li>
+      <li><strong>Levels 3 &amp; 4 and the built database schema</strong> are generated from source by <code>tools/planner/extract-c4-data.mjs</code> — regenerated on every commit <em>only in a clone that has opted in</em> with <code>git config core.hooksPath tools/githooks</code>, which is not the default; what does run everywhere is <code>tools/check-c4-freshness.mjs</code>, inside <code>npm run check</code>, which fails the gate when the committed artefacts disagree with the tree. The module graph and every module's export surface come from the TypeScript parser, the tables and RLS policies from <code>db/migrations/*.sql</code>. Anything carrying <code>@dropped-for-v1</code> <em>as an annotation on its own declaration</em> is flagged, never drawn as live. ⚠️ <strong>Two corrections, 12 Aug 2026, recorded rather than overwritten.</strong> This bullet read <em>"on every commit"</em> unqualified while <code>core.hooksPath</code> was unset in the authoring clone and nothing regenerated anything. And the drop test matched the tag <em>anywhere</em> in a leading comment, so <strong>seven live exports rendered as dropped</strong> — <code>SubjectLocation</code>, <code>POLICY_KINDS</code>, <code>LivePolicyKind</code>, <code>NormalisationReader</code>, <code>mayPromoteLearning</code>, <code>TelemetryPlane</code>, <code>AUTOMATED_ROLLBACK_EXISTS</code> — each because a neighbouring declaration's drop was narrated in its prose. <code>SubjectLocation</code>'s own comment says it is <em>not</em> annotated, and the page marked it dropped for saying so. The dropped count moved <strong>203 → 196</strong>.</li>
+      <li><strong>Planned tables</strong> are a JOIN since 5 Oct 2026 (G4417): <code>tools/planner/c4-planned.json</code> names what <code>docs/persistence-design.md</code> §2 planned and what was built for it, and the gate fails when a claimed table is missing or an <em>absent</em> one now exists. ⚠️ This bullet read <em>"designed, not built — only the two tables marked BUILT exist"</em> while the tree held {{total.builtTables}} tables.</li>
+      <li><strong>The frontend</strong> is derived since 5 Oct 2026 (G4415): the route register, the screen → operation join and the not-built marks are generated from <code>frontend/src</code>, <code>frontend/site/src</code> and the contracts. The section it replaces — built on <code>design/routes/</code>, which G264 deleted — is kept in a dated history block.</li>
+    </ul>
+  </div>
+
+  <!-- LEVEL 1 -->
+  <div class="rc-level" id="lvl1">
+    <div class="rc-level-head"><span class="rc-level-num">LEVEL 1</span><span class="rc-level-name">System context</span><span class="rc-level-tag">— the drone view</span></div>
+
+    <div class="rc-tabs" role="tablist">
+      <button class="rc-tab on" role="tab" data-tabgroup="l1" data-tab="now" onclick="showTab('l1','now')">Current state<span class="st now">AS IS</span></button>
+      <button class="rc-tab" role="tab" data-tabgroup="l1" data-tab="tobe" onclick="showTab('l1','tobe')">To-be state<span class="st next">PLANE-SPLIT</span></button>
+    </div>
+
+    <div class="rc-tabpanel" data-panelgroup="l1" data-panel="now">
+    <figure class="rc-figure">
+      <div class="rc-diagram-wrap">
+        <svg viewBox="0 0 1140 450" role="img" aria-label="System context: three personas above ReconcileAI, three external systems below it.">
+          <defs><marker id="arrowC" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+          <line class="edge-agg" x1="190" y1="104" x2="570" y2="190" marker-end="url(#arrowC)"/>
+          <line class="edge-agg" x1="570" y1="104" x2="570" y2="190" marker-end="url(#arrowC)"/>
+          <line class="edge-agg" x1="950" y1="104" x2="570" y2="190" marker-end="url(#arrowC)"/>
+          <line class="edge-agg" x1="570" y1="260" x2="190" y2="340" marker-end="url(#arrowC)"/>
+          <line class="edge-agg" x1="570" y1="260" x2="570" y2="340" marker-end="url(#arrowC)"/>
+          <line class="edge-agg" x1="570" y1="260" x2="950" y2="340" marker-end="url(#arrowC)"/>
+          <g class="node n-proof" onclick="ask('Who is the Operator persona in ReconcileAI and what do they do day to day?')">
+            <rect x="60" y="40" width="260" height="64" rx="8"/>
+            <text class="title" x="190" y="60" text-anchor="middle" dominant-baseline="central">Operator</text>
+            <text class="sub" x="190" y="82" text-anchor="middle" dominant-baseline="central">resolves exceptions daily</text></g>
+          <g class="node n-proof" onclick="ask('What does a CFO or finance controller do in ReconcileAI?')">
+            <rect x="440" y="40" width="260" height="64" rx="8"/>
+            <text class="title" x="570" y="60" text-anchor="middle" dominant-baseline="central">CFO / controller</text>
+            <text class="sub" x="570" y="82" text-anchor="middle" dominant-baseline="central">reviews tolerances &amp; pack</text></g>
+          <g class="node n-proof" onclick="ask('What does a forward deployment engineer configure in ReconcileAI?')">
+            <rect x="820" y="40" width="260" height="64" rx="8"/>
+            <text class="title" x="950" y="60" text-anchor="middle" dominant-baseline="central">Forward deployment engineer</text>
+            <text class="sub" x="950" y="82" text-anchor="middle" dominant-baseline="central">configures sources &amp; model</text></g>
+          <g class="node n-core n-zoomtarget" onclick="zoomTo('lvl2')">
+            <rect x="430" y="190" width="280" height="70" rx="8"/>
+            <text class="title" x="570" y="212" text-anchor="middle" dominant-baseline="central">ReconcileAI</text>
+            <text class="sub" x="570" y="236" text-anchor="middle" dominant-baseline="central">reconciliation platform</text></g>
+          <g class="tag zoom" onclick="zoomTo('lvl2')"><rect x="650" y="180" width="70" height="18" rx="3"/><text x="685" y="190" text-anchor="middle" dominant-baseline="central">ZOOM ↓</text></g>
+          <g class="node n-platform" onclick="ask('What ERP or source systems does ReconcileAI connect to, and how?')">
+            <rect x="60" y="340" width="260" height="64" rx="8"/>
+            <text class="title" x="190" y="360" text-anchor="middle" dominant-baseline="central">ERP / source systems</text>
+            <text class="sub" x="190" y="382" text-anchor="middle" dominant-baseline="central">e.g. SAP, via CDC</text></g>
+          <g class="node n-platform" onclick="ask('How does ReconcileAI correspond with counterparties over email and portals?')">
+            <rect x="440" y="340" width="260" height="64" rx="8"/>
+            <text class="title" x="570" y="360" text-anchor="middle" dominant-baseline="central">Email &amp; supplier portals</text>
+            <text class="sub" x="570" y="382" text-anchor="middle" dominant-baseline="central">correspondence channels</text></g>
+          <g class="node n-platform" onclick="ask('Why are Bedrock and SageMaker the only permitted model providers in ReconcileAI?')">
+            <rect x="820" y="340" width="260" height="64" rx="8"/>
+            <text class="title" x="950" y="360" text-anchor="middle" dominant-baseline="central">Bedrock / SageMaker</text>
+            <text class="sub" x="950" y="382" text-anchor="middle" dominant-baseline="central">the only permitted providers</text></g>
+        </svg>
+      </div>
+      <figcaption class="rc-caption">⚠️ <strong>The three personas drawn are NOT the model's stakeholder classes, and this caption claimed they were until 12 Aug 2026.</strong> <code>model/access.ts</code> declares <code>STAKEHOLDER_CLASSES</code> as <code>author</code> · <code>administrator</code> · <code>user</code> · <code>sponsor</code> · <code>assurance</code>, and at <code>model/access.ts:78</code> it records that <em>"<code>operator</code> was rejected outright — zero presence in any of the five, and in a technical room it means a Kubernetes controller"</em> — so the first node on this diagram is a word the cited source rejected after testing against ITIL 4, COBIT 2019, TOGAF, NIST SP 800-37r2 and the Three Lines Model. These three are <strong>engagement roles</strong> drawn for the context view; <code>sponsor</code> and <code>assurance</code> have no node here. Read <code>STAKEHOLDER_CLASSES</code> for the model's own vocabulary. External systems named in <code>docs/tenancy-topology.md</code>, <code>docs/integration-options.md</code> and <code>model/catalog.ts</code> (G54/G80b restrict model providers to Bedrock and SageMaker). ⚠️ <strong>The three external systems are still not reached by anything served</strong>: no connector reads a source (C9's declaration half is built, the pull is not), no outbound correspondence is sent, and <code>resolveModel()</code> has no caller in <code>server/</code>.</figcaption>
+    </figure>
+    </div>
+
+    <div class="rc-tabpanel" data-panelgroup="l1" data-panel="tobe" hidden>
+      <p class="rc-hint">At context level the plane split is an <strong>ownership</strong> boundary, not an internal one: under BYOA the data plane and everything in it sits in the customer's own AWS account, which is why it belongs on this diagram rather than only the one below.</p>
+      <figure class="rc-figure">
+        <div class="rc-diagram-wrap">
+          <svg viewBox="0 0 1160 740" role="img" aria-label="System context with the plane split and the surfaces each group uses. Customer users, the forward deployment engineer and support all work in surfaces that execute in the data plane. Billing and platform staff, and a future partner portal, sit in the control plane. External systems are reached only from the data plane.">
+            <defs><marker id="arrowL1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+            <g class="node plane-data" onclick="ask('Who are the customer users of ReconcileAI and what do they do day to day?')">
+              <rect x="70" y="44" width="190" height="66" rx="8"/>
+              <text class="title" x="165" y="70" text-anchor="middle" dominant-baseline="central">Customer users</text>
+              <text class="sub" x="165" y="92" text-anchor="middle" dominant-baseline="central">operator · CFO · admin</text></g>
+            <g class="node plane-ctl" onclick="ask('What does a forward deployment engineer configure, and why must that surface execute in the data plane?')">
+              <rect x="280" y="44" width="190" height="66" rx="8"/>
+              <text class="title" x="375" y="70" text-anchor="middle" dominant-baseline="central">FDE</text>
+              <text class="sub" x="375" y="92" text-anchor="middle" dominant-baseline="central">forward deployment</text></g>
+            <g class="node plane-ctl" onclick="ask('What does 1CloudHub support need to see during an incident, and what stops them seeing it today?')">
+              <rect x="490" y="44" width="190" height="66" rx="8"/>
+              <text class="title" x="585" y="70" text-anchor="middle" dominant-baseline="central">Support</text>
+              <text class="sub" x="585" y="92" text-anchor="middle" dominant-baseline="central">incident response</text></g>
+            <g class="node plane-ctl" onclick="ask('What do 1CloudHub billing and platform staff operate on, and why is all of it control-plane data?')">
+              <rect x="700" y="44" width="190" height="66" rx="8"/>
+              <text class="title" x="795" y="70" text-anchor="middle" dominant-baseline="central">Billing &amp; platform</text>
+              <text class="sub" x="795" y="92" text-anchor="middle" dominant-baseline="central">commercial · catalogue</text></g>
+            <g class="node plane-ctl" onclick="ask('What does a partner firm\'s staff do in the partner portal, and why is it served by the data plane (G4411)?')">
+              <rect x="910" y="44" width="190" height="66" rx="8"/>
+              <text class="title" x="1005" y="70" text-anchor="middle" dominant-baseline="central">Partner orgs</text>
+              <text class="sub" x="1005" y="92" text-anchor="middle" dominant-baseline="central">sign in — G269, G4411</text></g>
+
+            <line class="edge-hot" x1="165" y1="118" x2="165" y2="360" marker-end="url(#arrowL1)"/>
+            <line class="edge-agg" x1="375" y1="118" x2="375" y2="360" marker-end="url(#arrowL1)"/>
+            <line class="edge-agg" x1="585" y1="118" x2="585" y2="360" marker-end="url(#arrowL1)"/>
+            <line class="edge-agg" x1="795" y1="118" x2="795" y2="180" marker-end="url(#arrowL1)"/>
+            <line class="edge-agg" x1="1005" y1="118" x2="1005" y2="180" marker-end="url(#arrowL1)"/>
+
+            <rect class="zrect ctl" x="660" y="186" width="445" height="146" rx="12"/>
+            <text class="zlabel ctl" x="680" y="208">CONTROL PLANE — 1CLOUDHUB ACCOUNT · us-west-2</text>
+            <g class="node plane-ctl" onclick="ask('What does the staff console serve today, which plane serves it (G726), and what moves when console reads and writes go behind signed control-plane endpoints?')">
+              <rect x="695" y="238" width="190" height="56" rx="6"/>
+              <text class="title" x="790" y="256" text-anchor="middle" dominant-baseline="central">Staff console</text>
+              <text class="sub" x="790" y="276" text-anchor="middle" dominant-baseline="central">{{evidence.staffConsole}}</text></g>
+            <g class="st-badge {{badge.staffConsole}}"><rect x="825" y="221" width="60" height="13" rx="3"/><text x="855" y="228" text-anchor="middle" dominant-baseline="central">{{status.staffConsole}}</text></g>
+            <g class="node plane-ctl" onclick="ask('What does the partner portal serve today, and why is it served by the data plane like the staff console (G4411)?')">
+              <rect x="895" y="238" width="200" height="56" rx="6"/>
+              <text class="title" x="995" y="256" text-anchor="middle" dominant-baseline="central">Partner portal</text>
+              <text class="sub" x="995" y="276" text-anchor="middle" dominant-baseline="central">{{evidence.partnerPortal}}</text></g>
+            <g class="st-badge {{badge.partnerPortal}}"><rect x="1035" y="221" width="60" height="13" rx="3"/><text x="1065" y="228" text-anchor="middle" dominant-baseline="central">{{status.partnerPortal}}</text></g>
+            <text class="znote" x="680" y="310">both SERVED BY THE DATA PLANE today (G726, G4411) — the box is where the records live;</text>
+            <text class="znote" x="680" y="325">to-be: console reads/writes behind signed control-plane endpoints — in progress, not built</text>
+
+            <line class="edge-agg" x1="760" y1="332" x2="760" y2="360" marker-end="url(#arrowL1)"/>
+            <text class="znote" x="776" y="352">publishes downward</text>
+            <line class="edge-agg" x1="1010" y1="360" x2="1010" y2="332" marker-end="url(#arrowL1)"/>
+            <text class="znote" x="994" y="352" text-anchor="end">signed aggregates</text>
+
+            <rect class="zrect data" x="40" y="366" width="1065" height="318" rx="12"/>
+            <text class="zlabel data" x="60" y="390">{{label.dataPlaneZone}}</text>
+            <text class="znote" x="60" y="408">every reconciliation run, every document, every credential — and every log, metric and trace they write</text>
+
+            <g class="node plane-data" onclick="ask('What is the tenant web app and what does an operator do in it?')">
+              <rect x="70" y="422" width="190" height="60" rx="6"/>
+              <text class="title" x="165" y="442" text-anchor="middle" dominant-baseline="central">Tenant web app</text>
+              <text class="sub" x="165" y="464" text-anchor="middle" dominant-baseline="central">the operator's surface</text></g>
+            <g class="node plane-data" onclick="ask('Why must source configuration and credential binding execute in the data plane rather than a 1CloudHub console?')">
+              <rect x="280" y="422" width="190" height="60" rx="6"/>
+              <text class="title" x="375" y="442" text-anchor="middle" dominant-baseline="central">Source &amp; pack config</text>
+              <text class="sub" x="375" y="464" text-anchor="middle" dominant-baseline="central">the FDE's surface</text></g>
+            <g class="node plane-data" onclick="ask('What would a support incident console show, and why is reading a trace currently unauthorisable?')">
+              <rect x="490" y="422" width="190" height="60" rx="6"/>
+              <text class="title" x="585" y="442" text-anchor="middle" dominant-baseline="central">Incident console</text>
+              <text class="sub" x="585" y="464" text-anchor="middle" dominant-baseline="central">the support surface</text></g>
+
+            <text class="znote" x="60" y="506">customers sign in here against their own identity provider, at their own tenant host — they never meet the control plane</text>
+            <text class="znote" x="60" y="524">the FDE and support surfaces execute here too: staff authenticate on the platform connection, then reach a tenant only through a grant</text>
+
+            <text class="tierlab" x="60" y="554">EXTERNAL SYSTEMS — REACHED ONLY FROM THIS PLANE, NEVER FROM THE CONTROL PLANE</text>
+
+            <g class="node n-platform" onclick="ask('How does ReconcileAI ingest from ERP source systems, and why is that connection data-plane only?')">
+              <rect x="100" y="562" width="290" height="60" rx="8"/>
+              <text class="title" x="245" y="582" text-anchor="middle" dominant-baseline="central">ERP / source systems</text>
+              <text class="sub" x="245" y="604" text-anchor="middle" dominant-baseline="central">the customer's own systems</text></g>
+            <g class="node n-platform" onclick="ask('How does correspondence with counterparties work over email and supplier portals?')">
+              <rect x="450" y="562" width="290" height="60" rx="8"/>
+              <text class="title" x="595" y="582" text-anchor="middle" dominant-baseline="central">Email &amp; supplier portals</text>
+              <text class="sub" x="595" y="604" text-anchor="middle" dominant-baseline="central">counterparty correspondence</text></g>
+            <g class="node n-platform" onclick="ask('Why must Bedrock and Textract run inside the same AWS account as the data?')">
+              <rect x="800" y="562" width="290" height="60" rx="8"/>
+              <text class="title" x="945" y="582" text-anchor="middle" dominant-baseline="central">Bedrock · Textract</text>
+              <text class="sub" x="945" y="604" text-anchor="middle" dominant-baseline="central">in this account, under BYOA</text></g>
+
+            <text class="znote" x="60" y="650">all customer traffic terminates here, so under BYOA its cost sits on the customer's own AWS bill</text>
+            <text class="znote" x="60" y="668">inference and extraction run in this account too — call them from ours and the BYOA argument collapses</text>
+
+            <text class="znote" x="40" y="716">Every surface a customer's data passes through sits in the data plane. The control plane keeps the commercial record, and reads none of it.</text>
+          </svg>
+        </div>
+        <figcaption class="rc-caption">The asymmetry is the point. The control plane is narrow, 1CloudHub-owned, and commercial. The data plane is wide, holds everything sensitive, and changes owner under BYOA — and it carries not just the customer's surface but the FDE's and support's too, because a credential and a trace are both tenant data. ⚠️ <strong>This caption ended <em>"The partner portal is drawn dashed: G51 makes partner a commercial record in v1, so no partner user signs in yet"</em>, and is corrected rather than deleted (G4412)</strong>: G269 reversed G51 on 18 Sep 2026, the portal is served, and G4411 (5 Oct 2026, the owner's) places it on the DATA plane like the staff console. Both are drawn in the control box because the records they act on are control-owned; the process that serves them is the data plane's. The owner's to-be plan of 5 Oct 2026 moves console reads and writes behind signed control-plane endpoints — <strong>in progress, not built</strong>.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="rc-zoom"><div class="line"></div><span>↓</span><span class="txt">zoom in — inside ReconcileAI</span></div>
+
+  <!-- LEVEL 2 -->
+  <div class="rc-level" id="lvl2">
+    <div class="rc-level-head"><span class="rc-level-num">LEVEL 2</span><span class="rc-level-name">Containers</span><span class="rc-level-tag">— the city view, badged from the tree</span></div>
+
+    <div class="rc-tabs" role="tablist">
+      <button class="rc-tab on" role="tab" data-tabgroup="l2" data-tab="now" onclick="showTab('l2','now')">Current state<span class="st now">AS IS</span></button>
+      <button class="rc-tab" role="tab" data-tabgroup="l2" data-tab="tobe" onclick="showTab('l2','tobe')">To-be state<span class="st next">PLANE-SPLIT</span></button>
+    </div>
+
+    <div class="rc-tabpanel" data-panelgroup="l2" data-panel="now">
+    <p class="rc-hint">Every container here is clickable. The two with a <strong>ZOOM ↓</strong> badge drill into a level below; the rest open a question about that container.</p>
+    <figure class="rc-figure">
+      <div class="rc-diagram-wrap">
+        <svg viewBox="0 0 1100 520" role="img" aria-label="Container diagram as of 5 Oct 2026: a React web application and an apex marketing site; a data-plane Fastify process serving six contract tiers and a control-plane process serving one; an SQS run queue with a scheduled ECS worker; a tenant database and a control database; a model garden with no caller; and Bedrock outside. Every badge is printed from a predicate over the tree.">
+          <defs><marker id="arrowN" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+          <rect class="zrect" x="40" y="40" width="820" height="440" rx="14"/>
+          <text class="zlabel" x="64" y="62">RECONCILEAI — SYSTEM BOUNDARY · us-west-2</text>
+          <text class="znote" x="64" y="76">every badge below is a predicate over the tree (G4419) — BUILT means served or present, and the line under it says how much</text>
+          <line class="edge" x1="280" y1="132" x2="310" y2="132" marker-end="url(#arrowN)"/>
+          <line class="edge-flag" x1="570" y1="132" x2="600" y2="132" marker-end="url(#arrowN)"/>
+          <line class="edge-agg" x1="440" y1="164" x2="440" y2="230" marker-end="url(#arrowN)"/>
+          <line class="edge" x1="280" y1="262" x2="310" y2="262" marker-end="url(#arrowN)"/>
+          <line class="edge" x1="560" y1="164" x2="620" y2="230" marker-end="url(#arrowN)"/>
+          <line class="edge" x1="700" y1="294" x2="560" y2="360" marker-end="url(#arrowN)"/>
+          <line class="edge-flag" x1="800" y1="132" x2="900" y2="127" marker-end="url(#arrowN)"/>
+          <g class="node n-neutral" onclick="ask('What does the React application in frontend/src serve, on which hosts, and which operations does it reach?')">
+            <rect x="80" y="100" width="200" height="64" rx="6"/>
+            <text class="title" x="180" y="122" text-anchor="middle" dominant-baseline="central">Web application</text>
+            <text class="sub" x="180" y="144" text-anchor="middle" dominant-baseline="central">{{evidence.webApp}}</text></g>
+          <g class="st-badge {{badge.webApp}}"><rect x="84" y="92" width="62" height="15" rx="3"/><text x="115" y="100" text-anchor="middle" dominant-baseline="central">{{status.webApp}}</text></g>
+          <g class="node n-core n-zoomtarget" onclick="zoomTo('lvl3')">
+            <rect x="310" y="100" width="260" height="64" rx="6"/>
+            <text class="title" x="440" y="122" text-anchor="middle" dominant-baseline="central">Data plane — Fastify</text>
+            <text class="sub" x="440" y="144" text-anchor="middle" dominant-baseline="central">{{evidence.dataPlaneApi}}</text></g>
+          <g class="st-badge {{badge.dataPlaneApi}}"><rect x="314" y="92" width="62" height="15" rx="3"/><text x="345" y="100" text-anchor="middle" dominant-baseline="central">{{status.dataPlaneApi}}</text></g>
+          <g class="tag zoom" onclick="zoomTo('lvl3')"><rect x="500" y="90" width="70" height="18" rx="3"/><text x="535" y="100" text-anchor="middle" dominant-baseline="central">ZOOM ↓</text></g>
+          <g class="node n-neutral" onclick="selectModule('catalog', true)">
+            <rect x="600" y="100" width="200" height="64" rx="6"/>
+            <text class="title" x="700" y="122" text-anchor="middle" dominant-baseline="central">Model garden</text>
+            <text class="sub" x="700" y="144" text-anchor="middle" dominant-baseline="central">catalog.ts · no caller in server/</text></g>
+          <g class="st-badge st-designed"><rect x="604" y="92" width="62" height="15" rx="3"/><text x="635" y="100" text-anchor="middle" dominant-baseline="central">DESIGNED</text></g>
+          <g class="node n-neutral" onclick="ask('How does an admitted run reach the scheduled ECS worker through the SQS run queue, and why did G1201 refuse a scan?')">
+            <rect x="80" y="230" width="200" height="64" rx="6"/>
+            <text class="title" x="180" y="252" text-anchor="middle" dominant-baseline="central">Run queue + worker</text>
+            <text class="sub" x="180" y="274" text-anchor="middle" dominant-baseline="central">{{evidence.runQueue}}</text></g>
+          <g class="st-badge {{badge.runQueue}}"><rect x="84" y="222" width="62" height="15" rx="3"/><text x="115" y="230" text-anchor="middle" dominant-baseline="central">{{status.runQueue}}</text></g>
+          <g class="node n-platform n-zoomtarget" onclick="zoomTo('dbsec')">
+            <rect x="310" y="230" width="260" height="64" rx="6"/>
+            <text class="title" x="440" y="252" text-anchor="middle" dominant-baseline="central">Tenant database</text>
+            <text class="sub" x="440" y="274" text-anchor="middle" dominant-baseline="central">Postgres + RLS · {{total.dataPlaneTables}} tables</text></g>
+          <g class="tag zoom" onclick="zoomTo('dbsec')"><rect x="500" y="220" width="70" height="18" rx="3"/><text x="535" y="230" text-anchor="middle" dominant-baseline="central">ZOOM ↓</text></g>
+          <g class="st-badge st-partly"><rect x="314" y="222" width="62" height="15" rx="3"/><text x="345" y="230" text-anchor="middle" dominant-baseline="central">{{status.tenantDatabase}}</text></g>
+          <g class="node n-neutral" onclick="ask('What does the control-plane process serve, and why does it never read tenant data?')">
+            <rect x="600" y="230" width="200" height="64" rx="6"/>
+            <text class="title" x="700" y="252" text-anchor="middle" dominant-baseline="central">Control plane — Fastify</text>
+            <text class="sub" x="700" y="274" text-anchor="middle" dominant-baseline="central">{{evidence.controlPlaneApi}}</text></g>
+          <g class="st-badge {{badge.controlPlaneApi}}"><rect x="604" y="222" width="62" height="15" rx="3"/><text x="635" y="230" text-anchor="middle" dominant-baseline="central">{{status.controlPlaneApi}}</text></g>
+          <g class="node n-neutral" onclick="ask('What is served at the apex reconcileai.app, and why is it a separate build on Amplify?')">
+            <rect x="80" y="360" width="200" height="64" rx="6"/>
+            <text class="title" x="180" y="382" text-anchor="middle" dominant-baseline="central">Apex site</text>
+            <text class="sub" x="180" y="404" text-anchor="middle" dominant-baseline="central">{{evidence.apexSite}}</text></g>
+          <g class="st-badge {{badge.apexSite}}"><rect x="84" y="352" width="62" height="15" rx="3"/><text x="115" y="360" text-anchor="middle" dominant-baseline="central">{{status.apexSite}}</text></g>
+          <g class="node n-platform" onclick="zoomTo('dbsec')">
+            <rect x="310" y="360" width="300" height="64" rx="6"/>
+            <text class="title" x="460" y="382" text-anchor="middle" dominant-baseline="central">Control database</text>
+            <text class="sub" x="460" y="404" text-anchor="middle" dominant-baseline="central">{{evidence.controlDatabase}} · no RLS by design</text></g>
+          <g class="st-badge {{badge.controlDatabase}}"><rect x="314" y="352" width="62" height="15" rx="3"/><text x="345" y="360" text-anchor="middle" dominant-baseline="central">{{status.controlDatabase}}</text></g>
+          <g class="node n-neutral" onclick="ask('Why are Bedrock and SageMaker the only permitted model providers?')">
+            <rect x="900" y="100" width="160" height="54" rx="6"/>
+            <text class="title" x="980" y="122" text-anchor="middle" dominant-baseline="central">Bedrock /</text>
+            <text class="sub" x="980" y="144" text-anchor="middle" dominant-baseline="central">SageMaker</text></g>
+          <text class="znote" x="64" y="458">the console and partner hosts are served by the DATA plane (G726, G4411); the data plane reaches the control database only through the control plane's signed internal tier (G4301, G4320) — it holds no control-database credential</text>
+        </svg>
+      </div>
+      <figcaption class="rc-caption">⚠️ <strong>Corrected 5 Oct 2026 rather than rewritten (G4412).</strong> This diagram read <em>"designed; only the database is built"</em>, drew the web application, the API and the model garden as <em>designed</em>, and drew a <em>"Workflow engine — undecided"</em> with the note <em>"workflow orchestration still undecided — Temporal is the leading candidate"</em>; its caption said <em>"Everything except the database is designed, not deployed."</em> <strong>All of that was false by the tree.</strong> Runs are orchestrated by an SQS run queue and a scheduled ECS worker (G1201, R-W G1541); the owner's 5 Oct 2026 to-be plan amends G211 to say so — queue + worker orchestrate runs — and <code>grep -c 'Temporal' docs/HANDOFF.md</code> was 0 when G211 was ruled, so Temporal was never in the record. The model garden stays DESIGNED, by hand and without a predicate: <code>resolveModel()</code> has no caller in <code>server/</code>, and Bedrock is reached by nothing served (dashed). Derive the served counts, never read them: <code>node tools/served-set.mjs</code>.</figcaption>
+    </figure>
+    </div>
+
+    <div class="rc-tabpanel" data-panelgroup="l2" data-panel="tobe" hidden>
+      <p class="rc-hint">Same system, split along the control/data-plane axis — web, API and database each appear on both sides. BYOA itself is out of v1 (G36), but the seams are drawn now so that turning them on later is a commit rather than a redesign.</p>
+      <div class="rc-legend">
+        <span class="li"><span class="sw b">BUILT</span>exists and is verified</span>
+        <span class="li"><span class="sw p">PARTLY</span>the mechanism exists, not in this shape</span>
+        <span class="li"><span class="sw">DESIGNED</span>specified, no code</span>
+        <span class="li"><span class="sw">UNDECIDED</span>open question</span>
+      </div>
+      <figure class="rc-figure">
+        <div class="rc-diagram-wrap">
+          <svg viewBox="0 0 1160 944" role="img" aria-label="To-be container diagram. A control plane holding an admin web app, control API and control database publishes downward to a data plane holding the tenant web app, capability API, reconciliation pipeline, object store and tenant database. Each container is badged built, partly built, or designed.">
+            <defs><marker id="arrowT" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+            <rect class="zrect ctl" x="40" y="40" width="1080" height="204" rx="14"/>
+            <text class="zlabel ctl" x="64" y="64">{{label.controlPlaneZone}}</text>
+            <text class="znote" x="64" y="82">publishes downward, and never reads tenant data (invariant 3)</text>
+
+            <text class="tierlab" x="70" y="106">WEB</text>
+            <text class="tierlab" x="335" y="106">API</text>
+            <text class="tierlab" x="600" y="106">DATABASE</text>
+            <text class="tierlab" x="865" y="106">WORKER</text>
+
+            <g class="node plane-ctl" onclick="ask('What do the staff console and the partner portal serve today, and why are both served by the data plane (G726, G4411)?')">
+              <rect x="70" y="114" width="240" height="76" rx="6"/>
+              <text class="title" x="190" y="146" text-anchor="middle" dominant-baseline="central">Consoles</text>
+              <text class="sub" x="190" y="168" text-anchor="middle" dominant-baseline="central">staff · partner — served by the data plane</text></g>
+            <g class="st-badge {{badge.staffConsole}}"><rect x="232" y="120" width="70" height="15" rx="3"/><text x="267" y="128" text-anchor="middle" dominant-baseline="central">{{status.staffConsole}}</text></g>
+
+            <g class="node plane-ctl" onclick="ask('What does docs/contracts/control-plane.openapi.yaml expose, and why is it the only contract crossing an account boundary?')">
+              <rect x="335" y="114" width="240" height="76" rx="6"/>
+              <text class="title" x="455" y="146" text-anchor="middle" dominant-baseline="central">Control API</text>
+              <text class="sub" x="455" y="168" text-anchor="middle" dominant-baseline="central">{{evidence.controlPlaneApi}}</text></g>
+            <g class="st-badge {{badge.controlPlaneApi}}"><rect x="497" y="120" width="70" height="15" rx="3"/><text x="532" y="128" text-anchor="middle" dominant-baseline="central">{{status.controlPlaneApi}}</text></g>
+
+            <g class="node plane-ctl" onclick="ask('What lives in the control schema — packs, model catalogue, rate cards — and what may control_rw touch?')">
+              <rect x="600" y="114" width="240" height="76" rx="6"/>
+              <text class="title" x="720" y="146" text-anchor="middle" dominant-baseline="central">Control database</text>
+              <text class="sub" x="720" y="168" text-anchor="middle" dominant-baseline="central">{{evidence.controlDatabase}} · no RLS by design</text></g>
+            <g class="st-badge {{badge.controlDatabase}}"><rect x="762" y="120" width="70" height="15" rx="3"/><text x="797" y="128" text-anchor="middle" dominant-baseline="central">{{status.controlDatabase}}</text></g>
+
+            <g class="node plane-ctl" onclick="ask('How does attestation verification work — what is a UsageAttestation and what does the control plane do with it?')">
+              <rect x="865" y="114" width="240" height="76" rx="6"/>
+              <text class="title" x="985" y="146" text-anchor="middle" dominant-baseline="central">Attestation verify</text>
+              <text class="sub" x="985" y="168" text-anchor="middle" dominant-baseline="central">metering · rating · billing</text></g>
+            <g class="st-badge st-designed"><rect x="1027" y="120" width="70" height="15" rx="3"/><text x="1062" y="128" text-anchor="middle" dominant-baseline="central">DESIGNED</text></g>
+
+            <text class="znote" x="64" y="216">{{label.controlDatabase}}</text>
+            <text class="znote" x="64" y="232">built today: pack_catalogue · tenancy_roster · onboarding_record · onboarding_forced_step — rate cards, plans and policy templates are not</text>
+
+            <line class="edge-agg" x1="200" y1="254" x2="200" y2="350" marker-end="url(#arrowT)"/>
+            <text class="znote" x="218" y="276">publishes downward — packs · policy bundle · model catalogue · rated invoices</text>
+            <text class="znote" x="218" y="294">the connection is always a pull by the plane, signed (C2)</text>
+
+            <line class="edge-agg" x1="960" y1="350" x2="960" y2="254" marker-end="url(#arrowT)"/>
+            <text class="znote" x="942" y="276" text-anchor="end">signed aggregates, pushed by the plane (C3)</text>
+            <text class="znote" x="942" y="294" text-anchor="end">PII-free counters — that it happened, never what it contained</text>
+
+            <text class="znote" x="580" y="330" text-anchor="middle" style="fill:var(--flag)">✕ the control plane never calls a data plane — no callback, no webhook, no push, and nothing synchronous on the hot path (C1)</text>
+
+            <rect class="zrect data" x="40" y="358" width="1080" height="546" rx="14"/>
+            <text class="zlabel data" x="64" y="382">{{label.dataPlaneZone}}</text>
+            <text class="znote" x="64" y="400">every reconciliation component — and every log, metric and trace any of them writes (G107)</text>
+
+            <text class="tierlab" x="70" y="424">WEB</text>
+            <text class="tierlab" x="335" y="424">API</text>
+            <text class="tierlab" x="865" y="424">MANAGED SERVICES</text>
+
+            <g class="node plane-data" onclick="ask('What is the capability tier and why is it the only contract tier a browser meets?')">
+              <rect x="70" y="432" width="240" height="76" rx="6"/>
+              <text class="title" x="190" y="464" text-anchor="middle" dominant-baseline="central">Tenant web app</text>
+              <text class="sub" x="190" y="486" text-anchor="middle" dominant-baseline="central">{{evidence.webApp}}</text></g>
+            <g class="st-badge {{badge.webApp}}"><rect x="232" y="438" width="70" height="15" rx="3"/><text x="267" y="446" text-anchor="middle" dominant-baseline="central">{{status.webApp}}</text></g>
+
+            <g class="node plane-data" onclick="ask('What does docs/contracts/capability.openapi.yaml expose?')">
+              <rect x="335" y="432" width="240" height="76" rx="6"/>
+              <text class="title" x="455" y="464" text-anchor="middle" dominant-baseline="central">Capability API</text>
+              <text class="sub" x="455" y="486" text-anchor="middle" dominant-baseline="central">{{evidence.capabilityApi}}</text></g>
+            <g class="st-badge {{badge.capabilityApi}}"><rect x="497" y="438" width="70" height="15" rx="3"/><text x="532" y="446" text-anchor="middle" dominant-baseline="central">{{status.capabilityApi}}</text></g>
+
+            <g class="node plane-data" onclick="ask('Why is data-plane-local.openapi.yaml the only contract where inbound access is permitted?')">
+              <rect x="600" y="432" width="240" height="76" rx="6"/>
+              <text class="title" x="720" y="464" text-anchor="middle" dominant-baseline="central">Local admin API</text>
+              <text class="sub" x="720" y="486" text-anchor="middle" dominant-baseline="central">{{evidence.localApi}} · health only</text></g>
+            <g class="st-badge {{badge.localApi}}"><rect x="762" y="438" width="70" height="15" rx="3"/><text x="797" y="446" text-anchor="middle" dominant-baseline="central">{{status.localApi}}</text></g>
+
+            <g class="node n-neutral" onclick="ask('Why must inference and document extraction run inside the customer AWS account under BYOA, and why can Textract never be a ModelCatalogEntry?')">
+              <rect x="865" y="432" width="240" height="76" rx="6"/>
+              <text class="title" x="985" y="464" text-anchor="middle" dominant-baseline="central">Bedrock · Textract</text>
+              <text class="sub" x="985" y="486" text-anchor="middle" dominant-baseline="central">inference stays in-account</text></g>
+            <g class="st-badge st-designed"><rect x="1027" y="438" width="70" height="15" rx="3"/><text x="1062" y="446" text-anchor="middle" dominant-baseline="central">DESIGNED</text></g>
+
+            <text class="tierlab" x="70" y="530">COMPUTE &amp; INGESTION</text>
+
+            <g class="node plane-data" onclick="ask('Why is the S3 landing bucket data-plane, and why is tenant={tenantId} the first path segment?')">
+              <rect x="70" y="538" width="240" height="72" rx="6"/>
+              <text class="title" x="190" y="566" text-anchor="middle" dominant-baseline="central">S3 landing bucket</text>
+              <text class="sub" x="190" y="588" text-anchor="middle" dominant-baseline="central">bucket + tenant keys (G287) · no upload</text></g>
+            <g class="st-badge st-partly"><rect x="232" y="544" width="70" height="15" rx="3"/><text x="267" y="552" text-anchor="middle" dominant-baseline="central">PARTLY</text></g>
+
+            <g class="node n-undecided" onclick="ask('Why is EventBridge narrowed to only the S3 arrival trigger, and what replaces it for ingestion?')">
+              <rect x="335" y="538" width="240" height="72" rx="6"/>
+              <text class="title" x="455" y="566" text-anchor="middle" dominant-baseline="central">EventBridge</text>
+              <text class="sub" x="455" y="588" text-anchor="middle" dominant-baseline="central">arrival trigger only</text></g>
+            <g class="st-badge st-designed"><rect x="497" y="544" width="76" height="15" rx="3"/><text x="535" y="552" text-anchor="middle" dominant-baseline="central">UNDECIDED</text></g>
+
+            <g class="node plane-data" onclick="ask('How does a run go from admitRun through the SQS run queue to the scheduled ECS worker and the run executor?')">
+              <rect x="600" y="538" width="505" height="72" rx="6"/>
+              <text class="title" x="852" y="566" text-anchor="middle" dominant-baseline="central">Reconciliation pipeline</text>
+              <text class="sub" x="852" y="588" text-anchor="middle" dominant-baseline="central">SQS run queue · scheduled ECS worker · run executor — {{evidence.runQueue}}</text></g>
+            <g class="st-badge {{badge.runQueue}}"><rect x="1027" y="544" width="70" height="15" rx="3"/><text x="1062" y="552" text-anchor="middle" dominant-baseline="central">{{status.runQueue}}</text></g>
+
+            <text class="tierlab" x="70" y="632">DATABASE</text>
+            <text class="tierlab" x="600" y="632">TELEMETRY</text>
+
+            <g class="node plane-data" onclick="ask('What is built in db/ today, and how does it differ from the tenant schema plus tenant_rw the plane split calls for?')">
+              <rect x="70" y="640" width="505" height="72" rx="6"/>
+              <text class="title" x="322" y="668" text-anchor="middle" dominant-baseline="central">Tenant database</text>
+              <text class="sub" x="322" y="690" text-anchor="middle" dominant-baseline="central">{{label.tenantDatabase}}</text></g>
+            <g class="st-badge st-partly"><rect x="497" y="646" width="70" height="15" rx="3"/><text x="532" y="654" text-anchor="middle" dominant-baseline="central">PARTLY</text></g>
+
+            <g class="node plane-data" onclick="ask('Why are logs, metrics and traces themselves tenant data under G107?')">
+              <rect x="600" y="640" width="505" height="72" rx="6"/>
+              <text class="title" x="852" y="668" text-anchor="middle" dominant-baseline="central">Telemetry</text>
+              <text class="sub" x="852" y="690" text-anchor="middle" dominant-baseline="central">alarms + allow-listed logs (G1061, G1391) · no trace reader · no capability</text></g>
+            <g class="st-badge st-partly"><rect x="1027" y="646" width="70" height="15" rx="3"/><text x="1062" y="654" text-anchor="middle" dominant-baseline="central">PARTLY</text></g>
+
+            <text class="tierlab" x="70" y="740">CONNECTOR GATEWAY — THE ONLY PATH TO A CUSTOMER SYSTEM (CG1), SPLIT BY TRUST CLASS</text>
+
+            <g class="node plane-data" onclick="ask('What does the read-egress path do, and why does it hold no write-back credentials?')">
+              <rect x="70" y="748" width="330" height="64" rx="6"/>
+              <text class="title" x="235" y="770" text-anchor="middle" dominant-baseline="central">Read egress</text>
+              <text class="sub" x="235" y="792" text-anchor="middle" dominant-baseline="central">pulls · carries an authorizationId</text></g>
+            <g class="st-badge st-designed"><rect x="322" y="754" width="70" height="15" rx="3"/><text x="357" y="762" text-anchor="middle" dominant-baseline="central">DESIGNED</text></g>
+
+            <g class="node plane-data" onclick="ask('Why is write-back a separate process from read egress, and why is enable_endpoint_writeback the authority class?')">
+              <rect x="430" y="748" width="330" height="64" rx="6"/>
+              <text class="title" x="595" y="770" text-anchor="middle" dominant-baseline="central">Writeback broker</text>
+              <text class="sub" x="595" y="792" text-anchor="middle" dominant-baseline="central">authority class · never an agent</text></g>
+            <g class="st-badge st-designed"><rect x="682" y="754" width="70" height="15" rx="3"/><text x="717" y="762" text-anchor="middle" dominant-baseline="central">DESIGNED</text></g>
+
+            <g class="node plane-data" onclick="ask('What comms endpoints are actually in scope — email now, Slack outbound-only, and why can Teams app-only not post?')">
+              <rect x="790" y="748" width="315" height="64" rx="6"/>
+              <text class="title" x="947" y="770" text-anchor="middle" dominant-baseline="central">Comms outbound</text>
+              <text class="sub" x="947" y="792" text-anchor="middle" dominant-baseline="central">email now · Slack, Teams later</text></g>
+            <g class="st-badge st-designed"><rect x="1027" y="754" width="70" height="15" rx="3"/><text x="1062" y="762" text-anchor="middle" dominant-baseline="central">DESIGNED</text></g>
+
+            <text class="znote" x="64" y="844">{{label.downwardCrossing}}</text>
+            <text class="znote" x="64" y="862">endpoint and endpoint_health are tables inside the tenant database, owned by the gateway — health never leaves the plane, because stale health reads as false certainty</text>
+            <text class="znote" x="64" y="880" style="fill:var(--flag)">⚠ status is derived from authorised attempts and never polled (G74) — so there is no "connecting" and no green "up", only last attempt, last success, last failure class, and a literal unknown</text>
+            <text class="znote" x="64" y="898">{{label.tenantRowHome}}</text>
+          </svg>
+        </div>
+        <figcaption class="rc-caption">Sources: <code>docs/data-architecture.md</code> §2, §4, §4a and §6; G107 for what the data plane contains; C1/C2/C3 for what may cross. Contract-to-plane mapping from <code>docs/contracts/README.md</code>. ⚠️ <strong>Corrected 5 Oct 2026 rather than rewritten (G4412):</strong> every badge on this diagram was typed; the web app, both APIs, the local API and the control database said DESIGNED while serving, and the pipeline said <em>"Step Functions · Lambdas · Fargate"</em> — G211's ratification, which the owner's 5 Oct 2026 to-be plan amends: <strong>the queue and the worker orchestrate runs</strong>. Predicated badges are now printed from the tree; S3, EventBridge, telemetry, Bedrock and the three gateway processes are still typed, and say so by carrying no evidence line.</figcaption>
+      </figure>
+
+      <h4 style="font:600 14px var(--font-sans);margin:1.6rem 0 .3rem">Where authority comes from</h4>
+      <p class="rc-secsub">Level 1 states <em>which</em> plane serves each group. This states <em>where their authority is minted and where it is spent</em> — they are different questions, and the second is the one that decides whether a design is safe. A customer browser never meets the control plane; staff authenticate on the platform connection, but staff <em>reach</em> into a tenant is a grant evaluated in the plane, because being staff is not access.</p>
+      <figure class="rc-figure">
+        <div class="rc-diagram-wrap">
+          <svg viewBox="0 0 1160 540" role="img" aria-label="Identity topology. Customer users authenticate against their own identity provider at their own per-tenant host and land directly in the data plane, bypassing the control plane. FDE, support, billing and platform staff authenticate on the platform connection at the control plane; staff reach into a tenant is a TenantAccessGrant evaluated in the data plane. Partner users have no login in v1.">
+            <defs><marker id="arrowI2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+            <g class="node plane-data" onclick="ask('How does a customer user authenticate in ReconcileAI, and why do they never meet the control plane?')">
+              <rect x="70" y="44" width="240" height="74" rx="6"/>
+              <text class="title" x="190" y="74" text-anchor="middle" dominant-baseline="central">Customer users</text>
+              <text class="sub" x="190" y="96" text-anchor="middle" dominant-baseline="central">operator · CFO · tenant admin</text></g>
+
+            <g class="node plane-ctl" onclick="ask('How does an FDE or support engineer reach a tenant — walk me through TenantAccessGrant and the two-person rule.')">
+              <rect x="335" y="44" width="240" height="74" rx="6"/>
+              <text class="title" x="455" y="74" text-anchor="middle" dominant-baseline="central">FDE &amp; support</text>
+              <text class="sub" x="455" y="96" text-anchor="middle" dominant-baseline="central">1CloudHub delivery</text></g>
+
+            <g class="node plane-ctl" onclick="ask('What do billing, catalogue and tenancy staff operate on, and why is it all control-plane data?')">
+              <rect x="600" y="44" width="240" height="74" rx="6"/>
+              <text class="title" x="720" y="74" text-anchor="middle" dominant-baseline="central">Billing &amp; platform</text>
+              <text class="sub" x="720" y="96" text-anchor="middle" dominant-baseline="central">commercial · catalogue · tenancy</text></g>
+
+            <g class="node plane-ctl" onclick="ask('How does a partner firm\'s staff sign in, and why does the partner portal run on the data plane (G269, G4411)?')">
+              <rect x="865" y="44" width="240" height="74" rx="6"/>
+              <text class="title" x="985" y="74" text-anchor="middle" dominant-baseline="central">Partner orgs</text>
+              <text class="sub" x="985" y="96" text-anchor="middle" dominant-baseline="central">sign in — G269, served per G4411</text></g>
+
+            <line class="edge-hot" x1="190" y1="126" x2="190" y2="358" marker-end="url(#arrowI2)"/>
+            <text class="znote" x="206" y="152">authenticates against the customer's own identity provider,</text>
+            <text class="znote" x="206" y="170">at their own host — and never meets the control plane</text>
+
+            <line class="edge-agg" x1="455" y1="126" x2="455" y2="190" marker-end="url(#arrowI2)"/>
+            <line class="edge-agg" x1="720" y1="126" x2="720" y2="190" marker-end="url(#arrowI2)"/>
+            <text class="znote" x="588" y="172" text-anchor="middle">platform IdentityConnection</text>
+
+            <rect class="zrect ctl" x="400" y="196" width="705" height="112" rx="12"/>
+            <text class="zlabel ctl" x="420" y="220">CONTROL PLANE — WHERE AUTHORITY IS MINTED</text>
+            <text class="znote" x="420" y="238">staff authenticate here and a grant is issued here; neither act reads tenant data</text>
+
+            <g class="node plane-ctl" onclick="ask('What is the two-person rule on a TenantAccessGrant and where is it re-checked?')">
+              <rect x="430" y="250" width="250" height="52" rx="6"/>
+              <text class="title" x="555" y="268" text-anchor="middle" dominant-baseline="central">Grant issuance</text>
+              <text class="sub" x="555" y="288" text-anchor="middle" dominant-baseline="central">two-person rule · time-boxed</text></g>
+
+            <g class="node plane-ctl" onclick="ask('What is the platform IdentityConnection and how does org class derive from it?')">
+              <rect x="700" y="250" width="305" height="52" rx="6"/>
+              <text class="title" x="852" y="268" text-anchor="middle" dominant-baseline="central">Platform connection</text>
+              <text class="sub" x="852" y="288" text-anchor="middle" dominant-baseline="central">where staff authenticate · org derives</text></g>
+
+            <line class="edge-hot" x1="455" y1="308" x2="455" y2="358" marker-end="url(#arrowI2)"/>
+            <text class="znote" x="472" y="330">reach is a grant, evaluated in the plane per request — never a control-plane read</text>
+
+            <rect class="zrect data" x="40" y="366" width="1065" height="128" rx="12"/>
+            <text class="zlabel data" x="64" y="390">DATA PLANE — WHERE A GRANT IS SPENT · {tenant}.us-west-2.reconcileai.app</text>
+            <text class="znote" x="64" y="410">the host is bound to a tenant in server configuration, so tenant is established before any application code runs — there is no</text>
+            <text class="znote" x="64" y="428">tenant dropdown to defeat, which is how this satisfies invariant 1 rather than relocating it</text>
+            <text class="znote" x="64" y="450">the session arrives as the __Host-reconcile_session cookie (G386); D1 binds it to the tenant the HOST names (G179) and revokes on a host mismatch (G180)</text>
+            <text class="znote" x="64" y="472">completeFederatedSignIn mints the session — mounted under servedPublicly() (D6-8); the console and partner hosts mint tenant-less ones (G726)</text>
+          </svg>
+        </div>
+        <figcaption class="rc-caption">Decided in the record: federation through <code>IdentityConnection</code> with org derived from <code>connection.owner.kind</code> (§9.2); <code>DURABLE_ASSIGNMENT_PERMITTED.platform = false</code>, so staff hold no standing access; and <code>grantAllows()</code> running in the plane. Decided here: one host per tenant, and rated invoices published downward rather than shown in a control-plane portal. ⚠️ <strong>Corrected 5 Oct 2026 (G4412):</strong> this diagram drew partners as <em>"no login in v1 — G51"</em>, the session as <em>"F1 resolves X-Session"</em> and said <em>"nothing mints a session today"</em>. G269 reversed G51; G386 moved the handle into an <code>HttpOnly</code> <code>__Host-</code> cookie and fenced <code>X-Session</code> behind the local test flag; and the federated mint is served. The <em>"capability tier as the only tier a browser meets"</em> clause is dropped from the decided list: the browser also meets the session, foundation, administration and platform-console tiers — derive it, <code>node tools/served-set.mjs</code>.</figcaption>
+      </figure>
+
+      <div class="rc-grid2" style="margin-top:1rem">
+        <div class="rc-card">
+          <h4>Why customer traffic terminating in the plane is also a billing property</h4>
+          <ul>
+            <li>all session, serving and inference cost sits in the plane</li>
+            <li>under BYOA that is the customer's own AWS bill</li>
+            <li>1CloudHub never carries per-customer serving cost</li>
+            <li>UsageRecord ships up with no UserId — per-user analytics is impossible by construction</li>
+          </ul>
+        </div>
+        <div class="rc-card">
+          <h4>Open, and deliberately drawn as gaps — re-baselined 5 Oct 2026</h4>
+          <ul>
+            <li><code>telemetry</code> and <code>schedule</code> are resource classes with no capability — <code>node -e "for(const x of require('./docs/model-graph.json').gaps) if(x.kind==='resource_class_without_capability') console.log(x.subject)"</code></li>
+            <li>specified, not written: <span id="snwInline">—</span> (derived)</li>
+            <li><code>tools/check-plane-tags.mjs</code> (G76) does not exist</li>
+            <li>no cluster per residency region — one Aurora cluster, <code>us-west-2</code></li>
+            <li>no connector and no read egress — nothing pulls a source</li>
+          </ul>
+          <p style="font-size:11.5px;color:var(--ink-muted);margin:.4rem 0 0">⚠️ This card listed <em>"no operation mints a session"</em>, <em>"administration.openapi.yaml does not exist"</em> and <em>"partner portal (OC2) contradicts G51 — unresolved, v2"</em>. All three closed: the federated mint is served, the administration tier exists and is partly served, and G269/G4411 rule the portal.</p>
+        </div>
+      </div>
+
+      <h4 style="font:600 14px var(--font-sans);margin:1.6rem 0 .3rem">Tenant routing — fails closed at every hop</h4>
+      <p class="rc-secsub">How a request becomes a tenant. No single control is trusted alone, and nothing keys on SNI. The host <em>routes</em>; the session <em>decides</em>. ⚠️ <strong>Re-drawn 5 Oct 2026 from <code>infra/lib/edge-stack.ts</code> and <code>server/</code> (G4412).</strong> The diagram it replaces described a design that was never built: a KeyValueStore lookup at the edge, a rotating origin-secret header, <code>X-Session</code>, the domain <code>reconcile.app</code>, and a closing line reading <em>"DESIGNED — every AWS behaviour here is UNVERIFIED IN AN ACCOUNT (G101: no AWS resource exists)"</em> — G101 is the pooling ruling and says nothing about an account, and twelve stacks are live (<code>docs/HANDOFF.md</code> §0a).</p>
+      <figure class="rc-figure">
+        <div class="rc-diagram-wrap">
+          <svg viewBox="0 0 1160 634" role="img" aria-label="Request pipeline as built: browser at a tenant host, CloudFront with two distributions and a WAF rate rule, the SpaRewrite viewer function on the bundle behaviour only, a VPC origin to an internal ALB, the application resolving host to tenant by lookup and binding the session cookie to its host, and PostgreSQL row level security.">
+            <text class="tierlab" x="70" y="52">HOP</text>
+            <text class="tierlab" x="440" y="52">WHAT IT CHECKS</text>
+            <text class="tierlab" x="880" y="52">ON FAILURE</text>
+
+            <g class="node n-neutral" onclick="ask('Why is the region a label in the tenant hostname (G297), and why does a flat tenant host fail at the TLS handshake?')">
+              <rect x="70" y="76" width="340" height="64" rx="6"/>
+              <text class="title" x="240" y="98" text-anchor="middle" dominant-baseline="central">Browser</text>
+              <text class="sub" x="240" y="120" text-anchor="middle" dominant-baseline="central">{tenant}.us-west-2.reconcileai.app</text></g>
+            <text class="znote" x="440" y="102">two distributions, two wildcards (G297): *.us-west-2.reconcileai.app for tenants,</text>
+            <text class="znote" x="440" y="120">*.reconcileai.app for the consoles — a wildcard matches ONE label</text>
+            <text class="znote" x="880" y="110" style="fill:var(--flag)">TLS refused — no certificate offered</text>
+
+            <g class="node plane-data" onclick="ask('What does the CloudFront rate-based rule (G1871) bound, and what can it not bound?')">
+              <rect x="70" y="162" width="340" height="64" rx="6"/>
+              <text class="title" x="240" y="184" text-anchor="middle" dominant-baseline="central">CloudFront</text>
+              <text class="sub" x="240" y="206" text-anchor="middle" dominant-baseline="central">TLS termination · WAF rate rule</text></g>
+            <text class="znote" x="440" y="188">300 requests per 60 s per source IP on the tenant distribution (G1871) —</text>
+            <text class="znote" x="440" y="206">it bounds a sustained sweep and cannot stop a first burst</text>
+            <text class="znote" x="880" y="196" style="fill:var(--flag)">403 from WAF</text>
+
+            <g class="node plane-data" onclick="ask('Why is SpaRewrite attached to the bundle behaviour only and never to /v1/*?')">
+              <rect x="70" y="248" width="340" height="64" rx="6"/>
+              <text class="title" x="240" y="270" text-anchor="middle" dominant-baseline="central">SpaRewrite</text>
+              <text class="sub" x="240" y="292" text-anchor="middle" dominant-baseline="central">viewer-request function, bundle only</text></g>
+            <text class="znote" x="440" y="274">rewrites a dotless last segment to /index.html for deep links — it resolves</text>
+            <text class="znote" x="440" y="292">no tenant and touches no plane path, so a plane 404 stays a 404</text>
+            <text class="znote" x="880" y="282">(not a check)</text>
+
+            <g class="node plane-data" onclick="ask('How does the CloudFront VPC origin reach an internal ALB, and why is there no origin secret?')">
+              <rect x="70" y="334" width="340" height="64" rx="6"/>
+              <text class="title" x="240" y="356" text-anchor="middle" dominant-baseline="central">VPC origin → internal ALB</text>
+              <text class="sub" x="240" y="378" text-anchor="middle" dominant-baseline="central">no public address, no origin secret</text></g>
+            <text class="znote" x="440" y="360">the ALB is never internet-facing and admits only CloudFront's VPC-origin</text>
+            <text class="znote" x="440" y="378">security group — the hop inside the VPC is plaintext, and that is not ruled</text>
+            <text class="znote" x="880" y="368" style="fill:var(--flag)">unreachable</text>
+
+            <g class="node plane-data" onclick="ask('Why must host-to-tenant resolution be a lookup (G179), and why does the session bind to its issuing host (G180)?')">
+              <rect x="70" y="420" width="340" height="64" rx="6"/>
+              <text class="title" x="240" y="442" text-anchor="middle" dominant-baseline="central">Application</text>
+              <text class="sub" x="240" y="464" text-anchor="middle" dominant-baseline="central">host lookup · __Host-reconcile_session</text></g>
+            <text class="znote" x="440" y="446">the host resolves to a tenant or a console by LOOKUP, never a parse (G179, G726);</text>
+            <text class="znote" x="440" y="464">the session's bound host must equal the Host it arrived on (G180)</text>
+            <text class="znote" x="880" y="454" style="fill:var(--flag)">401 · session revoked</text>
+
+            <g class="node plane-data" onclick="ask('Why does the RLS session variable come from the session rather than from the host?')">
+              <rect x="70" y="506" width="340" height="64" rx="6"/>
+              <text class="title" x="240" y="528" text-anchor="middle" dominant-baseline="central">PostgreSQL</text>
+              <text class="sub" x="240" y="550" text-anchor="middle" dominant-baseline="central">row level security</text></g>
+            <text class="znote" x="440" y="532">the tenant comes from the session, never from the host — so a mis-route</text>
+            <text class="znote" x="440" y="550">reads nothing rather than reading somebody else's rows</text>
+            <text class="znote" x="880" y="540" style="fill:var(--flag)">zero rows</text>
+
+            <text class="znote" x="70" y="600">The Host header is a routing hint at every hop and an authority at none. Built in infra/ and server/; for what is deployed, staging as of 4 Oct 2026, read docs/HANDOFF.md §0a.</text>
+          </svg>
+        </div>
+        <figcaption class="rc-caption">The pipeline is the same for every host the data plane serves — tenant, console and partner. ⚠️ <strong>No Public Suffix List entry exists — G182 rules one and is NOT APPLIED</strong>, so the card that listed <em>"tenant domain goes on the Public Suffix List"</em> among the decisions that carry the weight is struck into the history block below. What separates tenants today is the <code>__Host-</code> prefix, which forbids a <code>Domain=</code> cookie at the user agent (G396), and G180's bound host.</figcaption>
+      </figure>
+
+      <details style="margin-top:1rem">
+        <summary class="rc-caption" style="cursor:pointer"><strong>History — the certificate strategy and Public Suffix List argument as they stood before 5 Oct 2026</strong> (pooled wildcard per region, delegated DCV for vanity domains, PSL inclusion). Kept because G36/G276's vanity domains are still owed; not a description of the tree.</summary>
+        <p class="rc-caption">It argued one ACM wildcard per region on <code>*.{region}.reconcile.app</code> behind one distribution per region; vanity domains through two customer CNAMEs and delegated DNS-01 validation, with customer-supplied certificates refused; a host binding that is <strong>permanent and additive, never migrated</strong> (that clause still holds — G180); and listing the tenant-serving domain on the Public Suffix List so pooled tenants are not same-site. <strong>What was built instead:</strong> two distributions and two certificates in <code>us-east-1</code> (G297), no vanity domain, no PSL entry. Retrieve the full section with <code>git show HEAD~1:tools/planner/c4-template.html</code> on the commit that introduced this block.</p>
+      </details>
+
+      <div class="rc-grid2" style="margin-top:1rem">
+        <div class="rc-card">
+          <h4>What splits, and into what</h4>
+          <ul>
+            <li>web → admin console (control) + tenant web app (data)</li>
+            <li>API → control-plane.openapi.yaml (control) + capability &amp; foundation (data)</li>
+            <li>database → control schema + tenant schema, one cluster <em>per residency region</em> (G185)</li>
+            <li>roles → control_rw · tenant_rw · tenant_migrate — <em>control_ro retired</em> (G185)</li>
+          </ul>
+        </div>
+        <div class="rc-card">
+          <h4>Why do it before BYOA</h4>
+          <ul>
+            <li>under BYOA the split is physical — separate AWS accounts</li>
+            <li>the data plane pulls packs and policy over signed HTTPS</li>
+            <li>which IS one code path in both topologies — control_ro was not</li>
+            <li>a grant is enforcement; review is not a mechanism</li>
+          </ul>
+        </div>
+      </div>
+      <p class="rc-caption" style="margin-top:.7rem">What C1 buys, stated as a feature rather than a constraint: the entitlement lease is verified offline and drawn down locally, so a control-plane outage stays invisible to the customer until the lease expires. Metering is fire-and-forget and must survive the control plane being down — buffered and replayed with its original sequence numbers. That property is only reachable if nothing on the hot path calls upward, which is why C1 is written as a hard requirement rather than a preference.</p>
+
+      <p class="rc-caption" style="margin-top:.8rem">⚠️ <strong>The paragraph below is the 12 Aug 2026 reading and is kept as it stood (G4412); two of its claims are now false.</strong> <em>"Nothing orchestrates it: no Step Function, no Lambda, no Fargate task"</em> — the run executor is reached by an SQS queue and a scheduled ECS (Fargate) worker (G1201, G1541). <em>"Everything else on this diagram is a specification"</em> — the badges above are now predicates over the tree and most of them are BUILT. What remains true: one cluster per residency region is not built.</p>
+      <p class="rc-caption" style="margin-top:.4rem"><strong>What the two PARTLY badges actually mean</strong>, because this is the distinction most worth being exact about. <em>Tenant database</em> — the data-plane half is built: <code>tenant</code> and <code>tenant_contact</code> live in the <code>tenant</code> schema under <code>tenant_rw</code>, with RLS <code>ENABLE</code>d and <code>FORCE</code>d, deny-on-NULL predicates, and the narrow <code>id</code>/<code>status</code>/<code>residency</code> projection. It remains PARTLY because the control schema and one-cluster-per-residency-region topology are not built. <em>Reconciliation pipeline</em> — the matching engine exists as total functions in <code>model/reconciliation.ts</code>, but nothing orchestrates it: no Step Function, no Lambda, no Fargate task. Everything else on this diagram is a specification.</p>
+
+      <p class="rc-caption" style="margin-top:.8rem">⚠️ <strong>Status — corrected 5 Oct 2026 (G4412).</strong> This read: <em>"The control-side schema and role remain unbuilt, so no claim of a complete two-schema boundary is made. <code>administration.openapi.yaml</code> does not exist"</em>. <strong>Both halves are false</strong>: the control side is a separate DATABASE (G193) with {{total.controlPlaneTables}} tables and its own roles; and the administration tier exists, partly served. ⚠️ <em>(6 Oct 2026, G4453: this clause also read <em>"read downward by the data plane's read-only role (G1161) and written by one column-level role (R9)"</em> — both roles are retired by control <code>0052</code> (G4320) and the data plane holds no control-database credential; it reaches the control database only through the control plane's signed internal tier, and only that plane's own role reads or writes it.)</em> What is still exactly true: G76's <code>check-plane-tags.mjs</code> — the checker that would refuse tenant data on a <code>[platform]</code>-tagged operation — has not been written either. G82 would put the BI layer in <code>ap-southeast-2</code>, which moves tenant data out of the residency region on every refresh; it is <strong>blocked on counsel and is not a commitment</strong>.</p>
+
+      <p class="rc-caption" style="margin-top:.8rem">🛑 <strong>G185 — RULED 12 Aug 2026, AND IT AMENDS DECISION F RATHER THAN REPLACING IT. Nothing below is built.</strong> ⚠️ <em>(5 Oct 2026, G4412: "nothing below is built" is the 12 Aug reading. Built since: the control database as a separate database (G193); one cluster, in <code>us-west-2</code>; and a direct read-only pool where this paragraph rules a signed pull — G1161 says of it in its own words <em>"by construction becomes by census"</em>. The signed pull, the per-region clusters and the re-pointed foreign key are still unbuilt.)</em> ⚠️ <em>(6 Oct 2026, G4453: the read-only pool is RETIRED — the tenant name is a pulled data-plane projection over the signed internal tier (G4311), roster and onboarding go through that tier (G4316, G4318), and control <code>0052</code> revokes the pool's role (G4320). The per-region clusters and the re-pointed foreign key are still unbuilt.)</em> The card above said <em>"one cluster"</em> and <em>"writing the hosted data plane against <code>control_ro</code> now means hosted and BYOA are the same code path"</em>. <strong>The second sentence was false and is the reason the first moved.</strong> A BYOA plane runs in the customer's AWS account, where there is no <code>control</code> schema to hold a grant against — so it must already fetch packs and policy over <code>/catalogue/packs</code> and <code>/policy/bundle</code>. There were always two code paths while <code>docs/data-architecture.md</code> §4 said there was one. <strong>What SURVIVES decision F, and it is the load-bearing half:</strong> the plane split stays enforced by separate schemas and separate database roles — a grant the database evaluates on every statement, not a convention, and still invariant 3's only positive enforcement. <strong>What CHANGES:</strong> <em>"one cluster"</em> becomes <strong>one cluster per residency region</strong>, because <code>Tenant.residency</code> is a live per-tenant field over five <code>RegionKey</code> values and tenant data never crosses a region — an axis decision F never addressed and which is coherent at N=1 only. Control-plane data keeps <strong>one writer and NO regional replica</strong>. ⚠️ <strong>A read-only replica per region was ruled and WITHDRAWN THE SAME DAY, and the withdrawal is recorded because the replica reached this page first.</strong> Two reasons, and the second is the stronger. <strong>It was unbuildable as drawn:</strong> a whole-cluster physical read replica cannot co-exist with a writable <code>tenant</code> schema in the same regional cluster, so one cluster per region and a regional control replica were mutually exclusive. <strong>And it had no reader left:</strong> once <code>control_ro</code> is retired and the plane reads packs, policy and the model catalogue from its own pulled projection, nothing in-region queries control tables over SQL at all. The regional read path <strong>is</strong> the data-plane-local projection — one mechanism, not two. <code>docs/persistence-design.md</code> §7's <em>"replicated per region"</em> recommendation is therefore <strong>SUPERSEDED, not applied</strong>. <strong>What is RETIRED:</strong> <code>control_ro</code>, replaced by the signed HTTPS pull into a data-plane-local projection, which is the shape that is genuinely one code path in both topologies. <strong>The rejected alternative, preserved:</strong> two database instances split by PLANE — refused because the plane boundary is already held by a positive grant, while two instances give only the absence of a route, which is restored by the first connection string, foreign data wrapper or BI replica; G82 shows that pressure is already live. ⚠️ <strong>The cost accepted, stated plainly:</strong> a per-region cluster multiplies the migration timelines, and there is no skew detector — the version rule at <code>docs/contracts/control-plane.openapi.yaml:110</code> governs the WIRE and has no schema equivalent. ⚠️ <strong>And the owning question G185 answers:</strong> the <code>tenant</code> row is <strong>control-owned</strong> (G50 makes provisioning a control-plane act), with the data plane holding a narrow projection of <code>id</code>, <code>status</code> and <code>residency</code> — the columns the RLS predicate and the residency check actually read. The <code>tenant_contact.tenant_id</code> foreign key at <code>db/migrations/0001_tenancy_and_rls.sql:96</code> re-points at that projection; <strong>no migration for any of this exists.</strong></p>
+    </div>
+  </div>
+
+  <div class="rc-zoom"><div class="line"></div><span>↓</span><span class="txt">zoom in — inside API / domain services</span></div>
+
+  <!-- CURRENT vs TO-BE -->
+  <div class="rc-level" id="state">
+    <h2 class="rc-sechead">Current and to-be — what exists, and what is only declared</h2>
+    <p class="rc-secsub">Levels 3 and 4 below draw every module the same way, which reads as though the model were uniformly real. It is not. This section splits the <strong>same parsed data</strong> into the four states this repository already has vocabulary for, so the picture below can be read against it. <strong>Every number here is computed from the parsed tree when the page renders</strong> — none is typed into the template, which is the defect corrected one screen down.</p>
+
+    <div class="rc-grid2" id="stateCards"></div>
+
+    <p class="rc-caption" style="margin-top:.9rem">🛑 <strong>Read <em>BUILT</em> narrowly: it means "has a runtime form", NOT "is exercised".</strong> The split above is by declaration kind — a <code>function</code> or a <code>const</code> survives compilation and can be called; an <code>interface</code> or a <code>type</code> is erased and cannot. That is a real distinction and it is not the same as working code. <code>docs/HANDOFF.md</code> §5.10 records the exact trap: five total <code>Record</code>s landed with <strong>no construction site anywhere</strong>, so <code>tsc</code> could not have failed on a single field chosen. <strong>A green typecheck is weak evidence here and a green <code>npm run check</code> is not proof of behaviour</strong> — only a fixture witnesses content. The one number on this page that carries execution rather than declaration is the database: <strong><span id="nTables">—</span> built tables and <span id="nPolicies">—</span> RLS policies</strong>, and even that is qualified, because <code>tests/db/tenant-isolation.test.ts</code> skips loudly when no local Postgres answers.</p>
+
+    <p class="rc-caption" style="margin-top:.7rem">⚠️ <strong>The fourth state is the one no parser can see, and it is hand-curated for that reason.</strong> <em>Specified, not written</em> is a document promising a module that does not exist in <code>model/</code> — there is no declaration to parse, so <code>extract-c4-data.mjs</code> is structurally blind to it. Since 5 Oct 2026 it is rendered from the model graph's own walk (G4416): <span id="snwList">—</span>. ⚠️ <strong>Until then it was a hand-typed label naming SEVEN modules</strong> — <em>"model/connections.ts, model/execution.ts, model/held-work.ts, model/ingestion.ts, model/matching.ts, model/money.ts, model/session.ts"</em> — and four of the seven had been written while the page went on saying otherwise. And the walk read <code>docs/c4.html</code> itself, so the page's own list could have kept a module on it; the generated page is now excluded from the walk. Reproduce it: <code>node -e "for(const x of require('./docs/model-graph.json').gaps) if(x.kind==='module_specified_not_written') console.log(x.subject)"</code></p>
+
+    <p class="rc-caption" style="margin-top:.7rem">The per-module table below is the same split, per file. <strong>Two modules carry the whole-file drop banner</strong> — <code>presentation.ts</code> and <code>deployment.ts</code> — and show zero live declarations of either kind. <code>kernel.ts</code> and <code>identity.ts</code> are the opposite shape: <strong>entirely declaration-only, with no runtime form at all</strong>, which is correct for a branded-id vocabulary and a file of compile-time assertions respectively.</p>
+    <div class="rc-tblwrap" style="margin-top:.6rem"><table class="rc-tbl" id="stateTbl">
+      <thead><tr><th>module</th><th>built<br><span style="font-weight:400">fn · const</span></th><th>declared, not built<br><span style="font-weight:400">interface · type</span></th><th>dropped for v1</th><th>total</th><th></th></tr></thead>
+      <tbody></tbody></table></div>
+  </div>
+
+  <!-- LEVEL 3 -->
+  <div class="rc-level" id="lvl3">
+    <div class="rc-level-head"><span class="rc-level-num">LEVEL 3</span><span class="rc-level-name">Type module dependencies</span><span class="rc-level-tag">— compile-time, NOT runtime components · generated from model/*.ts</span></div>
+    <p class="rc-hint">Click any module to open its code view below. Selecting one highlights its actual import edges.</p>
+    <p class="rc-caption">🛑 <strong>THIS IS NOT A C4 COMPONENT DIAGRAM AND IT WAS LABELLED AS ONE UNTIL 12 Aug 2026.</strong> In C4, an arrow at Level 3 means one component calls another at runtime. Here an arrow means <em>a declaration file named a type from another declaration file</em>. ⚠️ <strong>The first draft of this caption justified that with "<code>model/</code> is types only — nothing assigns values", and THAT IS FALSE</strong> — the tree holds <strong><span id="nConst">—</span> <code>export const</code> and <span id="nFn">—</span> <code>export function</code></strong>, and this same page says two screens up that the matching engine <em>"exists as total functions"</em>. The correction is kept visible because the false reason was the quotable sentence. ⚠️ <strong>A SECOND correction, 16 Aug 2026, and it is about the numbers rather than the reasoning.</strong> Those two figures were typed here as <em>"146"</em> and <em>"111"</em>; the tree says <strong>147</strong> and <strong>112</strong>, and had done since the merge that carried exports 849 → 854. <strong>Nothing could have caught it.</strong> A figure hand-typed into <code>c4-template.html</code> is an <em>input</em> to <code>check-c4-freshness.mjs</code>, so the checker renders it faithfully whether it is true or false — <code>render-c4-page.mjs</code> says so in its own header — and <code>check-doc-counts.mjs</code> reads Markdown lines, not HTML. Both are now <strong>read from the parsed data at render time</strong> and are no longer written down anywhere, which is the only repair that holds. <strong>The true reason is the imports, not the exports:</strong> <strong>{{total.typeOnlyImports}} of {{total.importStatements}}</strong> import statements in <code>model/</code> are type-only, which <code>verbatimModuleSyntax</code> <strong>erases before Node's loader ever sees them</strong> — so <strong>only {{total.runtimeImportEdges}} of the {{total.edges}} edges below exist at runtime</strong>. ⚠️ <em>These three figures were typed as "92 of 101" and "9 of the 65" until 5 Oct 2026 (G4412) and are now counted by the parser.</em> Derive the first pair by hand: <code>grep -h '^import' model/*.ts | wc -l</code> against <code>grep -h '^import type' model/*.ts | wc -l</code>. And <code>identity.ts</code> — which dominates the picture — is a file of compile-time assertions. ⚠️ <strong>This level witnesses which file names a type from which other file. It witnesses NOTHING about deployment, containers, planes, databases, call direction or data flow</strong> — so it cannot be read as evidence for or against any topology decision, including G185. A truthful runtime Level 3 would be generated from the {{total.declaredOperations}} declared contract operations, of which {{total.servedOperations}} are served — ⚠️ <em>this read "the 70 declared contract operations, none of which has an implementation" until 5 Oct 2026 (G4412)</em>. The served set and which client reaches each operation are derived in the frontend section below.</p>
+    <figure class="rc-figure">
+      <div class="rc-diagram-wrap"><svg id="l3svg" role="img" aria-label="Module dependency diagram generated from the TypeScript source, grouped by layer."></svg></div>
+      <figcaption class="rc-caption" id="l3cap"></figcaption>
+    </figure>
+  </div>
+
+  <div class="rc-zoom"><div class="line"></div><span>↓</span><span class="txt">zoom in — inside a module</span></div>
+
+  <!-- LEVEL 4 -->
+  <div class="rc-level" id="lvl4">
+    <div class="rc-level-head"><span class="rc-level-num">LEVEL 4</span><span class="rc-level-name">Code</span><span class="rc-level-tag">— export surface and type relationships</span></div>
+    <div class="rc-modlist" id="modlist"></div>
+    <div class="rc-detail">
+      <div class="rc-detail-head">
+        <span class="rc-detail-name" id="dName">—</span>
+        <span class="rc-pill layer" id="dLayer"></span>
+        <span class="rc-pill drop" id="dDrop" style="display:none">DROPPED FOR V1</span>
+        <span class="rc-detail-meta" id="dMeta"></span>
+      </div>
+      <div class="rc-detail-doc" id="dDoc"></div>
+      <div class="rc-detail-body">
+        <div class="rc-col">
+          <h3>Export surface</h3>
+          <div class="rc-scroll" id="dExports"></div>
+        </div>
+        <div class="rc-col">
+          <h3>Type relationships within this module</h3>
+          <div id="dRel"></div>
+          <h3 style="margin-top:1.1rem">Imports</h3>
+          <div id="dImports"></div>
+        </div>
+      </div>
+    </div>
+    <p class="rc-caption">Every symbol above is parsed from the module's source by the TypeScript compiler API. A name in red carries <code>@dropped-for-v1</code> — declared, not built.</p>
+  </div>
+
+  <!-- DATABASE -->
+  <div class="rc-level" id="dbsec">
+    <h2 class="rc-sechead">Database — built and planned</h2>
+    <p class="rc-secsub">Two databases, parsed apart (G4413): <strong>{{total.dataPlaneTables}}</strong> data-plane tables from <code>db/migrations/*.sql</code> and <strong>{{total.controlPlaneTables}}</strong> control-plane tables from <code>db/migrations-control/*.sql</code> — {{total.builtTables}} in all. A control table carries no RLS policy <em>by design</em>: there is no tenant in that database and no tenant session can exist there. ⚠️ <em>Until 5 Oct 2026 this section read the data plane's set alone, and said everything planned "has no DDL yet".</em></p>
+    <div id="dbBuilt"></div>
+
+    <h3 class="rc-sechead" style="font-size:14px">How tenant isolation is actually enforced</h3>
+    <p class="rc-secsub">Three mechanisms, none of which is a query-time <code>WHERE</code> clause — that is the point. A forgotten scope yields zero rows, not another tenant's.</p>
+    <figure class="rc-figure">
+      <div class="rc-diagram-wrap">
+        <svg viewBox="0 0 1100 300" role="img" aria-label="Tenant isolation mechanism: the application role connects without bypass rights, withTenantScope sets a transaction-local setting, and the RLS policy compares it to the row's tenant column.">
+          <defs><marker id="arrowI" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+          <line class="edge" x1="290" y1="90" x2="360" y2="90" marker-end="url(#arrowI)"/>
+          <line class="edge" x1="640" y1="90" x2="710" y2="90" marker-end="url(#arrowI)"/>
+          <g class="node n-neutral" onclick="ask('Why does reconcile_app have NOBYPASSRLS and own nothing?')">
+            <rect x="60" y="58" width="230" height="64" rx="6"/>
+            <text class="title" x="175" y="78" text-anchor="middle" dominant-baseline="central">reconcile_app</text>
+            <text class="sub" x="175" y="100" text-anchor="middle" dominant-baseline="central">LOGIN · NOBYPASSRLS</text></g>
+          <g class="node n-core" onclick="ask('Walk me through withTenantScope() in db/tenant-scope.ts and why set_config is parameterised.')">
+            <rect x="360" y="58" width="280" height="64" rx="6"/>
+            <text class="title" x="500" y="78" text-anchor="middle" dominant-baseline="central">withTenantScope()</text>
+            <text class="sub" x="500" y="100" text-anchor="middle" dominant-baseline="central">BEGIN · set_config($1,$2,true)</text></g>
+          <g class="node n-platform" onclick="ask('Explain the RLS policy predicates on tenant and tenant_contact.')">
+            <rect x="710" y="58" width="330" height="64" rx="6"/>
+            <text class="title" x="875" y="78" text-anchor="middle" dominant-baseline="central">RLS policy · ENABLE + FORCE</text>
+            <text class="sub" x="875" y="100" text-anchor="middle" dominant-baseline="central">nullif(current_setting(…),'') </text></g>
+          <text class="znote" x="60" y="168">1 — the request path connects as a role with no read exemption, owning nothing</text>
+          <text class="znote" x="60" y="192">2 — the tenant id is bound as a parameter inside an explicit transaction, never interpolated</text>
+          <text class="znote" x="60" y="216">3 — the policy compares the row's tenant column to that setting; NULL matches nothing, so an unscoped read returns zero rows</text>
+          <text class="znote" x="60" y="252">Verified by tests/db/tenant-isolation.test.ts — including two negative controls: with RLS disabled the same read leaks both tenants,</text>
+          <text class="znote" x="60" y="272">and with the policy dropped it fails closed. That suite skips when no local Postgres answers, so a green CI run is not proof.</text>
+        </svg>
+      </div>
+    </figure>
+
+    <h3 class="rc-sechead" style="font-size:14px">Planned tables — joined to the built schema</h3>
+    <p class="rc-secsub">From <code>docs/persistence-design.md</code> §2, joined by <code>tools/planner/c4-planned.json</code> (G4417): each planned name, whether it was built and as what. The gate fails when a claimed table is missing or an <em>absent</em> name now exists. ⚠️ <strong>Corrected 5 Oct 2026 rather than rewritten.</strong> This caption read <em>"Every table carries <code>tenant_id</code> as the leading column of every composite index"</em> — that rule holds for <strong>tenant-scoped tables only</strong>; the control database has no tenant — and <em>"Three are monthly-partitioned: <code>policy_evaluation</code>, <code>usage_record</code>, <code>audit</code>"</em>: <strong>no table is partitioned</strong> — <code>PARTITION BY</code> appears <strong>{{total.partitionedStatements}}</strong> times in comment-stripped DDL across both directories.</p>
+    <div id="plannedJoin"></div>
+    <p class="rc-caption" style="margin-top:.7rem">Payload shape: a discriminated union or recursive structure goes in a JSONB column; a foreign key does not. ⚠️ <strong>Corrected 5 Oct 2026:</strong> this said G106 was <em>"half applied … <code>FieldSpec.path</code> is still a bare <code>string</code> with nothing binding it to a payload key"</em>. Both halves have landed — <code>FieldPath</code> is a branded token list parsed at one seam (G214, <code>model/field-path.ts</code>), and the payload, its addressing and the subject index are one migration (G295, <code>db/migrations/0012_payload_and_subject_index.sql</code>). An unmapped key is stored and unreadable.</p>
+    <p class="rc-caption" style="margin-top:.4rem"><strong>{{total.builtTables}}</strong> built tables are classified: each is a planned entry's <code>builtAs</code> or is listed, with the migration that built it, in <code>tools/planner/c4-acknowledged.json</code> — a new table in neither fails <code>check:c4</code>.</p>
+  </div>
+
+  <!-- FRONTEND -->
+  <div class="rc-level" id="frontend">
+    <h2 class="rc-sechead">Frontend — what it serves, what it reaches, and what it marks as not built</h2>
+    <p class="rc-secsub"><strong>Everything in this section above the history block is generated</strong> (G4415) — from <code>frontend/src/routes/table.ts</code>, <code>frontend/src/main.tsx</code>, the API clients in <code>frontend/src/api/</code> and <code>frontend/site/src/api/</code>, the seven contract tiers and <code>tools/served-set.mjs</code>. <code>check-c4-freshness.mjs</code> fails when it drifts, when a client reaches an operation no plane serves, and when a served operation no client reaches is not acknowledged.</p>
+
+    <h3 class="rc-sechead" style="font-size:14px">What it stands on</h3>
+    <div class="rc-grid2">
+      <div class="rc-card"><h4>Kernel</h4><p style="font-size:12px;line-height:1.55;margin:.3rem 0 0"><code>docs/handoff-pack/tokens.css</code> — the one place a colour, a type step, a spacing unit, a duration, a layer or a breakpoint is declared (G264, G274); <code>frontend/src/bridge.css</code> imports it.</p></div>
+      <div class="rc-card"><h4>Application <span class="rc-pill" style="border-color:var(--good);color:var(--good);background:var(--good-soft)">{{status.webApp}}</span></h4><p style="font-size:12px;line-height:1.55;margin:.3rem 0 0"><code>frontend/src</code> — {{label.webApp}} — {{evidence.webApp}}.</p></div>
+      <div class="rc-card"><h4>Apex site <span class="rc-pill" style="border-color:var(--good);color:var(--good);background:var(--good-soft)">{{status.apexSite}}</span></h4><p style="font-size:12px;line-height:1.55;margin:.3rem 0 0"><code>frontend/site</code> — its own Vite build, served by Amplify at <code>reconcileai.app</code> (G1961, G3151).</p></div>
+      <div class="rc-card"><h4>The served set</h4><p style="font-size:12px;line-height:1.55;margin:.3rem 0 0"><strong>{{total.servedOperations}}</strong> of {{total.declaredOperations}} declared operations are mounted — <code>node tools/served-set.mjs</code>. Per tier below, with which client reaches each.</p></div>
+    </div>
+
+    <h3 class="rc-sechead" style="font-size:14px">The route register</h3>
+    <p class="rc-secsub">Every path in <code>ROUTE_PATHS</code>, whether <code>main.tsx</code> draws a screen for it, what it cites, and the pack's own <em>Exists</em> word for it — read by the parser <code>tests/app/route-provenance.test.ts</code> uses (<code>tools/planner/pack-routes.mjs</code>, G4414). <strong>{{total.screens}}</strong> screens over <strong>{{total.routes}}</strong> routes. A <code>drawn_record</code> citation points at <code>design/routes/</code>, which G264 deleted — it resolves at <code>archive/pre-handoff-pack</code> and nowhere in the tree.</p>
+    <div class="rc-tblwrap"><table class="rc-tbl" id="routeTbl"><thead><tr><th>route</th><th>screen</th><th>plane</th><th>pack says</th><th>cites</th></tr></thead><tbody></tbody></table></div>
+
+    <h3 class="rc-sechead" style="font-size:14px">Screen → operation join</h3>
+    <p class="rc-secsub">Every path an API client reaches, resolved to a declared operation by method and path and split against the served set. <strong>Used but unserved must be empty</strong>; served but unused must be acknowledged, with a reason, in <code>tools/planner/c4-acknowledged.json</code>. ⚠️ The join reads path literals and <code>method:</code> literals in the clients — a URL built from a variable is invisible to it, and the module says so on its face.</p>
+    <div id="opJoin"></div>
+
+    <h3 class="rc-sechead" style="font-size:14px">Not-built marks</h3>
+    <p class="rc-secsub"><code>&lt;NotBuilt&gt;</code> (a hatch: REFUSED, naming the refusing authority) and <code>&lt;Soon&gt;</code> (unfinished, not refused — G245 keeps the two inks apart), counted in comment-stripped source so a header describing a mark is not one.</p>
+    <div id="marksTbl"></div>
+    <p class="rc-caption">{{label.reportsDestination}}</p>
+
+    <details style="margin-top:1.4rem">
+      <summary class="rc-caption" style="cursor:pointer"><strong>History — this section as it stood until 5 Oct 2026</strong>, hand-authored against <code>design/system/</code> and <code>design/routes/</code>. G264 deleted both on 18 Sep 2026; every path it cites resolves at <code>archive/pre-handoff-pack</code> (<code>git show archive/pre-handoff-pack:design/routes/close.html</code>). The labels it rendered now read: {{label.frontendKernel}} · {{label.frontendSpecimens}} · {{label.frontendRoutes}} · {{label.frontendStandsOn}}.</summary>
+    <h3 class="rc-sechead" style="font-size:14px">Frontend — the drawn product, and what it stands on</h3>
+    <p class="rc-secsub">⚠️ <strong>Nothing above covers the frontend, and the omission was structural rather than an oversight.</strong> <code>extract-c4-data.mjs</code> reads <code>model/*.ts</code> and <code>db/migrations/*.sql</code>; the design system postdates it and lives in neither. So a reader of Levels 1–4 would have concluded the product was undrawn, when in fact it is drawn in detail. <strong>This section is hand-authored</strong> — the same standing as Levels 1 and 2 — and every figure in it carries the command that reproduces it, because nothing on this page checks any of them.</p>
+
+    <div class="rc-grid2">
+      <div class="rc-card"><h4>Kernel <span class="rc-pill" style="border-color:var(--good);color:var(--good);background:var(--good-soft)">BUILT</span></h4>
+        <p style="font-size:12px;line-height:1.55;margin:.3rem 0 0">{{was.frontendKernel}}</p>
+        <p style="margin:.4rem 0 0"><code>grep -cE '^  --[A-Za-z0-9_-]+:' design/system/tokens.css</code> → <strong>40</strong></p></div>
+      <div class="rc-card"><h4>Specimens <span class="rc-pill" style="border-color:var(--good);color:var(--good);background:var(--good-soft)">BUILT</span></h4>
+        <p style="font-size:12px;line-height:1.55;margin:.3rem 0 0">{{was.frontendSpecimens}}</p>
+        <p style="margin:.4rem 0 0"><code>ls design/system/*.html</code> → <strong>6 files</strong> — five specimens and the contact sheet</p></div>
+      <div class="rc-card"><h4>Routes <span class="rc-pill">DESIGNED</span></h4>
+        <p style="font-size:12px;line-height:1.55;margin:.3rem 0 0">{{was.frontendRoutes}}</p>
+        <p style="margin:.4rem 0 0"><code>ls design/routes/*.html</code> → <strong>6 files</strong> carrying 12 routes</p></div>
+      <div class="rc-card"><h4>What they reach <span class="rc-pill" style="border-color:var(--flag);color:var(--flag)">BLOCKED</span></h4>
+        <p style="font-size:12px;line-height:1.55;margin:.3rem 0 0">{{was.frontendStandsOn}}</p></div>
+    </div>
+
+    <h3 class="rc-sechead" style="font-size:14px">The route register, and what each route declares it stands on</h3>
+    <p class="rc-secsub">🛑 <strong>The routes carry NO machine-readable join to the model.</strong> There is no <code>data-model</code>, no <code>data-cap</code>, no <code>data-op</code> and no <code>operationId</code> anywhere in <code>design/routes/</code> — <code>grep -ohE 'data-[a-z0-9-]+=' design/routes/*.html | sort -u</code> returns eleven names and every one is presentational or state-machine (<code>data-l</code>, <code>data-turn</code>, <code>data-state</code>, …). <strong>Exactly one structured attribute points at the model, and it points at ABSENCE: <code>data-nb</code>.</strong> Everything below was derived by grepping prose citations, which means this table is a join a person made, not one a tool can re-derive. Three files hold more than one route each and declare no per-route boundary for their citations, so the module and decision columns are <strong>per file, not per route</strong> — splitting them would be inference and it is not done here.</p>
+
+    <div class="rc-tblwrap"><table class="rc-tbl">
+      <thead><tr><th>route</th><th>tier</th><th>file</th><th>model modules cited <span style="font-weight:400">(in the file)</span></th><th>contract ops</th><th>model gaps</th></tr></thead>
+      <tbody>
+        <tr><td class="nm">/</td><td rowspan="4">Entry</td><td rowspan="4" class="nm">entry.html</td><td rowspan="4">access · domain · governance · reconciliation · <strong style="color:var(--flag)">held-work ✗</strong></td><td rowspan="4" style="color:var(--flag)"><strong>none</strong></td><td rowspan="4">MG1–MG8</td></tr>
+        <tr><td class="nm">/signin</td></tr>
+        <tr><td class="nm">/signin/lapsed</td></tr>
+        <tr><td class="nm">/invite</td></tr>
+        <tr><td class="nm">/close</td><td rowspan="3">Tier 1 · Work</td><td rowspan="3" class="nm">close.html</td><td rowspan="3">billing · domain · governance · kernel · reconciliation</td><td rowspan="3" style="color:var(--flag)"><strong>none</strong></td><td rowspan="3">MG9–MG15</td></tr>
+        <tr><td class="nm">/close/run/:runId</td></tr>
+        <tr><td class="nm">/close/run/:runId/refused</td></tr>
+        <tr><td class="nm">/close/finding/:ref</td><td rowspan="3">Tier 1 · Work</td><td rowspan="3" class="nm">finding.html</td><td rowspan="3">access · agents · domain · governance · kernel · learning · policy · reconciliation</td><td rowspan="3" style="color:var(--flag)"><strong>none</strong></td><td rowspan="3">MG16–MG24</td></tr>
+        <tr><td class="nm">/close/finding/:ref/confirm</td></tr>
+        <tr><td class="nm">/close/finding/:ref/post</td></tr>
+        <tr><td class="nm">/ask</td><td>Tier 1 · Work</td><td class="nm">ask.html</td><td>access · domain · governance · identity · reconciliation · <strong style="color:var(--flag)">presentation ⚠ dropped</strong></td><td style="color:var(--flag)"><strong>none</strong></td><td>MG25–MG27</td></tr>
+        <tr><td class="nm">/reports</td><td>Tier 1 · Work</td><td class="nm">reports.html</td><td>access · agents · billing · domain · evaluation · examples · governance · kernel · observability · policy · <strong style="color:var(--flag)">presentation ⚠ dropped</strong></td><td><code>createExport</code> · <code>getExport</code> · <code>getDispositionMix</code></td><td>MG10 · MG28–MG30</td></tr>
+      </tbody></table></div>
+    <p class="rc-caption" style="margin-top:.6rem">Operation citations resolve to <code>docs/contracts/capability.openapi.yaml</code> — <code>createExport</code> at <code>:1744</code> (path <code>/exports</code>, <code>:1741</code>), <code>getExport</code> at <code>:1836</code> (<code>/exports/{exportId}</code>, <code>:1833</code>), <code>getDispositionMix</code> at <code>:1863</code> (<code>/reports/disposition-mix</code>, <code>:1860</code>). <strong>Those three are the ONLY contract operations the entire drawn product cites</strong>, against every operation declared across the four contract tiers — <code>node tools/check-doc-counts.mjs --derive</code> is the governed derivation of that total, and it is deliberately not written down here, because a figure typed into this template is an input to the freshness check rather than an output of it. <code>entry.html</code> states the counterpart negatively: of 67 contract paths, not one signs in, exchanges a token, takes a second factor, selects a tenant or signs out.</p>
+
+    <h3 class="rc-sechead" style="font-size:14px">The not-built marks — and two corrections to how they are usually described</h3>
+    <p class="rc-secsub">The hatch mark is the most useful thing in the bundle: it is a drawn screen admitting, in place, that what it is drawing does not exist. But the shorthand for it is wrong in two ways, and both matter to anyone counting.</p>
+    <div class="rc-grid2">
+      <div class="rc-card"><h4>⚠️ It is 90 marks, not 98</h4>
+        <p style="font-size:12px;line-height:1.6;margin:.3rem 0 0"><code>grep -o 'data-nb=' design/routes/*.html | wc -l</code> returns <strong>98</strong> — and <strong>8 of those are the reproduction commands matching themselves</strong>. Several route files say so in their own prose. The real mark count is <code>grep -oh 'data-nb="not built"' design/routes/*.html | wc -l</code> → <strong>90</strong>, of which 86 are on the five route files and 4 on the contact sheet. <em>This is <code>grep -c</code>-versus-<code>grep -o</code> in the wild, and it has shipped a wrong count here before.</em></p></div>
+      <div class="rc-card"><h4>⚠️ <code>data-nb</code> does NOT name the decision</h4>
+        <p style="font-size:12px;line-height:1.6;margin:.3rem 0 0">Its value is the constant string <code>not built</code> — one spelling, 90 times. It exists so the hatch carries a <em>printed word</em> that survives greyscale (<code>design/system/tokens.css:958</code>, <code>.nb::after{content:attr(data-nb)}</code>). <strong>The refusing authority lives in a separate <code>&lt;span class="nbwhy"&gt;</code></strong> — <code>grep -o 'class="nbwhy"' design/routes/*.html | wc -l</code> → <strong>84</strong>. 90 against 84, and per file they do not correspond either (<code>entry</code> 23/25, <code>reports</code> 9/14, <code>close</code> 26/19): <strong>the mark and the reason are not paired one-to-one, so "each mark names the decision that refused it" is not a claim this tree supports.</strong></p></div>
+    </div>
+    <p class="rc-caption" style="margin-top:.6rem">What a reason looks like when it is there — the authority first, in bold, then prose, then usually a reproducible <code>grep</code>: <code>design/routes/close.html:767</code> — <em>"G155 not applied, and no wire carries this row."</em> · <code>design/routes/entry.html:826</code> — <em>"A shared session has nowhere to live."</em> · <code>design/routes/entry.html:539</code> — <em>"<code>PRODUCT.md</code> — never a named customer or logo."</em> · <code>design/routes/finding.html:889</code> — <em>"DP-4 — the residue-to-exception join does…"</em>. So the authority is a <code>G###</code> ruling, a <code>PRODUCT.md</code> rule, a <code>DP-#</code> defect, or a bare statement that the model has no such noun.</p>
+
+    <h3 class="rc-sechead" style="font-size:14px">Reports — the destination that is almost entirely hatched, verified</h3>
+    <p class="rc-secsub">{{was.reportsDestination}}</p>
+    <p class="rc-caption">Verified against the tree rather than quoted: <code>grep -rnE '\b(ReportDefinition|ScheduledReport|PinnedAnswer|ExportJob|ReportSchedule)\b' model/</code> <strong>exits 1 with no output</strong>, and the unanchored <code>grep -rnoE '\bReport\b' model/*.ts</code> also exits 1 — <strong>the bare word does not occur in <code>model/</code> at all</strong>, which is a stronger result than "no exports". The only near-matches are <code>PackQualityReport</code> (9) and <code>PackQualityReportId</code> (6), a pack-<em>evaluation</em> artefact and not a finance pack. <code>model/presentation.ts</code> — where a pinned answer would live — is <code>@dropped-for-v1</code> <strong>whole</strong>, so both ends of that join are absent. What survives is real but small: three export operations, <code>exportData</code> (<code>model/access.ts:256</code>), and <code>export_data: false</code> in <code>model/agents.ts</code> — <em>export is bulk egress under a human's name, never delegated</em>.</p>
+
+    <h3 class="rc-sechead" style="font-size:14px">What this join does and does not prove</h3>
+    <p class="rc-secsub"><code>docs/screen-pack-ledger.md</code> is the precedent for a screens-to-model join in this repository, and it is careful to disclaim itself. That disclaimer governs this section too, and is reproduced rather than paraphrased — <code>docs/screen-pack-ledger.md:66–71</code>:</p>
+    <blockquote style="margin:.4rem 0 .8rem;padding:.6rem .9rem;border-left:3px solid var(--border-strong);font-size:12.5px;line-height:1.65;color:var(--ink-soft)">
+      <strong>A note on what a green join proves.</strong> Nothing. A row saying a screen has its model types and its operations means the <em>nouns</em> line up. It does not mean the behaviour is expressible, that the fields carry values, or that the operation returns what the screen draws. <code>docs/HANDOFF.md</code> §5.10 is the standing warning: five total records landed with no construction site anywhere, so <code>tsc</code> could not have failed on a single field chosen.
+    </blockquote>
+    <p class="rc-caption">Three further limits specific to this section. ⚠️ <strong>One:</strong> <code>docs/screen-pack-ledger.md</code> is <em>not</em> the ledger for these routes — it is a dated 7 Aug 2026 snapshot joining the older <code>Mockups/rec/</code> pack, superseded as a visual world under G72 and still authoritative as product truth. The routes above have <strong>no ledger of their own</strong>. ⚠️ <strong>Two:</strong> the MG column is the one edge here that <em>is</em> cleanly derivable — <code>docs/model-gaps.md</code> §5 groups all thirty gaps under five route headings — but the same thirty are restated as prose inside <code>design/routes/index.html</code> with <strong>no shared identifier linking the two copies</strong>, so they can drift apart silently and nothing would report it. ⚠️ <strong>Three:</strong> the route contact sheet's own not-built table is <strong>already stale</strong> — it sums to 78 and its reproduction comment asserts 79, against a tree that carries 86 on those five files. Run the command; do not read the table.</p>
+    </details>
+  </div>
+
+  <p class="rc-footer" id="footer"></p>
+</div>
+
+<script type="application/json" id="c4data">__C4_DATA__</script>
+<script>
+(function () {
+  var DATA = JSON.parse(document.getElementById('c4data').textContent);
+  var LAYERS = [
+    { key: 'proof', label: 'PROOF & FIXTURES', note: 'nothing depends on these' },
+    { key: 'platform', label: 'PLATFORM SERVICES', note: 'cross-cutting capabilities' },
+    { key: 'core', label: 'CORE', note: 'entities, access, matching engine' },
+    { key: 'foundation', label: 'FOUNDATION', note: 'zero internal dependencies' }
+  ];
+  var byName = {};
+  DATA.modules.forEach(function (m) { byName[m.name] = m; });
+  var selected = null;
+  var pos = {};
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function el(tag, attrs, text) {
+    var n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  var BOX_W = 210, BOX_H = 56, GAP_X = 22, GAP_Y = 16, PER_ROW = 5;
+  var PAD = 16, LAYER_HEAD = 34, LAYER_GAP = 26, MARGIN = 30;
+
+  function buildL3() {
+    var svg = document.getElementById('l3svg');
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var defs = el('defs');
+    var mk = el('marker', { id: 'arrL3', viewBox: '0 0 10 10', refX: '8', refY: '5', markerWidth: '6', markerHeight: '6', orient: 'auto-start-reverse' });
+    mk.appendChild(el('path', { d: 'M2 1L8 5L2 9', fill: 'none', stroke: 'context-stroke', 'stroke-width': '1.5', 'stroke-linecap': 'round' }));
+    defs.appendChild(mk); svg.appendChild(defs);
+
+    var y = MARGIN, maxRight = 0;
+    var edgeLayer = el('g'); svg.appendChild(edgeLayer);
+    var nodeLayer = el('g'); svg.appendChild(nodeLayer);
+
+    LAYERS.forEach(function (layer) {
+      var mods = DATA.modules.filter(function (m) { return m.layer === layer.key; });
+      if (!mods.length) return;
+      var rows = Math.ceil(mods.length / PER_ROW);
+      var boxTop = y + LAYER_HEAD;
+      var h = LAYER_HEAD + rows * BOX_H + (rows - 1) * GAP_Y + PAD;
+      var widest = Math.min(mods.length, PER_ROW);
+      var innerW = widest * BOX_W + (widest - 1) * GAP_X;
+      var boxW = innerW + PAD * 2;
+      nodeLayer.appendChild(el('rect', { class: 'zrect', x: MARGIN, y: y, width: boxW, height: h, rx: 12 }));
+      nodeLayer.appendChild(el('text', { class: 'zlabel', x: MARGIN + 16, y: y + 20 }, layer.label));
+      nodeLayer.appendChild(el('text', { class: 'znote', x: MARGIN + 16 + layer.label.length * 7.2 + 14, y: y + 20 }, layer.note));
+      maxRight = Math.max(maxRight, MARGIN + boxW);
+
+      mods.forEach(function (m, i) {
+        var r = Math.floor(i / PER_ROW), c = i % PER_ROW;
+        var inRow = Math.min(mods.length - r * PER_ROW, PER_ROW);
+        var rowW = inRow * BOX_W + (inRow - 1) * GAP_X;
+        var x0 = MARGIN + PAD + (innerW - rowW) / 2 + c * (BOX_W + GAP_X);
+        var yy = boxTop + r * (BOX_H + GAP_Y);
+        pos[m.name] = { x: x0, y: yy, w: BOX_W, h: BOX_H, cx: x0 + BOX_W / 2, cy: yy + BOX_H / 2 };
+        var cls = 'node n-' + m.layer + (m.dropped ? ' n-dropped' : '');
+        var g = el('g', { class: cls, 'data-mod': m.name, tabindex: '0', role: 'button',
+          'aria-label': m.name + '.ts — ' + m.counts.total + ' exports' });
+        g.appendChild(el('rect', { x: x0, y: yy, width: BOX_W, height: BOX_H, rx: 6 }));
+        g.appendChild(el('text', { class: 'title', x: x0 + BOX_W / 2, y: yy + 20, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, m.name + '.ts'));
+        var sub = m.dropped ? 'dropped for v1' : m.counts.total + ' exports' + (m.counts.dropped ? ' · ' + m.counts.dropped + ' dropped' : '');
+        g.appendChild(el('text', { class: 'sub', x: x0 + BOX_W / 2, y: yy + 39, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, sub));
+        g.addEventListener('click', function () { selectModule(m.name, false); });
+        g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectModule(m.name, false); } });
+        nodeLayer.appendChild(g);
+      });
+      y += h + LAYER_GAP;
+    });
+
+    svg.setAttribute('viewBox', '0 0 ' + (maxRight + MARGIN) + ' ' + (y - LAYER_GAP + MARGIN));
+    svg.__edges = edgeLayer;
+    drawEdges();
+  }
+
+  /**
+   * Trim a centre-to-centre segment back to both boxes' borders, so an edge
+   * starts and ends in open space instead of vanishing under the label it
+   * points at. Pure geometry: walk the ray from each centre to the point where
+   * it leaves that box's half-extents.
+   */
+  function trim(a, b, padA, padB) {
+    var dx = b.cx - a.cx, dy = b.cy - a.cy;
+    if (dx === 0 && dy === 0) return null;
+    function hit(box, sx, sy, pad) {
+      var hw = box.w / 2 + pad, hh = box.h / 2 + pad;
+      var tx = sx === 0 ? Infinity : hw / Math.abs(sx);
+      var ty = sy === 0 ? Infinity : hh / Math.abs(sy);
+      return Math.min(tx, ty);
+    }
+    var ta = hit(a, dx, dy, padA), tb = hit(b, dx, dy, padB);
+    return {
+      x1: a.cx + dx * ta, y1: a.cy + dy * ta,
+      x2: b.cx - dx * tb, y2: b.cy - dy * tb
+    };
+  }
+
+  function drawEdges() {
+    var g = document.getElementById('l3svg').__edges;
+    while (g.firstChild) g.removeChild(g.firstChild);
+    if (!selected) return;
+    var m = byName[selected];
+    if (!m) return;
+    var from = pos[selected];
+    if (!from) return;
+    m.imports.forEach(function (dep) {
+      var to = pos[dep];
+      if (!to) return;
+      var s = trim(from, to, 2, 8);
+      if (s) g.appendChild(el('line', Object.assign({ class: 'edge-hot', 'marker-end': 'url(#arrL3)' }, s)));
+    });
+    DATA.modules.forEach(function (other) {
+      if (other.name === selected) return;
+      if (other.imports.indexOf(selected) === -1) return;
+      var f = pos[other.name];
+      if (!f) return;
+      var s = trim(f, from, 2, 8);
+      if (s) g.appendChild(el('line', Object.assign({ class: 'edge-dim', 'marker-end': 'url(#arrL3)' }, s)));
+    });
+  }
+
+  function buildModList() {
+    var wrap = document.getElementById('modlist');
+    wrap.innerHTML = '';
+    DATA.modules.forEach(function (m) {
+      var b = document.createElement('button');
+      b.className = 'rc-modbtn' + (m.dropped ? ' drop' : '');
+      b.textContent = m.name;
+      b.setAttribute('data-mod', m.name);
+      b.addEventListener('click', function () { selectModule(m.name, false); });
+      wrap.appendChild(b);
+    });
+  }
+
+  function groupHtml(title, items, kind) {
+    if (!items.length) return '';
+    var h = '<div class="rc-group"><div class="rc-group-h">' + esc(title) + ' <span class="n">' + items.length + '</span></div>';
+    items.forEach(function (it) {
+      h += '<div class="rc-item' + (it.dropped ? ' dropped' : '') + '">';
+      h += '<div class="rc-item-n">' + esc(it.name) + (kind === 'fn' ? esc(it.signature || '') : '') + '</div>';
+      if (kind !== 'fn' && it.signature) h += '<div class="rc-item-s">' + esc(it.signature) + '</div>';
+      if (kind === 'iface' && it.members && it.members.length) {
+        var ms = it.members.slice(0, 14).map(function (mm) { return mm.name + (mm.type ? ': ' + mm.type : ''); }).join(' · ');
+        if (it.members.length > 14) ms += ' · …' + (it.members.length - 14) + ' more';
+        h += '<div class="rc-members">' + esc(ms) + '</div>';
+      }
+      h += '</div>';
+    });
+    return h + '</div>';
+  }
+
+  function buildRelMap(m) {
+    var host = document.getElementById('dRel');
+    host.innerHTML = '';
+    var rels = m.relationships || [];
+    if (!rels.length) {
+      host.innerHTML = '<p class="rc-empty">No intra-module type references — this module’s exported types do not reference one another.</p>';
+      return;
+    }
+    var deg = {};
+    rels.forEach(function (r) { deg[r.from] = (deg[r.from] || 0) + 1; deg[r.to] = (deg[r.to] || 0) + 1; });
+    var names = Object.keys(deg).sort(function (a, b) { return deg[b] - deg[a] || a.localeCompare(b); }).slice(0, 12);
+    var keep = {};
+    names.forEach(function (n) { keep[n] = true; });
+    var shown = rels.filter(function (r) { return keep[r.from] && keep[r.to]; });
+
+    var W = 520, rowH = 30, colW = 250, n = names.length;
+    var H = Math.max(n * rowH + 30, 80);
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'rc-relmap', role: 'img',
+      'aria-label': 'Type reference map for ' + m.name });
+    var defs = el('defs');
+    var mk = el('marker', { id: 'arrRel', viewBox: '0 0 10 10', refX: '9', refY: '5', markerWidth: '5', markerHeight: '5', orient: 'auto-start-reverse' });
+    mk.appendChild(el('path', { d: 'M2 1L8 5L2 9', fill: 'none', stroke: 'context-stroke', 'stroke-width': '1.5' }));
+    defs.appendChild(mk); svg.appendChild(defs);
+
+    // Edges go in their own group appended FIRST, so every connector renders
+    // behind the labels rather than across them. A line through a type name is
+    // the fastest way to make a small diagram unreadable.
+    var edgeG = el('g');
+    var boxG = el('g');
+    svg.appendChild(edgeG);
+    svg.appendChild(boxG);
+
+    var p = {};
+    names.forEach(function (nm, i) {
+      var col = i % 2, row = Math.floor(i / 2);
+      var x = col * colW + 10, y = row * rowH + 18;
+      p[nm] = { x: x, y: y, w: colW - 26 };
+      boxG.appendChild(el('rect', { x: x, y: y - 11, width: colW - 26, height: 22, rx: 4, fill: 'var(--paper-2)', stroke: 'var(--border-strong)', 'stroke-width': '.75' }));
+      boxG.appendChild(el('text', { x: x + 8, y: y, 'dominant-baseline': 'central', style: 'font:500 10.5px var(--font-mono);fill:var(--ink)' }, nm.length > 26 ? nm.slice(0, 25) + '…' : nm));
+    });
+    shown.forEach(function (r) {
+      var a = p[r.from], b = p[r.to];
+      if (!a || !b || a === b) return;
+      var x1 = a.x + a.w, y1 = a.y, x2 = b.x, y2 = b.y;
+      var mx = (x1 + x2) / 2;
+      edgeG.appendChild(el('path', { d: 'M' + x1 + ' ' + y1 + ' C' + mx + ' ' + y1 + ',' + mx + ' ' + y2 + ',' + x2 + ' ' + y2,
+        fill: 'none', stroke: 'var(--accent)', 'stroke-width': '.85', opacity: '.5', 'marker-end': 'url(#arrRel)' }));
+    });
+    host.appendChild(svg);
+    var cap = document.createElement('p');
+    cap.className = 'rc-caption';
+    cap.style.marginTop = '.4rem';
+    cap.textContent = rels.length + ' reference' + (rels.length === 1 ? '' : 's') + ' between exported types' +
+      (names.length < Object.keys(deg).length ? ' — showing the ' + names.length + ' most connected' : '');
+    host.appendChild(cap);
+  }
+
+  window.selectModule = function (name, scroll) {
+    var m = byName[name];
+    if (!m) return;
+    selected = name;
+    document.getElementById('dName').textContent = m.name + '.ts';
+    document.getElementById('dLayer').textContent = m.layer;
+    document.getElementById('dDrop').style.display = m.dropped ? '' : 'none';
+    document.getElementById('dMeta').textContent =
+      m.counts.total + ' exports · ' + m.counts.dropped + ' dropped · imports ' + m.imports.length;
+    document.getElementById('dDoc').textContent = m.doc || '';
+
+    var e = m.exports;
+    document.getElementById('dExports').innerHTML =
+      groupHtml('Interfaces', e.interfaces, 'iface') +
+      groupHtml('Functions', e.functions, 'fn') +
+      groupHtml('Type aliases', e.types, 'type') +
+      groupHtml('Constants', e.values, 'val') ||
+      '<p class="rc-empty">No top-level exports.</p>';
+
+    var imp = document.getElementById('dImports');
+    if (!m.imports.length) {
+      imp.innerHTML = '<p class="rc-empty">Imports nothing — this module is a root.</p>';
+    } else {
+      imp.innerHTML = m.imports.map(function (d) {
+        return '<button class="rc-modbtn" data-jump="' + esc(d) + '">' + esc(d) + '</button>';
+      }).join(' ');
+      Array.prototype.forEach.call(imp.querySelectorAll('[data-jump]'), function (b) {
+        b.addEventListener('click', function () { selectModule(b.getAttribute('data-jump'), true); });
+      });
+    }
+
+    buildRelMap(m);
+
+    Array.prototype.forEach.call(document.querySelectorAll('#modlist .rc-modbtn'), function (b) {
+      b.classList.toggle('on', b.getAttribute('data-mod') === name);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#l3svg [data-mod]'), function (g) {
+      g.classList.toggle('n-selected', g.getAttribute('data-mod') === name);
+    });
+    drawEdges();
+    if (scroll !== false) zoomTo('lvl4');
+    else {
+      var t = document.getElementById('lvl4');
+      t.scrollIntoView({ behavior: 'auto', block: 'start' });
+      flash(t);
+    }
+  };
+
+  function flash(t) {
+    t.classList.add('rc-flash');
+    setTimeout(function () { t.classList.remove('rc-flash'); }, 1400);
+  }
+  window.zoomTo = function (id) {
+    var t = document.getElementById(id);
+    if (!t) return;
+    t.scrollIntoView({ behavior: 'auto', block: 'start' });
+    flash(t);
+  };
+  window.ask = function (q) {
+    if (typeof sendPrompt === 'function') sendPrompt(q);
+  };
+
+  window.showTab = function (group, id) {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-tabgroup="' + group + '"]'), function (b) {
+      b.classList.toggle('on', b.getAttribute('data-tab') === id);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-panelgroup="' + group + '"]'), function (p) {
+      p.hidden = p.getAttribute('data-panel') !== id;
+    });
+  };
+
+  function buildDb() {
+    var host = document.getElementById('dbBuilt');
+    var db = DATA.db;
+    if (!db.tables.length) {
+      host.innerHTML = '<p class="rc-empty">No CREATE TABLE found in db/migrations — nothing is built yet.</p>';
+      return;
+    }
+    var h = '';
+    var control = (db.control && db.control.tables) || [];
+    db.tables.concat(control).forEach(function (t) {
+      var isControl = t.plane === 'control';
+      h += '<div class="rc-tblwrap" style="margin-bottom:1rem">';
+      h += '<div class="rc-tblcap">' + esc((isControl ? 'control · ' : '') + (t.schema === 'public' ? '' : t.schema + '.') + t.name) +
+        '<span class="rc-pill" style="border-color:var(--good);color:var(--good);background:var(--good-soft)">BUILT</span>';
+      if (isControl) h += '<span class="rc-pill">CONTROL DB · NO RLS — NO TENANT IN THIS DATABASE</span>';
+      if (t.rlsEnabled) h += '<span class="rc-pill">RLS ENABLED</span>';
+      if (t.rlsForced) h += '<span class="rc-pill">FORCED</span>';
+      h += '<span style="font-weight:400;color:var(--ink-muted);font-size:11px">' + esc((isControl ? 'db/migrations-control/' : 'db/migrations/') + t.source) + '</span></div>';
+      h += '<table class="rc-tbl"><thead><tr><th>column</th><th>type</th><th>null</th><th>key / default</th></tr></thead><tbody>';
+      t.columns.forEach(function (c) {
+        var extra = [];
+        if (c.primaryKey) extra.push('PK');
+        if (c.references) extra.push('→ ' + c.references);
+        if (c.default) extra.push('default ' + c.default);
+        h += '<tr><td class="nm">' + esc(c.name) + '</td><td>' + esc(c.type) + '</td><td>' +
+          (c.notNull ? 'NOT NULL' : 'nullable') + '</td><td>' + esc(extra.join(' · ')) + '</td></tr>';
+      });
+      h += '</tbody></table>';
+      if (t.constraints.length) {
+        h += '<div style="padding:6px 10px;font:400 11.5px var(--font-mono);color:var(--ink-muted);border-top:1px solid var(--border)">' +
+          esc(t.constraints.join(' · ')) + '</div>';
+      }
+      h += '</div>';
+    });
+
+    if (db.policies.length) {
+      h += '<div class="rc-tblwrap" style="margin-bottom:1rem"><div class="rc-tblcap">row level security policies</div>';
+      h += '<table class="rc-tbl"><thead><tr><th>policy</th><th>table</th><th>using / with check</th></tr></thead><tbody>';
+      db.policies.forEach(function (p) {
+        var same = p.using && p.using === p.withCheck;
+        var pred = same ? p.using + '  (identical in both)' : 'USING ' + p.using + '   CHECK ' + p.withCheck;
+        h += '<tr><td class="nm">' + esc(p.name) + '</td><td>' + esc(p.table) + '</td><td>' + esc(pred) + '</td></tr>';
+      });
+      h += '</tbody></table></div>';
+    }
+
+    if (db.roles.length) {
+      h += '<div class="rc-tblwrap" style="margin-bottom:1rem"><div class="rc-tblcap">roles</div>';
+      h += '<table class="rc-tbl"><thead><tr><th>role</th><th>what it is for</th></tr></thead><tbody>';
+      db.roles.forEach(function (r) {
+        h += '<tr><td class="nm">' + esc(r.name) + '</td><td>' + esc(r.note) + '</td></tr>';
+      });
+      h += '</tbody></table></div>';
+    }
+
+    if (db.grants.length) {
+      h += '<div class="rc-tblwrap"><div class="rc-tblcap">grants</div>';
+      h += '<table class="rc-tbl"><thead><tr><th>to</th><th>privileges</th><th>on</th></tr></thead><tbody>';
+      db.grants.forEach(function (g) {
+        h += '<tr><td class="nm">' + esc(g.to) + '</td><td>' + esc(g.privileges) + '</td><td>' + esc(g.on) + '</td></tr>';
+      });
+      h += '</tbody></table></div>';
+    }
+    host.innerHTML = h;
+  }
+
+  /**
+   * The four-state split, recomputed from the parsed data on every render.
+   *
+   * WHY IT IS COMPUTED HERE AND NOT WRITTEN DOWN. A count typed into this
+   * template is an INPUT to check-c4-freshness.mjs, which renders it faithfully
+   * whether or not it is true — that is how "146 export const" survived the tree
+   * moving to 147. Derived here, the figure cannot disagree with the data the
+   * rest of the page draws, because it IS that data.
+   *
+   * RE-EXPORTS ARE EXCLUDED, and that is the whole reason two totals on this page
+   * differ. A type alias carrying `reExportedFrom` is another module's
+   * declaration reached through this one; counting it here would report one
+   * declaration twice and overshoot the governed 854 the same way adding the 88
+   * re-exported names to `counts.total` once overshot it to 918.
+   */
+  function stateSplit(m) {
+    var own = [];
+    m.exports.interfaces.forEach(function (x) { own.push([x, 'decl']); });
+    m.exports.types.forEach(function (x) { if (x.reExportedFrom === undefined) own.push([x, 'decl']); });
+    m.exports.functions.forEach(function (x) { own.push([x, 'exec']); });
+    m.exports.values.forEach(function (x) { own.push([x, 'exec']); });
+    var s = { built: 0, declared: 0, dropped: 0, total: own.length };
+    own.forEach(function (p) {
+      if (p[0].dropped) s.dropped++;
+      else if (p[1] === 'exec') s.built++;
+      else s.declared++;
+    });
+    return s;
+  }
+
+  function buildState() {
+    var tot = { built: 0, declared: 0, dropped: 0, total: 0 };
+    var rows = DATA.modules.map(function (m) {
+      var s = stateSplit(m);
+      tot.built += s.built; tot.declared += s.declared;
+      tot.dropped += s.dropped; tot.total += s.total;
+      return { m: m, s: s };
+    });
+
+    var pct = function (n) { return tot.total ? Math.round((n / tot.total) * 100) : 0; };
+    var cards = [
+      ['BUILT', tot.built, 'good',
+       'A <code>function</code> or a <code>const</code> — it survives compilation and can be called. Says nothing about whether anything calls it.'],
+      ['DECLARED, NOT BUILT', tot.declared, 'warn',
+       'An <code>interface</code> or a <code>type</code>. Erased at compile time; nothing constructs or executes it. In a types-first model this is the majority, by design.'],
+      ['DROPPED FOR V1', tot.dropped, 'bad',
+       'Carries <code>@dropped-for-v1</code> <em>as an annotation on its own declaration</em>. Declared and deliberately not built — kept, never deleted.'],
+      ['SPECIFIED, NOT WRITTEN', null, 'muted',
+       'A document naming a <code>model/</code> module that does not exist. <strong>Not parseable</strong> — there is no declaration to read — so it is found by walking the documents (G4416).']
+    ];
+
+    document.getElementById('stateCards').innerHTML = cards.map(function (c) {
+      var n = c[1];
+      var head = n === null
+        ? '<span style="font:700 22px var(--font-mono)">' + DATA.specifiedNotWritten.length + '</span> <span style="font-size:11px;color:var(--ink-muted)">modules · from the model graph\u2019s walk</span>'
+        : '<span style="font:700 22px var(--font-mono)">' + n + '</span> <span style="font-size:11px;color:var(--ink-muted)">of ' + tot.total + ' · ' + pct(n) + '%</span>';
+      return '<div class="rc-card"><h4>' + esc(c[0]) + '</h4><p style="margin:.2rem 0 .5rem">' + head + '</p>' +
+        '<p style="font-size:12px;line-height:1.55;color:var(--ink-soft);margin:0">' + c[3] + '</p></div>';
+    }).join('');
+
+    var tb = document.querySelector('#stateTbl tbody');
+    tb.innerHTML = rows.map(function (r) {
+      var s = r.s;
+      var note = r.m.dropped ? 'whole module dropped'
+        : (s.built === 0 && s.dropped === 0 ? 'declaration-only'
+        : (s.declared === 0 && s.dropped === 0 ? 'all runtime' : ''));
+      return '<tr><td class="nm"><button class="rc-modbtn" data-mod-jump="' + esc(r.m.name) + '">' +
+        esc(r.m.name) + '.ts</button></td>' +
+        '<td>' + s.built + '</td><td>' + s.declared + '</td><td>' + s.dropped + '</td><td>' + s.total + '</td>' +
+        '<td style="color:var(--ink-muted);font-size:11.5px">' + esc(note) + '</td></tr>';
+    }).join('') +
+      '<tr style="font-weight:700;border-top:2px solid var(--border-strong)"><td class="nm">all ' +
+      DATA.totals.modules + '</td><td>' + tot.built + '</td><td>' + tot.declared + '</td><td>' +
+      tot.dropped + '</td><td>' + tot.total + '</td><td style="font-weight:400;color:var(--ink-muted);font-size:11.5px">own declarations</td></tr>';
+
+    Array.prototype.forEach.call(tb.querySelectorAll('[data-mod-jump]'), function (b) {
+      b.addEventListener('click', function () { selectModule(b.getAttribute('data-mod-jump'), true); });
+    });
+
+    // The two figures the Level 3 caption used to have typed into it, and the two
+    // the DB caption needs. Read from the data, so they cannot drift from it.
+    var count = function (k) {
+      return DATA.modules.reduce(function (n, m) { return n + m.exports[k].length; }, 0);
+    };
+    document.getElementById('nConst').textContent = count('values');
+    document.getElementById('nFn').textContent = count('functions');
+    document.getElementById('nTables').textContent = DATA.totals.builtTables;
+    document.getElementById('nPolicies').textContent = DATA.totals.policies;
+  }
+
+  function pill(text, tone) {
+    var c = tone === 'good' ? 'border-color:var(--good);color:var(--good);background:var(--good-soft)'
+      : tone === 'bad' ? 'border-color:var(--flag);color:var(--flag);background:var(--flag-soft)'
+      : tone === 'warn' ? 'border-color:var(--warn);color:var(--warn);background:var(--warn-soft)' : '';
+    return '<span class="rc-pill" style="' + c + '">' + esc(text) + '</span>';
+  }
+
+  /* G4416 — specified, not written: the model graph's own walk. */
+  function buildSnw() {
+    var list = DATA.specifiedNotWritten.map(function (x) { return '<code>' + esc(x.subject) + '</code>'; }).join(' · ') || 'none';
+    ['snwList', 'snwInline'].forEach(function (id) { var n = document.getElementById(id); if (n) n.innerHTML = list; });
+  }
+
+  /* G4417 — the planned-tables join. */
+  function buildPlanned() {
+    var groups = {};
+    DATA.planned.forEach(function (p) { (groups[p.group] = groups[p.group] || []).push(p); });
+    var h = '<div class="rc-tblwrap"><table class="rc-tbl"><thead><tr><th>planned</th><th></th><th>status</th><th>built as</th><th>note</th></tr></thead><tbody>';
+    Object.keys(groups).forEach(function (g) {
+      h += '<tr><td colspan="5" style="font-weight:600;color:var(--ink)">' + esc(g) + '</td></tr>';
+      groups[g].forEach(function (p) {
+        var built = p.builtAs !== null && p.builtAsExists;
+        h += '<tr><td class="nm">' + esc(p.planned) + '</td><td>' + (built ? pill('BUILT', 'good') : pill('ABSENT', 'bad')) + '</td><td>' +
+          esc(p.status) + '</td><td>' + esc(p.builtAs || '—') + '</td><td>' + esc(p.note || '') + '</td></tr>';
+      });
+    });
+    var n = DATA.planned.filter(function (p) { return p.builtAs !== null && p.builtAsExists; }).length;
+    h += '</tbody></table></div><p class="rc-caption">' + n + ' of ' + DATA.planned.length + ' planned tables are built (same, renamed or reshaped); ' +
+      (DATA.planned.length - n) + ' are absent.</p>';
+    document.getElementById('plannedJoin').innerHTML = h;
+  }
+
+  /* G4415 — the route register. */
+  function buildRoutes() {
+    var tb = document.querySelector('#routeTbl tbody');
+    tb.innerHTML = DATA.frontend.routes.map(function (r) {
+      return '<tr><td class="nm">' + esc(r.path) + '</td><td>' + (r.screen ? pill('SCREEN', 'good') : pill('NO SCREEN', 'warn')) +
+        '</td><td>' + esc(r.plane) + '</td><td>' + esc(r.packExists || '— not in the pack table') + '</td><td>' + esc(r.cites) + '</td></tr>';
+    }).join('');
+  }
+
+  /* G4415 — the screen → operation join, per tier. */
+  function buildJoin() {
+    var j = DATA.frontend.join;
+    var h = '<div class="rc-grid2" style="margin-bottom:.8rem">';
+    h += '<div class="rc-card"><h4>served + used ' + pill(String(j.servedUsed.length), 'good') + '</h4><p style="font-size:12px;margin:.2rem 0 0;color:var(--ink-soft)">a client reaches it and a plane mounts it</p></div>';
+    h += '<div class="rc-card"><h4>served + unused ' + pill(String(j.servedUnused.length), 'warn') + '</h4><p style="font-size:12px;margin:.2rem 0 0;color:var(--ink-soft)">mounted, no browser client — each acknowledged with a reason</p></div>';
+    h += '<div class="rc-card"><h4>used + unserved ' + pill(String(j.usedUnserved.length), j.usedUnserved.length ? 'bad' : 'good') + '</h4><p style="font-size:12px;margin:.2rem 0 0;color:var(--ink-soft)">a client reaches an operation nothing mounts — must be 0</p></div>';
+    h += '<div class="rc-card"><h4>tiers</h4><ul>' + Object.keys(j.tiers).map(function (t) {
+      return '<li>' + esc(t) + ' — ' + j.tiers[t].served + ' of ' + j.tiers[t].declared + ' served</li>';
+    }).join('') + '</ul></div></div>';
+    h += '<div class="rc-tblwrap"><table class="rc-tbl"><thead><tr><th>operation</th><th>tier</th><th></th><th>reached by / why not</th></tr></thead><tbody>';
+    j.servedUsed.forEach(function (o) {
+      h += '<tr><td class="nm">' + esc(o.op) + '</td><td>' + esc(o.tier) + '</td><td>' + pill('USED', 'good') + '</td><td>' + esc(o.by.join(' · ')) + '</td></tr>';
+    });
+    j.servedUnused.forEach(function (o) {
+      h += '<tr><td class="nm">' + esc(o.op) + '</td><td>' + esc(o.tier) + '</td><td>' + pill('UNUSED', 'warn') + '</td><td>' + esc(o.ack || 'NOT ACKNOWLEDGED') + '</td></tr>';
+    });
+    j.usedUnserved.forEach(function (o) {
+      h += '<tr><td class="nm">' + esc(o.op) + '</td><td>' + esc(o.tier) + '</td><td>' + pill('UNSERVED', 'bad') + '</td><td>' + esc(o.by.join(' · ')) + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+    document.getElementById('opJoin').innerHTML = h;
+  }
+
+  /* G4415 — the not-built marks. */
+  function buildMarks() {
+    var m = DATA.frontend.marks;
+    var h = '<div class="rc-tblwrap"><table class="rc-tbl"><thead><tr><th>file</th><th>&lt;NotBuilt&gt;</th><th>&lt;Soon&gt;</th></tr></thead><tbody>';
+    m.byFile.forEach(function (f) { h += '<tr><td class="nm">' + esc(f.file) + '</td><td>' + f.notBuilt + '</td><td>' + f.soon + '</td></tr>'; });
+    h += '<tr style="font-weight:700"><td class="nm">all</td><td>' + m.notBuilt + '</td><td>' + m.soon + '</td></tr></tbody></table></div>';
+    document.getElementById('marksTbl').innerHTML = h;
+  }
+
+  buildL3();
+  buildModList();
+  buildState();
+  buildDb();
+  buildSnw();
+  buildPlanned();
+  buildRoutes();
+  buildJoin();
+  buildMarks();
+  selectModule('reconciliation', false);
+  window.scrollTo(0, 0);
+
+  var t = DATA.totals;
+  document.getElementById('l3cap').innerHTML =
+    t.modules + ' modules · ' + t.edges + ' import edges · ' + t.droppedModules +
+    ' dropped for v1. Generated from <code>model/*.ts</code> by the TypeScript parser, laid out by layer — adding a module changes this picture without anyone redrawing it.';
+  document.getElementById('footer').textContent =
+    'Levels 1–2 hand-authored, badges predicated · Levels 3–4, the schema and the frontend generated from source · ' +
+    t.exports + ' exports parsed, ' + t.droppedExports + ' dropped-for-v1 · ' +
+    t.builtTables + ' built tables (' + t.dataPlaneTables + ' data · ' + t.controlPlaneTables + ' control), ' + t.policies + ' RLS policies · ' +
+    t.servedOperations + ' of ' + t.declaredOperations + ' operations served';
+})();
+</script>

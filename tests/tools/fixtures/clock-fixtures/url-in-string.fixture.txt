@@ -1,0 +1,9 @@
+/* A `//` inside a string literal is not a comment opener.
+ *
+ * The comment stripper preserves string contents verbatim, which is what makes
+ * it safe in both directions: it must not treat the `//` in a URL as the start
+ * of a comment and blank the rest of the line. `compose.yaml`'s ElastiMQ
+ * endpoint below is the real shape this protects. */
+
+const endpoint = 'http://localhost:9324/000000000000/run-admitted'
+const other = "https://example.test/a//b"

@@ -1,0 +1,13 @@
+/* A LIVE clock and a past-direction interval — the shape that is correct.
+ *
+ * Six files in the tree look like this: they seed `now() - interval 'N'` and
+ * compare it against the database's own clock, or against `new Date()`, so both
+ * sides move together and the drift is unrepresentable. This is the normal and
+ * correct way to seed an expired row for an RLS policy test, and flagging it
+ * would make the checker useless by making it noisy.
+ *
+ * Correct verdict: `half` — the interval is found, no FROZEN clock is. */
+
+await mig.query(`UPDATE tenant.membership SET expires_at = now() - interval '1 day'`)
+
+const verdict = decide({ principal, capability: 'view_run', now: new Date().toISOString() })

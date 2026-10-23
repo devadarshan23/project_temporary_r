@@ -1,0 +1,236 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PARTNER.CSS — the P1 partner portal's panes (and the staff console's front
+   door), PORTED FROM docs/handoff-pack/app.css. G3297, 3 Oct 2026.
+
+   EVERY VALUE IS A KERNEL REFERENCE, exactly as close.css: each line reads a
+   token from docs/handoff-pack/tokens.css, so a token moved in the kernel moves
+   this surface with it. Nothing here states a colour, a size or a spacing unit.
+
+   SCOPED UNDER `.portal`. The pack's app.css styles bare `.pane`, `.lab`,
+   `.tbl`, `.chip`, `.choice` and `.abtn`; Setup, the register and the run
+   account share this bundle and carry their own `.choice` / `.abtn`, so the
+   pack's selectors are kept and only the scope is added. The CHROME and the
+   STATUS BAR are close.css's — one chrome, worn by three surfaces.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══ THE FRAME ════════════════════════════════════════════════════════════ */
+.app > .route:has(> .portal){padding:0;gap:0;display:flex;flex-direction:column}
+.app > .route > .portal{flex:1;display:flex;flex-direction:column;min-width:0;
+  font-family:var(--face-sans);color:var(--ink)}
+.portal > .statusbar,.portal > .statusrow{margin-top:auto}
+.chrome .abtn .q{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted);
+  margin-left:calc(var(--u)*2)}
+.chrome .abtn[data-soon]{color:var(--muted);background-color:transparent}
+.chrome button.acctitem:hover{background-color:var(--row-hover)}
+.chrome button.acctitem[aria-disabled="true"]{color:var(--muted);cursor:default}
+.chrome .acctitem .k{margin-left:auto;font-family:var(--face-mono);font-size:var(--s1);color:var(--muted)}
+
+/* ═══ THE PARTNER CHROME AT EVERY WIDTH — RP-01 / RP-02 (G3566, G3567) ═════
+   close.css's step rules were written for the TENANT bar (three destinations,
+   a door and a meter) and the partner bar wears them too. Two of them break a
+   bar of up to nine destinations, and both are undone here, scoped to the
+   partner chrome so the tenant bar is untouched:
+   · `@media (max-width:1279px){ .chrome > nav{flex:none} }` stopped the nav
+     shrinking, so the destinations pushed the palette, "Needs you", the period
+     and the ACCOUNT MENU — Sign out — past the viewport: the document measured
+     1238 wide at 1024 and at 820, and 453 at 390. The nav shrinks again; what
+     does not fit is the drop order's (PartnerPortal.tsx `useQuietDrop`).
+   · `@media (max-width:1079px){ .chrome .dests > li:nth-child(3){display:none} }`
+     hides the tenant bar's third destination — on this bar, Commission. The
+     drop order decides what collapses here, quiet ones first, never a built one.
+   And below 720 the pack's phone shell keeps the mark, the palette key and the
+   avatar; the destinations move to the tab bar (`PartnerTabBar`). close.css
+   hides `.chrome > .abtn`, but a quiet control sits inside its tooltip wrapper,
+   so the partner bar names its own. */
+.chrome:is([data-partner-chrome],[data-staff-chrome]) > nav{flex:1 1 0;min-width:0}
+/* NS-01 (G3710): the staff chrome wears the same drop order and `+N` cue —
+   one treatment for one problem, not two (its *Agent builder* vanished at 820
+   with no cue, under close.css's tenant-bar nth-child(3) rule). */
+/* The nav TAKES the free space, so the drop order measures the room the bar
+   has rather than the room its own contents asked for; `.sp` then has none. */
+.chrome:is([data-partner-chrome],[data-staff-chrome]) > .sp{flex:0 0 0}
+.chrome:is([data-partner-chrome],[data-staff-chrome]) .dests > li[hidden]{display:none}
+.chrome:is([data-partner-chrome],[data-staff-chrome]) .dests > li:nth-child(3):not([hidden]){display:list-item}
+.chrome:is([data-partner-chrome],[data-staff-chrome]) .dests > li[data-more] [data-soon]{font-family:var(--face-mono);font-size:var(--s2)}
+/* THE VISIBLE CUE when a built destination still runs past the edge: the
+   pack's `.dests` scrolls with its scrollbar hidden, so its edge fades. */
+.chrome:is([data-partner-chrome],[data-staff-chrome]) .dests[data-overflow="end"]{
+  -webkit-mask-image:linear-gradient(to right,var(--ink) calc(100% - var(--u)*8),transparent);
+  mask-image:linear-gradient(to right,var(--ink) calc(100% - var(--u)*8),transparent)}
+/* RP-06 (G3569): the destinations keep their place, unseen, until the role is known. */
+.chrome[data-partner-chrome] > nav[data-settling]{visibility:hidden}
+.chrome[data-partner-chrome] .tenant{min-width:0;max-width:calc(var(--u)*48)}
+@media (max-width:1079px){
+  .chrome[data-partner-chrome] .abtn .q{display:none}
+  .chrome[data-partner-chrome] .tenant{max-width:calc(var(--u)*28)}
+}
+@media (max-width:719px){
+  .chrome[data-partner-chrome] > .tipwrap:has(> .abtn){display:none}
+  /* With the nav gone the spacer is what keeps the avatar — and the menu
+     anchored to it — at the right edge, inside the viewport. */
+  .chrome:is([data-partner-chrome],[data-staff-chrome]) > .sp{flex:1}
+  /* One sticky bar at the foot, the tab bar, as the tenant shell keeps it. */
+  .portal > .statusbar{position:static}
+}
+
+/* ═══ A PANE ═══════════════════════════════════════════════════════════════ */
+.portal .pane{padding:calc(var(--u)*5);display:grid;gap:calc(var(--u)*5);flex:1;
+  align-content:start}
+.portal .pane p{font-size:var(--s2);line-height:var(--lh-note);margin:0;max-width:72ch}
+.portal .lab{display:block;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  margin-bottom:calc(var(--u)*2)}
+.portal .q{color:var(--muted)}
+.portal p.q{font-size:var(--s2)}
+.portal .mono{font-family:var(--face-mono);font-variant-numeric:tabular-nums}
+.portal .paneh{display:flex;align-items:center;justify-content:space-between;
+  gap:calc(var(--u)*4);flex-wrap:wrap;margin-bottom:calc(var(--u)*3)}
+.portal .paneh > .lab{margin:0}
+
+/* ═══ FIGURES ══════════════════════════════════════════════════════════════ */
+.portal .figs{display:flex;gap:calc(var(--u)*8);align-items:flex-end;flex-wrap:wrap}
+.portal .fig{display:block}
+.portal .fig .k{display:block;font-size:var(--s2);color:var(--muted);
+  margin-bottom:calc(var(--u)*1)}
+.portal .fig .v{display:block;font-family:var(--face-mono);font-size:var(--s4);
+  font-weight:var(--w-figure);font-variant-numeric:tabular-nums;color:var(--ink)}
+/* RP-10 (G3571): prose in a figure slot reads small, as the staff console draws it. */
+.portal .fig .v.sm{font-size:var(--s2)}
+.portal .fig[data-soon]{font:inherit;background:none;border:0;padding:0;text-align:left}
+.portal .fig[data-soon] .v{color:var(--muted);font-weight:var(--w-body)}
+
+/* ═══ CONTROLS ═════════════════════════════════════════════════════════════ */
+.portal .acts{display:flex;gap:calc(var(--u)*2);flex-wrap:wrap;margin-top:calc(var(--u)*4)}
+.portal .abtn{font:inherit;font-size:var(--s2);min-height:var(--target);
+  padding:0 calc(var(--u)*4);cursor:pointer;border:0;color:var(--ink);
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.portal .abtn:hover{background-color:var(--tile-hover)}
+.portal .abtn[data-commit]{background-color:var(--ink);color:var(--on-ink);
+  font-weight:var(--w-emph);box-shadow:none}
+.portal .abtn[data-commit]:hover{background-color:var(--accent-deep)}
+.portal .abtn[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--ink);
+  font-weight:var(--w-emph)}
+/* A commit that is not ready yet keeps its place and its shape, and recedes. */
+.portal .abtn[data-commit][aria-disabled="true"]{background-color:var(--sheet);
+  color:var(--muted);font-weight:var(--w-body);box-shadow:inset 0 0 0 1px var(--rule-strong);cursor:default}
+/* THE QUIET UNBUILT CONTROL (G3091): muted, drawn shape kept, no hatch. */
+.portal .abtn[data-soon]{color:var(--muted);background-color:var(--sheet);cursor:default}
+.portal .abtn[data-soon]:hover{background-color:var(--sheet)}
+
+.portal .reasons{display:grid;gap:calc(var(--u)*2);
+  padding-top:calc(var(--u)*4);border-top:1px solid var(--rule-strong)}
+@media (min-width:1080px){
+  .portal .reasons{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .portal .reasons > .lab,.portal .reasons > .drop,.portal .reasons > .acts{grid-column:1 / -1}
+}
+.portal .fac{display:flex;align-items:center;gap:calc(var(--u)*2);flex-wrap:wrap}
+.portal .reasons > .fac{grid-column:1 / -1}
+.portal .choice{display:flex;align-items:center;justify-content:space-between;
+  gap:calc(var(--u)*3);text-align:left;font:inherit;color:var(--ink);
+  font-size:var(--s2);min-height:var(--target);padding:0 calc(var(--u)*3);
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  border:0;cursor:pointer}
+.portal .choice:hover{background-color:var(--tile-hover)}
+.portal .choice[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--ink);
+  font-weight:var(--w-emph)}
+.portal .choice .to{font-family:var(--face-mono);font-size:var(--s1);
+  letter-spacing:var(--tr-micro);text-transform:uppercase;color:var(--muted)}
+.portal .choice[aria-pressed="true"] .to{color:var(--ink)}
+.portal .drop{padding:calc(var(--u)*4);background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);font-size:var(--s2);
+  color:var(--muted);text-align:center}
+.portal .drop b{display:block;color:var(--ink);font-weight:var(--w-emph);
+  margin-bottom:calc(var(--u)*1)}
+.portal .drop .note{font-size:var(--s1);line-height:var(--lh-note);color:var(--muted);
+  margin:calc(var(--u)*3) 0 0}
+.portal .pfields{display:grid;gap:calc(var(--u)*3);
+  grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));
+  margin-top:calc(var(--u)*4);text-align:left}
+.portal .pfields label,.portal .pfields > div{display:grid;gap:calc(var(--u)*1.5);min-width:0}
+.portal .pfields input,.portal .drop input{width:100%;box-sizing:border-box;
+  font:inherit;font-size:var(--s2);color:var(--ink);background-color:var(--paper);border:0;
+  box-shadow:inset 0 0 0 1px var(--rule-strong);
+  min-height:var(--target);padding:calc(var(--u)*1.5) calc(var(--u)*2)}
+.portal .pfields input:focus-visible,.portal .drop input:focus-visible{box-shadow:inset 0 0 0 1px var(--ink)}
+.portal .pfields input[aria-invalid="true"]{box-shadow:inset 0 0 0 1px var(--refused)}
+.portal .pfields input::placeholder,.portal .drop input::placeholder{color:var(--muted)}
+
+/* ═══ A RESULT, AND A REFUSAL ═════════════════════════════════════════════ */
+.portal .result{padding:calc(var(--u)*4);background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--ink);font-size:var(--s2);line-height:var(--lh-note);
+  max-width:80ch}
+.portal .result.refused{box-shadow:inset 0 0 0 1px var(--refused);color:var(--refused)}
+
+/* A STATED POSITION — the pack's sheet block, words only, no hatch. */
+.portal .sheet-note{background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule);
+  padding:calc(var(--u)*4);max-width:var(--measure-text)}
+.portal .sheet-note p{margin:calc(var(--u)*2) 0 0}
+
+/* ═══ CONTROLLED TABLES ════════════════════════════════════════════════════ */
+.portal .tbar{display:flex;align-items:center;gap:calc(var(--u)*3);flex-wrap:wrap;
+  padding:calc(var(--u)*2) 0 calc(var(--u)*3)}
+.portal .tbar .tsearch{flex:1;min-width:calc(var(--u)*40);display:flex;
+  align-items:center;gap:calc(var(--u)*2)}
+.portal .tbar input[type="search"]{flex:1;min-width:0;font:inherit;
+  font-size:var(--s2);color:var(--ink);background-color:var(--paper);
+  border:0;box-shadow:inset 0 0 0 1px var(--rule-strong);
+  min-height:var(--target);padding:0 calc(var(--u)*3)}
+.portal .tbar input::placeholder{color:var(--muted)}
+.portal .tcount{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted);
+  white-space:nowrap}
+.portal .tpager{display:flex;align-items:center;gap:calc(var(--u)*2);flex:none}
+.portal .tpager button{font:inherit;font-family:var(--face-mono);font-size:var(--s2);
+  min-height:var(--target);min-width:var(--target);cursor:pointer;border:0;
+  color:var(--ink);background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.portal .tpager button:hover{background-color:var(--tile-hover)}
+.portal .tpager button[aria-disabled="true"]{color:var(--muted);cursor:default;background-color:var(--sheet)}
+.portal .tpager .tpageline{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted);white-space:nowrap}
+.portal .scroller{overflow-x:auto;overscroll-behavior-x:contain}
+.portal .tbl{width:100%;border-collapse:collapse;font-size:var(--s2);min-width:38rem}
+.portal .tbl th,.portal .tbl td{text-align:left;vertical-align:top;font-weight:var(--w-body);
+  padding:calc(var(--u)*3) calc(var(--u)*4) calc(var(--u)*3) 0;border-bottom:1px solid var(--rule)}
+.portal .tbl thead th{font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  border-bottom:1px solid var(--rule-strong)}
+.portal .tbl .mono{font-family:var(--face-mono);font-variant-numeric:tabular-nums}
+.portal .tbl th .tsort{display:flex;align-items:center;gap:calc(var(--u)*2);
+  font:inherit;font-size:inherit;font-weight:inherit;letter-spacing:inherit;
+  text-transform:inherit;color:inherit;background:none;border:0;padding:0;
+  cursor:pointer;text-align:left;min-height:var(--target)}
+.portal .tbl th .tsort:hover{color:var(--ink)}
+.portal .tbl th .tsort .ind{font-family:var(--face-mono);color:var(--ink);width:1ch;flex:none}
+.portal .tbl th[aria-sort="ascending"],.portal .tbl th[aria-sort="descending"]{color:var(--ink)}
+.portal .tempty{font-size:var(--s2);line-height:var(--lh-note);color:var(--muted);
+  padding:calc(var(--u)*4) 0}
+.portal .chip{display:inline-flex;align-items:center;gap:calc(var(--u)*1);
+  font-family:var(--face-mono);font-size:var(--s1);color:var(--ink);
+  background-color:var(--paper);padding:calc(var(--u)*1) calc(var(--u)*2);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);white-space:nowrap}
+.portal .chip.stale{color:var(--refused);box-shadow:inset 0 0 0 1px var(--refused)}
+
+/* ═══ ROUND TWO — docs/build/ui-audit/reaudit-partner-staff-apex.md ═══════
+   RP-12 (G3713): the component's inline spacing, moved here as four utilities
+   scoped under `.portal`, each a kernel reference. */
+.portal .flat{margin:0}
+.portal .mt2{margin-top:calc(var(--u)*2)}
+.portal .mt3{margin-top:calc(var(--u)*3)}
+.portal .mt4{margin-top:calc(var(--u)*4)}
+.portal .drop.lefted{text-align:left}
+.portal .q.sub{display:block;margin-top:calc(var(--u)*1)}
+/* NP-05 (G3708): the pane heading is the skip target; it takes the ring. */
+.portal .lab[tabindex="-1"]:focus{outline-offset:calc(var(--u)*1)}
+/* RP-07 (G3704): a figure whose read was refused — the pack's `—`, muted. */
+.portal .fig .v.unread{color:var(--muted);font-weight:var(--w-body)}
+/* NP-04 (G3706): the currency is the label's middle word, editable in place. */
+.portal .lab .cur{display:inline-block;width:auto;min-height:0;box-sizing:content-box;
+  font-family:var(--face-mono);font-size:var(--s1);font-weight:var(--w-emph);
+  letter-spacing:var(--tr-micro);color:var(--ink);background-color:var(--paper);border:0;
+  box-shadow:inset 0 -1px 0 0 var(--rule-strong);padding:0 calc(var(--u)*1);
+  text-transform:uppercase;vertical-align:baseline}
+.portal .lab .cur[aria-invalid="true"]{box-shadow:inset 0 -1px 0 0 var(--refused);color:var(--refused)}
+.portal .pfields > div[data-deal-value]{display:grid;gap:calc(var(--u)*1.5);min-width:0}
+/* NP-03 (G3705): why a value is refused, beside the field. */
+.portal .fieldnote{font-size:var(--s1);line-height:var(--lh-note);color:var(--refused);margin:0}
+/* A field with a note under it makes its row taller; its siblings keep their
+   input under their label rather than spreading the row's spare height. */
+.portal .pfields label,.portal .pfields > div{align-content:start}

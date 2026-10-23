@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@200;300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./handoff.css">
+<style>doc-page:not(:defined){visibility:hidden}</style>
+<script src="./doc-page.js"></script>
+</helmet>
+
+<doc-page margin="0.8in">
+  <div class="runhead" slot="header">
+    <span>ReconcileAI · design system specification</span>
+    <span>for implementation</span>
+  </div>
+  <div class="runfoot" slot="footer">
+    <span>tokens.css is the authority. A value not in it is a finding.</span>
+    <span>Illustrative figures throughout</span>
+  </div>
+
+  <div class="doc">
+
+  <h1>the specification</h1>
+  <p class="lede">The implementable half of the design system: every token, every
+  rule, and all fourteen primitives specified to the level a developer can build
+  from without asking a second question.</p>
+
+  <div class="h-meta">
+    <span><b>Platform</b> Responsive web · React</span>
+    <span><b>Accessibility</b> WCAG 2.2 Level AA</span>
+    <span><b>Units</b> rem, with argued px constants</span>
+    <span><b>Themes</b> light · dark</span>
+    <span><b>Tiers</b> four, from 320px</span>
+  </div>
+
+  <h2>How to read this</h2>
+  <p class="note"><b>The kernel is the authority.</b>
+  <code>tokens.css</code> is the only place a colour, a type step, a spacing
+  unit, a duration, a layer or a breakpoint is declared. This document restates
+  those values for reading; where the two disagree, the kernel wins. If a
+  component needs a value that is not in the kernel, that is a
+  <b>finding</b> — add it there, or state why it is local. It is never a local
+  invention.</p>
+  <p class="note"><b>Every token has exactly one job, and the job is what you
+  pick by.</b> Not the look. A step used outside its job is a defect even when
+  it looks right, because the next reader will copy the look and lose the
+  meaning.</p>
+  <p class="note"><b>Each primitive's specification below has a 🛑 Never
+  row.</b> Those are not style preferences. Each one names a defect that was
+  built, measured and removed, and the row exists so it is not rebuilt.</p>
+  <p class="note">The companion reference sheet draws every primitive live, with
+  the demonstrations this document describes. Read them together: this one is
+  the contract, that one is the evidence.</p>
+
+  <h2>1 · Visual identity</h2>
+
+  <h3>The mark</h3>
+  <ul class="kv">
+    <li><b>Composition</b><span>Wordmark "Reconcile" in the sans face at weight 700, tracking −.025em, followed by a square badge carrying "AI" on a 90° cyan→green gradient.</span></li>
+    <li><b>--badge-gradient</b><span>linear-gradient(90deg, #50c6e9, #72c34e). The badge.</span></li>
+    <li><b>--badge-gradient-glyph</b><span>linear-gradient(135deg, same stops). The standalone glyph. Two tokens and not one: the badge and the glyph run at different angles, and a single token would force one back inline.</span></li>
+    <li><b>--badge-radius</b><span>0, under R2. The brand sheet's own corner is .09em; this token is the single revert point.</span></li>
+    <li><b>Clear space</b><span>The badge's own width on every side. Expressed in em so it travels with the mark at any size.</span></li>
+    <li><b>Minimum size</b><span>16px of badge. Below that the two letterforms in the gradient stop resolving, and the mark should be the glyph alone.</span></li>
+    <li><b>On an ink ground</b><span>.logo--invert switches the wordmark to --on-ink. The badge gradient is unchanged — it holds against both grounds.</span></li>
+  </ul>
+  <div class="callout">🛑 <b>These are the only two gradients in the system.</b> A
+  gradient that is not the mark is a finding: a gradient on a surface is an
+  elevation claim, and there is no elevation scale. The brief's "subtle
+  gradients" is declined here rather than quietly ignored. The luminous touch is
+  the one apparent exception and is not one — a radial source with falloff is
+  light, and light carries no elevation claim.</div>
+
+  <h3>Grounds — three, and a fourth is a finding</h3>
+  <table>
+    <thead><tr><th scope="col">Token</th><th scope="col">Light</th><th scope="col">Dark</th><th scope="col">The one job it has</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">--paper</th><td class="num">#ffffff</td><td class="num">#001a22</td><td>The sheet everything sits on.</td></tr>
+      <tr><th scope="row">--sheet</th><td class="num">#f1f7f7</td><td class="num">#012b35</td><td>A panel <em>on</em> the sheet. 1.08:1 light, 1.35:1 dark — barely there, and meant to be.</td></tr>
+      <tr><th scope="row">--tile-hover</th><td class="num">#e7f0f0</td><td class="num">#023b47</td><td>A pointer is over a tile. A ground change, never a hue change.</td></tr>
+      <tr><th scope="row">--row-hover</th><td class="num">#f8fbfb</td><td class="num">#01222c</td><td>A pointer is over a register row.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>The ink ramp — pick by the job</h3>
+  <table>
+    <caption>Ratios are stated against <code>--paper</code> / <code>--sheet</code> in each theme. Two light steps fall below AA on <code>--sheet</code> and are marked; neither is used for text on a panel.</caption>
+    <thead><tr><th scope="col">Token</th><th scope="col">Light</th><th scope="col" class="num">Ratios</th><th scope="col">Dark</th><th scope="col" class="num">Ratio</th><th scope="col">The one job it has</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">--ink</th><td class="num">#00303f</td><td class="num">14.05 / 12.97</td><td class="num">#e8f2f3</td><td class="num">15.74</td><td>Everything that must be read.</td></tr>
+      <tr><th scope="row">--refused</th><td class="num">#4a6166</td><td class="num">6.57 / 6.07</td><td class="num">#879ea2</td><td class="num">6.36</td><td>Refused, or never built. A control that was never usable, and the sentence naming what refused it. <b>Never cleared work.</b></td></tr>
+      <tr><th scope="row">--muted</th><td class="num">#566d72</td><td class="num">5.49 / 5.07</td><td class="num">#7d9498</td><td class="num">5.60</td><td>Supporting text. Nothing else.</td></tr>
+      <tr><th scope="row">--recede</th><td class="num">#607478</td><td class="num">4.92 / 4.54</td><td class="num">#718a8e</td><td class="num">4.89</td><td>Cleared work, deliberately quieted. <b>Below AA on --sheet.</b></td></tr>
+      <tr><th scope="row">--rule-strong</th><td class="num">#a4b8bb</td><td class="num">2.07 / 1.91</td><td class="num">#22505d</td><td class="num">2.03</td><td>The hairline between sections. Never text.</td></tr>
+      <tr><th scope="row">--rule</th><td class="num">#cfdedf</td><td class="num">1.38 / 1.28</td><td class="num">#123540</td><td class="num">1.37</td><td>The hairline between rows. Never text. <b>The visible floor</b> — nothing is deliberately fainter.</td></tr>
+      <tr><th scope="row">--on-ink</th><td class="num">#ffffff</td><td class="num">14.05 on ink</td><td class="num">#001a22</td><td class="num">15.74</td><td>Text on an ink ground. <b>Inverts in direction</b> between themes — in dark, an ink ground is a light panel.</td></tr>
+      <tr><th scope="row">--on-ink-2</th><td class="num">#bcccd0</td><td class="num">8.49 on ink</td><td class="num">#1d4a55</td><td class="num">8.52</td><td>Secondary text on an ink ground.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>The two meaning colours</h3>
+  <table>
+    <thead><tr><th scope="col">Token</th><th scope="col">Light</th><th scope="col">Dark</th><th scope="col">Contract</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">--agent</th><td class="num">#00866a<br>4.55 / 4.20</td><td class="num">#14a082<br>5.45</td><td><b>The machine measured something, and nothing else.</b> MAY: a bar, tick or fill whose length states a number the machine produced — today the meter, and only the meter. MAY NOT: a link, a hover, a citation, an activity indicator, or anything captioned as measuring nothing. Below AA on light --sheet: fine for a 3px graphic object, not for text.</td></tr>
+      <tr><th scope="row">--agent-deep</th><td class="num">#014751<br>10.39 / 9.59</td><td class="num">#86dcc5<br>11.15</td><td>Agent <em>text</em>, and the committing button's hover. Reached almost nowhere, on purpose.</td></tr>
+      <tr><th scope="row">--accent</th><td class="num">#8a4b2a<br>6.73 / 6.21</td><td class="num">#d99a74<br>7.54</td><td><b>Wayfinding: where you are, and what Enter would run.</b> The active destination's underline, the palette's selected row edge, the current crumb. MAY NOT: a status, a severity, a hover, a measurement, a chart series, a button ground, or anything on an ink surface.</td></tr>
+      <tr><th scope="row">--accent-deep</th><td class="num">#6d3a20<br>9.06 / 8.36</td><td class="num">#eec0a3<br>10.62</td><td>Accent <em>text</em>. Reached almost nowhere: an accent that has to be read is usually a state wearing a disguise.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><b>Why the accent is warm, and outside the brand
+  family.</b> A second green would be read as a second agent state, which is the
+  exact confusion the agent rule exists to prevent. A warm clay against a
+  teal-green system cannot be mistaken for a measurement at any size.
+  <b>And it reinforces rather than carries:</b> which destination you are on is
+  a state, so it is carried by the word's weight and by the underline's form,
+  and the accent is a third channel on top of two that already work. Remove the
+  accent and wayfinding still functions. Remove the underline and it does
+  not — that is the test for whether a colour is carrying something it should
+  not.</div>
+
+  <h3>The luminous touch</h3>
+  <p class="note">Apply <code>.lit</code> to anything the machine is working on
+  <em>right now</em>. A radial source at 18%/0% with falloff to nothing by 74%
+  — never a flat fill, never a border alone, and <b>never more than one lit
+  thing per view</b>: one light is legible, six lights are wallpaper. Light
+  values: <code>--lit-hot</code> rgba(202,246,65,.34) and
+  <code>--lit-mid</code> rgba(82,198,227,.22), dropping to .26/.16 in the dark
+  theme, where the same stops composite to a genuine glow rather than to a
+  tint.</p>
+  <p class="note">The light is <b>pale</b>, and that is what stops a lime light
+  reading as an amber status: composited on paper the hot centre is
+  rgb(237,252,190), a 24.3% channel span.
+  <code>.lit--running</code> adds the sweep — one slow pass per 17s with 88% of
+  the cycle at rest.</p>
+  <div class="callout">⚠️ <b>Implementation note that has bitten this system
+  twice.</b> The paint is declared on a doubled class
+  (<code>.lit.lit</code>), and background-<em>color</em> and
+  background-<em>image</em> are declared separately. <code>background:</code> is
+  a shorthand that resets background-image, so any component writing
+  <code>background: var(--x)</code> at single-class specificity erased the light
+  — silently, because nothing else about the element changed. The same trap
+  applies to <code>.nb</code>. Use <code>background-color</code>, always.</div>
+
+  <h2>2 · Typography</h2>
+
+  <h3>Two faces, and no third</h3>
+  <ul class="kv">
+    <li><b>--face-sans</b><span>IBM Plex Sans, system-ui, sans-serif. Carries language: every sentence, label, control and heading.</span></li>
+    <li><b>--face-mono</b><span>IBM Plex Mono, ui-monospace, monospace. Carries figures: anything a person compares against another instance of itself — a figure, a reference, a hash, a key-cap. Always with tabular numerals.</span></li>
+  </ul>
+  <p class="note">There is no display face. A third family would have to say what
+  it is <em>for</em>, and both jobs are taken. The division between the two is
+  R9, not taste.</p>
+
+  <h3>Six steps, each arriving with its pairing decided</h3>
+  <table>
+    <caption><code>--s5</code> does not exist: nothing in the system is between a title and a figure, and minting the step is how a fifth heading level arrives without anybody deciding to add one.</caption>
+    <thead><tr><th scope="col">Step</th><th scope="col" class="num">Value</th><th scope="col">Weight</th><th scope="col">Tracking</th><th scope="col">Leading</th><th scope="col">Job</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">--s7</th><td class="num">clamp(2.25rem, 1.1rem + 5.75vw, 6rem)</td><td>--w-display 200</td><td>--tr-display −.035em</td><td>--lh-display .95</td><td>Display. One per page, lowercase.</td></tr>
+      <tr><th scope="row">--s6</th><td class="num">clamp(1.75rem, 1.2rem + 2.75vw, 2.5rem)</td><td>--w-lede 300</td><td>0</td><td>1</td><td>Figure. The one number a screen is about. Mono, tabular.</td></tr>
+      <tr><th scope="row">--s4</th><td class="num">clamp(1rem, .94rem + .3vw, 1.0625rem)</td><td>--w-emph 600</td><td>--tr-title −.01em</td><td>--lh-body 1.45</td><td>Title. An overlay head, a route state, a lede.</td></tr>
+      <tr><th scope="row">--s3</th><td class="num">0.875rem — fixed</td><td>--w-body 400</td><td>0</td><td>--lh-body 1.45</td><td>Body. The document default.</td></tr>
+      <tr><th scope="row">--s2</th><td class="num">0.78125rem — fixed</td><td>--w-body 400</td><td>0</td><td>--lh-note 1.55</td><td>Label, caption, table cell, control, note. The workhorse.</td></tr>
+      <tr><th scope="row">--s1</th><td class="num">0.6875rem — fixed</td><td>--w-emph 600</td><td>--tr-micro .1em</td><td>--lh-note 1.55</td><td>Micro. Uppercase, always. A section label, a state name, the not-built word.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><b>The three small steps do not scale with the viewport,
+  and that is the rule rather than an omission.</b> A 14px body is 14px on a
+  phone and on a 32-inch display, because it is already at the readable floor
+  and a viewport-scaled body text shrinks below it on exactly the device where
+  reading is hardest. Only the three steps above body are fluid.
+  <br>⚠️ <b>The fluid steps clamp with a rem floor, never a vw floor.</b> A pure
+  vw value ignores the reader's font-size setting entirely, which fails 1.4.4
+  Resize Text while looking responsive.</div>
+
+  <h3>Six weights, each with one job</h3>
+  <ul class="kv">
+    <li><b>--w-display 200</b><span>--s7 only. Nothing else is ever this light.</span></li>
+    <li><b>--w-lede 300</b><span>The one lede paragraph, and the --s6 figure.</span></li>
+    <li><b>--w-body 400</b><span>Everything that is a sentence.</span></li>
+    <li><b>--w-figure 500</b><span>A monospaced thing that must not look bold — a key-cap, a token name, a reference.</span></li>
+    <li><b>--w-emph 600</b><span>Emphasis, and every uppercase micro label.</span></li>
+    <li><b>--w-mark 700</b><span>The wordmark and the glyph. Nothing else.</span></li>
+  </ul>
+  <p class="note">🛑 <b>A weight is never used for emphasis outside its job.</b>
+  500 on a sentence of prose is not "slightly bold" — it is the figure weight
+  appearing where no figure is, and it reads as a rendering accident.</p>
+
+  <h3>Leading, tracking, measure</h3>
+  <p class="note"><b>Leading: the smallest type gets the loosest.</b> That is the
+  reverse of the instinct and it is the whole rule — a 12.5px note is read in
+  long paragraphs at a size where lines are easy to lose, so it needs more room
+  between them than 14px body does. All three values are <b>unitless
+  multipliers</b>, so a reader's 1.5× override under 1.4.12 Text Spacing
+  multiplies rather than replaces them.</p>
+  <p class="note"><b>Tracking is paired with the step, not chosen at the call
+  site.</b> Both values are optical corrections for size — 11px uppercase closes
+  up to illegibility without +.1em, and a 96px display opens into gaps without
+  −.035em — which is why neither is available to a step that did not ask for
+  one. In <code>em</code> and not <code>rem</code>: tracking must scale with the
+  type it is tracking.</p>
+  <table>
+    <thead><tr><th scope="col">Measure</th><th scope="col" class="num">Value</th><th scope="col">For</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">--measure-text</th><td class="num">80ch</td><td>Body and note prose, and it is the ceiling. Past about eighty characters the eye loses the start of the next line.</td></tr>
+      <tr><th scope="row">--measure-lede</th><td class="num">64ch</td><td>The one lede. Shorter because it is bigger.</td></tr>
+      <tr><th scope="row">--measure-act</th><td class="num">56ch</td><td>A sentence a person must <em>act</em> on: a route state, a dialog's consequence, an error.</td></tr>
+    </tbody>
+  </table>
+  <p class="note">🛑 <b>Never set a text measure in px or rem.</b> A
+  <code>ch</code> measure holds when the step changes; a fixed measure silently
+  becomes 120 characters at --s2 and 50 at --s4. <code>--measure</code> (73.75rem)
+  is a different thing entirely — a <em>page</em> — and the two must never be
+  written in terms of each other.</p>
+
+  <h2>3 · Space, layer, target</h2>
+  <ul class="kv">
+    <li><b>--u · 0.25rem</b><span>4px at a 16px root. Every gap is a multiple, written calc(var(--u)*n) so the multiple stays legible at the call site. <b>The half-unit is the floor</b> — a quarter-unit is a finding. No half-unit token is minted: every site already spells it one way, and a token would create a second spelling.</span></li>
+    <li><b>--gutter</b><span>clamp(1.25rem, .85rem + 2vw, 3.5rem) — 20→56px. The page's own edge.</span></li>
+    <li><b>--measure · 73.75rem</b><span>1180px. A page of content. Does not grow above the ultra tier: a line of text that keeps widening eventually exceeds every text measure. Never rewritten in terms of the entry-tier form column, which is calc(var(--u)*102) and moves for different reasons.</span></li>
+    <li><b>--col-min · 15.5rem</b><span>248px. The floor of an auto-fit grid column.</span></li>
+    <li><b>--target-min · 1.5rem</b><span>24px. The WCAG 2.2 AA 2.5.8 floor, declared once as a rule so a new control cannot be born under it. In rem, so a reader who raises their font size gets a bigger target — a px floor satisfies the criterion as written and fails the person it was written for.</span></li>
+    <li><b>--target · 2rem</b><span>32px. What the system's controls actually are. <b>24 is a floor, not a design target</b> — nothing is designed at 24.</span></li>
+    <li><b>--z-popover 20</b><span>A tooltip or a menu — anchored to something.</span></li>
+    <li><b>--z-overlay 30</b><span>A drawer — over the register, never away from it.</span></li>
+    <li><b>--z-modal 40</b><span>A dialog, its scrim, and the toast.</span></li>
+    <li><b>--z-skip 99</b><span>The skip link. Highest, because it is the one control that must be reachable when something else has gone wrong.</span></li>
+  </ul>
+  <p class="note">The four layers are spaced by ten so a component can sit
+  between two without reopening the scale. <b>The order is the decision rather
+  than the numbers.</b></p>
+
+  <h3>Depth, and why there is no elevation scale</h3>
+  <p class="note"><b>A surface separates by rule or by ground.</b> There is no
+  shadow palette and no elevation scale; the two scrims are the only exception,
+  and they exist because a modal must dim what it blocks.
+  <code>--sheet-shadow</code> is not a shadow — it is a hairline under a panel,
+  which is why it is spelled <code>0 1px 0 var(--rule-strong)</code>.</p>
+  <p class="note"><b>Border weight is deliberately not tokenised.</b> There is
+  no scale, there are three unrelated facts, and all three stay in px because a
+  hairline that scales with the reader's font size becomes a border:
+  <b>1px</b> is the only edge weight the system has and it never varies;
+  <b>1.5px</b> occurs once, on a hollow connection dot, as geometric
+  compensation — a hollow 7px dot needs a thicker ring than a solid one to read
+  at the same weight; <b>2px</b> is <b>emphasis</b>, which is a rule rather
+  than a size: the 1px edge doubled and switched to full --ink, never a hue
+  change.</p>
+
+  <h2>4 · Motion</h2>
+  <ul class="kv">
+    <li><b>--spring</b><span>linear(0, .231 10%, .624 20%, .922 30%, 1.067 40%, 1.094 50%, 1.067 60%, 1.030 70%, 1.005 80%, .995 90%, 1). A real damped spring — ζ 0.6, ω<sub>n</sub> 18 rad/s — sampled at eleven points and written as an easing function. Overshoots 9% and settles.</span></li>
+    <li><b>--t-spring · 420ms</b><span>The spring's settle time. Anything that <em>moves</em>, on the way in.</span></li>
+    <li><b>--t-fade · 120ms</b><span>Opacity and colour, and the way out.</span></li>
+  </ul>
+  <div class="callout">🛑 <b>A leaving element does not bounce.</b> Spring on the
+  way in, plain fade on the way out. The overshoot means "this landed here", and
+  an element on its way off screen has nothing to land on — a bounce on exit
+  reads as a failure to leave. <b>The spring carries the asymmetry the old
+  two-duration scale carried in its numbers</b>, which is why one spring
+  replaces two durations rather than sitting alongside them.
+  <br>⚠️ <b>--t-fade is not a second spring.</b> An opacity change has no
+  distance to ease across, so a spring on it is mathematically meaningless —
+  the overshoot clamps at 1 and the curve degenerates. It is a geometric
+  necessity, the same category as the 1.5px hollow dot.</div>
+  <p class="note"><b>Why linear() and not a JS spring.</b> It runs on the
+  compositor as an ordinary CSS transition, needs no runtime, survives the
+  reduced-motion guard, and cannot disagree with itself between two components
+  the way two spring configs in two files would. <b>What it gives up is
+  interruptibility:</b> a JS spring retargets mid-flight from its current
+  velocity, and this one restarts. That trade is why it is one token and not a
+  library, and it is recorded as an open finding rather than as a win.</p>
+
+  <h3>The motion inventory — six, every keyframe in the kernel, and a seventh is a finding</h3>
+  <p class="note"><b>Amended 3 Oct 2026 by two owner rulings</b> (RM-08, RM-09): <code>toast-in</code> and the three overlay entrances moved into <code>tokens.css</code>, applied through <code>--enter-*</code> tokens the kernel's reduced-motion block sets to <code>none</code>; <code>lv</code> is struck until a surface draws level bars. A component may apply a kernel keyframe and may not declare one.</p>
+  <table>
+    <thead><tr><th scope="col">Animation</th><th scope="col" class="num">Duration</th><th scope="col">Budget</th><th scope="col">Meaning, and what reduced motion does</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">sweep</th><td class="num">17s</td><td>ambient</td><td>Light passing across a running job — not a spinner. 88% of the cycle is at rest, and the rest fraction rather than the duration is what makes it read as ambient. A faster pass was built, read as a marquee, and was slowed deliberately. Reduced motion: <code>display:none</code>, and the .lit ground stays.</td></tr>
+      <tr><th scope="row">alive</th><td class="num">3.6s</td><td>ambient</td><td>The connection light breathing. Reduced motion: the halo settles at <b>.3, not 0</b> — a down light has an opacity-0 halo <em>and</em> a hollow centre, and stopping a live halo at 0 collapses two differences into one, on the indicator whose entire argument is that absence of life is the signal.</td></tr>
+      <tr><th scope="row"><s>lv</s></th><td class="num">1.4s</td><td>struck</td><td><b>Struck 3 Oct 2026 (RM-08)</b> — no product surface draws level bars; a specimen on the Design System page only. Was: the agent's level bars. Reduced motion: held at the reading height, and <b>the idle bars are held separately</b> so the difference between working and idle survives the setting.</td></tr>
+      <tr><th scope="row">toast-in</th><td class="num">--t-spring</td><td>feedback</td><td>An outcome arriving. The only one on the feedback budget, and the only one whose absence costs nothing — the toast still says what happened. <code>--enter-toast</code>.</td></tr>
+      <tr><th scope="row">fade-in · drawer-in · modal-in</th><td class="num">--t-fade · --t-spring</td><td>entrance</td><td>A modal's scrim, a drawer, a dialog arriving — <code>--enter-scrim</code>, <code>--enter-drawer</code>, <code>--enter-modal</code>. Entry only; a leaving overlay takes a plain fade. Reduced motion: <code>none</code> — the overlay is simply there.</td></tr>
+    </tbody>
+  </table>
+  <p class="note"><b>The ambient tempo rule.</b> Motion measured in
+  <b>seconds</b> means "this is live". Motion measured in <b>milliseconds</b>
+  means "you did that". The two budgets never mix: retiming the sweep to the
+  spring would make it mean "this just happened", and stretching a drawer to 17s
+  would make an overlay claim to be an ongoing process.</p>
+  <div class="callout">⚠️ <b>Two traps in the reduced-motion guard, both
+  load-bearing.</b> <code>*</code> alone does not match pseudo-elements, and
+  both kernel animations run on one — a guard written <code>*{}</code> looks
+  complete, passes review, and stops neither; <code>*,*::before,*::after</code>
+  is required. And <code>.001ms</code> merely makes an infinite animation fast,
+  not still, which is why the sweep and the halo are stopped by their own
+  selectors on top of the universal rule.</div>
+
+  <h2>5 · Iconography</h2>
+  <p class="note">🛑 <b>There is no icon set, and that is a decision rather than
+  an absence.</b> The system has six glyphs. All six are typographic — set in
+  the text face at the parent's size, never drawn, never an SVG, never a
+  font-icon. The metered mark is not among them: it is the mascot's still
+  form, ruled under R19 and documented with the mark.</p>
+  <table>
+    <thead><tr><th scope="col">Glyph</th><th scope="col">Class</th><th scope="col">Contract</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">~</th><td>grammar · carries meaning</td><td>Hedges a forecast. A figure the system is guessing at wears the hedge, so a number without one is a number somebody can rely on. Counted as one of the six indicators.</td></tr>
+      <tr><th scope="row">›</th><td>grammar · carries meaning</td><td>Your move. Where the work stops until a person acts; also opens an invalid field's stated reason, which is why the field needs no hue. Counted.</td></tr>
+      <tr><th scope="row">…</th><td>grammar · carries meaning</td><td>Elsewhere. Not "loading" — the work is real, it is moving, and it is not moving here. Counted.</td></tr>
+      <tr><th scope="row">past tense</th><td>grammar · no glyph</td><td>States a fact. "Completed at 03:12" is a fact with a time on it; "completing" would be a claim about now the page cannot make. The fourth grammar indicator is a <em>tense</em>, which is the clearest evidence this system carries meaning in language rather than in shapes. Counted.</td></tr>
+      <tr><th scope="row">✕</th><td>affordance · carries nothing</td><td>This panel closes. Always <code>aria-hidden</code>, always inside a control that already has an accessible name. Not counted, because it reports no state.</td></tr>
+      <tr><th scope="row">▾</th><td>affordance · carries nothing</td><td>A menu follows. Same contract. Not counted.</td></tr>
+      <tr><th scope="row">∴</th><td>not a glyph · the mascot's still form</td><td>The metered mark. Trails a spend figure — <code>128,440 ∴</code> — and follows words that already say an act is billable; no unit word is needed, because the figure's own qualifier says what was counted. Carries the class <code>.met</code> so the contract is greppable. It belongs to THE MARK, not to this set, and it may not move in a dense context. A seventh glyph (‡) was added for this job on 6 Sep 2026 and withdrawn the same day.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">🛑 <b>An affordance glyph is never the sole
+  affordance.</b> Removing the glyph must leave the control fully operable and
+  fully announced. A glyph that is the only thing naming a control is a defect,
+  not an icon, and it fails 4.1.2 Name, Role, Value.
+  <br><b>The test for any proposed icon:</b> state what it carries that the word
+  beside it does not. If the answer is "it is faster to scan", the answer is a
+  better label. An icon set grows by resemblance rather than by decision — the
+  next icon arrives because a shape existed — and under R1 an icon cannot
+  carry state anyway, so every icon the system could add would be decoration on
+  a word that is already doing the work.</div>
+
+  <h2>6 · The six indicators</h2>
+  <p class="note">Six, each a distinct <b>form</b> so none can be mistaken for
+  another. Two are marks and four are grammar. <b>The count is load-bearing:</b>
+  a seventh indicator is a design change, not an addition. 🛑 No second line and
+  no second dot — a progress bar is a second line, an unread dot is a second
+  dot, and both were built once and removed.</p>
+  <table>
+    <thead><tr><th scope="col">Indicator</th><th scope="col">Form</th><th scope="col">Specification</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Mark one · the meter</th><td>one line</td><td>3px bar, <code>--agent</code> fill on a <code>--track</code> remainder, with a 1px × 9px tick at the floor it had to clear and a 9px caption. <b>Only where a real score exists</b> — never for progress, completion, or anything unmeasured. Geometry stays in px: a 3px bar is a graphic object under 1.4.11 and needs 3:1 at exactly that weight.</td></tr>
+      <tr><th scope="row">Mark two · the connection light</th><td>one dot</td><td>7px dot in <code>--ink</code> — never the agent green, because this is infrastructure and the agent colour means measurement. A live connection breathes (a 3.6s halo); an unreachable one is hollow (1.5px inset ring) and still. <b>Absence of life is the signal</b>, so no hazard colour exists and none is needed. The only radius in the system besides the mark, and the words beside it always say the same thing.</td></tr>
+      <tr><th scope="row">Grammar one</th><td>~</td><td>Hedges a forecast.</td></tr>
+      <tr><th scope="row">Grammar two</th><td>past tense</td><td>States a fact, with a time on it.</td></tr>
+      <tr><th scope="row">Grammar three</th><td>›</td><td>Your move. A person in the loop is the exception, so a person gets named — the agent ran every row, and naming it says nothing.</td></tr>
+      <tr><th scope="row">Grammar four</th><td>…</td><td>Elsewhere. Blocked on something outside this system.</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Two treatments are deliberately <em>not</em> indicators, which
+  is what keeps the six at six: <code>.lit</code> (the luminous touch) and
+  <code>.nb</code> (the not-built hatch). Neither reports a state of the
+  work.</p>
+
+  <h2>7 · The not-built treatment</h2>
+  <p class="note">🛑 <b>Required on any feature a decision refused or left
+  unbuilt.</b> A mockup carrying one of them without this treatment becomes
+  evidence of a shipped control. Three parts, and all three are required:</p>
+  <ul class="kv">
+    <li><b>.nb.nb</b><span>The hatch. 135° repeating stripe, 6px transparent / 1px <code>--hatch</code>, at alpha .18 — 1.42:1 on both light grounds, and 1.55:1 in the dark theme where the stripe inverts to a light value. <b>It inverts or it disappears:</b> a dark stripe on a dark ground is the not-built defect in its purest form.</span></li>
+    <li><b>.nb::after</b><span>The word, from <code>data-nb</code>. Uppercase --s1 in <code>--refused</code>, top right, on a --paper chip with a 1px edge. It survives greyscale printing and does not depend on hue.</span></li>
+    <li><b>.nbwhy</b><span>The reason — the sentence naming the decision that refused it. <b>A hatch without a reason is half the treatment:</b> the word says <em>that</em>, the reason says <em>which decision</em>, and a reviewer cannot act on the first without the second.</span></li>
+  </ul>
+  <div class="callout">⚠️ <b>Why the alpha is .18 and not .055.</b> At .055 the
+  stripe composited to 1.11:1 on every ground — fainter than
+  <code>--rule</code> at 1.38:1, the faintest line the system deliberately
+  declares — so the hatch sat below the visible floor on the ground it was
+  calibrated for. The reported premise that this was <em>--sheet-specific</em>
+  was exactly inverted: an alpha composite scales the ground rather than
+  displacing it, which is what makes an alpha stripe ground-independent, and the
+  solid stripe the finding implied would have introduced the defect it named.</div>
+
+  <h2>8 · The four interactive states, for every control</h2>
+  <table>
+    <thead><tr><th scope="col">State</th><th scope="col">What changes</th><th scope="col">Declared where</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">rest</th><td><code>--paper</code> ground, 1px <code>--rule-strong</code> edge, radius 0, min-height <code>--target</code>.</td><td>THE CONTROL</td></tr>
+      <tr><th scope="row">hover</th><td>Ground → <code>--tile-hover</code> (or <code>--row-hover</code> on a register row). <b>A ground change, never a hue change.</b> Transitioned on <code>--t-fade</code>.</td><td>GROUND</td></tr>
+      <tr><th scope="row">focus-visible</th><td>2px <code>--ink</code> <b>outline</b> at 2px offset. Never suppressed, never restyled, never replaced by a component's own edge.</td><td>ONE FOCUS RING</td></tr>
+      <tr><th scope="row">active</th><td>Inverts to the ink ground with <code>--on-ink</code> text.</td><td>THE CONTROL</td></tr>
+      <tr><th scope="row">disabled</th><td><code>--refused</code> on <code>--sheet</code>, with <code>aria-disabled="true"</code> and a reason stated beside the control.</td><td>R12 · THE CONTROL</td></tr>
+      <tr><th scope="row">invalid</th><td>2px full-<code>--ink</code> border — the emphasis rule — plus the reason in words, beginning with ›. <b>No hue change.</b></td><td>THE CONTROL</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">🛑 <b>Never a dimmed opacity for disabled.</b> Opacity
+  composites against whatever is behind it, so it fails contrast silently and by
+  a different amount on each of the four grounds — and differently again in the
+  dark theme.
+  <br>🛑 <b>Never the <code>disabled</code> attribute.</b> Always
+  <code>aria-disabled</code>, so a keyboard user can still reach the control and
+  read why it is refused.
+  <br>⚠️ <b>The focus ring is an outline, and this is not cosmetic.</b> It used
+  to be a box-shadow with <code>outline:none</code> and no fallback at
+  specificity (0,1,0), so any component declaring its own box-shadow edge
+  replaced the ring outright and left nothing behind — box-shadow does not
+  accumulate across rules. Eleven files had restated it locally and they had
+  already drifted apart. An outline and a box-shadow are different properties: a
+  component's edge cannot replace the ring at any specificity, in any source
+  order. <b>The failure class is gone, not just its instances.</b> Do not remove
+  <code>outline-offset</code> to tighten the ring — an ink-ground control
+  carrying --on-ink text would take an ink ring at the border box and be
+  invisible.</div>
+
+  <h2>9 · The fourteen primitives</h2>
+  <p class="note">Component names are suggestions this specification can carry.
+  <b>The props and the ARIA contract are not.</b> An implementation that renames
+  <code>&lt;Drawer&gt;</code> is fine; one that drops
+  <code>onDismiss</code> is a different component.</p>
+
+  <h3>1 · Navigation shell — &lt;Shell&gt;</h3>
+  <table>
+    <tbody>
+      <tr><th scope="row">Anatomy</th><td><code>nav</code> → <code>ul.dests</code> → one <code>button.dest</code> per destination. <b>Three: Close, Ask, Reports — and never a fourth.</b> Setup is a door behind the avatar, not a destination.</td></tr>
+      <tr><th scope="row">States</th><td>rest · hover · focus-visible · <code>aria-current="page"</code> · <b>absent</b>. Absent, not disabled — a destination a person may never use is noise, so a permission-shortened tree is shorter rather than greyer.</td></tr>
+      <tr><th scope="row">Active</th><td>Three channels: <code>--w-emph</code> weight, a 2px bottom edge, and <code>--accent</code> on that edge. The first two work without the third.</td></tr>
+      <tr><th scope="row">ARIA</th><td><code>nav</code> with <code>aria-label="Destinations"</code>; the active control carries <code>aria-current="page"</code>. <b>Inside Setup no destination is current.</b></td></tr>
+      <tr><th scope="row">Behaviour</th><td>Re-clicking the active destination dismisses overlays, clears filters and returns the register to the top. A route change survives the entity and the period; it does not survive a filter.</td></tr>
+      <tr><th scope="row">Responsive</th><td>Narrow: a bottom tab bar, one tab per destination, 44px tall. <b>A tab bar that holds exactly the destinations that exist is the strongest argument the three-destination rule has.</b></td></tr>
+      <tr class="never"><th scope="row">🛑 Never</th><td>A fourth destination · a disabled destination · a hue-only active state · a dropdown of further destinations.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2 · Chrome bar — &lt;Chrome&gt;</h3>
+  <table>
+    <tbody>
+      <tr><th scope="row">Anatomy</th><td>Nine controls, in order: the mark · entity + period switcher · three destinations · connection light · token meter · agent state · search · notifications · avatar.</td></tr>
+      <tr><th scope="row">Surface</th><td><code>--paper</code> ground, 1px <code>--rule-strong</code> bottom edge. Radius 0. No shadow.</td></tr>
+      <tr><th scope="row">ARIA</th><td><code>banner</code>. The agent state carries an <code>aria-label</code>; the meter's figure is text, not a title attribute.</td></tr>
+      <tr><th scope="row">Notes</th><td>The agent's level bars are <code>--ink</code>, not <code>--agent</code>: they are captioned as measuring nothing, and the agent rule reserves the hue to the meter. The token meter is the one genuinely measured thing in the bar. <b>No unread dot on notifications</b> — that is a second dot.</td></tr>
+      <tr><th scope="row">Responsive</th><td>Narrow: three controls — mark, search, avatar. Six are <b>relocated, not dropped</b>: entity, notifications, Setup and sign-out behind the avatar; connection light, token meter and agent state into the status sheet, because all three are reports rather than controls.</td></tr>
+      <tr class="never"><th scope="row">🛑 Never</th><td>A tenth control without a decision on the record · a dashboard of summary tiles · a left sidebar · an unread dot.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3 · Command palette — &lt;Palette&gt;</h3>
+  <table>
+    <tbody>
+      <tr><th scope="row">Anatomy</th><td>Input row → ranked sections → footer legend. Sections are <b>Find · Go · Do · Ask</b>, ranked by what a typed string most likely <em>is</em>.</td></tr>
+      <tr><th scope="row">Selection</th><td>The first row of the first section is what Enter would run: <code>--accent-quiet</code> ground plus a 2px <code>--accent</code> left edge and <code>--w-emph</code>. <b>Ground and edge together</b> — the edge alone is invisible to a reader who cannot distinguish the hue, and the ground alone is the hover state.</td></tr>
+      <tr><th scope="row">Keys</th><td><kbd>⌘K</kbd> opens from anywhere · ↑ ↓ move · ↵ runs · esc dismisses.</td></tr>
+      <tr><th scope="row">ARIA</th><td><code>role="dialog"</code>, <code>aria-modal="true"</code>. Traps focus and restores it to the control that opened it.</td></tr>
+      <tr><th scope="row">Behaviour</th><td><b>Ask is ranked last and is never absent.</b> Last, because a string that matches a document reference is a lookup rather than a question; never absent, because a question needs no match to be valid. When nothing else matches, Ask is the whole result.</td></tr>
+      <tr><th scope="row">Responsive</th><td>Narrow: a full-screen sheet. Mid and up: a centred panel, max <code>calc(var(--u)*140)</code>.</td></tr>
+      <tr class="never"><th scope="row">🛑 Never</th><td>An empty state with no Ask row · sections in a different order · a fifth section.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4 · Breadcrumb — &lt;Trail&gt;</h3>
+  <table>
+    <tbody>
+      <tr><th scope="row">Anatomy</th><td><code>nav</code> → crumbs separated by a <code>--rule-strong</code> slash. Every crumb but the last is a <code>button.crumb</code> with an underline; the last is plain text.</td></tr>
+      <tr><th scope="row">Appears</th><td><b>Only when you are deeper than a destination.</b> It is the way <em>out</em> as well as the trail.</td></tr>
+      <tr><th scope="row">Current</th><td><code>--accent-deep</code>, no underline, <code>--w-figure</code>. The absence of an underline and the <code>aria-current</code> attribute both say "you are here" before the colour does.</td></tr>
+      <tr><th scope="row">ARIA</th><td><code>nav</code> with <code>aria-label="Breadcrumb"</code>; the last crumb carries <code>aria-current="page"</code>.</td></tr>
+      <tr><th scope="row">Responsive</th><td>Narrow: the last two crumbs only, with a leading ellipsis that expands the full trail.</td></tr>
+      <tr class="never"><th scope="row">🛑 Never</th><td>A link on the last crumb · hue as the only affordance on a crumb link (the underline is load-bearing — the agent rule took the hue away and R1 forbids it coming back).</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5 · Account menu and the Setup door — &lt;AccountMenu&gt;</h3>
+  <table>
+    <tbody>
+      <tr><th scope="row">Anatomy</th><td>Three groups under the avatar: <b>Profile · Preferences · My notifications</b>, then <b>Setup · Support &amp; defects</b>, then <b>Sign out</b>. Group headings are --s1 uppercase with a <code>--rule</code> divider above.</td></tr>
+      <tr><th scope="row">Surface</th><td>THE OVERLAY SURFACE: <code>--paper</code>, 1px <code>--rule-strong</code>, radius 0, plus <code>--sheet-shadow</code> (a hairline, not a shadow). Layer <code>--z-popover</code>.</td></tr>
+      <tr><th scope="row">Keys</th><td>Opens on Enter or Space · ↑ ↓ Home End move · esc closes and restores focus to the avatar.</td></tr>
+      <tr><th scope="row">ARIA</th><td><code>role="menu"</code> with <code>menuitem</code> children; the trigger carries <code>aria-haspopup</code> and <code>aria-expanded</code>.</td></tr>
+      <tr><th scope="row">Behaviour</th><td><b>Both Setup columns are listed in full</b>, so nothing in Setup is reachable only by search. The door exists for the person who does not yet know what the thing is called. Supporting Support &amp; defects sits in the same position on every surface — 3.2.6 Consistent Help.</td></tr>
+      <tr><th scope="row">Responsive</th><td>Narrow: a bottom sheet, full width.</td></tr>
+      <tr class="never"><th scope="row">🛑 Never</th><td>A Setup item reachable only through the palette · a group reordered per surface.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6 · Filter mechanism — &lt;Filters&gt;</h3>
+  <table>
+    <tbody>
+      <tr><th scope="row">Anatomy</th><td>Facet list → active-filter chips → clear-all → count line. Each facet is a <code>button.facet</code> with its count in mono; each active filter is a removable <code>.chip</code>.</td></tr>
+      <tr><th scope="row">States</th><td>Facet: rest · hover · <code>aria-pressed="true"</code> (<code>--sheet</code> ground + <code>--w-emph</code>) · focus. Clear-all is <code>aria-disabled</code> when nothing is filtered.</td></tr>
+      <tr><th scope="row">The count line</th><td><b>States its scope and its denominator.</b> "6 of 14 shown · 32 in the register · 18 held out by the current filter". A filtered count with neither is a number nobody can check.</td></tr>
+      <tr><th scope="row">Behaviour</th><td><b>The facet list is not a design choice</b> — it is the closed set the contract already carries. A facet the query cannot express is drawn as a <em>hole</em> (hatched, with its reason), never invented in the UI: inventing it means filtering a page of rows instead of the register, which is a filter lying about its denominator.</td></tr>
+      <tr><th scope="row">Responsive</th><td>Narrow: facets move into a sheet; <b>the chips stay visible</b>, because what is filtered must never be hidden behind a tap.</td></tr>
+      <tr class="never"><th scope="row">🛑 Never</th><td>A facet the query cannot express · a count without a denominator · a chip whose removal is not a single target ≥24px.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7 · Table navigation — &lt;Register&gt;</h3>
+  <table>
+    <tbody>
+      <tr><th scope="row">Anatomy</th><td><code>table</code> inside a single-axis <code>.scroller</code>; sticky <code>thead</code> on a <code>--paper</code> ground; a sort control in the column head; a load-more control below.</td></tr>
+      <tr><th scope="row">Sort</th><td><b>Carried by a word, never a glyph.</b> A closed enum of four; the control states the current mode in words and cycles. <code>aria-sort</code> on the column.</td></tr>
+      <tr><th scope="row">Load</th><td>Progressive, and <b>no page numbers</b>: the register grows while you read it, so page three is not a stable place.</td></tr>
+      <tr><th scope="row">Sticky head</th><td>The only sticky element in the system, and a focused row scrolls clear of it — 2.4.11 Focus Not Obscured. A column heading that scrolls away turns every figure into an unlabelled number.</td></tr>
+      <tr><th scope="row">Figures</th><td>Every value and score is mono with tabular numerals, right-aligned. R9.</td></tr>
+      <tr><th scope="row">Responsive</th><td>Narrow: <b>triages to three columns</b> — reference, exception, whose move — folding value and score into the row's second line. It is the one table that reflows rather than scrolling, because it is the one surface a person reads for hours.</td></tr>
+      <tr class="never"><th scope="row">🛑 Never</th><td>A glyph-only sort affordance · page numbers · a fixed height on a row · two-dimensional scrolling at 320px.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>8 · Side sheet / drawer — &lt;Drawer&gt;</h3>
+  <table>
+    <tbody>
+      <tr><th scope="row">Anatomy</th><td>scrim → panel · <code>.ov-head</code> (title, context, close) → <code>.ov-body</code> (scrolls) → <code>.ov-foot</code> (actions, right-aligned).</td></tr>
+      <tr><th scope="row">Surface</th><td>THE OVERLAY SURFACE: <code>--paper</code>, <b>1px <code>--rule-strong</code> on the entry side only</b>, radius 0, no shadow.</td></tr>
+      <tr><th scope="row">Geometry</th><td>Right edge, full height, <code>min(92%, calc(var(--u)*110))</code> — 440px at a 16px root. Layer <code>--z-overlay</code>.</td></tr>
+      <tr><th scope="row">Motion</th><td>In on <code>--spring</code> at <code>--t-spring</code>. Out on <code>--t-fade</code>.</td></tr>
+      <tr><th scope="row">ARIA</th><td><code>role="dialog"</code>, <code>aria-modal="false"</code>, <code>aria-labelledby</code> the title.</td></tr>
+      <tr><th scope="row">Behaviour</th><td><b>Does not trap focus</b> — the register behind it stays operable, which is the whole point of a drawer. Escape closes; the scrim closes. Closing undoes nothing, because asking is not an act.</td></tr>
+      <tr><th scope="row">Responsive</th><td>Narrow: full width, no left edge — 92% of 360px leaves a 28px strip of register that shows nothing and reads as a mistake. <b>Ultra: becomes an inline third column</b> and stops being an overlay at all.</td></tr>
+      <tr class="never"><th scope="row">🛑 Never</th><td>A shadow · an edge on more than one side · a focus trap · replacing the register rather than sitting over it · a bounce on the way out.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>9 · Modal dialog, scrim, focus trap — &lt;Dialog&gt;</h3>
+  <table>
+    <tbody>
+      <tr><th scope="row">Anatomy</th><td>scrim at <code>--z-modal</code> → centred panel → head, body, foot. The committing action is the <code>data-commit</code> button: ink ground, <code>--on-ink</code> text, <code>--agent-deep</code> on hover.</td></tr>
+      <tr><th scope="row">Geometry</th><td><code>min(92%, calc(var(--u)*130))</code>, max-height 90%, 1px edge on all four sides.</td></tr>
+      <tr><th scope="row">Motion</th><td>In on <code>--spring</code>, rising <code>calc(var(--u)*4)</code>. The scrim fades on <code>--t-fade</code>.</td></tr>
+      <tr><th scope="row">ARIA</th><td><code>role="dialog"</code>, <code>aria-modal="true"</code>, <code>aria-labelledby</code>. The reason field carries <code>aria-invalid</code> and <code>aria-describedby</code> its own message.</td></tr>
+      <tr><th scope="row">Behaviour</th><td>Traps focus; restores it to the opener. <b>Escape cancels; the scrim does not</b> — a destructive act is not dismissed by a misclick. The commit control is <code>aria-disabled</code> until the required reason is entered.</td></tr>
+      <tr><th scope="row">The reason</th><td><b>Product machinery, not a courtesy.</b> It is what an SOP amendment would be drafted from, which is why the act cannot commit without it — and why it is entered once and attached to all three affected records (3.3.7 Redundant Entry).</td></tr>
+      <tr><th scope="row">Responsive</th><td>Narrow: full width less the gutter; footer buttons stack full width.</td></tr>
+      <tr class="never"><th scope="row">🛑 Never</th><td>Scrim-click to dismiss · a commit enabled without its reason · a shadow · an <code>autofocus</code> on the committing control.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>10 · Tooltip / popover — &lt;Tip&gt;</h3>
+  <table>
+    <tbody>
+      <tr><th scope="row">Anatomy</th><td><code>.tw</code> positioning wrapper → the trigger control → <code>.tip</code> panel. <b>The panel is a sibling of the trigger, never a child.</b></td></tr>
+      <tr><th scope="row">Surface</th><td>THE TOOLTIP SURFACE: <code>--ink</code> ground, <code>--on-ink</code> text, <code>--on-ink-2</code> second line, radius 0, <b>no edge</b> — 14.05:1 against paper already separates it.</td></tr>
+      <tr><th scope="row">Geometry</th><td>Above the trigger, offset <code>calc(var(--u)*2)</code>, left-aligned to it. Max width <code>calc(var(--u)*64)</code>. Layer <code>--z-popover</code>.</td></tr>
+      <tr><th scope="row">States</th><td><b>Two only:</b> <code>[data-open]</code> absent, or <code>"true"</code>. There is no hover state, no loading state and no placement variant.</td></tr>
+      <tr><th scope="row">Motion</th><td><code>opacity var(--t-fade) linear</code>. Not the spring.</td></tr>
+      <tr><th scope="row">ARIA</th><td>Panel is <code>role="tooltip"</code> with an id; the trigger carries <code>aria-describedby</code>. A disabled trigger uses <code>aria-disabled="true"</code>, never <code>disabled</code>.</td></tr>
+      <tr><th scope="row">Behaviour</th><td><b>The open state has exactly one writer, and it is the script.</b> Focus opens it; tap opens it; pointerenter may open it only by calling the same function. Escape clears the attribute and stops propagation so an enclosing overlay does not also close.</td></tr>
+      <tr><th scope="row">Two guards</th><td>A tap focuses <em>then</em> clicks — without a pointer guard the pair opens on focus and closes on click, and the tap user sees nothing. A browser restores focus on reload — without an interaction guard the panel opens before anyone has touched the page.</td></tr>
+      <tr><th scope="row">Responsive</th><td>Unchanged. Narrow: opened by tap, dismissed by tap-away or Escape.</td></tr>
+      <tr class="never"><th scope="row">🛑 Never</th><td><code>display:none</code> · <code>visibility:hidden</code> · any CSS selector keyed on <code>:hover</code>, <code>:focus-visible</code> or <code>:focus-within</code> · hover as the only way in · a tooltip carrying information stated nowhere else.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">⚠️ <b>Why no selector may open it.</b> A script can clear
+  an attribute; it cannot clear a pseudo-class, and <b>pressing Escape does not
+  move focus</b>. Keyed on <code>:focus-visible</code>, the script wrote the
+  panel shut and the panel stayed painted — the attribute said dismissed and the
+  pixels said open, which fails 1.4.13 while every review of the source says it
+  passes. Three files shipped that live, and one of them re-focused the trigger
+  in its own Escape handler, guaranteeing the panel survived.
+  <br>And <b>a tooltip must never leave the accessibility tree.</b>
+  <code>display:none</code> and <code>visibility:hidden</code> strand every
+  <code>aria-describedby</code> pointing at it, which turns this primitive from
+  one that <em>adds</em> a reason into one that <em>takes a reason away</em> from
+  exactly the keyboard and screen-reader users it exists for. Opacity is the
+  ordinary way to satisfy that; the clipped visually-hidden pattern is the other
+  one.</div>
+
+  <h3>11 · Toast / transient outcome — &lt;Toast&gt;</h3>
+  <table>
+    <tbody>
+      <tr><th scope="row">Anatomy</th><td>Stack bottom-right, gap <code>calc(var(--u)*.5)</code>. Each: title (<code>--w-emph</code>) + detail (<code>--muted</code>) + a dismiss control.</td></tr>
+      <tr><th scope="row">Surface</th><td><code>--paper</code>, 1px <code>--rule-strong</code>, plus a <b>2px <code>--ink</code> left edge — the emphasis rule, not a hue.</b></td></tr>
+      <tr><th scope="row">Motion</th><td><code>toast-in</code> on <code>--spring</code> at <code>--t-spring</code>, rising <code>calc(var(--u)*4)</code>.</td></tr>
+      <tr><th scope="row">ARIA</th><td><code>role="status"</code> — polite, because an outcome is not an interruption.</td></tr>
+      <tr><th scope="row">Behaviour</th><td>The terminal state of an asynchronous act. <b>The bell is not this:</b> a notification is for what happened while you were looking somewhere else.</td></tr>
+      <tr><th scope="row">Responsive</th><td>Narrow: full width above the tab bar.</td></tr>
+      <tr class="never"><th scope="row">🛑 Never</th><td>A hue carrying success or failure — the words carry it · <code>role="alert"</code> for an ordinary outcome · a toast as the only record of what happened.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>12 · Status bar — &lt;StatusBar&gt;</h3>
+  <table>
+    <tbody>
+      <tr><th scope="row">Anatomy</th><td>Three slots, and <b>they never rearrange: keys left · provenance middle · the audit trail last.</b> 1px <code>--rule-strong</code> top edge.</td></tr>
+      <tr><th scope="row">ARIA</th><td><code>contentinfo</code>.</td></tr>
+      <tr><th scope="row">Behaviour</th><td>One grammar on every protected surface, <b>so a screenshot of any screen describes itself.</b> The slot is never omitted: a surface with nothing to report says so in the slot where the report would have been — "no run for Aug 2026" rather than an empty middle.</td></tr>
+      <tr><th scope="row">Responsive</th><td>Narrow: <b>one tappable row that opens the full grammar as a sheet.</b> Not truncated and not dropped — it moves. The row shows the provenance slot, because that is the half a person checks without being asked.</td></tr>
+      <tr class="never"><th scope="row">🛑 Never</th><td>Reordered slots · an omitted slot · a truncated provenance line.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>13 · Route-level states — &lt;RouteState&gt;</h3>
+  <table>
+    <tbody>
+      <tr><th scope="row">Kinds</th><td>ready · loading · empty · error. Each carries a <b>scope</b> and a <b>time</b>.</td></tr>
+      <tr><th scope="row">ARIA</th><td><code>region</code> with <code>aria-live="polite"</code> on the state's heading, so a change of state is announced without stealing focus.</td></tr>
+      <tr><th scope="row">Loading</th><td>The scope is stated <em>while</em> it loads, so a slow page is still a page about something. Skeleton rows are <code>--sheet</code> blocks; there is <b>no progress bar</b>, because that is a second line.</td></tr>
+      <tr><th scope="row">Four nothings</th><td>They must not look alike: <b>the filter's fault</b> (clear-all is right there) · <b>a clean night</b> (a run that found nothing still reports) · <b>no run at all</b> (nothing has been measured, so there is nothing to be clean about) · <b>waiting elsewhere</b> (not an empty state — the work is moving, just not here).</td></tr>
+      <tr><th scope="row">Error</th><td>Names what answered and what did not, and states that <b>nothing has been changed</b> — a failed read is not a failed run. Carries the audit id so the report is actionable.</td></tr>
+      <tr><th scope="row">Responsive</th><td>Narrow: actions stack full width; the sentence stays inside <code>--measure-act</code>.</td></tr>
+      <tr class="never"><th scope="row">🛑 Never</th><td>A progress bar · a state without a scope or a time · an empty state that reads like a failure · a retry that does not say what it will retry.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>14 · Key-caps and the shortcut legend — &lt;Keys&gt;</h3>
+  <table>
+    <tbody>
+      <tr><th scope="row">Anatomy</th><td><code>.kb</code> — mono <code>--s1</code> at <code>--w-figure</code>, 1px inset edge, on <code>--paper</code>. <code>.kb--on-ink</code> inverts to a <code>--on-ink-2</code> hairline.</td></tr>
+      <tr><th scope="row">Use</th><td>One way to state a key, at one size, in all four places it appears: a status bar, a menu row, a dialog and the palette footer. It replaces four ad-hoc mono spans at four different sizes.</td></tr>
+      <tr><th scope="row">ARIA</th><td><code>kbd</code>. ⚠️ <b>A key-cap is not a target</b> — it is a static label describing a keystroke, so 2.5.8 does not reach it and it is not padded to 24px. A clickable key-cap is a button wearing a cap, and it takes the floor.</td></tr>
+      <tr><th scope="row">Responsive</th><td>Narrow: <b>hidden, and the shortcut still works.</b> A phone has no ⌘, so a cap naming one is an instruction a reader cannot follow — but a Bluetooth keyboard on a tablet can, which is why the shortcut is never removed, only its label. <b>This is the one place the system hides information rather than moving it</b>, and it is stated so it is not mistaken for the pattern.</td></tr>
+      <tr class="never"><th scope="row">🛑 Never</th><td>A shortcut that exists only as a cap · a cap at a size other than --s1 · a removed shortcut at the narrow tier.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>10 · Responsive</h2>
+  <table>
+    <thead><tr><th scope="col">Tier</th><th scope="col" class="num">Range</th><th scope="col">What changes</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Narrow</th><td class="num">320 – 719</td><td>The phone shell: three chrome controls, destinations in a bottom tab bar, the status bar as a tappable row. Every grid collapses to one column, the register triages to three, a drawer becomes a full-height sheet, footer buttons stack.</td></tr>
+      <tr><th scope="row">Mid</th><td class="num">720 – 1079</td><td>The desktop shell returns: one bar, nine controls, destinations inline. The register keeps all five columns in its scroller. Three-up grids drop to two.</td></tr>
+      <tr><th scope="row">Wide</th><td class="num">1080 – 1439</td><td>The reference layout. A drawer opens <em>over</em> the register.</td></tr>
+      <tr><th scope="row">Ultra</th><td class="num">1440 +</td><td><code>--measure</code> holds and the page centres; content does not grow to fill the display. <b>The evidence panel moves inline beside the register</b> instead of opening as a drawer over it.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">🛑 <b>320px is the floor, and it is a conformance
+  requirement rather than a choice.</b> 1.4.10 Reflow requires the whole
+  interface to work at 320 CSS px with no two-dimensional scrolling. Every table
+  is therefore inside a <b>single-axis</b> scroller — a five-column register is
+  five columns, and that is the one thing in an interface that legitimately
+  cannot reflow — and no layout may set a min-width above 320px at the narrow
+  tier.
+  <br>⚠️ <b>The breakpoints are constants, not usable tokens.</b> A custom
+  property cannot be read inside <code>@media</code>, so every breakpoint is
+  still written literally at its site. They are declared so each number has one
+  home and a fourth has to argue with them. <b>Change the kernel first</b>, then
+  the copies. Adopting container queries would close this and is an open
+  finding.
+  <br>⚠️ <b>Form controls are 16px minimum</b> — <code>max(1rem, var(--s2))</code>.
+  iOS Safari zooms the viewport when a focused input is under 16px, which breaks
+  Reflow on every form in the system. The label above the field carries --s2;
+  the field itself does not.</div>
+
+  <h2>11 · Accessibility · WCAG 2.2 Level AA</h2>
+  <table>
+    <thead><tr><th scope="col">Criterion</th><th scope="col">How it is met</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">1.4.1 Use of Colour</th><td><b>By construction.</b> R1: no state may depend on hue. No red, no amber, no traffic-light green; every state carries a word and colour only reinforces one.</td></tr>
+      <tr><th scope="row">1.4.3 Contrast</th><td>Every ink step measured against both grounds in both themes. The two light steps below AA on <code>--sheet</code> are marked and not used for text on it.</td></tr>
+      <tr><th scope="row">1.4.4 Resize Text</th><td>Every step, unit, gutter, measure and target in <code>rem</code>. <b>Nothing sets a root font-size</b>, so the base is whatever the reader chose.</td></tr>
+      <tr><th scope="row">1.4.10 Reflow</th><td>320px floor; single-axis scrollers; grids collapse; the register triages; 16px form controls.</td></tr>
+      <tr><th scope="row">1.4.11 Non-text Contrast</th><td>The 3px meter bar measured as a graphic object at exactly its declared weight — which is why the bar, the tick and the level bars stay in px rather than scaling. Control edges are <code>--rule-strong</code>.</td></tr>
+      <tr><th scope="row">1.4.12 Text Spacing</th><td>All three leadings are unitless multipliers. Two habits banned outright: <b>no fixed height on anything holding text</b>, and <b>no <code>overflow:hidden</code> to make a layout hold</b>.</td></tr>
+      <tr><th scope="row">1.4.13 Content on Hover/Focus</th><td>The tooltip's whole design — dismissible, hoverable, persistent, and never out of the accessibility tree.</td></tr>
+      <tr><th scope="row">2.1.1 / 2.1.2 Keyboard</th><td>Everything operable is reachable and operable by keyboard; modals and the palette trap focus and restore it.</td></tr>
+      <tr><th scope="row">2.2.2 Pause, Stop, Hide</th><td>All three ambient animations are decorative by construction and all three stop under <code>prefers-reduced-motion</code>.</td></tr>
+      <tr><th scope="row">2.4.3 Focus Order</th><td>DOM order is reading order; <b>no <code>tabindex</code> above 0 exists anywhere</b>; the skip link is first on every surface.</td></tr>
+      <tr><th scope="row">2.4.7 Focus Visible</th><td><b>By construction.</b> One ring, declared once, as an <code>outline</code>. The erasability is not defended against — it is unavailable.</td></tr>
+      <tr><th scope="row">2.4.11 Focus Not Obscured</th><td>New in 2.2. The register's sticky head is the only sticky element; a focused row scrolls clear of it. No sticky footers on scrollable surfaces.</td></tr>
+      <tr><th scope="row">2.5.8 Target Size</th><td>New in 2.2. 24×24 floor declared once as a rule, in rem. <b>None of the three exceptions is used anywhere</b> — each is an argument a reviewer has to accept rather than a measurement.</td></tr>
+      <tr><th scope="row">3.2.6 Consistent Help</th><td>New in 2.2. Support &amp; defects in the same position on every surface, reachable from the palette anywhere.</td></tr>
+      <tr><th scope="row">3.3.1 Error Identification</th><td>An invalid field states its reason in words, beginning with ›. The 2px border reinforces the word, never replaces it.</td></tr>
+      <tr><th scope="row">3.3.7 Redundant Entry</th><td>New in 2.2. A reason is entered once and attached to every affected record; entity and period survive a route change.</td></tr>
+      <tr><th scope="row">4.1.2 Name, Role, Value</th><td>Affordance glyphs always <code>aria-hidden</code> inside a named control. A disabled control carries <code>aria-disabled</code>, never <code>disabled</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>12 · Integration and theming</h2>
+  <table>
+    <thead><tr><th scope="col">File</th><th scope="col">Format</th><th scope="col">For</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">tokens.css</th><td>CSS custom properties</td><td><b>The authority.</b> Must be loaded — the other three name the vocabulary, they do not carry the values.</td></tr>
+      <tr><th scope="row">tokens.tokens.json</th><td>W3C Design Tokens (DTCG)</td><td>The canonical interchange, carrying every token's one job as its description. What a design tool reads and what any future generator should consume.</td></tr>
+      <tr><th scope="row">tokens.sd.json</th><td>Style Dictionary source</td><td>The build input, for teams already emitting platform files.</td></tr>
+      <tr><th scope="row">tailwind.preset.js</th><td>Tailwind theme preset</td><td>What the React app imports. Class names are the token's <em>job</em>: <code>text-refused</code>, <code>bg-sheet</code>, <code>border-rule-strong</code>.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">🛑 <b>The Tailwind preset must never inline a hex.</b>
+  Every value is <code>var(--token)</code>. A preset that copies
+  <code>#00303f</code> into its palette forks the kernel: the dark theme stops
+  applying, and there are suddenly two places a colour is declared. That is why
+  <code>tokens.css</code> still has to be loaded.
+  <br>🛑 <b>And no build may flatten the dark theme into separate names.</b>
+  <code>ink-dark</code> / <code>paper-dark</code> breaks the rule that no
+  component knows which theme it is in. Two themes over <b>one</b> set of names,
+  switched by <code>[data-theme="dark"]</code> on the root element.</div>
+  <p class="note"><b>Three layers, and our vocabulary rather than atomic
+  design's.</b> The <b>kernel</b> owns every value and the rules cheaper to
+  state once than to enforce per component. The <b>fourteen primitives</b> each
+  own their states, their ARIA contract and their responsive behaviour; a
+  primitive consumes tokens and composes other primitives, and never reaches
+  into another primitive's internals. <b>Compositions</b> are the routes — they
+  arrange primitives and own no visual decisions at all. A composition that
+  needs a new visual treatment is asking for a primitive, and that is a design
+  change.</p>
+  <p class="note">The mapping onto atoms / molecules / organisms is close but not
+  adopted: our primitives span the first two, because the useful line here is
+  <b>whether a thing has states of its own</b>, not how many parts it has.</p>
+
+  <h2>13 · Open findings</h2>
+  <p class="note">Each of these is a decision nobody has taken, recorded so it is
+  not mistaken for an oversight — and so the next person does not have to
+  re-derive it.</p>
+  <ul class="kv">
+    <li><b>Container queries</b><span>The three breakpoints are declared and unusable inside <code>@media</code>. Whether components should respond to their container rather than the viewport would change how every grid reflows. A design decision, not a value.</span></li>
+    <li><b>Interruptible motion</b><span><code>--spring</code> restarts rather than retargeting from its current velocity. Closing it needs a runtime, which is a stack decision rather than a token one.</span></li>
+    <li><b>forced-colors mode</b><span>The system has almost no transparency to reduce, but forced-colors would flatten the luminous touch and the hatch to nothing — and the not-built treatment would lose both its halves. A real gap.</span></li>
+    <li><b>No AAA position</b><span>The target is AA and the system does not claim otherwise. Raising the ramp would collapse the distinction between <code>--muted</code>, <code>--refused</code> and <code>--recede</code>, which carry three different meanings.</span></li>
+    <li><b>2.4.11 is asserted, not tested</b><span>Focus Not Obscured depends on scroll behaviour that cannot be verified from a specimen sheet. It needs the real register at the real length, on a real keyboard.</span></li>
+    <li><b>No screen-reader transcript</b><span>The ARIA contract is specified; what a given reader announces is a different claim. Three readers on three platforms is the test, and it has not been run.</span></li>
+    <li><b>The state label's markup</b><span><code>&lt;figure&gt;/&lt;figcaption&gt;</code> is the only form that associates a label with the thing it labels programmatically. The reference sheet uses it everywhere, which is a vote rather than a ruling.</span></li>
+    <li><b>The fourth ground</b><span>Three grounds only, and a fourth is a finding. Nothing needs one — the entry tier came closest, wanting a <code>--sheet</code> page with a <code>--paper</code> card, and was refused because that makes <code>--sheet</code> a page ground under an existing name.</span></li>
+  </ul>
+
+  <p class="note" style="margin-top:calc(var(--u)*10)"><b>Every figure in this
+  document is illustrative.</b> No customer, logo, testimonial, price, SLA or
+  benchmark is named, because none has been established.</p>
+
+  </div>
+</doc-page>
+</x-dc>
+</body>
+</html>

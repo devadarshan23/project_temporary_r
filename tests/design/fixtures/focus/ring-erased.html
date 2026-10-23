@@ -1,0 +1,34 @@
+<!doctype html><meta charset="utf-8"><title>fixture · the ring erased the only way left</title>
+<link rel="stylesheet" href="../../../../docs/handoff-pack/tokens.css">
+<!-- THE DETECTOR'S POSITIVE CONTROL — NEW 22 Aug 2026, G240, AND IT EXISTS
+     BECAUSE THE OLD ONE STOPPED WORKING FOR THE RIGHT REASON.
+
+     ring-eaten.html was the positive control: three box-shadow edges that ate
+     the kernel ring, proving the detector could see a bare focus stop. G240
+     made the ring an `outline`, so those three no longer erase anything — which
+     is the ruling working, and which leaves the audit in §2 of
+     focus-indicator.test.ts asserting `no page has a bare stop` with NOTHING
+     witnessing that a bare stop would be caught. That is §5.6 of docs/HANDOFF.md
+     — a control that passes while measuring nothing — and it would have arrived
+     as a SIDE EFFECT of a repair, which is the way it usually arrives.
+
+     🛑 SO THE ATTACKER HAD TO CHANGE PROPERTY TOO. There is exactly one way left
+     to leave a focused element with no indicator under an outline kernel: write
+     `outline:none` yourself. That is what the three elements below do, each also
+     carrying its own box-shadow edge so the detector cannot pass them on the
+     ring bands either. All three MUST be caught.
+
+     ⚠️ THIS IS ALSO THE HONEST STATEMENT OF WHAT G240 DID AND DID NOT BUY. The
+     ring can no longer be erased BY ACCIDENT — by a component minding its own
+     edge, which is how all eleven measured failures happened. It can still be
+     erased ON PURPOSE, by a rule that names `outline` and sets it to none. No
+     CSS mechanism prevents that; the audit in §2 is what catches it, and this
+     fixture is what proves the audit can. -->
+<style>
+  .erase:focus-visible{outline:none;box-shadow:inset 0 0 0 1px var(--rule-strong)}
+  .erase-width:focus-visible{outline-width:0;box-shadow:inset 0 0 0 1px var(--ink)}
+  input.erase-attr:focus-visible{outline:none;box-shadow:inset 0 0 0 1px var(--rule-strong)}
+</style>
+<button class="erase">erases the ring by naming outline</button>
+<button class="erase-width">erases it by zeroing the outline width</button>
+<input class="erase-attr" aria-label="erases it by naming outline on an attribute selector">

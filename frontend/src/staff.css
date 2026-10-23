@@ -1,0 +1,169 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   STAFF.CSS — the 1CloudHub staff console, PORTED FROM docs/handoff-pack/app.css
+   for docs/handoff-pack/S1 Staff.dc.html (G3321–G3330, 3 Oct 2026).
+
+   EVERY VALUE IS A KERNEL REFERENCE, as in close.css: nothing here states a
+   colour, a size or a spacing unit; each line reads a token from
+   docs/handoff-pack/tokens.css. The chrome is close.css's `.chrome` rules,
+   unchanged — the staff console and the tenant shell draw ONE chrome.
+
+   SCOPED UNDER `.staff`. The pack's app.css styles bare class names (`.pane`,
+   `.tbl`, `.abtn`, `.result`) for a page that is only the app; this bundle also
+   carries Setup and the Close screens, which own their own `.abtn`. The
+   selectors are the pack's; only the scope is added.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.staff{background-color:var(--paper);color:var(--ink);font-family:var(--face-sans);
+  font-size:var(--s3);line-height:var(--lh-body)}
+.staff > .staff-work{flex:1;padding:0;display:flex;flex-direction:column;min-width:0}
+
+/* ═══ TYPE ═════════════════════════════════════════════════════════════════ */
+.staff .lab{display:block;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  margin-bottom:calc(var(--u)*2)}
+.staff .q{color:var(--muted)}
+.staff .q.sub{display:block;margin-top:calc(var(--u)*1);font-size:var(--s1);
+  font-family:var(--face-sans)}
+.staff p.note{font-size:var(--s2);line-height:var(--lh-note);margin:calc(var(--u)*2) 0 0}
+
+/* ═══ FIGURES ══════════════════════════════════════════════════════════════ */
+.staff .figs{display:flex;gap:calc(var(--u)*8);align-items:flex-end;flex-wrap:wrap}
+.staff .fig .k{display:block;font-size:var(--s2);color:var(--muted);
+  margin-bottom:calc(var(--u)*1)}
+.staff .fig .v{display:block;font-family:var(--face-mono);font-size:var(--s4);
+  font-weight:var(--w-figure);font-variant-numeric:tabular-nums;color:var(--ink)}
+.staff .fig .v.sm{font-size:var(--s2)}
+/* G3092 — a figure nothing serves is a quiet `<Soon>`: the fig's shape, muted. */
+.staff .fig[data-soon]{font:inherit;background:none;border:0;padding:0;text-align:left;cursor:default}
+.staff .fig[data-soon] .v{color:var(--muted);font-weight:var(--w-body)}
+
+/* ═══ THE PANE ═════════════════════════════════════════════════════════════ */
+/* RS-01 (G3583): AT 390 THE WHOLE PANE WAS 628px WIDE, not just the table.
+   `.staff-work` is a flex column and the pane a grid with an implicit `auto`
+   track, so both sized to the table's `min-width:38rem` and `.scroller` never
+   had a constrained width to scroll inside. `min-width:0` on both and a
+   `minmax(0,1fr)` track give the scroller the viewport, so the TABLE scrolls
+   and the page does not. */
+.staff .pane{padding:calc(var(--u)*5);display:grid;gap:calc(var(--u)*5);flex:1;
+  align-content:start;min-width:0;grid-template-columns:minmax(0,1fr)}
+.staff .pane p{font-size:var(--s2);line-height:var(--lh-note);margin:0;max-width:72ch}
+.staff .paneh{display:flex;align-items:center;justify-content:space-between;
+  gap:calc(var(--u)*4);flex-wrap:wrap;margin-bottom:calc(var(--u)*3)}
+.staff .paneh > .lab{margin:0}
+.staff .paneh .abtn{margin:0}
+.staff .pane .reasons{margin-bottom:calc(var(--u)*4)}
+.staff .pane .result{margin-bottom:calc(var(--u)*4)}
+
+/* ═══ CONTROLS ═════════════════════════════════════════════════════════════ */
+.staff .acts{display:flex;gap:calc(var(--u)*2);flex-wrap:wrap;margin-top:calc(var(--u)*4)}
+.staff .pane .abtn{font:inherit;font-size:var(--s2);min-height:var(--target);
+  padding:0 calc(var(--u)*4);cursor:pointer;border:0;color:var(--ink);
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.staff .pane .abtn:hover{background-color:var(--tile-hover)}
+.staff .pane .abtn[data-commit]{background-color:var(--ink);color:var(--on-ink);
+  font-weight:var(--w-emph);box-shadow:none}
+.staff .pane .abtn[data-commit]:hover{background-color:var(--accent-deep)}
+.staff .pane .abtn[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--ink);
+  font-weight:var(--w-emph)}
+.staff .pane .abtn[aria-disabled="true"]{color:var(--refused);background-color:var(--sheet);
+  cursor:default}
+/* G3091 — a control nothing serves is MUTED, not refused-red. */
+.staff .pane .abtn[data-soon]{color:var(--muted);background-color:var(--sheet)}
+.staff .pane .abtn[data-soon]:hover{background-color:var(--sheet)}
+/* RS-05 (G3584): the billing period's two parts, the period then its label. */
+.staff .chrome .abtn.period{gap:calc(var(--u)*2)}
+.staff .chrome button.acctitem{font:inherit;border:0;background:none;text-align:left;
+  cursor:pointer;color:var(--ink)}
+.staff .chrome button.acctitem:not([data-soon]):hover{background-color:var(--row-hover)}
+
+/* ═══ THE FORCE FORM ═══════════════════════════════════════════════════════ */
+.staff .reasons{display:grid;gap:calc(var(--u)*2);margin-top:calc(var(--u)*4);
+  padding-top:calc(var(--u)*4);border-top:1px solid var(--rule-strong)}
+@media (min-width:1080px){
+  .staff .reasons{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .staff .reasons > .lab,.staff .reasons > .acts,.staff .reasons > p,
+  .staff .reasons > .pfields{grid-column:1 / -1}
+}
+.staff .pfields{display:grid;gap:calc(var(--u)*3);
+  grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));
+  margin-top:calc(var(--u)*4);text-align:left}
+.staff .pfields label{display:grid;gap:calc(var(--u)*1.5);min-width:0}
+.staff .pfields input{width:100%;box-sizing:border-box;font:inherit;font-size:var(--s2);
+  color:var(--ink);background-color:var(--paper);border:0;
+  box-shadow:inset 0 0 0 1px var(--rule-strong);min-height:var(--target);
+  padding:calc(var(--u)*1.5) calc(var(--u)*2)}
+.staff .result{margin-top:calc(var(--u)*4);padding:calc(var(--u)*4);
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--ink);
+  font-size:var(--s2);line-height:var(--lh-note);max-width:80ch}
+.staff .result.refused{box-shadow:inset 0 0 0 1px var(--refused);color:var(--refused)}
+
+/* ═══ CONTROLLED TABLES ════════════════════════════════════════════════════ */
+.staff .tbar{display:flex;align-items:center;gap:calc(var(--u)*3);flex-wrap:wrap;
+  padding:calc(var(--u)*2) 0 calc(var(--u)*3)}
+.staff .tbar .tsearch{flex:1;min-width:calc(var(--u)*40);display:flex;
+  align-items:center;gap:calc(var(--u)*2)}
+.staff .tbar input[type="search"]{flex:1;min-width:0;font:inherit;
+  font-size:var(--s2);color:var(--ink);background-color:var(--paper);
+  border:0;box-shadow:inset 0 0 0 1px var(--rule-strong);
+  min-height:var(--target);padding:0 calc(var(--u)*3)}
+.staff .tbar input::placeholder{color:var(--muted)}
+.staff .tcount{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted);
+  white-space:nowrap}
+.staff .tnarrow{font-size:var(--s1);color:var(--ink);background-color:var(--sheet);
+  box-shadow:inset 0 0 0 1px var(--rule);padding:calc(var(--u)*2) calc(var(--u)*3);
+  margin:0 0 calc(var(--u)*3)}
+/* RS-01 (G3583): POSITIONED, so the `.sr-only` labels inside the table (an
+   absolutely-positioned 1px box) take the scroller as their containing block.
+   Unpositioned, they escaped its overflow and widened the PAGE to 596px at 390
+   while the table itself scrolled correctly — measured, not guessed. */
+.staff .scroller{overflow-x:auto;overscroll-behavior-x:contain;position:relative}
+.staff .tbl{width:100%;border-collapse:collapse;font-size:var(--s2);min-width:38rem}
+.staff .tbl th,.staff .tbl td{text-align:left;vertical-align:top;font-weight:var(--w-body);
+  padding:calc(var(--u)*3) calc(var(--u)*4) calc(var(--u)*3) 0;
+  border-bottom:1px solid var(--rule)}
+.staff .tbl thead th{font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  border-bottom:1px solid var(--rule-strong)}
+.staff .tbl .mono{font-family:var(--face-mono);font-variant-numeric:tabular-nums}
+.staff .tbl th .tsort{display:flex;align-items:center;gap:calc(var(--u)*2);
+  font:inherit;font-size:inherit;font-weight:inherit;letter-spacing:inherit;
+  text-transform:inherit;color:inherit;background:none;border:0;padding:0;
+  cursor:pointer;text-align:left;min-height:var(--target)}
+.staff .tbl th .tsort:hover{color:var(--ink)}
+.staff .tbl th .tsort .ind{font-family:var(--face-mono);color:var(--ink);width:1ch;flex:none}
+.staff .tbl th[aria-sort="ascending"],.staff .tbl th[aria-sort="descending"]{color:var(--ink)}
+.staff .tbl tr.tfilters th{padding-top:calc(var(--u)*2);padding-bottom:calc(var(--u)*3);
+  vertical-align:top}
+.staff .tbl tr.tfilters select{width:100%;box-sizing:border-box;
+  font:inherit;font-size:var(--s1);color:var(--ink);background-color:var(--paper);
+  border:0;box-shadow:inset 0 0 0 1px var(--rule-strong);
+  min-height:calc(var(--u)*7);padding:0 calc(var(--u)*2)}
+.staff .tbl tr.quiet td{color:var(--muted)}
+.staff .pfields input:disabled{color:var(--muted);background-color:var(--sheet);cursor:default}
+.staff .tempty{font-size:var(--s2);line-height:var(--lh-note);color:var(--muted);
+  padding:calc(var(--u)*4) 0}
+
+/* ═══ CHIPS ════════════════════════════════════════════════════════════════ */
+.staff .chip{display:inline-flex;align-items:center;gap:calc(var(--u)*1);
+  font-family:var(--face-mono);font-size:var(--s1);color:var(--ink);
+  background-color:var(--paper);padding:calc(var(--u)*1) calc(var(--u)*2);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);white-space:nowrap}
+.staff .chip.stale{color:var(--refused);box-shadow:inset 0 0 0 1px var(--refused)}
+
+/* ═══ NARROW (< 720) — RS-01's chrome half (G3583) ═════════════════════════
+   close.css's phone rule keeps the mark, the palette key and the avatar and
+   drops `.chrome > .abtn` — but every staff chrome control nothing serves is a
+   `<Soon>`, which wraps its button in a `.tipwrap`, so that selector missed
+   *Needs you* and the billing period and the bar ran to 596px at 390, the
+   account menu off-screen. The same three controls the phone shell keeps; the
+   mark is the way back to the tenancy, and a record carries its own *Back to
+   tenancy*. */
+@media (max-width:719px){
+  .staff .chrome > .tipwrap:has(> .abtn){display:none}
+}
+
+/* ═══ ROUND TWO — docs/build/ui-audit/reaudit-partner-staff-apex.md ═══════ */
+/* NS-04 (G3711): a lone field takes the width of what it holds, not the pane. */
+.staff .pfields.narrow{grid-template-columns:minmax(0,calc(var(--u)*56))}
+/* NP-05 / NS-03 (G3708, G3709): the pane heading is where focus lands. */
+.staff .lab[tabindex="-1"]:focus{outline-offset:calc(var(--u)*1)}

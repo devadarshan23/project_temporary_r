@@ -1,0 +1,96 @@
+-- =====================================================================
+-- 0240 — A SIGN-IN ATTEMPT EXPIRES, AND THE DATABASE IS WHAT EXPIRES IT.
+--        D6-6, THE OWNER'S RULING OF 29–30 Sep 2026. G2201–G2203.
+--
+-- ⚠️ THE NUMBER IS 0240 AND THE GAP BELOW IT IS DELIBERATE. `0230`–`0239` were
+--    reserved to another slice and spent nothing; `0240`–`0249` are this
+--    slice's. Derive what is spent, never read it:
+--    `ls db/migrations/*.sql db/migrations-control/*.sql`
+--
+-- G88: forward-only. `0013` IS NOT EDITED — `0017`'s precedent: *"G88 makes
+--      migrations forward-only, so editing `0014` is refused; it keeps its
+--      refusal on its face and this file keeps the correction on its own."*
+-- ⚠️ SCHEMA-QUALIFIED THROUGHOUT, because 0003 requires it from 0004 on.
+--
+-- ---------------------------------------------------------------------
+-- 🛑 THE SENTENCE IN `0013` THIS FILE CORRECTS, QUOTED SO IT IS NOT LOST:
+--
+--      *"Declared and NOT READ … The column exists so that the codec G220
+--       owes has something to compare when it lands, and so that a row can
+--       be expired by an operator query in the meantime. ⚠️ THERE IS NO
+--       `sign_in_attempt_expired` REFUSAL AND THE MODEL ARGUES ITS ABSENCE —
+--       do not add one here."*
+--
+--    Its premise is still true and its instruction is still obeyed: the
+--    MODEL reads no clock (`Timestamp = string`, so a comparison there would
+--    be lexical), and NO `sign_in_attempt_expired` refusal is added. What is
+--    false from this file on is *"NOT READ"* — `expires_at` is now one of the
+--    two bounds below, compared as `timestamptz` where the type is honest.
+--
+-- 🛑 THE DEFECT, IN D6's WORDS: nothing aged an attempt, so a stolen `state`
+--    was usable indefinitely — one of the three attacks
+--    `docs/build/d6-threat-model.md` records as having no defence today.
+--    WITNESSED RED before this file: an attempt started eleven minutes ago,
+--    and one whose own `expires_at` had passed, were each CONSUMED by
+--    `assembleSignIn()` with `{ ok: true }`.
+--    `tests/db/signin-expiry-and-subject-fence.test.ts` §1a/§1b.
+--
+-- ---------------------------------------------------------------------
+-- WHY A RESTRICTIVE POLICY AND NOT A `WHERE`, AND NOT A PERMISSIVE EDIT
+--
+--    · Not a `WHERE` in `ATTEMPT_READ` (D6-6 option (a) as first written):
+--      a predicate in one reader protects only that reader, and the ruling
+--      is *"enforced in the DATABASE"*. **The model-only alternative was
+--      refused on `0035`'s precedent** — a row that stays valid in the
+--      database protects nothing that does not go through the model — and a
+--      reader-only predicate is the same refusal one layer out.
+--    · Not an `ALTER POLICY sign_in_attempt_rls`: that is a PERMISSIVE
+--      policy, and a second permissive policy added later would be ORed
+--      beside it and could see a stale row. A RESTRICTIVE policy is ANDed
+--      into every permissive one, present and future — the same reason
+--      `0200` put the door test on a restrictive policy.
+--    · `FOR ALL` WITH `USING` AND NO `WITH CHECK`, DELIBERATELY. PostgreSQL
+--      reuses the `USING` as the `WITH CHECK` for INSERT and UPDATE, and here
+--      that is the WANTED polarity (unlike `0220`, G1982, where the reuse was
+--      a permissive write clause nobody wrote): it narrows the consuming
+--      UPDATE as well as the read, so a writer that skipped the read cannot
+--      burn or claim a stale row, and the future INSERT writer cannot write
+--      an attempt already dead. It only ever NARROWS, because it is
+--      restrictive.
+--
+-- WHAT THE REFUSAL LOOKS LIKE, AND THE LOSS IT ACCEPTS
+--
+--    An expired attempt is INVISIBLE, so `assembleSignIn()` answers
+--    `sign_in_attempt_absent` — whose own declaration already reads
+--    *"Expired, swept, or never minted."* D6 named the cost: *"Collapses a
+--    refusal into `sign_in_attempt_absent`."* **Accepted, and it is the safe
+--    direction**: telling an unauthenticated caller that a `state` EXISTED
+--    but aged out is a small oracle on somebody else's sign-in, and the
+--    honest answer to "may this be consumed" is the same either way.
+--
+-- THE WINDOW — TEN MINUTES, AND IT WAS CHOSEN BY THE SLICE, NOT THE OWNER
+--
+--    The ruling says *"The window is not yet chosen — five or ten minutes is
+--    conventional; that is owed by the slice."* The argument is on
+--    `SIGN_IN_ATTEMPT_TTL_MINUTES` in `server/data-plane/signin.ts`, which
+--    NAMES the window; this policy ENFORCES it, and §1d of the suite requires
+--    the two to agree. The bound is `least(expires_at, started_at + TTL)`
+--    written as two conjuncts: a writer may SHORTEN an attempt by its own
+--    `expires_at` and may NOT lengthen one past the TTL.
+--
+-- ⚠️ `now()` IS TRANSACTION-STABLE, so the read and the consuming UPDATE in
+--    one `withSignInScope()` transaction see the same instant: an attempt
+--    cannot be visible to the read and invisible to the write that follows.
+--
+-- ⚠️ NO `CHECK (expires_at <= started_at + interval …)`. It would be a second
+--    statement of the TTL that a writer meets at INSERT, while the policy
+--    already makes a longer expiry harmless. One home for the number.
+-- =====================================================================
+
+CREATE POLICY sign_in_attempt_unexpired_restrictive ON tenant.sign_in_attempt
+  AS RESTRICTIVE
+  FOR ALL
+  USING (
+    now() < expires_at
+    AND now() < started_at + interval '10 minutes'
+  );

@@ -1,0 +1,1163 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE KERNEL — ReconcileAI design system
+   The only place a colour, a type step, a spacing unit, a duration, a layer or
+   a breakpoint is declared. Anything drawn against this system declares none
+   of the six. If a component needs a value that is not here, that is a
+   finding: add it HERE, or state why it is local.
+
+   UNITS. rem for anything that should scale with the reader's browser setting
+   — type, space, gutters, measures, target sizes. px ONLY for optical
+   constants that must not scale: hairlines, the ring band, the meter bar, the
+   connection dot, the hatch stripe. Each px literal is argued at its own site
+   and none of them is a step in a scale.
+   ⚠️ THE BASE IS 16px AND IS NOT ASSUMED — nothing here sets a root font-size,
+   so the base IS whatever the reader chose. The px figures in comments are
+   what the value resolves to at a 16px root, stated for reference only. Do not
+   re-derive a token from one of them.
+
+   THEMES. Two: the default light theme on :root, and a dark theme under
+   [data-theme="dark"]. The dark theme is a RECOMPUTE, not a transform — every
+   step keeps its job and its name and takes a measured value of its own.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* ── GROUND ─────────────────────────────────────────────────────────────
+     Three grounds only, plus two hover grounds. A fourth ground is a
+     finding, not a decision.                                              */
+  --paper:#ffffff;          /* the sheet everything sits on                  */
+  --sheet:#f1f7f7;          /* a panel ON the sheet — 1.08:1, barely there   */
+  --tile-hover:#e7f0f0;     /* 1.16:1 · a pointer is over a tile            */
+  --row-hover:#f8fbfb;      /* 1.04:1 · a pointer is over a register row    */
+
+  /* ── INK ────────────────────────────────────────────────────────────────
+     One ramp, ordered by contrast on --paper. Each step has ONE job. Pick by
+     the job, never by how it looks. Every ratio is stated against BOTH light
+     grounds, because a panel renders against --sheet.                      */
+  --ink:#00303f;            /* 14.05:1 paper · 12.97:1 sheet · must be read  */
+  --refused:#4a6166;        /*  6.57:1 paper ·  6.07:1 sheet · REFUSED       */
+  --muted:#566d72;          /*  5.49:1 paper ·  5.07:1 sheet · supporting    */
+  --recede:#607478;         /*  4.92:1 paper ·  4.54:1 sheet · CLEARED work  */
+  --rule-strong:#a4b8bb;    /*  2.07:1 · hairline between sections          */
+  --rule:#cfdedf;           /*  1.38:1 · hairline between rows · THE FLOOR  */
+  --on-ink:#ffffff;         /* 14.05:1 on --ink                             */
+  --on-ink-2:#bcccd0;       /*  8.49:1 on --ink · secondary on ink grounds   */
+
+  /* --refused CLOSES THE MISSING SEMANTIC STEP. --recede means CLEARED work
+     and --muted means SUPPORTING TEXT; a control that was never usable is
+     neither, and the whole bundle was reaching for --muted because it was the
+     only step that stayed above AA on the ground a disabled control is drawn
+     on. That was a contrast argument standing in for a semantic.
+     🛑 --recede IS NEVER A REFUSAL and --refused is never cleared work.    */
+
+  /* ── THE AGENT ──────────────────────────────────────────────────────────
+     The brand's deep green. It means THE MACHINE MEASURED SOMETHING and
+     nothing else.
+     🛑 It does NOT mean matched, good, passed or safe. State is carried by
+     grammar, never by hue — see THE HUE RULE.
+
+     THE AGENT RULE
+       MAY      a bar, a tick or a fill whose length or position states a
+                NUMBER the machine produced. Today that is the meter, and
+                only the meter.
+       MAY NOT  a link, a hover, an inline citation, an activity indicator,
+                an "in flight" edge, or ANY element captioned as measuring
+                nothing. Reaching for it there is the defect, not the fix.
+
+     THE REASON belongs to the METER rather than to the green: if green ALSO
+     means "the machine is busy", a green bar no longer certainly encodes a
+     quantity, and the confidence meter stops being self-explaining — a reader
+     has to be told which green they are looking at, which is the one thing
+     the meter was built not to need.
+
+     "The machine is WORKING" is carried by --ink at MARK scale and by THE
+     LUMINOUS TOUCH at SURFACE scale. There is no third option.
+     The ratios are why ink can take that job and green could not: --ink is
+     14.05:1 / 12.97:1, --agent is 4.55:1 / 4.20:1 — below AA on --sheet,
+     which is fine for a 3px bar (non-text, 3:1) and not fine for text.     */
+  --agent:#00866a;          /*  4.55:1 paper · 4.20:1 sheet · the mark       */
+  --agent-deep:#014751;     /* 10.39:1 paper · 9.59:1 sheet · agent TEXT     */
+  --track:rgba(0,134,106,.16);  /* the meter's unfilled remainder            */
+
+  /* ── THE ACCENT ─────────────────────────────────────────────────────────
+     ✅ MINTED — one accent, and it exists because the agent hue could not be
+     lent out. Its one job is WAYFINDING: where you are, and what the palette
+     would run if you pressed Enter. Nothing else.
+
+     🛑 IT IS DELIBERATELY NOT IN THE BRAND'S GREEN FAMILY. A second green
+     would be read as a second agent state, which is the exact confusion THE
+     AGENT RULE was written to prevent. A warm clay against a teal-green
+     system cannot be mistaken for a measurement at any size.
+
+     🛑 AND IT REINFORCES, IT NEVER CARRIES. R1 stands: which destination you
+     are on is a STATE, so it is carried by the WORD (weight) and the
+     UNDERLINE, and the accent is a third channel on top of two that already
+     work. Remove the accent and wayfinding still functions. Remove the
+     underline and it does not — which is the test for whether a colour is
+     carrying something it should not.
+       MAY      the active destination's underline · the palette's selected
+                row edge · the current crumb in a trail
+       MAY NOT  a status, a severity, a hover, a measurement, a chart series,
+                a button ground, or anything on an ink surface
+     --accent-deep is for accent TEXT, which is reached almost nowhere: an
+     accent that has to be read is usually a state wearing a disguise.      */
+  --accent:#8a4b2a;         /*  6.73:1 paper ·  6.21:1 sheet                 */
+  --accent-deep:#6d3a20;    /*  9.06:1 paper ·  8.36:1 sheet · accent TEXT   */
+  /* ⚠️ .06 AND NOT .12, MEASURED ON 15 SEP 2026. At 12% the warm tint darkened
+     the ground enough that --muted text on a SELECTED row read 4.26:1 on
+     --sheet and --recede read 4.12:1 on --paper — both below AA, on the one
+     row the reader is looking at. A translucent ground fails this way
+     silently: the token passes against every ground in the ramp and then
+     fails against itself composited over one. At 6% every ink step that can
+     land on it clears 4.5:1, and the ground costs nothing it was carrying
+     alone anyway — THE SELECTED ROW IS THE 2px EDGE PLUS THIS TINT, never
+     the tint by itself. */
+  --accent-quiet:rgba(138,75,42,.06);  /* the selected row's ground          */
+
+  /* ── THE LUMINOUS TOUCH ─────────────────────────────────────────────────
+     AI has shone light on an object. A SOURCE WITH FALLOFF, never a fill.
+     Lime is the hot centre, cyan the falloff. Both are unusable as marks
+     (1.25:1 and 1.99:1) and excellent as light, which is why they live here
+     and not in the ink ramp.
+     The light is PALE, and that is what stops a lime light reading as an
+     amber status: composited on --paper the hot centre is rgb(237,252,190),
+     a 24.3% channel span; the falloff is rgb(217,242,249), 12.5%.          */
+  --lit-hot:rgba(202,246,65,.34);
+  --lit-mid:rgba(82,198,227,.22);
+  --lit-out:rgba(82,198,227,0);
+  --lit-hot-hover:rgba(202,246,65,.46);
+  --lit-mid-hover:rgba(82,198,227,.30);
+  --lit-edge:rgba(0,134,106,.22);   /* the inset hairline around a lit thing */
+  /* THE SWEEP'S BAND — RMR-01, THE OWNER'S RULING (3 Oct 2026, G3480): the
+     band was a raw `rgba(255,255,255,.46)` written into the rule, with no dark
+     recompute. White on white paper only reads over the light's gradient, so
+     the light theme keeps it exactly; the dark theme's value is below. */
+  --lit-sweep:rgba(255,255,255,.46);
+
+  /* ── THE HATCH ──────────────────────────────────────────────────────────
+     Declared here rather than inside .nb because it is the one value that
+     has to change per theme: a dark stripe is invisible on a dark ground.  */
+  --hatch:rgba(0,48,63,.18);        /* 1.42:1 on --paper and on --sheet      */
+
+  /* ── THE MARK ───────────────────────────────────────────────────────────
+     Badge square (aspect 1.05), gradient 90° cyan→green. Two gradients, not
+     one: the badge and the glyph run at different angles, and a single token
+     would force one of them back inline. --badge-radius is 0 under the
+     Square Corner Rule and is the single revert point.
+     🛑 THESE ARE THE ONLY TWO GRADIENTS IN THE SYSTEM. A gradient that is not
+     the mark is a finding — see THE SURFACE RULE.                          */
+  --badge-from:#50c6e9;
+  --badge-to:#72c34e;
+  --badge-radius:0;
+  --badge-gradient:linear-gradient(90deg,var(--badge-from) 0%,var(--badge-to) 100%);
+  --badge-gradient-glyph:linear-gradient(135deg,var(--badge-from) 0%,var(--badge-to) 100%);
+
+  /* ── TYPE ───────────────────────────────────────────────────────────────
+     TWO FACES AND NO THIRD. Plex Sans carries language; Plex Mono carries
+     anything a person compares against another instance of itself — a figure,
+     a reference, a hash, a key-cap. The division is R9, not taste, and it is
+     why there is no display face: a third family would have to say what it is
+     FOR, and the two jobs are already taken.                               */
+  --face-sans:'IBM Plex Sans',system-ui,sans-serif;
+  --face-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --logo-face:var(--face-sans);
+
+  /* SIX STEPS, IN rem. --s5 does not exist: nothing in the system is BETWEEN
+     a title and a figure, and minting the step is how a fifth heading level
+     arrives without anybody deciding to add one.
+
+     🛑 THE SMALL STEPS DO NOT SCALE WITH THE VIEWPORT, AND THAT IS THE RULE.
+     --s1 · --s2 · --s3 are FIXED in rem: a 14px body is 14px on a phone and
+     on a 32-inch display, because it is already at the readable floor and a
+     viewport-scaled body text shrinks below it on exactly the device where
+     reading is hardest. Only the three steps ABOVE body are fluid, because
+     a 96px display on a 360px screen is not a headline, it is an
+     obstruction.
+     ⚠️ THE FLUID STEPS USE clamp() WITH A rem FLOOR, never a vw floor. A pure
+     vw value ignores the reader's font-size setting entirely, which fails
+     1.4.4 while looking responsive.                                        */
+  --s1:0.6875rem;                          /* 11px · micro, uppercase        */
+  --s2:0.78125rem;                         /* 12.5px · label, cell, control  */
+  --s3:0.875rem;                           /* 14px · body, the default       */
+  --s4:clamp(1rem,.94rem + .3vw,1.0625rem);/* 16→17px · title                */
+  --s6:clamp(1.75rem,1.2rem + 2.75vw,2.5rem);  /* 28→40px · figure           */
+  --s7:clamp(2.25rem,1.1rem + 5.75vw,6rem);    /* 36→96px · display          */
+
+  /* ── WEIGHT ─────────────────────────────────────────────────────────────
+     SIX WEIGHTS, EACH WITH ONE JOB, and the job is what you pick by. Six was
+     not chosen — it was MEASURED: the tree already used all six, and five of
+     them were spelled as bare numbers at dozens of sites while the system
+     claimed to have no weight scale.
+     🛑 A WEIGHT IS NEVER USED FOR EMPHASIS OUTSIDE ITS JOB. 500 on a sentence
+     of prose is not "slightly bold" — it is the figure weight appearing where
+     no figure is, and it reads as a rendering accident.                    */
+  --w-display:200;          /* --s7 only. Nothing else is ever this light    */
+  --w-lede:300;             /* the one lede paragraph, and the --s6 figure   */
+  --w-body:400;             /* everything that is a sentence                 */
+  --w-figure:500;           /* a monospaced thing that must not look bold —
+                               a key-cap, a token name, a reference          */
+  --w-emph:600;             /* emphasis, and EVERY uppercase micro label     */
+  --w-mark:700;             /* the wordmark and the glyph. Nothing else      */
+
+  /* ── TRACKING ───────────────────────────────────────────────────────────
+     TRACKING IS PAIRED WITH THE STEP, NOT CHOSEN AT THE CALL SITE. Four
+     values, each belonging to exactly one step; body and label track at 0.
+     THE RULE IS THAT TRACKING COMPENSATES FOR SIZE: 11px uppercase closes up
+     to the point of illegibility without +.1em, and a 96px display opens up
+     into gaps without −.035em. Both are optical corrections, which is why
+     neither is available to a step that did not ask for one.
+     ⚠️ em, NOT rem, DELIBERATELY. Tracking must scale with the type it is
+     tracking; a rem value would stay put while the step around it moved.   */
+  --tr-micro:.1em;          /* --s1, uppercase. Non-negotiable at this size  */
+  --tr-title:-.01em;        /* --s4                                          */
+  --tr-display:-.035em;     /* --s7                                          */
+  --tr-mark:-.025em;        /* the wordmark, set tighter than any running
+                               text, and it is not running text             */
+
+  /* ── LEADING ────────────────────────────────────────────────────────────
+     THREE VALUES, AND THE SMALLEST TYPE GETS THE LOOSEST LEADING. That is
+     the reverse of the instinct and it is the whole rule: a --s2 note is read
+     in long paragraphs at a size where lines are easy to lose, so it needs
+     MORE room between them than --s3 body does. A 96px display needs less
+     than one line's worth, because its lines are three words long.
+     ⚠️ ALL THREE ARE UNITLESS, so they multiply the element's own size. A
+     line-height in rem breaks the moment a step changes under it, and it is
+     also what fails 1.4.12 Text Spacing.                                   */
+  --lh-display:.95;         /* --s7. Sub-single, deliberately                */
+  --lh-body:1.45;           /* --s3 and --s4                                 */
+  --lh-note:1.55;           /* --s2 prose                                    */
+  /* ⚠️ A FOURTH VALUE, AND IT IS NOT A READING LEADING (G3395, 3 Oct 2026).
+     A single-line CONTROL box — a button, a close ×, the wordmark — is set
+     solid so its height is its padding and nothing else. The kernel already
+     wrote `line-height:1` bare on .logo and the pack's .x; the app spelled it
+     twice more. One name for a value used in four places, and the three
+     reading leadings above are unchanged. Never on text that can wrap.     */
+  --lh-solid:1;             /* a one-line control box. Never on prose        */
+
+  /* ── MEASURE, FOR TEXT ──────────────────────────────────────────────────
+     THREE ch-BASED MEASURES, and they are NOT --measure. --measure is a PAGE;
+     these are LINES, and a line's readable length depends on the face rather
+     than on the layout.
+     🛑 NEVER SET A TEXT MEASURE IN px OR rem. A ch measure holds when the
+     step changes; a fixed measure silently becomes 120 characters at --s2 and
+     50 at --s4.                                                            */
+  --measure-text:80ch;      /* body and note prose. The ceiling             */
+  --measure-lede:64ch;      /* the one lede — shorter, because it is bigger  */
+  --measure-act:56ch;       /* a sentence a person must ACT on: a route
+                               state, a dialog's consequence, an error       */
+
+  /* ── SPACE ──────────────────────────────────────────────────────────────
+     One unit, in rem, so every gap in the system scales with the reader's
+     setting. Every gap is a multiple of it, written calc(var(--u)*n) so the
+     multiple stays legible at the call site.
+
+     THE HALF-UNIT IS THE FLOOR. 2px at a 16px root, written
+     calc(var(--u)*.5), and nothing finer. A quarter-unit is a finding.
+     🛑 NO --u-half TOKEN. Every site already spells this value one way; a
+     token would create a second spelling for the same value and leave the
+     tree writing both. The gap was a missing RULE, not a missing value.    */
+  --u:0.25rem;                              /* 4px at a 16px root            */
+  --gutter:clamp(1.25rem,.85rem + 2vw,3.5rem);  /* 20→56px                   */
+
+  /* ── TARGET ─────────────────────────────────────────────────────────────
+     ✅ WCAG 2.2 AA 2.5.8 Target Size (Minimum). Every interactive target is
+     at least 24×24, and the system's own controls are 32 (--u*8) because a
+     row of 24px controls in a dense register reads as a toolbar of dots.
+
+     🛑 24 IS A FLOOR, NOT A TARGET SIZE. It is what a chip, an inline remove
+     and a table sort control get; nothing is DESIGNED at 24.
+     ⚠️ AND IT IS IN rem, so a reader who raises their font size gets a bigger
+     target rather than the same one. A px floor would satisfy the criterion
+     as written and fail the person it was written for.
+     THE 2.5.8 EXCEPTIONS ARE NOT USED ANYWHERE IN THIS SYSTEM. No target
+     relies on the inline-text exception, the spacing exception or the
+     essential exception — which is deliberate, because every one of them is
+     an argument a reviewer has to accept rather than a measurement.        */
+  --target-min:1.5rem;      /* 24px · the 2.5.8 floor                        */
+  --target:2rem;            /* 32px · what the system's controls actually are*/
+
+  /* ── LAYOUT ─────────────────────────────────────────────────────────────
+     FOUR TIERS, and the tier names are jobs rather than devices: a 900px
+     browser window on a desktop is the MID tier, and calling it "tablet"
+     is how a layout ends up keyed on a guess about hardware.
+
+       NARROW   320 – 719    one column. The phone shell (see THE SHELL).
+       MID      720 – 1079   two columns; the register keeps its head.
+       WIDE    1080 – 1439   the full register, drawer over content.
+       ULTRA   1440 +        --measure holds and the page centres. The
+                             evidence panel moves INLINE beside the register
+                             instead of opening as a drawer over it.
+
+     🛑 320px IS THE FLOOR AND IT IS A CONFORMANCE REQUIREMENT, NOT A CHOICE.
+     1.4.10 Reflow requires the whole interface to work at 320 CSS px with no
+     two-dimensional scrolling. Every table in this system is therefore inside
+     a single-axis scroller, and no layout may set a min-width that exceeds
+     320px at the narrow tier.
+     ⚠️ THE THREE BREAKPOINTS ARE CONSTANTS, NOT USABLE TOKENS. A custom
+     property cannot be read inside a @media query, so every breakpoint is
+     still written literally at its site. They are declared so each number has
+     ONE home and a fourth has to argue with them; they are NOT declared so
+     they can be referenced. A container query is the only form that can read
+     them, and adopting container queries is an open finding.               */
+  --measure:73.75rem;       /* 1180px · a page of content                    */
+  --col-min:15.5rem;        /* 248px · the floor of an auto-fit column       */
+  --bp-narrow:720px;        /* narrow → mid                                  */
+  --bp-mid:1080px;          /* mid → wide                                    */
+  --bp-wide:1440px;         /* wide → ultra                                  */
+
+  /* ── MOTION ─────────────────────────────────────────────────────────────
+     ONE SPRING. The two-duration scale it replaces said ENTER IS SLOWER THAN
+     EXIT and carried the asymmetry in the numbers; the spring carries it in
+     the CURVE instead — it arrives fast, overshoots 9%, and settles. A thing
+     leaving runs the same curve, which is the one thing the old rule got
+     for free and this one has to state:
+
+     🛑 A LEAVING ELEMENT DOES NOT BOUNCE. Run the spring on the way IN and a
+     plain --t-fade on the way OUT. The overshoot means "this landed here";
+     an element on its way off screen has nothing to land on, and a bounce
+     on exit reads as a failure to leave.
+
+     WHY linear() AND NOT A JS SPRING. This is a real spring sampled into an
+     easing function — ζ 0.6, ωn 18 rad/s, eleven samples over 420ms — so it
+     runs on the compositor as an ordinary CSS transition, needs no runtime,
+     survives the reduced-motion guard at the foot of this file, and cannot
+     disagree with itself between two components the way two spring configs
+     in two files would. What it gives up is interruptibility: a JS spring
+     retargets mid-flight from its current velocity, and this one restarts.
+     That trade is the reason it is one token and not a library.
+
+     ⚠️ --t-fade IS THE ONE PLACE THE ONE-SPRING RULING NEEDED A SECOND VALUE,
+     and it is not a second spring. An opacity change has NO DISTANCE to ease
+     across, so a spring on it is mathematically meaningless — the overshoot
+     clamps at 1 and the curve degenerates. The same argument the 1.5px hollow
+     dot makes: a geometric necessity, not a step in a scale.
+
+     🛑 AND THE AMBIENT ANIMATIONS ARE NOT ON THIS SCALE. 17s and 3.6s are
+     argued at their own declarations. THE AMBIENT TEMPO RULE: motion measured
+     in SECONDS means "this is live"; motion measured in MILLISECONDS means
+     "you did that". Retiming the sweep to the spring would make it mean "this
+     just happened"; stretching a drawer to 17s would make an overlay claim to
+     be an ongoing process.                                                 */
+  --spring:linear(0, .231 10%, .624 20%, .922 30%, 1.067 40%, 1.094 50%,
+    1.067 60%, 1.030 70%, 1.005 80%, .995 90%, 1);
+  --t-spring:420ms;         /* one duration, for anything that MOVES         */
+  --t-fade:120ms;           /* opacity and colour only. Not a move           */
+
+  /* THE ENTRANCES, AS TOKENS — the owner's rulings of 3 Oct 2026 (RM-08,
+     RM-09; G3396, G3397). A component APPLIES one of these and never declares
+     a keyframe of its own: `animation:var(--enter-toast)`. Each is the whole
+     shorthand, so the curve and the duration cannot be re-chosen at a call
+     site, and each is set to `none` in the reduced-motion block at the foot
+     of this file — ONE guard, keyed on the token rather than on whichever
+     class name a surface happens to use (the pack says `.drawer`, the app
+     says `.ov`; a guard on either name misses the other).
+     🛑 ENTRY ONLY. A leaving overlay or toast takes a plain --t-fade, per
+     "A LEAVING ELEMENT DOES NOT BOUNCE" above.                             */
+  --enter-toast:toast-in var(--t-spring) var(--spring);
+  --enter-scrim:fade-in var(--t-fade) linear;
+  --enter-drawer:drawer-in var(--t-spring) var(--spring);
+  --enter-modal:modal-in var(--t-spring) var(--spring);
+
+  /* ── DEPTH ──────────────────────────────────────────────────────────────
+     THE SURFACE RULE. There is no elevation scale, no shadow palette and no
+     decorative gradient. A surface separates by RULE or by GROUND. The two
+     scrims below are the only exception, and they exist because a modal must
+     dim what it blocks.
+     🛑 A GRADIENT THAT IS NOT THE MARK IS A FINDING. The brief's "subtle
+     gradients" is declined here rather than quietly ignored: a gradient on a
+     surface is an elevation claim without an elevation scale, and the two the
+     system has are an identity, not a depth cue.
+
+     THE OVERLAY SURFACE — the rule above stops one step short of the case
+     every overlay hits: an overlay sits on --paper and is usually ITSELF
+     --paper, so it cannot separate by GROUND and must separate by RULE.
+       AN OVERLAY IS  --paper ground · a 1px --rule-strong edge · radius 0 ·
+                      NO shadow. A drawer takes the edge on the side it
+                      enters from and nowhere else.
+     --sheet-shadow is not a shadow: it is a hairline under a panel, which is
+     why it is spelled the way it is, and it is allowed.
+
+     THE TOOLTIP SURFACE
+       A TOOLTIP IS  --ink ground · --on-ink text · --on-ink-2 for a second
+                     line · radius 0 · no edge, because the ground already
+                     separates it (14.05:1 against --paper).
+
+     🛑 A TOOLTIP MUST NEVER LEAVE THE ACCESSIBILITY TREE. Hidden by OPACITY
+     plus pointer-events:none, or by the clipped visually-hidden pattern.
+     NEVER display:none and NEVER visibility:hidden — both remove the panel
+     from the tree, so every aria-describedby pointing at it resolves to
+     nothing and the reason exists only while it is painted. That turns the
+     tooltip ruling from one that ADDS a reason into one that TAKES a reason
+     away from exactly the keyboard and screen-reader users it was imposed
+     for.
+
+     🛑 THE TOOLTIP'S OPEN STATE HAS EXACTLY ONE WRITER, AND IT IS THE
+     SCRIPT. No CSS selector may open a tooltip — not :hover, not
+     :focus-visible, not :focus-within. Focus and tap both still open it; they
+     open it by the script SETTING the attribute.
+     THE REASON IS THAT ESCAPE MUST GENUINELY DISMISS (2.2 AA 1.4.13). A
+     script can clear an attribute; it cannot clear :focus-visible, because
+     pressing Escape does not move focus. On the keyboard path the script
+     wrote the panel shut and the panel stayed painted — the attribute said
+     dismissed and the pixels said open, which fails while every review of the
+     source says it passes.
+     A HOVER REVEAL IS NOT AN EXCEPTION: it is legal only when pointerenter
+     calls the same show() and writes the same attribute, so hover cannot
+     disagree with Escape. TWO GUARDS come with the form — a TAP focuses and
+     then clicks, so an unguarded pair opens on focus and closes on click and
+     the tap user sees nothing; and a BROWSER RESTORES FOCUS ON RELOAD, and a
+     restored focus is not a user.
+
+     BORDER WEIGHT — RULED AND DELIBERATELY NOT TOKENISED. There is no scale
+     here, there are three unrelated facts, and all three stay in px because
+     a hairline that scales with the reader's font size becomes a border:
+       1px    the only edge weight this system has. It never varies, and a
+              token for a constant that never varies adds a spelling without
+              adding a decision.
+       1.5px  occurs once, at .conn[data-state="down"], and it is geometric
+              compensation — a HOLLOW 7px dot needs a thicker ring than a
+              solid one to read at the same weight. Not a step.
+       2px    is EMPHASIS, and it is a rule rather than a size: an emphasised
+              edge is the 1px edge DOUBLED and switched to full --ink, never a
+              hue change.                                                   */
+  --scrim:rgba(0,48,63,.38);
+  --sheet-shadow:0 1px 0 var(--rule-strong);
+
+  /* ── LAYER ──────────────────────────────────────────────────────────────
+     FOUR LAYERS, and the ORDER is the decision rather than the numbers. They
+     are spaced by ten so a component can sit between two without reopening
+     the scale, and the skip link is highest because it is the one control
+     that must be reachable when something else has gone wrong.            */
+  --z-popover:20;   /* a tooltip or a menu — anchored to something          */
+  --z-overlay:30;   /* a drawer — over the register, never away from it     */
+  --z-modal:40;     /* a dialog and its scrim — blocks what is under it     */
+  --z-skip:99;      /* the skip link                                        */
+}
+
+/* ═══ THE DARK THEME ═════════════════════════════════════════════════════
+   A DIMMED LIGHT THEME: one dark ground, and every other step RECOMPUTED
+   against it. Every ratio below was measured against this theme's own
+   --paper, not carried over.
+
+   🛑 IT IS NOT AN INVERSION AND NOT A FILTER. Each step keeps its NAME and
+   its JOB, so no component branches on the theme — a component that needs to
+   know which theme it is in is a component with two designs.
+
+   ⚠️ TWO STEPS INVERT THEIR DIRECTION AND THAT IS THE ONE THING TO KNOW.
+   --on-ink and --on-ink-2 are "text on an ink ground", and in this theme an
+   ink ground is a LIGHT panel — so they become dark values. The name still
+   describes the job correctly; only the value moved.
+
+   --agent LIGHTENS. Its light-theme hex is 1.5:1 here and unusable. The hue
+   family is preserved so the mark still reads as the same mark, and the new
+   value is 5.45:1 — BETTER than the light theme's 4.55:1, because on a dark
+   ground the green no longer has to compete with white.                    */
+[data-theme="dark"]{
+  --paper:#001a22;          /* the dark ground                               */
+  --sheet:#012b35;          /* 1.35:1 · a panel ON it                        */
+  --tile-hover:#023b47;
+  --row-hover:#01222c;
+
+  --ink:#e8f2f3;            /* 15.74:1                                       */
+  --refused:#879ea2;        /*  6.36:1 · REFUSED                             */
+  --muted:#7d9498;          /*  5.60:1 · supporting                          */
+  --recede:#718a8e;         /*  4.89:1 · CLEARED work                        */
+  --rule-strong:#22505d;    /*  2.03:1                                       */
+  --rule:#123540;           /*  1.37:1 · THE FLOOR                           */
+  --on-ink:#001a22;         /* 15.74:1 on --ink                              */
+  --on-ink-2:#1d4a55;       /*  8.52:1 on --ink                              */
+
+  --agent:#14a082;          /*  5.45:1                                       */
+  --agent-deep:#86dcc5;     /* 11.15:1 · agent TEXT                          */
+  --track:rgba(20,160,130,.22);
+
+  --accent:#d99a74;         /*  7.54:1                                       */
+  --accent-deep:#eec0a3;    /* 10.62:1 · accent TEXT                         */
+  --accent-quiet:rgba(217,154,116,.14);
+
+  /* THE LIGHT GETS BRIGHTER, NOT DARKER. The luminous touch is a SOURCE, and
+     a source on a dark ground is the case it was always describing — the same
+     lime and cyan composite to a genuine glow here rather than to a tint.
+     🛑 AND IT IS DIMMED — THE OWNER'S RULING, 3 Oct 2026 (G3661): *"Dim the
+     dark glow."* The glow this block first declared (hot .26, mid .16; hover
+     .36/.24) took --muted to 2.64:1 at the light's source and 2.00:1 on
+     hover, MEASURED IN CHROMIUM through the whole sweep — a lit cell's status
+     line was unreadable in this theme. The four alphas below are chosen to keep
+     --muted ≥4.5:1 at every pixel of a lit cell, at rest and on
+     hover, with the sweep's band at every instant of its pass: measured
+     4.82:1 at rest and 4.66:1 on hover (minimum over every sampled pixel and
+     sweep instant) by `tests/design/dark-lit-contrast.test.ts`, which reads the
+     PAINT, not the style. A glow on this ground is quiet BY RULING; the
+     --lit-edge hairline carries the "lit" signal and is unchanged. */
+  --lit-hot:rgba(202,246,65,.06);
+  --lit-mid:rgba(82,198,227,.04);
+  --lit-out:rgba(82,198,227,0);
+  --lit-hot-hover:rgba(202,246,65,.07);
+  --lit-mid-hover:rgba(82,198,227,.05);
+  --lit-edge:rgba(20,160,130,.34);
+  /* 🛑 THE SWEEP DOES NOT GO WHITE ON A DARK GROUND — RMR-01, THE OWNER'S
+     RULING (G3480): *"add a dark-theme value for the sweep highlight token
+     (low-alpha teal/ink) so text stays ≥4.5:1 throughout the sweep."* The
+     light theme's white at .46 composited to ≈rgb(117,131,136) here and took
+     --ink from 15.74 to 3.44:1 and --muted from 5.60 to 1.22:1 at the band's
+     peak — the status line vanished for two seconds in every seventeen. A
+     .10 tint of this theme's --agent keeps the pass legible: at the band's
+     peak over paper --muted holds 4.92:1, and over the light's hottest point
+     --ink holds 6.90:1. ⚠️ MEASURED, AND REPORTED
+     RATHER THAN FIXED: the LIGHT ITSELF (--lit-hot at its 18% 0% source)
+     already brings --muted to 2.70:1 at its hottest point in this theme,
+     sweep or no sweep — that is the light's value, not the band's, and it is
+     a separate kernel question.
+     ✅ RULED AND FIXED — G3661, THE OWNER'S: *"Dim the dark glow"* (above).
+     The band drops .10 → .03 with it, because the ruling is ≥4.5:1 "sweep
+     included": a .10 band over even the dimmed source took --muted under
+     4.5 on hover. Still a low-alpha teal, so RMR-01's ruling holds as it was
+     written. */
+  --lit-sweep:rgba(20,160,130,.03);
+
+  /* 🛑 THE HATCH INVERTS OR IT DISAPPEARS. A dark stripe on a dark ground is
+     the .nb defect in its purest form: a refused control rendering as an
+     ordinary one. 1.55:1 here, just above this theme's --rule at 1.37:1 —
+     the same relationship the light theme's .18 stripe has to its own. */
+  --hatch:rgba(232,242,243,.16);
+
+  --scrim:rgba(0,10,14,.62);
+}
+
+/* ═══ BASE ═══════════════════════════════════════════════════════════════ */
+*{box-sizing:border-box}
+html,body{margin:0}
+html{color-scheme:light dark}
+/* RV-13 (G3392, 3 Oct 2026): once a theme is CHOSEN, the UA's own surfaces —
+   scrollbars, an unstyled field, a date picker — follow it rather than the OS.
+   Without these a reader on a light OS who picks dark gets light scrollbars on
+   a dark page, and the reverse. */
+[data-theme="dark"]{color-scheme:dark}
+[data-theme="light"]{color-scheme:light}
+body{background:var(--paper);color:var(--ink);
+  font-family:var(--face-sans);font-weight:var(--w-body);
+  font-size:var(--s3);line-height:var(--lh-body);-webkit-font-smoothing:antialiased}
+
+/* ⚠️ NOTHING SETS A ROOT FONT-SIZE, DELIBERATELY. `html{font-size:62.5%}` is
+   the common shortcut for making 1rem = 10px, and it silently overrides the
+   reader's own setting — every rem in this file then scales from a number the
+   designer picked instead of the one the user chose. */
+
+/* THE TABULAR FIGURE RULE — every figure a person compares against another
+   figure is monospaced with tabular numerals, so columns align and a digit
+   never changes width between two renders of the same number. */
+.mono,.figure,td.num,th.num{font-family:var(--face-mono);
+  font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.num{text-align:right}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ═══ ONE FOCUS RING, EVERYWHERE ═════════════════════════════════════════
+   AND IT IS AN `outline`. The ring was a box-shadow with outline:none and no
+   fallback at specificity (0,1,0), so ANY component that declared its own
+   box-shadow edge on a focused element replaced the ring outright and left
+   nothing behind — box-shadow does not accumulate across rules. Every fix for
+   that repaired INSTANCES and left the next component free to erase it again.
+   `outline` and `box-shadow` are different properties: a component's
+   box-shadow cannot replace an outline at ANY specificity, in ANY source
+   order. The failure CLASS is gone, not just the instances of it.
+
+   ⚠️ THE OFFSET IS LOAD-BEARING, NOT DECORATION. An ink-ground control
+   carrying --on-ink text would take an ink ring AT the border box and be
+   invisible. outline-offset:2px puts the ring on the ground BESIDE the
+   element instead. Do not remove it to "tighten" the ring.
+   .on-ink is for the other case — a focusable element sitting ON an ink
+   surface, where the ground the offset ring lands on is itself ink.
+   ⚠️ BOTH VALUES STAY IN px. A ring that scales with the reader's font size
+   grows into a 6px band at large settings and starts occluding the control it
+   is marking; 2.4.7 asks for a visible indicator, not a proportional one. */
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.on-ink :focus-visible,.on-ink:focus-visible{outline-color:var(--on-ink)}
+
+.skip{position:absolute;left:-9999px;background:var(--ink);color:var(--on-ink);
+  padding:calc(var(--u)*3) calc(var(--u)*4);z-index:var(--z-skip)}
+.skip:focus{left:calc(var(--u)*2);top:calc(var(--u)*2)}
+
+/* ═══ THE TARGET FLOOR ═══════════════════════════════════════════════════
+   2.2 AA 2.5.8. Declared once, as a rule rather than per component, so a new
+   control cannot be born under the floor. It is min-* rather than fixed so a
+   control that is already larger keeps its size. */
+button,[role="button"],[role="menuitem"],[role="menuitemradio"],[role="tab"],
+summary,a:not([class]){min-height:var(--target-min)}
+button,[role="button"]{min-width:var(--target-min)}
+
+/* ═══ THE INK DEFAULT ON FORM CONTROLS ═══════════════════════════════════
+   🛑 A CONTROL THAT SETS NO COLOUR MUST TAKE THE INK RAMP, NOT AN OS SYSTEM
+   COLOUR. Every form control has a UA rule painting it a system colour —
+   button{color:buttontext} and its relatives — and a UA rule BEATS
+   inheritance, so a button that simply never mentions colour is not "the ink
+   it sits in": it is whatever the reader's operating system says a button is.
+
+   15 SEP 2026 · THIS SHIPPED AS WHITE TEXT ON A WHITE GROUND. Under a reader
+   whose OS reports prefers-color-scheme:dark, `buttontext` resolves to white
+   — while these surfaces stay light, because the dark theme here is opt-in
+   through [data-theme] and is not media-queried. Result: .choice, .abtn at
+   rest, .labbtn and any bare text in .cell were invisible for every
+   dark-mode reader and perfectly legible for everyone else, which is why it
+   survived review. 1.4.3 failed at 1:1.
+
+   THE FIX BELONGS HERE AND NOT ON THE COMPONENTS. Patching each control as
+   it is found leaves the next one to be written with the same hole, and the
+   hole is only visible on half the machines. */
+button,input,select,textarea,optgroup{color:inherit}
+
+/* ═══ THE LINK ═══════════════════════════════════════════════════════════
+   THE UNDERLINE IS NOT DECORATION. IT IS THE ONLY AFFORDANCE LEFT, AND THE
+   AGENT RULE IS WHAT TOOK THE OTHER ONE AWAY. Breadcrumb links were painted
+   --agent-deep with no underline, so hue was the sole affordance at 1.35:1
+   against --ink; moving them to --ink removes the hue and THE HUE RULE
+   forbids it coming back. Without an underline a link is --ink text sitting
+   among --ink text with nothing marking it.
+
+   HOVER CHANGES WEIGHT, NEVER HUE, and the weight is the EMPHASIS rule: the
+   1px edge DOUBLED. The rest state declares 1px explicitly so the doubling is
+   exact rather than relative to a UA `auto` that varies with size.
+
+   ⚠️ 3px IS NOT A MULTIPLE OF --u AND IS NOT MEANT TO BE. SPACE governs the
+   GAPS BETWEEN THINGS; an underline offset is optical clearance under a
+   descender — the same category as the 3px meter bar, the 9px tick and the
+   7px connection dot, each argued where it sits.
+
+   🛑 `:not([class])` IS LOAD-BEARING, NOT DEFENSIVE. Every classed anchor is
+   already a component with a decided treatment. A kernel rule reaching them
+   would draw an underline through every button in the system. */
+a:not([class]){color:var(--ink);text-decoration:underline;
+  text-underline-offset:3px;text-decoration-thickness:1px}
+a:not([class]):hover{text-decoration-thickness:2px}
+
+/* ═══ THE CONTROL ════════════════════════════════════════════════════════
+   ONE SURFACE, AND THE EDGE IS A BORDER. Two spellings of this surface used
+   to exist and they disagreed about the edge — one wrote an inset box-shadow,
+   which at (0,1,1) beat the old box-shadow focus ring outright and left the
+   control with no visible focus at all. That is closed twice over now: the
+   ring is an outline, and the edge is a border.
+
+   THE FOUR INTERACTIVE STATES ARE DECLARED FOR EVERY CONTROL IN THIS SYSTEM,
+   and none of them is a hue change:
+     hover     the GROUND changes — --tile-hover or --row-hover
+     focus     the outline ring, offset 2px. Never suppressed, never restyled
+     active    the ground goes one step further, or the control inverts to ink
+     disabled  --refused on --sheet, with aria-disabled and a stated reason
+
+   THE FACE IS THE BODY FACE, AND MONO IS OPT-IN THROUGH .mono. Controls
+   holding AMOUNTS AND DATES are monospaced because THE TABULAR FIGURE RULE
+   governs their contents. An email address is not a figure. A one-time code
+   is.
+
+   background-COLOR, NEVER THE SHORTHAND. `background:` resets
+   background-image, which is where the .nb hatch lives. A refused control
+   drawn without its hatch is the exact failure .nb exists to prevent.
+
+   DISABLED IS --refused ON --sheet.
+   🛑 NEVER A DIMMED OPACITY. Opacity composites against whatever is behind
+   it, so it fails contrast silently and by a different amount on each ground.
+
+   INVALID IS THE EMPHASIS RULE'S CALL SITE. 2px, full --ink, no hue change.
+   The WORD still carries the meaning — a field states its reason beginning
+   with › for "your move" — and the border only reinforces it. This is 1.4.1
+   and 3.3.1 satisfied by construction rather than by review.
+
+   🛑 AND NO WIDTH IS DECLARED. A control's width is LAYOUT, not surface, and
+   the cascade is per-declaration: a kernel width would apply to every control
+   that declares none of its own.
+   ⚠️ font-size:16px IS THE ONE PLACE A CONTROL OVERRIDES THE SCALE, and it is
+   not styling. iOS Safari zooms the viewport when a focused input is under
+   16px, which breaks 1.4.10 Reflow on every form in the system. The label
+   above the field carries --s2; the field itself does not. */
+input[type="text"],input[type="email"],input[type="password"],input[type="search"],
+input[type="tel"],input[type="url"],input[type="number"],input[type="date"],
+select,textarea{
+  font:inherit;font-size:max(1rem,var(--s2));color:var(--ink);
+  background-color:var(--paper);
+  border:1px solid var(--rule-strong);border-radius:0;
+  min-height:var(--target);padding:0 calc(var(--u)*2)}
+/* a textarea pads on all four sides because it has no single line to centre
+   in a min-height — geometry, like the 1.5px hollow dot, and not a step. */
+textarea{padding:calc(var(--u)*2);min-height:calc(var(--u)*14);resize:vertical}
+input[aria-disabled="true"],select[aria-disabled="true"],textarea[aria-disabled="true"],
+input:disabled,select:disabled,textarea:disabled{
+  color:var(--refused);background-color:var(--sheet)}
+input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="true"]{
+  border-width:2px;border-color:var(--ink)}
+
+/* ═══ THE ENTRY FRAME ════════════════════════════════════════════════════
+   Sign-in, re-authentication and invitation are a single card on an otherwise
+   empty page, because there is no session yet to draw a shell for.
+   WHAT IS MISSING IS THE FRAME, NOT THE SURFACE: the card is THE OVERLAY
+   SURFACE above, which was derived from exactly this case.
+   🛑 THE GROUND IS NOT INVERTED. A --sheet page with a --paper card separates
+   by GROUND and needs no edge — refused, because it makes --sheet a PAGE
+   ground, and a fourth ground is a finding.
+   🛑 THE CEILING IS A FORM COLUMN, NOT --measure, and must not be rewritten
+   in terms of it. They move for different reasons.
+   100dvh, NOT 100vh: a mobile browser's retracting toolbar makes 100vh taller
+   than the viewport it stands in, so a card centred in it sits below centre
+   and the bottom of the form goes under the chrome. */
+.entry{display:grid;place-items:center;min-height:100dvh;
+  padding:var(--gutter);background-color:var(--paper)}
+.entry > *{width:100%;max-width:calc(var(--u)*102)}
+
+/* ═══ THE MARK ═══════════════════════════════════════════════════════════
+   CLEAR SPACE is the badge's own width on every side, expressed in em so it
+   travels with the mark at any size. MINIMUM SIZE is 16px of badge — below
+   that the two letterforms in the gradient stop resolving and the mark should
+   be the glyph alone. */
+.logo{display:inline-flex;align-items:center;gap:.30em;font-family:var(--logo-face);
+  font-weight:var(--w-mark);letter-spacing:var(--tr-mark);line-height:1;
+  color:var(--ink);font-size:var(--logo-size,1.25rem);white-space:nowrap}
+.logo .badge{display:inline-flex;align-items:center;justify-content:center;
+  width:1.06em;height:1em;border-radius:var(--badge-radius);flex:none;
+  background:var(--badge-gradient);
+  color:#fff;font-weight:var(--w-mark);letter-spacing:-.02em;font-size:.94em;
+  padding-left:.02em}
+.logo--invert{color:var(--on-ink)}
+.glyph{display:inline-flex;align-items:center;justify-content:center;flex:none;
+  background:var(--badge-gradient-glyph);
+  color:#fff;font-family:var(--logo-face);font-weight:var(--w-mark);
+  letter-spacing:-.02em;border-radius:var(--badge-radius);
+  font-size:var(--glyph-size,1.25rem);width:1.18em;height:1.18em}
+
+/* ═══ THE MASCOT ═════════════════════════════════════════════════════════
+   ∴ — three dots in a triangle, and it belongs HERE, with the wordmark and
+   the badge, rather than in ICONOGRAPHY. That placement is the whole ruling:
+
+     A GLYPH may not move and may not carry state. It is part of the
+     product's language and it is counted.
+     THE MASCOT may move, because it reports NOTHING. It is brand, it sits
+     outside the seven glyphs and outside THE SIX INDICATORS for the same
+     reason the logo does, and no reader ever has to learn it.
+
+   THE MARK IS AGENT INK; THE LIGHT IS LIME AND CYAN. The dots hold the shape
+   at --agent-deep and the luminous touch is cast AROUND them — the kernel
+   already says lime and cyan are unusable as marks (1.25:1, 1.99:1) and
+   excellent as light, so they never colour the dots themselves.
+
+   THE ENERGY LADDER is chosen by WHAT THE PRODUCT IS DOING, never by where
+   the mascot happens to sit:
+     (none)     still · the favicon, the sign-in lockup, print, and anywhere a
+                person is reading rather than waiting
+     working    4.8s · a run is reading and nobody is watching this spot
+     thinking   2.0s · Ask is composing and the person is watching it
+     listening  1.25s · the question field has focus. Nothing else is this
+                quick, because nothing else is answering a PERSON
+   ⚠️ THESE ARE 40% SLOWER THAN THE FIRST PASS, AND THAT WAS NOT A TASTE CALL.
+   At 1.4s the swell and the hand-off overlapped enough that three dots taking
+   light in turn read as three dots jiggling in place. The sequence has to be
+   legible AS a sequence or the mark is just moving.
+   🛑 TWO LINES IT MAY NOT CROSS. It is never the only thing saying the
+   machine is working — the word and the run strip still carry that — and it
+   never MOVES in a dense context like a register cell, where motion would
+   compete with the reading beside it.
+
+   TWO REGISTERS, ONE SHAPE. This is what lets the mark be everywhere without
+   ever being noise:
+     STILL   the character ∴, set in the text face at the parent's size, in
+             --agent-deep, carried by .met. It is the METERED MARK: it trails
+             a spend figure — 128,440 ∴ — and it follows words that already
+             say an act is billable. No unit word is needed beside it, because
+             the figure's own qualifier ("this month", "read by the machine")
+             says what was counted. Needs no markup and cannot move.
+     MOVING  the composed three-dot .mascot with its energy ladder, at
+             identity scale only — the lockup, a run that is reading, Ask
+             composing. Never inline in a table.
+   🛑 THE STILL FORM IS STILL NOT AN INDICATOR. It marks that something was
+   metered; the WORDS beside it report the state, exactly as they did for the
+   glyph this replaced.
+
+   ⚠️ ONE ANIMATION, DECLARED IN THE INVENTORY AS BRAND. mascot-cascade may
+   run on .mascot and nowhere else; a product surface reaching for it is a
+   finding, exactly like a fifth product animation would be. */
+.mascot{position:relative;display:inline-block;line-height:1;
+  width:.92em;height:1em;color:var(--agent-deep);
+  font-size:var(--mascot-size,3rem)}
+.mascot > i{position:absolute;font-style:normal;color:inherit}
+.mascot > .d1{left:0;bottom:-.06em}
+.mascot > .d2{right:0;bottom:-.06em}
+.mascot > .d3{left:50%;transform:translateX(-50%);bottom:.32em}
+/* Each dot brightens and swells as the light reaches it, then hands it on.
+   THE SWELL IS SHORT AND THE DARK BEAT IS LONG — the light is up and gone
+   inside the first third of the cycle, and the rest of the cycle is the mark
+   at rest. A swell that decays across most of the cycle keeps three dots
+   lit at once, which is what made the sequence read as movement in place
+   rather than as a light being handed along.
+   The third dot restates the centring transform because it is animating the
+   same property. */
+@keyframes mascot-cascade{
+  0%,34%,100%{color:var(--agent-deep);text-shadow:none;transform:scale(1)}
+  11%{color:var(--agent);transform:scale(1.22);
+    text-shadow:0 0 .18em rgba(202,246,65,1),0 0 .5em rgba(82,198,227,.85),
+                0 0 1em rgba(82,198,227,.5)}}
+@keyframes mascot-cascade-mid{
+  0%,34%,100%{color:var(--agent-deep);text-shadow:none;transform:translateX(-50%) scale(1)}
+  11%{color:var(--agent);transform:translateX(-50%) scale(1.22);
+    text-shadow:0 0 .18em rgba(202,246,65,1),0 0 .5em rgba(82,198,227,.85),
+                0 0 1em rgba(82,198,227,.5)}}
+/* ⚠️ THE OVERRIDE REPEATS THE DOT CLASSES RATHER THAN MATCHING `> i`. The base
+   rule is .mascot[data-energy] > .d1 at (0,3,0) and it sets duration through
+   the animation SHORTHAND; an override on the type selector is (0,2,1) and
+   loses on weight whatever the source order — which is how a four-rung ladder
+   ends up running at one speed. */
+.mascot[data-energy] > .d1{animation:mascot-cascade 2s ease-in-out infinite}
+.mascot[data-energy] > .d2{animation:mascot-cascade 2s ease-in-out .2s infinite}
+.mascot[data-energy] > .d3{animation:mascot-cascade-mid 2s ease-in-out .4s infinite}
+.mascot[data-energy="working"] > .d1,
+.mascot[data-energy="working"] > .d2,
+.mascot[data-energy="working"] > .d3{animation-duration:4.8s}
+.mascot[data-energy="thinking"] > .d1,
+.mascot[data-energy="thinking"] > .d2,
+.mascot[data-energy="thinking"] > .d3{animation-duration:2s}
+.mascot[data-energy="listening"] > .d1,
+.mascot[data-energy="listening"] > .d2,
+.mascot[data-energy="listening"] > .d3{animation-duration:1.25s}
+
+/* ═══ THE LUMINOUS TOUCH ═════════════════════════════════════════════════
+   Apply .lit to anything the machine is working on RIGHT NOW. A source at
+   18%/0% with falloff to nothing by 74%. Never a flat fill, never a border
+   alone, and never on more than one thing per view — one light is legible,
+   six lights are wallpaper.
+
+   THE PAINT IS ON A DOUBLED CLASS, and the colour and the image are declared
+   SEPARATELY, so a later single-class `background:` shorthand cannot erase
+   the light. Each gradient is still written ONCE: .lit carries what is not a
+   background, .lit.lit carries the paint.
+   ⚠️ THE .lit GRADIENTS ARE LIGHT, NOT DECORATION, so THE SURFACE RULE's ban
+   on non-mark gradients does not reach them: a radial source with falloff is
+   the only honest way to draw light, and it carries no elevation claim. */
+.lit{position:relative;box-shadow:inset 0 0 0 1px var(--lit-edge)}
+.lit.lit{background-color:var(--paper);
+  background-image:radial-gradient(120% 90% at 18% 0%,
+    var(--lit-hot) 0%, var(--lit-mid) 38%, var(--lit-out) 74%)}
+.lit.lit:hover{background-image:radial-gradient(120% 90% at 18% 0%,
+    var(--lit-hot-hover) 0%, var(--lit-mid-hover) 38%, var(--lit-out) 74%)}
+/* the living edge — light passing across a running job, not a spinner. One
+   slow pass per 17s with 88% of the cycle at rest. Do not speed it up: a
+   faster pass was built, read as a marquee, and was slowed deliberately. */
+.lit--running::after{content:"";position:absolute;inset:0;pointer-events:none;
+  transform:translateX(-120%);animation:sweep 17s cubic-bezier(.4,0,.25,1) infinite}
+.lit--running.lit--running::after{
+  background-image:linear-gradient(105deg,transparent 40%,var(--lit-sweep) 50%,transparent 60%)}
+@keyframes sweep{0%{transform:translateX(-120%)}12%{transform:translateX(120%)}100%{transform:translateX(120%)}}
+
+/* ═══ THE SIX INDICATORS ═════════════════════════════════════════════════
+   Six, each a distinct FORM so none can be mistaken for another. The count is
+   load-bearing: a seventh indicator is a design change, not an addition.
+     ONE LINE  the confidence meter — a MEASUREMENT, always
+     ONE DOT   the connection light — its HALO is the life signal
+     the rest  text distinguished by GRAMMAR:
+               ~  hedges a forecast        past tense  states a fact
+               ›  means your move          …           means elsewhere
+   🛑 NO SECOND LINE and NO SECOND DOT. A progress bar is a second line. An
+   unread dot is a second dot. Both were built once and both were removed.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* MARK ONE · THE METER. Only where a real score exists. Never for progress,
+   completion, or anything unmeasured. The tick is the floor it had to clear.
+   ⚠️ THE BAR, THE TICK AND THE CAPTION STAY IN px. A 3px bar is a graphic
+   object under 1.4.11, and it needs 3:1 against its own ground at exactly
+   that weight; scaling it with the reader's font size changes what was
+   measured. */
+/* THE ROOM FOR THE CAPTION IS CONDITIONAL, AND ONE VARIABLE CARRIES IT.
+   Only a meter whose tick actually names the floor needs a line under the bar;
+   reserving it on every meter cost 13px on rows that print no caption, which
+   is the opposite of what a compact register wants. --cap switches the whole
+   geometry at once, so the bar, the tick and the padding can never disagree
+   about where the baseline is. */
+.meter{position:relative;display:inline-block;--cap:0px;
+  padding-bottom:calc(11px + var(--cap))}
+.meter:has(.tick:not([data-t=""])){--cap:13px}
+.meter > .v{display:block;opacity:.72}
+.meter::before{content:"";position:absolute;left:0;right:0;height:3px;
+  bottom:calc(4px + var(--cap));background:var(--track)}
+.meter::after{content:"";position:absolute;left:0;height:3px;
+  bottom:calc(4px + var(--cap));width:var(--score);background:var(--agent)}
+.meter .tick{position:absolute;bottom:calc(1px + var(--cap));
+  left:var(--floor);width:1px;height:9px;background:var(--ink);opacity:.6}
+/* ⚠️ THE CAPTION SITS BELOW THE BAR AND READS LEFTWARD FROM THE TICK, and
+   both halves of that are load-bearing. It used to hang to the RIGHT of the
+   tick at bar level, which collides with the bar itself on every meter whose
+   score CLEARS the floor — the fill runs on past the tick and straight through
+   the words. Dropping it below the bar ends that; anchoring it to the tick's
+   right edge so it reads leftward keeps it inside the meter, because a floor
+   is high by nature (0.60, 0.90) and the room is always on the filled side. */
+.meter .tick::after{content:attr(data-t);position:absolute;left:auto;right:0;
+  bottom:-11px;
+  font-size:9px;letter-spacing:.05em;color:var(--muted);white-space:nowrap}
+
+/* MARK TWO · THE CONNECTION LIGHT. Ink, never the agent green: this is
+   infrastructure, and the agent colour means measurement. A live connection
+   breathes; an unreachable one is hollow and STILL. Absence of life is the
+   signal — no hazard colour exists and none is needed, and the words beside it
+   say the same thing, because a state may never depend on a light alone.
+   This is the ONLY radius in the system besides the mark. */
+.conn{display:inline-flex;align-items:center;gap:calc(var(--u)*2);
+  font-size:var(--s2);color:var(--muted)}
+.conn i{position:relative;width:7px;height:7px;border-radius:50%;
+  background:var(--ink);flex:none}
+.conn i::after{content:"";position:absolute;inset:-4px;border-radius:50%;
+  box-shadow:0 0 0 1px var(--ink);opacity:0;animation:alive 3.6s ease-out infinite}
+@keyframes alive{0%{transform:scale(.55);opacity:.42}70%,100%{transform:scale(1.25);opacity:0}}
+.conn[data-state="down"] i{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.conn[data-state="down"] i::after{animation:none;opacity:0}
+.conn[data-state="down"]{color:var(--ink)}
+.conn b{font-weight:var(--w-body);color:var(--ink)}
+
+/* THE PERSON. The agent ran every row, so naming it says nothing; a PERSON in
+   the loop is the exception, so that is what gets named. Ink, not agent
+   green. */
+.hu{font-size:var(--s1);letter-spacing:var(--tr-micro);text-transform:uppercase;
+  color:var(--ink);font-weight:var(--w-emph)}
+
+/* ═══ THE HUE RULE ═══════════════════════════════════════════════════════
+   🛑 NO STATE MAY DEPEND ON HUE. There is no red, no amber and no
+   traffic-light green in this system; --agent is deep precisely so it cannot
+   be read as "matched", and --accent is warm precisely so it cannot be read
+   as agent. Every state carries a WORD; colour only ever reinforces one. This
+   satisfies WCAG 2.2 AA 1.4.1 by construction rather than by review, and it
+   is why a failing state looks like FULL INK and a cleared one looks like
+   --recede.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* ═══ ICONOGRAPHY ════════════════════════════════════════════════════════
+   🛑 THERE IS NO ICON SET, AND THAT IS A DECISION RATHER THAN AN ABSENCE.
+   The system has SIX GLYPHS. All six are typographic — set in the text face
+   at the parent's size, never drawn, never an SVG, never a font-icon.
+
+     FOUR ARE GRAMMAR and are governed by THE SIX INDICATORS, not by this
+     block. ~ hedges a forecast · › means your move · … means elsewhere ·
+     past tense states a fact (no glyph). They CARRY MEANING, which is why
+     they are counted, ruled and capped at six.
+
+     TWO ARE AFFORDANCE and carry no meaning at all:
+       ✕   this panel closes
+       ▾   a menu follows
+     🛑 AN AFFORDANCE GLYPH IS ALWAYS aria-hidden AND NEVER THE SOLE
+     AFFORDANCE. It sits inside a control that already has an accessible
+     name, and removing the glyph must leave the control fully operable. A
+     glyph that is the only thing naming a control is a defect, not an icon.
+
+   ⚠️ ‡ WAS ADDED ON 6 SEP 2026 AS A SEVENTH GLYPH AND RETIRED THE SAME DAY.
+   It was carrying the metered mark — the thing that trails a spend figure —
+   and THE MASCOT's still form does that job with the brand's own shape
+   instead of a borrowed reference mark. The metered mark is therefore
+   documented with THE MARK and not here, and this set is six again. The
+   round trip is left on the record because a count that moves twice without
+   a reason written down is how a set becomes a collection.
+
+   WHY STILL NO SET. An icon vocabulary is a SECOND semantic channel, and it
+   would compete with the grammar for the same job — a mail glyph beside
+   "waiting on the bank feed …" does not add information, it splits it. An
+   icon set also grows by RESEMBLANCE rather than by decision: the next icon
+   arrives because a shape existed. And under THE HUE RULE an icon cannot
+   carry state anyway, so every icon the system could add would be decoration
+   on a word that is already doing the work.
+
+   🛑 ADDING A GLYPH IS A DESIGN CHANGE, NOT AN ADDITION — the same sentence
+   the indicator count makes, for the same reason. The seventh was argued,
+   dated, and then withdrawn once the brand's own mark could do the job; a
+   seventh earns that much again or it does not land.                       */
+
+/* THE METERED MARK HAS THE ONE CLASS, because it is the one thing whose
+   contract can be checked by grep: every .met should hold ∴ and sit either
+   after a spend figure or after words that already say an act is billable.
+   It inherits the parent's size and face — the class exists to be findable,
+   not to style. See THE MASCOT for the argument. */
+.met{font:inherit;color:var(--agent-deep);padding-left:.12em}
+
+/* ═══ THE MOTION INVENTORY ════════════════════════════════════════
+   🛑 AMENDED 3 Oct 2026 BY TWO OWNER RULINGS, AND THE OLD TEXT IS QUOTED
+   RATHER THAN DELETED because it is the rule a reader would have cited:
+     "FOUR PRODUCT ANIMATIONS EXIST IN THIS SYSTEM AND A FIFTH IS A FINDING.
+        sweep 17s · alive 3.6s · lv 1.4s · toast-in --t-spring
+      … There is no fifth keyframe animation, and a component may not
+      declare one."
+   ⚠️ THE OLD INVENTORY WAS FALSE ABOUT ITS OWN FILE: only sweep and alive had
+   a keyframe HERE; lv and toast-in lived in system-page.css, a record sheet
+   no product imports, and that same sheet declared three MORE (fade-in,
+   drawer-in, modal-in) against "no fifth". (RM-08, RM-09.)
+
+   RM-08 (G3396): "Move toast-in into the kernel; strike lv from the motion
+   inventory until a surface draws level bars." No product surface in the
+   pack draws `.agent` — it appears only on the Design System page — so lv
+   is a SPECIMEN, kept in system-page.css and counted nowhere.
+   ⚠️ THE LAST CLAUSE IS STRUCK — RMR-06 (G3480): a keyframe "counted
+   nowhere" is the seventh the amended rule below calls a finding. The lv
+   keyframe is DELETED from system-page.css and the specimen's bars are still;
+   the surface that first draws level bars declares it HERE.
+   RM-09 (G3397): "Overlay entrance animations (fade-in, drawer-in, modal-in)
+   move into the kernel with reduced-motion guards; amend the 'no fifth
+   keyframe' rule."
+
+   THE PRODUCT ANIMATIONS NOW:
+     sweep      17s        AMBIENT  · light passing across a running job
+     alive      3.6s       AMBIENT  · the connection light breathing
+     toast-in   --t-spring FEEDBACK · an outcome arriving   (--enter-toast)
+     fade-in    --t-fade   ENTRANCE · a modal's scrim       (--enter-scrim)
+     drawer-in  --t-spring ENTRANCE · a drawer arriving     (--enter-drawer)
+     modal-in   --t-spring ENTRANCE · a dialog arriving     (--enter-modal)
+   🛑 THE RULE, AS AMENDED: EVERY KEYFRAME IN THE SYSTEM IS DECLARED IN THIS
+   FILE. A component may APPLY one — through its --enter-* token where it has
+   one — and may not DECLARE one. A seventh is a finding. Everything else that
+   moves is a TRANSITION on a property, timed by --t-spring (a move) or
+   --t-fade (an opacity or colour change).
+
+   AND ONE BRAND ANIMATION, COUNTED SEPARATELY BECAUSE IT IS NOT THE PRODUCT
+   SPEAKING:
+     mascot-cascade  1.25 / 2 / 4.8s  BRAND · the mascot's energy ladder
+   🛑 IT MAY RUN ON .mascot AND NOWHERE ELSE. The count can absorb it only
+   because the mascot reports nothing; a product surface reaching for this
+   animation is a finding, exactly as a fifth product animation would be.
+   Added 6 Sep 2026 with THE MASCOT.
+
+   ⚠️ THE SWEEP SPENDS 88% OF ITS CYCLE AT REST, which is what makes 17s read
+   as ambient rather than as slow. The rest fraction, not the duration, is the
+   load-bearing part.
+
+   🛑 NOTHING ANIMATES THAT CARRIES INFORMATION A STILL FRAME DOES NOT. That
+   is what makes the reduced-motion guard a complete answer rather than a
+   degradation: every one of the six is either ambient (so its absence costs
+   nothing but liveness), feedback whose outcome is also stated in words, or
+   an entrance whose end state is the overlay simply being there.
+   ═════════════════════════════════════════════════════════════════════════ */
+/* Each is a FROM-only keyframe: the element's own resting style is the end
+   state, so an entrance cannot disagree with the surface it lands as.
+   ⚠️ THEY ANIMATE THE INDIVIDUAL `translate` PROPERTY, NOT `transform`. The
+   page sheet's modal-in was `transform:translate(-50%,calc(-50% + …))`, which
+   hard-codes ONE centring technique — apply it to a flex-centred dialog and
+   it lands a quarter-screen up and left. `translate` composes with whatever
+   `transform` the surface already has, so one keyframe serves both. */
+@keyframes toast-in{from{translate:0 calc(var(--u)*4)}}
+@keyframes fade-in{from{opacity:0}}
+@keyframes drawer-in{from{translate:100% 0}}
+@keyframes modal-in{from{translate:0 calc(var(--u)*4)}}
+
+/* ═══ NOT-BUILT ══════════════════════════════════════════════════════════
+   🛑 REQUIRED on any feature a decision refused or left unbuilt. A mockup
+   carrying one of them WITHOUT this treatment becomes evidence of a shipped
+   control.
+   Hatch plus a stated word: the hatch is visible in a screenshot, the word
+   survives greyscale printing, and neither depends on hue.
+
+   THE HATCH ALPHA IS .18. At .055 the stripe composited to 1.11:1 on every
+   ground — FAINTER THAN --rule (1.38:1), the faintest line this system
+   deliberately declares, so the hatch was below the visible floor on the
+   ground it was calibrated for. At .18 it is 1.42:1 on both light grounds.
+   THE ALPHA FORM IS THE REASON IT IS GROUND-INDEPENDENT: an alpha composite
+   SCALES the ground rather than displacing it, so the stripe reads the same
+   on all four grounds. A solid stripe is the ground-dependent one.
+   ⚠️ THE STRIPE GEOMETRY STAYS IN px. 6px transparent / 1px stripe is an
+   optical pattern; scaling it with the reader's font size turns a hatch into
+   a set of bars.
+
+   THE HATCH IS DECLARED ON A DOUBLED CLASS. `background:` is a SHORTHAND and
+   it resets background-image, so any element carrying both .nb and a local
+   class writing `background:var(--x)` lost the hatch outright — SILENTLY,
+   because the ::after word is unaffected and still said NOT BUILT. ORDER, not
+   specificity, was the whole mechanism: .nb and a local class both score
+   (0,1,0) and the local rule loads later. .nb.nb scores (0,2,0) and no
+   single-class rule can reach it whatever the order. */
+.nb{position:relative}
+.nb.nb{background-image:repeating-linear-gradient(135deg,
+    transparent 0 6px, var(--hatch) 6px 7px)}
+.nb::after{content:attr(data-nb);position:absolute;top:0;right:0;
+  font-size:var(--s1);letter-spacing:var(--tr-micro);text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--refused);background:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);padding:2px 6px}
+
+/* THE NOT-BUILT REASON. The hatch says a thing is not built; the sentence
+   naming the decision that refused it is what makes the hatch ACTIONABLE, and
+   it had no kernel entry — so five files invented five names for it (.nbwhy ·
+   .why-nb · .nb-why · .nbnote · .cap). One name, beside .nb, in --refused,
+   because a refusal is what it is reporting.
+   🛑 A HATCH WITHOUT A REASON IS HALF THE TREATMENT. The word says THAT; the
+   reason says WHICH DECISION, and a reviewer cannot act on the first without
+   the second. */
+.nbwhy{display:block;font-size:var(--s2);line-height:var(--lh-note);
+  color:var(--refused);margin-top:calc(var(--u)*2);max-width:var(--measure-text)}
+.nbwhy b{color:var(--ink);font-weight:var(--w-emph)}
+
+/* ═══ REDUCED MOTION ══════════════════════════════════════════════════════
+   Both kernel animations are guarded HERE, once, and the mascot's with them.
+   They used to be guarded in
+   every file that linked this one, six different ways — the sweep stopped
+   three ways and the halo two — which is how six files come to disagree about
+   one system.
+
+   🛑 `*` ALONE IS NOT ENOUGH AND THAT IS THE WHOLE TRAP. The universal
+   selector does not match pseudo-elements, and BOTH kernel animations run on
+   one — .lit--running::after and .conn i::after. A guard written `*{}` looks
+   complete, passes review, and stops neither. `*,*::before,*::after` is
+   load-bearing, not defensive.
+
+   🛑 AND THE SPRING IS COVERED BY transition-duration, NOT BY REMOVING THE
+   EASING. A spring's overshoot is the part a motion-sensitive reader objects
+   to, and at .001ms there is no overshoot to see — the element is simply
+   where it was going. Do not add a second rule swapping --spring for `linear`
+   under this query; it would be a rule that changes nothing.
+
+   THE HALO SETTLES AT .3, NOT 0, ON PURPOSE. A DOWN light has an opacity-0
+   halo AND a hollow centre — two differences from a live one. Stop a live
+   halo at 0 and those two collapse to one the moment a reader turns motion
+   off, on the indicator whose entire argument is that absence of life is the
+   signal. Holding a faint STATIC ring keeps both.
+
+   The two rules below are stated as their own selectors rather than left to
+   the universal one, because .001ms merely makes an infinite animation fast,
+   not still. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;
+    animation-iteration-count:1!important;transition-duration:.001ms!important;
+    scroll-behavior:auto!important}
+  .lit--running::after{display:none}                             /* the sweep stops */
+  .conn i::after{animation:none;opacity:.3;transform:scale(1)}   /* the halo stops  */
+  /* THE MASCOT GOES STILL AND STAYS THE MARK. Its resting state is already a
+     complete mark — three dots in agent ink — so there is nothing to hold for
+     it the way the halo holds a faint ring. */
+  .mascot > i{animation:none;transform:none;text-shadow:none}
+  .mascot > .d3{transform:translateX(-50%)}
+  /* 🛑 RM-10 (G3398): THE LINE ABOVE LOST. `.mascot > i` is (0,1,1) and the
+     cascade rule `.mascot[data-energy] > .d1` is (0,3,0) — the very trap THE
+     MASCOT's own override note describes, inside the guard. Measured under
+     `reduce`: a working dot still computed `animation-name: mascot-cascade`,
+     and only the universal `.001ms` above made it LOOK still. These repeat the
+     dot classes at (0,3,0) and come later, so they win on order. */
+  .mascot[data-energy] > .d1,
+  .mascot[data-energy] > .d2,
+  .mascot[data-energy] > .d3{animation:none}
+  /* THE ENTRANCES (RM-09): the overlay is simply THERE. Keyed on the token, so
+     every surface that applies one is guarded whatever its class is called. */
+  :root{--enter-toast:none;--enter-scrim:none;--enter-drawer:none;--enter-modal:none}
+}
+
+/* ═══ TEXT SPACING ════════════════════════════════════════════════════════
+   1.4.12 requires that a reader can override line-height to 1.5×, paragraph
+   spacing to 2×, letter-spacing to .12× and word-spacing to .16× with no loss
+   of content or function. Nothing here fights that, and two habits that would
+   are banned outright:
+   🛑 NO FIXED HEIGHT ON ANYTHING THAT HOLDS TEXT. min-height, or nothing.
+   🛑 NO overflow:hidden ON A TEXT CONTAINER to make a layout hold. If the
+   text does not fit, the layout is wrong.
+   The system's own line-heights are unitless multipliers, so a reader's
+   override multiplies rather than replaces them.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   WHAT IS STILL OPEN
+   · CONTAINER QUERIES. The three breakpoints are declared and unusable inside
+     @media. Whether components should respond to their container rather than
+     the viewport would change how every grid in the system reflows, and it is
+     a design decision rather than a value.
+   · THE STATE LABEL'S MARKUP. <figure>/<figcaption> is the only form that
+     associates a label with the thing it labels programmatically, and two of
+     the original five sheets used a plain span instead. A markup convention,
+     so it cannot be closed from here.
+   · THE FOURTH GROUND. A fourth is a finding. Nothing needs one yet — the
+     entry tier came closest and was refused.
+   · INTERRUPTIBLE MOTION. --spring restarts rather than retargeting from its
+     current velocity. Closing that needs a runtime, which is a stack decision
+     rather than a token one.
+   ═══════════════════════════════════════════════════════════════════════════ */

@@ -1,0 +1,160 @@
+-- =====================================================================
+-- CONTROL PLANE 0020 — THE CONSOLE READER'S ONE PRIVILEGE. G1161/G1162
+-- (20 Sep 2026).
+--
+-- **NO TABLE. NO COLUMN. ONE `GRANT USAGE` AND ONE `GRANT SELECT`, TO A ROLE
+--   THIS DATABASE HAS NEVER HAD — AND THE ROLE IS THE DATA PLANE'S.**
+--
+-- `CLAUDE.md`, verbatim, because a paraphrased invariant is a changed
+-- invariant:
+--
+--     "3. **The control plane publishes downward and never reads tenant
+--      data.**"
+--
+-- THE OWNER'S RULING OF 20 Sep 2026, which this file applies:
+--
+--     "The data plane gains a READ-ONLY control-database pool. A second
+--      connection, `SELECT` only, on its own credential."
+--
+-- ⚠️ READ THE DIRECTION BEFORE READING ANYTHING ELSE. The edge opened here is
+--    the DATA plane reading the CONTROL database — a read DOWNWARD of a
+--    control-owned fact, into a process that publishes nothing back. The
+--    direction invariant 3 forbids is the other one and is UNTOUCHED: no
+--    `RECONCILE_DB_*` reaches `server/control-plane/`, nothing there imports
+--    `db/tenant-scope.ts`, and `compose.yaml` still leaves `data-plane-db`
+--    unresolvable inside that container.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 WHAT THIS SPENDS, NAMED HERE RATHER THAN DISCOVERED LATER.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- G193 held invariant 3 **by construction** and the ruling says in its own
+-- voice what taking it costs:
+--
+--     "*By construction* becomes *by census*, and that is a real loss, not a
+--      wash."
+--
+-- The construction was that no process could reach the other's storage
+-- because no process held a credential or a route to it. That is now false in
+-- one direction, deliberately. What stands in its place is
+-- `tests/db/control-plane-census.test.ts`, which ENUMERATES every relation in
+-- this database from the catalogue and requires — for BOTH roles now, which
+-- is this file's other half — that neither holds `INSERT`, `UPDATE` or
+-- `DELETE` on any of them.
+--
+-- **A construction cannot be undone by a commit that forgets. A census can be
+-- undone by a commit that adds a table, a grant and an exemption together.**
+-- What the census buys back is that the undoing is a RED GATE rather than
+-- silence, and that is strictly less than what was spent. Do not describe
+-- this as equivalent.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 WHY A SECOND ROLE, WHEN `reconcile_control_app` ALREADY HOLDS `SELECT`
+--    ON EXACTLY THE TABLE THE CONSOLE WANTS.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- Because that role is the CONTROL PLANE's, and its `SELECT` set is the set
+-- of everything this database publishes downward to the whole fleet —
+-- `0001_catalogue.sql`'s `pack_catalogue` today, and whatever a pack-authoring
+-- slice adds next. **A grant written for the control plane would silently
+-- become a grant to every console read**, because nobody writing
+-- `GRANT SELECT ON <next table> TO reconcile_control_app` is thinking about a
+-- data plane.
+--
+-- `reconcile_control_reader` is granted one table, in one line, in this file.
+-- Every widening of it is a line in `db/migrations-control/` that a reviewer
+-- meets as a widening rather than as a catalogue grant.
+--
+-- ⚠️ AND THE TWO ROLES AUTHENTICATE SEPARATELY. Different name, different
+--    password — `compose.yaml` sets `RECONCILE_CONTROL_APP_PASSWORD` on the
+--    control services and `RECONCILE_CONTROL_READ_PASSWORD` on the data plane,
+--    and `tests/http/plane-separation.test.ts` asserts the data plane holds
+--    neither of the control plane's own. A shared credential would make the
+--    separation above a comment.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 `SELECT` ON ONE TABLE, AND `pack_catalogue` IS REFUSED BY NAME.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- The console operation this edge exists for is `listTenants`, and the only
+-- relation it reads is `tenancy_roster`. `pack_catalogue` is the artefact the
+-- control plane publishes to data planes over `listEntitledPacks` — a
+-- DECLARED CONTRACT OPERATION with a version window, a signature story and a
+-- lifecycle filter. A data plane reading it directly out of the database
+-- would be a SECOND path to the same artefact, bypassing every one of those,
+-- which is §5.3 with the copy in the place a plane installs from.
+--
+-- `tests/db/control-read-pool.test.ts` §3 witnesses the refusal live —
+-- `permission denied for table pack_catalogue` — rather than inferring it
+-- from the absence of a line here, because an absent `GRANT` and an absent
+-- TABLE look identical in a migration set.
+--
+-- ⚠️ NO `GRANT` ON `schema_migration` EITHER, AND ITS ABSENCE IS ALREADY
+--    ASSERTED. `tests/db/control-plane-census.test.ts` §A2 requires the
+--    application role to hold neither read nor write on the ledger; this file
+--    adds the reader to that requirement rather than carving it an exception.
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 NO `INSERT`, NO `UPDATE`, NO `DELETE`, AND THE READ-ONLY TRANSACTION IS
+--    A SECOND CONTROL RATHER THAN A RESTATEMENT OF THIS ONE.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- `db/control-read-scope.ts` issues `BEGIN READ ONLY`. The two controls are
+-- independent and fail in different directions:
+--
+--   · this GRANT is per RELATION, and it is enforced by a privilege somebody
+--     has to remember not to widen;
+--   · the transaction mode is per STATEMENT, over every relation at once, and
+--     it is enforced by the server regardless of what was granted.
+--
+-- **Witnessed RED against a role deliberately granted the write**, which is
+-- the only way to show the second control doing work of its own:
+--
+--     GRANT SELECT, INSERT, UPDATE, DELETE ON tenancy_roster TO <reader>;
+--     BEGIN READ ONLY; INSERT INTO tenancy_roster …;
+--     -> ERROR:  cannot execute INSERT in a read-only transaction
+--     BEGIN;            INSERT INTO tenancy_roster …;   -> INSERT 0 1
+--
+-- ═══════════════════════════════════════════════════════════════════════
+-- 🛑 AND THIS FILE MOUNTS NOTHING. `listTenants` IS STILL REFUSED, ON G833.
+-- ═══════════════════════════════════════════════════════════════════════
+--
+-- `0002_tenancy_roster.sql` refuses a `stage` column and calls the refusal a
+-- BLOCKER rather than a gap, because `TenantSummary` marks `stage` `required`
+-- and `fast-json-stringify` serialises without validating — so an operation
+-- with an almost-complete table ships a 200 missing its own required field
+-- SILENTLY. **Nothing in this commit changes that**, and
+-- `tests/http/console-roster-unreachable.test.ts` §5 derives it per operation
+-- across all fourteen rather than asserting it here.
+--
+-- **The TOPOLOGY blocker is what this file closes. The SCHEMA blocker is
+-- G833's and is open.** Closing one of two and mounting nothing is the
+-- honest shape of this slice.
+--
+-- RULINGS THIS APPLIES (docs/HANDOFF.md §3):
+--   G1161  the data plane gains a read-only control-database pool. THE
+--          OWNER'S.
+--   G1162  the reach is its own ROLE with its own credential, not a second
+--          user of `reconcile_control_app`. DERIVED.
+--   G832   the census is what replaces the construction; this file puts the
+--          second role inside it.
+--   G88    forward-only. There is no `down`, and neither `0001_catalogue.sql`
+--          nor `0002_tenancy_roster.sql` is edited by this file — no
+--          `ALTER TABLE`, no `REVOKE`, no `ALTER POLICY`.
+--   G193   two processes, two databases. Still two; what changed is that one
+--          process now holds a narrow, argued, read-only credential for the
+--          other's database.
+--
+-- ⚠️ NOT SCHEMA-QUALIFIED, which is 0001's convention: there is no `tenant`
+--    schema in this database and everything here is `public`.
+--
+-- ⚠️ THE ROLE IS CREATED BY `server/control-plane/provision.ts`, NOT HERE.
+--    A migration cannot mint the role it grants to — `db/provision.ts` states
+--    the same of `reconcile_migrator` — and `CREATE ROLE` needs a privilege no
+--    migration run should hold. That module creates BOTH roles before
+--    `applyMigrations()`, so this `GRANT` always has a grantee.
+-- =====================================================================
+
+GRANT USAGE ON SCHEMA public TO reconcile_control_reader;
+
+GRANT SELECT ON tenancy_roster TO reconcile_control_reader;

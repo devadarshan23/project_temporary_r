@@ -1,0 +1,550 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PAGE GEOMETRY — the design system reference sheet.
+   GEOMETRY ONLY. This file declares no colour, no type step, no spacing unit,
+   no duration, no layer and no breakpoint value; every value below is composed
+   from a token in tokens.css. If you find a literal here that is not a
+   geometric compensation argued at its own site, that is a finding.
+
+   THE THREE BREAKPOINTS ARE WRITTEN LITERALLY — 720px, 1080px, 1440px —
+   because a custom property cannot be read inside a @media query. They are
+   the kernel's --bp-narrow, --bp-mid and --bp-wide. If you change one, change
+   it in the kernel first and then here; the kernel is the authority.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.pg{padding:calc(var(--u)*10) var(--gutter) calc(var(--u)*24);max-width:var(--measure)}
+
+h1{font-weight:var(--w-display);font-size:var(--s7);line-height:var(--lh-display);
+  letter-spacing:var(--tr-display);margin:0 0 calc(var(--u)*3);text-transform:lowercase}
+.lede{color:var(--muted);font-size:var(--s4);font-weight:var(--w-lede);
+  max-width:var(--measure-lede);margin:0 0 calc(var(--u)*10)}
+h2{font-size:var(--s2);letter-spacing:.14em;text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--muted);
+  margin:calc(var(--u)*16) 0 calc(var(--u)*4);padding-top:calc(var(--u)*4);
+  border-top:1px solid var(--rule-strong)}
+h3{font-size:var(--s3);font-weight:var(--w-emph);
+  margin:calc(var(--u)*8) 0 calc(var(--u)*3);letter-spacing:0;
+  text-transform:none;color:var(--ink)}
+h4{font-size:var(--s2);font-weight:var(--w-emph);margin:calc(var(--u)*5) 0 calc(var(--u)*2);
+  color:var(--ink)}
+.sub{color:var(--muted);font-size:var(--s2);max-width:var(--measure-text);
+  margin:0 0 calc(var(--u)*8)}
+p{margin:calc(var(--u)*3) 0 0;max-width:var(--measure-text)}
+.note{color:var(--muted);font-size:var(--s2);max-width:var(--measure-text);
+  margin:calc(var(--u)*3) 0 0;line-height:var(--lh-note)}
+.note b{color:var(--ink);font-weight:var(--w-emph)}
+.spec{font-family:var(--face-mono);font-size:var(--s2);color:var(--muted)}
+.lab{display:block;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  margin-bottom:calc(var(--u)*2)}
+
+/* ═══ MASTHEAD ═════════════════════════════════════════════════════════════ */
+.masthead{display:flex;align-items:baseline;justify-content:space-between;
+  gap:calc(var(--u)*6);flex-wrap:wrap;padding-bottom:calc(var(--u)*6);
+  border-bottom:1px solid var(--rule-strong);margin-bottom:calc(var(--u)*10)}
+.masthead .who{font-size:var(--s2);color:var(--muted);text-align:right}
+.masthead .who b{display:block;color:var(--ink);font-weight:var(--w-emph)}
+@media (max-width:720px){
+  .masthead .who{text-align:left}
+}
+
+/* ═══ FIGURE — the specimen frame ══════════════════════════════════════════
+   <figure>/<figcaption> is the form: it is the only one that associates a
+   label with the thing it labels programmatically. */
+figure{margin:0;min-width:0}
+figcaption{font-size:var(--s1);letter-spacing:.08em;text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--muted);margin-bottom:calc(var(--u)*2)}
+.frame{background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  padding:calc(var(--u)*4);min-width:0}
+.frame--sheet{background-color:var(--sheet)}
+
+/* ═══ GRIDS ════════════════════════════════════════════════════════════════
+   Every multi-column grid collapses to one column at the narrow tier. That is
+   1.4.10 Reflow, not a preference: at 320px a two-column grid forces
+   horizontal scrolling on the page itself. */
+.grid{display:grid;gap:calc(var(--u)*5);
+  grid-template-columns:repeat(auto-fit,minmax(var(--col-min),1fr));
+  margin-top:calc(var(--u)*4)}
+.two{display:grid;gap:calc(var(--u)*5);grid-template-columns:repeat(2,minmax(0,1fr));
+  margin-top:calc(var(--u)*4)}
+.three{display:grid;gap:calc(var(--u)*5);grid-template-columns:repeat(3,minmax(0,1fr));
+  margin-top:calc(var(--u)*4)}
+@media (max-width:1080px){
+  .three{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:720px){
+  .two,.three{grid-template-columns:minmax(0,1fr)}
+}
+
+/* ═══ TABLES ═══════════════════════════════════════════════════════════════
+   🛑 EVERY TABLE IS INSIDE A SINGLE-AXIS SCROLLER. A table is the one thing in
+   an interface that legitimately cannot reflow to 320px — a five-column
+   register is five columns — so the scroll is confined to ONE axis and the
+   page itself never scrolls sideways. That is what 1.4.10 asks for. */
+.wrap{overflow-x:auto;margin-top:calc(var(--u)*4)}
+table{border-collapse:collapse;width:100%}
+.wrap table{min-width:calc(var(--u)*150)}
+caption{text-align:left;font-size:var(--s2);color:var(--muted);
+  padding:0 0 calc(var(--u)*3);max-width:var(--measure-text)}
+th,td{text-align:left;vertical-align:top;padding:calc(var(--u)*2) calc(var(--u)*3);
+  border-bottom:1px solid var(--rule);font-size:var(--s2)}
+thead th{font-size:var(--s1);letter-spacing:.12em;text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--muted);
+  border-bottom:1px solid var(--rule-strong);white-space:nowrap}
+tbody th{font-weight:var(--w-body)}
+td.num,th.num{text-align:right;font-family:var(--face-mono);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.tok{font-family:var(--face-mono);font-size:var(--s2);color:var(--ink);
+  font-weight:var(--w-figure);white-space:nowrap}
+.job{color:var(--muted)}
+.sw{display:block;width:calc(var(--u)*14);height:calc(var(--u)*7);
+  box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.sw--type{display:flex;align-items:center;justify-content:center;
+  font-family:var(--face-mono);font-size:var(--s2);font-weight:var(--w-emph)}
+/* 🛑 THE VERDICT IS A WORD, NEVER A COLOUR. "This ratio fails AA" is a state,
+   and no state may depend on hue. It is set in the ink step, uppercase, and it
+   survives greyscale. */
+.verdict{font-size:var(--s1);letter-spacing:.06em;text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--muted);white-space:nowrap}
+.verdict[data-aa="below"]{color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);
+  padding:0 calc(var(--u)*1)}
+
+/* ═══ INDICATOR CARDS ══════════════════════════════════════════════════════ */
+.six{display:grid;gap:calc(var(--u)*5);margin-top:calc(var(--u)*4);
+  grid-template-columns:repeat(auto-fit,minmax(var(--col-min),1fr))}
+.ind{padding:calc(var(--u)*5);background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);display:flex;flex-direction:column}
+.ind .no{font-size:var(--s1);letter-spacing:var(--tr-micro);text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--muted)}
+.ind .nm{font-size:var(--s3);font-weight:var(--w-emph);margin-top:calc(var(--u)*1)}
+.ind .stage{margin:calc(var(--u)*5) 0;padding:calc(var(--u)*4);
+  background-color:var(--sheet);display:flex;align-items:center;
+  gap:calc(var(--u)*5);flex-wrap:wrap;min-height:calc(var(--u)*18)}
+.ind .why{font-size:var(--s2);color:var(--muted);line-height:var(--lh-note);
+  margin-top:auto}
+.ind .why b{color:var(--ink);font-weight:var(--w-emph)}
+.gram{font-size:var(--s3);color:var(--ink)}
+.gram .mk{font-family:var(--face-mono);font-weight:var(--w-emph)}
+.gram .qt{color:var(--muted)}
+
+/* ═══ RULES + FINDINGS ═════════════════════════════════════════════════════ */
+.rules{list-style:none;margin:calc(var(--u)*4) 0 0;padding:0;max-width:96ch}
+.rules li{display:grid;grid-template-columns:calc(var(--u)*10) 1fr;
+  gap:calc(var(--u)*3);padding:calc(var(--u)*3) 0;border-bottom:1px solid var(--rule)}
+.rules .r{font-family:var(--face-mono);font-variant-numeric:tabular-nums;
+  font-size:var(--s2);color:var(--muted)}
+.rules .t{font-size:var(--s3);line-height:1.5}
+.rules .t b{font-weight:var(--w-emph)}
+.rules .t i{display:block;font-style:normal;color:var(--muted);font-size:var(--s2);
+  margin-top:calc(var(--u)*1)}
+@media (max-width:720px){
+  .rules li{grid-template-columns:minmax(0,1fr);gap:calc(var(--u)*1)}
+}
+.find{list-style:none;margin:calc(var(--u)*4) 0 0;padding:0;max-width:92ch}
+.find li{padding:calc(var(--u)*3) 0;border-bottom:1px solid var(--rule);
+  font-size:var(--s2);line-height:var(--lh-note);color:var(--muted)}
+.find li b{color:var(--ink);font-weight:var(--w-emph)}
+.find .kind{display:inline-block;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--ink);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);padding:0 calc(var(--u)*1.5);
+  margin-right:calc(var(--u)*2)}
+.find .kind[data-k="closed"]{color:var(--on-ink);background-color:var(--ink);
+  box-shadow:none}
+.synthetic{font-size:var(--s1);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-top:calc(var(--u)*16);padding-top:calc(var(--u)*4);
+  border-top:1px solid var(--rule-strong);max-width:none}
+
+/* ═══ THE BUTTON ═══════════════════════════════════════════════════════════
+   Four states, none of them a hue change. The target floor is the kernel's;
+   this control sits above it at --target. */
+.btn{display:inline-flex;align-items:center;justify-content:center;
+  gap:calc(var(--u)*2);font:inherit;font-size:var(--s2);font-weight:var(--w-figure);
+  color:var(--ink);background-color:var(--paper);
+  border:1px solid var(--rule-strong);border-radius:0;
+  min-height:var(--target);padding:0 calc(var(--u)*3);cursor:pointer;
+  text-align:left;white-space:nowrap;
+  transition:background-color var(--t-fade) linear,color var(--t-fade) linear}
+.btn:hover{background-color:var(--tile-hover)}
+.btn:active{background-color:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+.btn[data-commit]{background-color:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+.btn[data-commit]:hover{background-color:var(--agent-deep);border-color:var(--agent-deep)}
+.btn[data-commit]:active{background-color:var(--agent-deep)}
+.btn[aria-disabled="true"]{color:var(--refused);background-color:var(--sheet);
+  cursor:default;border-color:var(--rule)}
+.btn[aria-disabled="true"]:hover,.btn[aria-disabled="true"]:active{
+  background-color:var(--sheet);color:var(--refused)}
+.btn--quiet{border-color:transparent;background-color:transparent}
+.btn--quiet:hover{background-color:var(--tile-hover)}
+.btn[aria-pressed="true"]{background-color:var(--sheet);
+  border-color:var(--ink);font-weight:var(--w-emph)}
+
+/* ═══ KEY-CAP ══════════════════════════════════════════════════════════════
+   ONE way to state a key, at one size, everywhere.
+   ⚠️ A KEY-CAP IS NOT A TARGET. It is a static label describing a keystroke,
+   so 2.5.8 does not reach it and it is not padded out to 24px. A key-cap that
+   is clickable is a button wearing a cap, and it takes the floor. */
+.kb{display:inline-flex;align-items:center;gap:calc(var(--u)*.5);
+  font-family:var(--face-mono);font-size:var(--s1);font-weight:var(--w-figure);
+  color:var(--ink);background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);padding:1px calc(var(--u)*1.5);
+  min-width:calc(var(--u)*5);justify-content:center;line-height:1.5}
+.kb--on-ink{color:var(--on-ink);background-color:transparent;
+  box-shadow:inset 0 0 0 1px var(--on-ink-2)}
+.legend{display:flex;flex-wrap:wrap;gap:calc(var(--u)*2) calc(var(--u)*6);
+  font-size:var(--s2);color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:calc(var(--u)*2)}
+
+/* ═══ THE TOOLTIP ══════════════════════════════════════════════════════════
+   THE SURFACE IS THE KERNEL'S. The mechanism is the ruled one: hidden by
+   OPACITY plus pointer-events, never display:none or visibility:hidden, so the
+   panel never leaves the accessibility tree. NO SELECTOR OPENS IT — the only
+   rule keyed on the open state is keyed on [data-open], which only the script
+   writes. Timed with --t-fade because an opacity change is not a move. */
+.tw{position:relative;display:inline-flex}
+.tip{position:absolute;bottom:calc(100% + var(--u)*2);left:0;z-index:var(--z-popover);
+  width:max-content;max-width:calc(var(--u)*64);
+  background-color:var(--ink);color:var(--on-ink);
+  padding:calc(var(--u)*2) calc(var(--u)*3);
+  font-size:var(--s2);line-height:var(--lh-body);
+  opacity:0;pointer-events:none;transition:opacity var(--t-fade) linear}
+.tw[data-open="true"] .tip{opacity:1}
+.tip i{display:block;font-style:normal;color:var(--on-ink-2);margin-top:calc(var(--u)*1)}
+
+/* ═══ THE CHROME BAR ═══════════════════════════════════════════════════════
+   At the narrow tier the bar keeps THREE controls — mark, search, avatar — and
+   the destinations move to the tab bar below. The other five are reached
+   through the palette or the account menu. */
+.chrome{display:flex;align-items:center;gap:calc(var(--u)*4);flex-wrap:wrap;
+  padding:calc(var(--u)*3) calc(var(--u)*4);background-color:var(--paper);
+  border-bottom:1px solid var(--rule-strong)}
+.chrome .sp{flex:1 1 calc(var(--u)*8)}
+.dests{display:flex;gap:calc(var(--u)*5);list-style:none;margin:0;padding:0}
+.dest{font:inherit;font-size:var(--s3);color:var(--muted);background:none;border:0;
+  padding:calc(var(--u)*1) 0;cursor:pointer;border-bottom:2px solid transparent;
+  min-height:var(--target-min);
+  transition:color var(--t-fade) linear,border-color var(--t-fade) linear}
+/* THE ACCENT'S FIRST CALL SITE. The word already carries the state in WEIGHT
+   and the underline already carries it in FORM; the accent is the third
+   channel on top of two that work without it. */
+.dest[aria-current="page"]{color:var(--ink);font-weight:var(--w-emph);
+  border-bottom-color:var(--accent)}
+.dest:hover{color:var(--ink)}
+.avatar{width:var(--target);height:var(--target);flex:none;display:grid;
+  place-items:center;background-color:var(--ink);color:var(--on-ink);border:0;
+  font:inherit;font-size:var(--s2);font-weight:var(--w-emph);cursor:pointer;
+  font-family:var(--face-mono)}
+
+/* ═══ THE PHONE SHELL ══════════════════════════════════════════════════════
+   The bottom tab bar. Three destinations, one per tab, and NEVER a fourth —
+   the same rule the desktop bar keeps, which is why the phone shell needs no
+   overflow affordance.
+   ⚠️ THE TABS ARE 44px TALL EVEN THOUGH THE FLOOR IS 24. 2.5.8 is a
+   conformance minimum, not a design target, and a primary destination reached
+   with a thumb at the bottom edge of a phone is the one control in the system
+   that genuinely wants the larger touch size. */
+.tabbar{display:flex;background-color:var(--paper);
+  border-top:1px solid var(--rule-strong)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:calc(var(--u)*1);font:inherit;font-size:var(--s2);
+  color:var(--muted);background:none;border:0;border-top:2px solid transparent;
+  min-height:calc(var(--u)*11);padding:calc(var(--u)*2) 0;cursor:pointer}
+.tab[aria-current="page"]{color:var(--ink);font-weight:var(--w-emph);
+  border-top-color:var(--accent)}
+/* The status bar collapses to ONE TAPPABLE ROW that opens the full grammar as
+   a sheet. The grammar is not dropped and it is not truncated — it moves. */
+.statusrow{display:flex;align-items:center;justify-content:space-between;
+  gap:calc(var(--u)*3);width:100%;font:inherit;font-size:var(--s2);
+  color:var(--muted);background-color:var(--sheet);border:0;
+  border-top:1px solid var(--rule);padding:calc(var(--u)*2) calc(var(--u)*4);
+  min-height:var(--target);cursor:pointer;text-align:left}
+.statusrow b{color:var(--ink);font-weight:var(--w-figure)}
+.statusrow .more{font-family:var(--face-mono);color:var(--muted)}
+
+/* ═══ MENU ═════════════════════════════════════════════════════════════════ */
+.menu{position:absolute;top:calc(100% + var(--u)*2);right:0;z-index:var(--z-popover);
+  min-width:calc(var(--u)*58);background-color:var(--paper);
+  border:1px solid var(--rule-strong);box-shadow:var(--sheet-shadow);
+  padding:calc(var(--u)*1) 0;list-style:none;margin:0}
+.menu[data-side="left"]{right:auto;left:0}
+.menu .gp{font-size:var(--s1);letter-spacing:var(--tr-micro);text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--muted);
+  padding:calc(var(--u)*2) calc(var(--u)*3) calc(var(--u)*1)}
+.menu li + .gp{border-top:1px solid var(--rule);margin-top:calc(var(--u)*1)}
+.mi{display:flex;align-items:center;justify-content:space-between;
+  gap:calc(var(--u)*4);width:100%;font:inherit;font-size:var(--s2);color:var(--ink);
+  background:none;border:0;padding:calc(var(--u)*2) calc(var(--u)*3);cursor:pointer;
+  text-align:left;min-height:var(--target)}
+.mi:hover{background-color:var(--tile-hover)}
+.mi[aria-checked="true"]{font-weight:var(--w-emph)}
+.mi .rt{color:var(--muted);font-size:var(--s1);letter-spacing:.06em}
+.anchor{position:relative;display:inline-flex}
+
+/* ═══ THE COMMAND PALETTE ══════════════════════════════════════════════════ */
+.pal{background-color:var(--paper);border:1px solid var(--rule-strong);
+  max-width:calc(var(--u)*140)}
+.pal-in{display:flex;align-items:center;gap:calc(var(--u)*3);
+  padding:calc(var(--u)*3) calc(var(--u)*4);border-bottom:1px solid var(--rule-strong)}
+.pal-in input{flex:1;border:0;min-height:var(--target);padding:0;
+  font-size:max(1rem,var(--s4));background-color:transparent}
+.pal-sec{font-size:var(--s1);letter-spacing:var(--tr-micro);text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--muted);
+  padding:calc(var(--u)*3) calc(var(--u)*4) calc(var(--u)*1)}
+.pal-row{display:flex;align-items:center;justify-content:space-between;
+  gap:calc(var(--u)*4);width:100%;font:inherit;font-size:var(--s3);color:var(--ink);
+  background-color:transparent;border:0;border-left:2px solid transparent;
+  padding:calc(var(--u)*2) calc(var(--u)*4);cursor:pointer;text-align:left;
+  min-height:var(--target)}
+.pal-row:hover{background-color:var(--tile-hover)}
+/* THE ACCENT'S SECOND CALL SITE — what Enter would run. The ground and the
+   2px edge together, because the edge alone is invisible to a reader who
+   cannot distinguish the hue, and the ground alone is the hover state. */
+.pal-row[data-sel="true"]{background-color:var(--accent-quiet);
+  border-left-color:var(--accent);font-weight:var(--w-emph)}
+.pal-row .k{color:var(--muted);font-size:var(--s2)}
+.pal-ft{display:flex;gap:calc(var(--u)*5);flex-wrap:wrap;
+  padding:calc(var(--u)*3) calc(var(--u)*4);border-top:1px solid var(--rule);
+  font-size:var(--s2);color:var(--muted)}
+.pal-empty{padding:calc(var(--u)*6) calc(var(--u)*4);color:var(--muted);
+  font-size:var(--s2)}
+
+/* ═══ BREADCRUMB ═══════════════════════════════════════════════════════════ */
+.trail{display:flex;align-items:center;gap:calc(var(--u)*2);flex-wrap:wrap;
+  font-size:var(--s2);color:var(--muted);padding:calc(var(--u)*3) 0}
+.trail .crumb{font:inherit;color:var(--ink);background:none;border:0;padding:0;
+  cursor:pointer;text-decoration:underline;text-underline-offset:3px;
+  text-decoration-thickness:1px;min-height:var(--target-min)}
+.trail .crumb:hover{text-decoration-thickness:2px}
+.trail .sep{color:var(--rule-strong)}
+/* The third accent site: where you are. Not a link, so it has no underline to
+   lose, which is why the accent is doing visible work here rather than
+   reinforcing. It is still not the only cue — the absence of an underline and
+   the aria-current attribute both say it first. */
+.trail [aria-current="page"]{color:var(--accent-deep);text-decoration:none;
+  font-weight:var(--w-figure)}
+
+/* ═══ THE REGISTER ═════════════════════════════════════════════════════════ */
+.reg{width:100%;border-collapse:collapse}
+.reg thead th{position:sticky;top:0;background-color:var(--paper);z-index:1}
+.reg tbody tr:hover{background-color:var(--row-hover)}
+.reg td{font-size:var(--s2)}
+.reg .who{font-size:var(--s1);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted)}
+.sorter{font:inherit;font-size:var(--s1);letter-spacing:.12em;text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--muted);background:none;border:0;padding:0;
+  cursor:pointer;min-height:var(--target-min)}
+.sorter[aria-sort]{color:var(--ink)}
+.sorter .word{font-weight:var(--w-emph);letter-spacing:.06em}
+.scroller{max-height:calc(var(--u)*80);overflow:auto}
+
+/* THE TRIAGE COLLAPSE. Below the narrow breakpoint the register drops to the
+   three columns a person triages on — reference, exception, whose move — and
+   value and score move into the row's second line. It is a REFLOW, not a
+   horizontal scroll, because the register is the one surface a person reads
+   for hours. */
+@media (max-width:720px){
+  .reg .drop{display:none}
+}
+
+/* ═══ FACETS AND CHIPS ═════════════════════════════════════════════════════ */
+.facets{display:flex;flex-direction:column;gap:calc(var(--u)*1);list-style:none;
+  margin:0;padding:0}
+.facet{display:flex;align-items:center;justify-content:space-between;
+  gap:calc(var(--u)*3);width:100%;font:inherit;font-size:var(--s2);color:var(--ink);
+  background:none;border:0;padding:calc(var(--u)*2);cursor:pointer;text-align:left;
+  min-height:var(--target)}
+.facet:hover{background-color:var(--tile-hover)}
+.facet[aria-pressed="true"]{background-color:var(--sheet);font-weight:var(--w-emph)}
+.facet .ct{font-family:var(--face-mono);font-variant-numeric:tabular-nums;
+  color:var(--muted);font-weight:var(--w-body)}
+.chips{display:flex;flex-wrap:wrap;gap:calc(var(--u)*2);align-items:center}
+/* ⚠️ THE CHIP WAS THE SYSTEM'S ONLY 2.5.8 FAILURE. At --s2 with a 4px pad it
+   measured 22px tall; the floor is 24. min-height is the fix rather than more
+   padding, so the label keeps its position. */
+.chip{display:inline-flex;align-items:center;gap:calc(var(--u)*2);font:inherit;
+  font-size:var(--s2);color:var(--ink);background-color:var(--sheet);border:0;
+  padding:calc(var(--u)*1) calc(var(--u)*2);cursor:pointer;
+  min-height:var(--target-min)}
+.chip:hover{background-color:var(--tile-hover)}
+.chip .x{color:var(--muted);font-family:var(--face-mono)}
+
+/* ═══ OVERLAYS ═════════════════════════════════════════════════════════════
+   THE SPRING RUNS ON THE WAY IN AND NOT ON THE WAY OUT. The overshoot means
+   "this landed here"; a drawer on its way off screen has nothing to land on,
+   so it leaves on a plain --t-fade curve. */
+.stagebox{position:relative;overflow:hidden;background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);min-height:calc(var(--u)*90)}
+.scrim{position:absolute;inset:0;background-color:var(--scrim);z-index:var(--z-overlay);
+  animation:var(--enter-scrim)}
+.scrim[data-for="modal"]{z-index:var(--z-modal)}
+/* fade-in, drawer-in, modal-in and toast-in MOVED TO tokens.css on 3 Oct 2026
+   (RM-09, G3397) and are applied through the kernel's --enter-* tokens, which
+   the kernel's own reduced-motion block sets to none. */
+.drawer{position:absolute;top:0;right:0;bottom:0;width:min(92%,calc(var(--u)*110));
+  z-index:calc(var(--z-overlay) + 1);background-color:var(--paper);
+  border-left:1px solid var(--rule-strong);display:flex;flex-direction:column;
+  animation:var(--enter-drawer)}
+.modal{position:absolute;top:50%;left:50%;
+  z-index:calc(var(--z-modal) + 1);width:min(92%,calc(var(--u)*130));
+  background-color:var(--paper);border:1px solid var(--rule-strong);
+  display:flex;flex-direction:column;max-height:90%;
+  transform:translate(-50%,-50%);animation:var(--enter-modal)}
+.ov-head{display:flex;align-items:flex-start;justify-content:space-between;
+  gap:calc(var(--u)*4);padding:calc(var(--u)*4);
+  border-bottom:1px solid var(--rule-strong)}
+.ov-title{font-size:var(--s4);font-weight:var(--w-emph);margin:0;
+  letter-spacing:var(--tr-title)}
+.ov-body{padding:calc(var(--u)*4);overflow:auto;flex:1}
+.ov-foot{display:flex;align-items:center;justify-content:flex-end;
+  gap:calc(var(--u)*3);padding:calc(var(--u)*4);border-top:1px solid var(--rule);
+  flex-wrap:wrap}
+.ov-foot .sp{flex:1}
+.x{font:inherit;font-size:var(--s3);color:var(--muted);background:none;border:0;
+  padding:calc(var(--u)*1) calc(var(--u)*2);cursor:pointer;line-height:1;
+  min-height:var(--target-min);min-width:var(--target-min)}
+.x:hover{color:var(--ink)}
+@media (max-width:720px){
+  /* A drawer on a phone is a full-height sheet, because 92% of 360px leaves a
+     28px strip of register that shows nothing and reads as a mistake. */
+  .drawer{width:100%;border-left:0}
+  .ov-foot{flex-direction:column;align-items:stretch}
+  .ov-foot .btn{width:100%}
+}
+
+/* ═══ TOAST ════════════════════════════════════════════════════════════════
+   The 2px left edge is the EMPHASIS rule, not a hue. */
+.toasts{position:absolute;right:calc(var(--u)*4);bottom:calc(var(--u)*4);
+  z-index:var(--z-modal);display:flex;flex-direction:column;gap:calc(var(--u)*.5);
+  width:min(88%,calc(var(--u)*88))}
+.toast{background-color:var(--paper);border:1px solid var(--rule-strong);
+  border-left:2px solid var(--ink);padding:calc(var(--u)*3) calc(var(--u)*4);
+  display:flex;gap:calc(var(--u)*4);align-items:flex-start;
+  animation:var(--enter-toast)}
+.toast .tb{flex:1;font-size:var(--s2)}
+.toast .tb b{display:block;font-weight:var(--w-emph);color:var(--ink)}
+.toast .tb i{font-style:normal;color:var(--muted)}
+@media (max-width:720px){
+  .toasts{left:calc(var(--u)*4);right:calc(var(--u)*4);width:auto}
+}
+
+/* ═══ STATUS BAR ═══════════════════════════════════════════════════════════
+   ONE grammar on every protected surface, and it never rearranges:
+   keys left · provenance middle · the audit trail last. */
+.statusbar{display:flex;align-items:center;gap:calc(var(--u)*5);flex-wrap:wrap;
+  padding:calc(var(--u)*2) calc(var(--u)*4);border-top:1px solid var(--rule-strong);
+  background-color:var(--paper);font-size:var(--s2);color:var(--muted)}
+.statusbar .mid{flex:1;min-width:calc(var(--u)*30)}
+.statusbar b{color:var(--ink);font-weight:var(--w-figure)}
+
+/* ═══ ROUTE-LEVEL STATE ════════════════════════════════════════════════════ */
+.route{padding:calc(var(--u)*12) calc(var(--u)*6);text-align:left;
+  background-color:var(--paper)}
+.route h3{margin-top:0;font-size:var(--s4);font-weight:var(--w-emph)}
+.route p{color:var(--muted);font-size:var(--s2);max-width:var(--measure-act)}
+.route .acts{display:flex;gap:calc(var(--u)*3);margin-top:calc(var(--u)*5);
+  flex-wrap:wrap}
+.skel{display:flex;flex-direction:column;gap:calc(var(--u)*2)}
+.skel i{display:block;height:calc(var(--u)*3);background-color:var(--sheet)}
+@media (max-width:720px){
+  .route{padding:calc(var(--u)*8) calc(var(--u)*4)}
+  .route .acts .btn{width:100%}
+}
+
+/* ═══ THE AGENT STATE BARS ═════════════════════════════════════════════════
+   ⚠️ A SPECIMEN, NOT A PRODUCT ANIMATION — RM-08, the owner's ruling of 3 Oct
+   2026 (G3396): "strike lv from the motion inventory until a surface draws
+   level bars." No product surface in the pack draws `.agent`; this page does.
+   Level bars are --ink, not --agent: they are captioned as measuring nothing,
+   and the agent rule reserves the hue to the meter.
+   🛑 AND THE KEYFRAME IS STRUCK HERE TOO — RMR-06 (G3480), 3 Oct 2026. This
+   block kept the lv keyframe "with its own guard, and the kernel counts it
+   nowhere", which contradicted the kernel's amended rule written a few lines
+   from RM-08's own text: *"EVERY KEYFRAME IN THE SYSTEM IS DECLARED IN THIS
+   FILE … A seventh is a finding."* A keyframe counted nowhere is the finding.
+   The specimen bars are therefore drawn STILL — the reading bars at the height
+   the reduced-motion guard already gave them, the idle bars at 4px — so the
+   page still shows the difference between the two states without motion. The
+   surface that first draws level bars declares the keyframe IN tokens.css,
+   with its guard, and moves the inventory to seven.
+   ⚠️ THE BAR GEOMETRY IS px. A 2px bar is a graphic object, and scaling it
+   with the reader's font size changes what 1.4.11 measured. */
+.agent{display:inline-flex;align-items:flex-end;gap:2px;height:16px}
+.agent .lv{width:2px;height:12px;background-color:var(--ink)}
+.agent .lv:nth-child(2){height:16px}
+.agent--idle .lv,.agent--idle .lv:nth-child(2){height:4px}
+
+/* ═══ SPECIMEN GEOMETRY — typography ═══════════════════════════════════════ */
+/* The measure demo: a rule at the ceiling, so the line length is VISIBLE
+   rather than asserted. */
+.mrow{position:relative;padding-right:calc(var(--u)*3);
+  border-right:1px solid var(--rule-strong);margin-top:calc(var(--u)*4)}
+.mrow--text{max-width:var(--measure-text)}
+.mrow--lede{max-width:var(--measure-lede)}
+.mrow--act{max-width:var(--measure-act)}
+.mrow .cap{display:block;font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted);margin-bottom:calc(var(--u)*1)}
+
+/* The tracking demo: the same string twice, one tracked and one not. */
+.trdemo{display:flex;flex-direction:column;gap:calc(var(--u)*4);
+  margin-top:calc(var(--u)*4)}
+.trdemo > div{display:flex;align-items:baseline;gap:calc(var(--u)*4);flex-wrap:wrap}
+.trdemo .tag{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted);
+  min-width:calc(var(--u)*26);flex:none}
+
+/* ═══ SPECIMEN GEOMETRY — motion ═══════════════════════════════════════════
+   Two tracks, one on --spring and one on --t-fade's linear curve, replayed
+   together so the DIFFERENCE is what you see rather than either on its own.
+   The transition is keyed on a data attribute the script writes; no timing is
+   declared here, only which token each track uses. */
+.mdemo{display:flex;flex-direction:column;gap:calc(var(--u)*4);
+  margin-top:calc(var(--u)*4)}
+.track{position:relative;height:calc(var(--u)*10);background-color:var(--sheet);
+  overflow:hidden}
+.track i{position:absolute;top:50%;left:calc(var(--u)*2);margin-top:calc(var(--u)*-3);
+  display:block;width:calc(var(--u)*6);height:calc(var(--u)*6);
+  background-color:var(--ink);transform:translateX(0)}
+.track[data-t="spring"] i{transition:transform var(--t-spring) var(--spring)}
+.track[data-t="fade"] i{transition:transform var(--t-fade) linear}
+.track[data-t="none"] i{transition:transform var(--t-spring) cubic-bezier(.4,0,.2,1)}
+.mdemo[data-go="true"] .track i{transform:translateX(calc(100cqw - var(--u)*14))}
+.track .edge{position:absolute;top:0;bottom:0;right:calc(var(--u)*2);width:1px;
+  background-color:var(--rule-strong)}
+.track .tg{position:absolute;left:calc(var(--u)*2);bottom:calc(var(--u)*1);
+  font-family:var(--face-mono);font-size:var(--s1);color:var(--muted)}
+
+/* ═══ SPECIMEN GEOMETRY — iconography ══════════════════════════════════════ */
+.glyphs{display:grid;gap:calc(var(--u)*4);margin-top:calc(var(--u)*4);
+  grid-template-columns:repeat(auto-fit,minmax(var(--col-min),1fr))}
+.gl{padding:calc(var(--u)*4);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  display:flex;flex-direction:column;gap:calc(var(--u)*2)}
+.gl .ch{font-size:var(--s6);line-height:1;font-weight:var(--w-lede);color:var(--ink)}
+.gl .kind{font-size:var(--s1);letter-spacing:var(--tr-micro);text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--muted)}
+.gl .job{font-size:var(--s2);color:var(--muted);line-height:var(--lh-note)}
+
+/* ═══ SPECIMEN GEOMETRY — the responsive tiers ═════════════════════════════
+   A phone drawn at its real CSS width, so the shell below is not an
+   impression of a phone layout but the layout itself at 360px. */
+.devices{display:flex;gap:calc(var(--u)*6);flex-wrap:wrap;align-items:flex-start;
+  margin-top:calc(var(--u)*4)}
+.device{flex:none;box-shadow:inset 0 0 0 1px var(--rule-strong);
+  display:flex;flex-direction:column;background-color:var(--paper)}
+.device--phone{width:360px;max-width:100%;min-height:calc(var(--u)*128)}
+.device .body{flex:1;padding:calc(var(--u)*4)}
+.tierbar{display:flex;height:calc(var(--u)*3);margin-top:calc(var(--u)*4);
+  box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.tierbar i{display:block;border-right:1px solid var(--rule-strong)}
+.tierbar i:last-child{border-right:0}
+.tierbar i[data-fill]{background-color:var(--sheet)}
+
+/* ═══ SPECIMEN GEOMETRY — the spec table ═══════════════════════════════════ */
+.spectable td:first-child,.spectable th:first-child{white-space:nowrap}
+.spectable .anat{font-family:var(--face-mono);font-size:var(--s2);color:var(--ink)}
+.statematrix th[scope="row"]{font-family:var(--face-mono);font-weight:var(--w-figure);
+  color:var(--ink);white-space:nowrap}
+
+/* ═══ THE THEME SWITCH ═════════════════════════════════════════════════════
+   Not a system primitive — it belongs to this reference sheet, because the
+   product's theme follows the operating system. It is drawn here so both
+   themes can be inspected side by side. */
+.themebar{display:flex;align-items:center;gap:calc(var(--u)*3);flex-wrap:wrap;
+  margin-bottom:calc(var(--u)*6);padding-bottom:calc(var(--u)*4);
+  border-bottom:1px solid var(--rule)}

@@ -1,0 +1,342 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE SIGNED-OUT SHELL — the entry card (V3) and the error page (E1).
+   G3046, 2 Oct 2026. GEOMETRY ONLY; every value composes a token from
+   docs/handoff-pack/tokens.css, which `bridge.css` imports.
+
+   🛑 TRANSCRIBED FROM `docs/handoff-pack/public.css` AND SCOPED, NOT IMPORTED.
+   That sheet styles bare `h1` and `p` for a marketing page, so importing it
+   would re-type every heading and paragraph in the signed-in product. Each
+   rule below is the pack's own, behind an `.entry` or `.e1` ancestor, so it
+   reaches the two signed-out surfaces and nothing else. `.entry` itself — the
+   centring frame — and `.logo`, `.mascot` are the KERNEL's and are not restated.
+
+   ⚠️ `.btn` AND `.field` ALSO EXIST IN `overlays.css` WITH OTHER MEANINGS, and
+   that sheet is unlayered and global. The scoped rules here out-rank it by
+   specificity and restate every property it sets, so nothing of the overlay
+   button leaks onto the card's ways in.
+
+   ⚠️ THE TWO BRAND BUTTONS (`.fedbtn--ms`, `.fedbtn--g`) ARE NOT TRANSCRIBED.
+   They are public.css's one sanctioned deviation — a brand hex, a third face, a
+   radius — and the tree draws neither button: the realm answer names a door,
+   never its brand, so a "Sign in with Microsoft" button could only guess.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Inside the route root, which already pads by calc(--u * 6) on every side. */
+.route > .entry,
+.route > .e1 { margin: calc(var(--u) * -6); }
+
+/* ═══ THE CARD ═════════════════════════════════════════════════════════════ */
+.entry > .card { max-width: calc(var(--u) * 196); }
+.entry .card,
+.e1 .card {
+  background-color: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
+  padding: calc(var(--u) * 8);
+}
+.entry .top,
+.e1 .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--u) * 4);
+  flex-wrap: wrap;
+  padding-bottom: calc(var(--u) * 6);
+  border-bottom: 1px solid var(--rule);
+}
+/* RV-14 (G3485): only the LOCKUP loses its underline. The pack's back link is
+   an `<a class="small">` with no reset, so it is underlined at rest
+   (`E1 Errors.dc.html`, `V3 Sign In.dc.html`); the rule that stripped "every
+   link in the top row" took it from "‹ Back to the site" as well. */
+.entry .top > a:first-child,
+.e1 .top > a:first-child { text-decoration: none; }
+.entry .small,
+.e1 .small {
+  font-size: var(--s2);
+  line-height: var(--lh-note);
+  color: var(--muted);
+}
+.entry .top a.small,
+.e1 .top a.small {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.entry .small:hover,
+.e1 .small:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.entry .top a.small:hover,
+.e1 .top a.small:hover { text-decoration-thickness: 2px; }
+
+.entry .card h1,
+.e1 .card h1 {
+  font-size: var(--s4);
+  font-weight: var(--w-emph);
+  letter-spacing: var(--tr-title);
+  line-height: var(--lh-body);
+  max-width: 34ch;
+  margin: calc(var(--u) * 6) 0 0;
+}
+.entry .card p,
+.e1 .card p {
+  font-size: var(--s2);
+  line-height: var(--lh-note);
+  color: var(--muted);
+  max-width: var(--measure-act);
+  margin: calc(var(--u) * 3) 0 0;
+}
+.entry .card p b,
+.e1 .card p b { color: var(--ink); font-weight: var(--w-emph); }
+@media (max-width: 720px) {
+  .entry .card,
+  .e1 .card { padding: calc(var(--u) * 5); }
+}
+
+/* ═══ THE TWO TABS ═════════════════════════════════════════════════════════ */
+.entry .tabs {
+  display: flex;
+  gap: calc(var(--u) * 6);
+  list-style: none;
+  margin: 0 0 calc(var(--u) * 5);
+  padding: 0;
+  border-bottom: 1px solid var(--rule);
+}
+.entry .tabs button {
+  font: inherit;
+  font-size: var(--s2);
+  font-weight: var(--w-figure);
+  color: var(--muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: calc(var(--u) * 2) 0;
+  min-height: var(--target);
+  box-shadow: inset 0 -1px 0 transparent;
+}
+.entry .tabs button:hover { color: var(--ink); }
+.entry .tabs button[aria-current="true"] {
+  color: var(--ink);
+  box-shadow: inset 0 -2px 0 var(--ink);
+}
+
+/* ═══ THE WAYS IN ══════════════════════════════════════════════════════════ */
+.entry .way,
+.e1 .way {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 2);
+  margin-top: calc(var(--u) * 7);
+  max-width: calc(var(--u) * 102);
+}
+.entry .card-split .way { max-width: none; }
+.entry .btn,
+.e1 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: calc(var(--u) * 3);
+  width: 100%;
+  font: inherit;
+  font-size: var(--s2);
+  font-weight: var(--w-figure);
+  line-height: var(--lh-body);
+  color: var(--ink);
+  background-color: var(--paper);
+  border: 1px solid var(--rule-strong);
+  border-radius: 0;
+  min-height: calc(var(--u) * 12);
+  /* The pack's 12px inline padding; the block padding is ours, because at
+     phone width the note wraps under the label rather than leaving the box —
+     `nowrap` (public.css) overflowed the card at 390px. */
+  padding: calc(var(--u) * 2) 12px;
+  flex-wrap: wrap;
+  row-gap: 0;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color var(--t-fade) linear, color var(--t-fade) linear;
+}
+.entry .btn:hover,
+.e1 .btn:hover { background-color: var(--tile-hover); }
+.entry .btn[data-commit],
+.e1 .btn[data-commit] {
+  background-color: var(--ink);
+  color: var(--on-ink);
+  border-color: var(--ink);
+  font-size: var(--s3);
+}
+.entry .btn[data-commit]:hover,
+.e1 .btn[data-commit]:hover { background-color: var(--agent-deep); border-color: var(--agent-deep); }
+.entry .btn[aria-disabled="true"],
+.e1 .btn[aria-disabled="true"] {
+  color: var(--refused);
+  background-color: var(--sheet);
+  border-color: var(--rule);
+  cursor: default;
+}
+.entry .btn--quiet,
+.e1 .btn--quiet { border-color: transparent; background-color: transparent; }
+.entry .btn .k,
+.e1 .btn .k {
+  font-family: var(--face-mono);
+  font-size: var(--s1);
+  color: var(--muted);
+  margin-left: auto;
+  letter-spacing: var(--tr-micro); /* G3662 — the owner's G3400 ruling, "Snap to kernel scale": was .06em */
+  white-space: nowrap;
+}
+.entry .btn[data-commit] .k,
+.e1 .btn[data-commit] .k { color: var(--on-ink-2); }
+
+.entry .field {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * 2);
+  min-width: 0;
+  margin: 0;
+}
+.entry .field > span {
+  font-size: var(--s1);
+  letter-spacing: var(--tr-micro);
+  text-transform: uppercase;
+  font-weight: var(--w-emph);
+  color: var(--muted);
+}
+.entry .field input { width: 100%; }
+
+.entry .orline {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 3);
+  margin: calc(var(--u) * 6) 0 0;
+  font-size: var(--s1);
+  letter-spacing: var(--tr-micro);
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: var(--w-emph);
+}
+.entry .orline::before,
+.entry .orline::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--rule);
+}
+/* The orline is followed by a stack of its own; the stack sits closer. */
+.entry .orline + .way { margin-top: calc(var(--u) * 3); }
+
+.entry .card p.foot-note {
+  margin-top: calc(var(--u) * 8);
+  padding-top: calc(var(--u) * 5);
+  border-top: 1px solid var(--rule);
+  font-size: var(--s2);
+  color: var(--muted);
+  line-height: var(--lh-note);
+}
+
+/* ═══ WHO LANDS WHERE ══════════════════════════════════════════════════════ */
+.entry .card-split {
+  display: grid;
+  align-items: start;
+  grid-template-columns: minmax(0, calc(var(--u) * 102)) minmax(0, 1fr);
+  gap: calc(var(--u) * 10);
+  padding-top: calc(var(--u) * 6);
+}
+.entry .card-split h1 { margin-top: 0; }
+.entry .auds-col { padding-left: calc(var(--u) * 8); border-left: 1px solid var(--rule); }
+.entry .lab {
+  display: block;
+  font-size: var(--s1);
+  letter-spacing: var(--tr-micro);
+  text-transform: uppercase;
+  font-weight: var(--w-emph);
+  color: var(--muted);
+  line-height: var(--lh-body);
+}
+.entry .auds-col > .lab { margin-bottom: calc(var(--u) * 4); }
+.entry .audiences {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: calc(var(--u) * 2);
+  margin: 0;
+}
+.entry .aud { padding: calc(var(--u) * 4); background-color: var(--sheet); min-width: 0; }
+.entry .aud .who {
+  display: block;
+  font-size: var(--s1);
+  letter-spacing: var(--tr-micro);
+  text-transform: uppercase;
+  font-weight: var(--w-emph);
+  color: var(--muted);
+}
+.entry .aud .lands {
+  display: block;
+  font-size: var(--s2);
+  line-height: var(--lh-note);
+  color: var(--ink);
+  margin: calc(var(--u) * 2) 0 0;
+}
+@media (max-width: 860px) {
+  .entry .card-split { grid-template-columns: minmax(0, 1fr); gap: calc(var(--u) * 8); }
+  .entry .auds-col {
+    padding-left: 0;
+    border-left: 0;
+    padding-top: calc(var(--u) * 6);
+    border-top: 1px solid var(--rule);
+  }
+  .entry .audiences { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .entry .audiences { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ═══ E1 — THE ERROR PAGE ══════════════════════════════════════════════════
+   The pack draws it as a centred column of calc(--u * 220) on the paper
+   ground, the card below the same top row the entry card carries. */
+.e1 {
+  max-width: calc(var(--u) * 220);
+  margin-left: auto;
+  margin-right: auto;
+  padding: calc(var(--u) * 8) var(--gutter) calc(var(--u) * 12);
+}
+.route > .e1 { margin-left: auto; margin-right: auto; }
+.e1 > .card { margin-top: calc(var(--u) * 8); }
+.e1 .kind {
+  display: block;
+  font-family: var(--face-mono);
+  font-size: var(--s1);
+  letter-spacing: var(--tr-micro); /* G3662 — was .12em, snapped to the kernel's nearest step */
+  text-transform: uppercase;
+  font-weight: var(--w-emph);
+  color: var(--muted);
+}
+.e1 .card p.said {
+  font-size: var(--s3);
+  line-height: var(--lh-body);
+  color: var(--ink);
+  max-width: var(--measure-text);
+  margin-top: calc(var(--u) * 5);
+}
+.e1 .card p.means { max-width: var(--measure-text); }
+/* RC-28 (G3481): E1's "What to quote" is SENTENCE CASE. Its `.lab` has no rule
+   on the public shell (`public.css` styles `.lab` only under `.routed` and
+   `.auds-col`), so it is drawn as the card's own text, not as a micro label. */
+.e1 .lab { display: block; color: var(--ink); }
+.e1 .quote {
+  margin-top: calc(var(--u) * 8);
+  padding-top: calc(var(--u) * 5);
+  border-top: 1px solid var(--rule);
+}
+.e1 .card .quote p.code {
+  font-family: var(--face-mono);
+  font-size: var(--s3);
+  color: var(--ink);
+  margin-top: calc(var(--u) * 2);
+  max-width: var(--measure-text);
+  overflow-wrap: anywhere;
+}
+.e1 .card p.own {
+  max-width: var(--measure-text);
+  padding: calc(var(--u) * 3) calc(var(--u) * 4);
+  margin-top: calc(var(--u) * 5);
+  background-color: var(--sheet);
+  box-shadow: inset 0 0 0 1px var(--rule);
+}

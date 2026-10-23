@@ -1,0 +1,62 @@
+{
+  "name": "reconcileai",
+  "private": true,
+  "type": "module",
+  "description": "ReconcileAI — the canonical domain model, the design record, and the mechanical checkers. There is no application here yet; see docs/build/phase-one-plan.md.",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "typecheck": "tsc -p model/tsconfig.json --noEmit",
+    "typecheck:tests": "tsc -p tests/tsconfig.json --noEmit",
+    "typecheck:server": "tsc -p server/tsconfig.json --noEmit",
+    "typecheck:frontend": "tsc -p frontend/tsconfig.json --noEmit",
+    "typecheck:infra": "node infra/ensure-deps.mjs && tsc -p infra/tsconfig.json --noEmit",
+    "synth:infra": "node infra/ensure-deps.mjs && npm --prefix infra run synth",
+    "dev:frontend": "vite -c frontend/vite.config.ts",
+    "dev:plane": "RECONCILE_DB_HOST=127.0.0.1 RECONCILE_DB_PORT=5432 RECONCILE_DB_NAME=reconcile_browser RECONCILE_APP_PASSWORD=dataplane_local_app_pw RECONCILE_HTTP_HOST=127.0.0.1 RECONCILE_HTTP_PORT=8080 RECONCILE_LOCAL_TEST_AUTH=1 node server/data-plane/main.ts",
+    "dev:plane:migrate": "RECONCILE_DB_HOST=127.0.0.1 RECONCILE_DB_PORT=5432 RECONCILE_DB_NAME=reconcile_browser RECONCILE_APP_PASSWORD=dataplane_local_app_pw RECONCILE_MIGRATOR_PASSWORD=dataplane_local_mig_pw RECONCILE_DEV_SEED=1 node server/data-plane/migrate-main.ts",
+    "build:frontend": "vite build -c frontend/vite.config.ts && vite build -c frontend/vite.config.ts --ssr src/prerender.tsx --outDir dist-ssr && node frontend/dist-ssr/prerender.js && npm run build:site",
+    "build:site": "vite build -c frontend/site/vite.config.ts && vite build -c frontend/site/vite.config.ts --ssr src/prerender.tsx --outDir dist-ssr && node frontend/site/dist-ssr/prerender.js",
+    "package:site": "npm run build:site && node frontend/site/package-site.mjs",
+    "dev:site": "vite -c frontend/site/vite.config.ts",
+    "token:mint": "node server/dev/mint-token.ts",
+    "test": "npm run typecheck:tests && node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=./tools/skip-census.mjs --test-reporter-destination=stdout \"tests/**/*.test.ts\" \"tests/**/*.test.mjs\"",
+    "graph": "node tools/planner/extract.mjs --write",
+    "check:counts": "node tools/check-doc-counts.mjs",
+    "check:citations": "node tools/check-citations.mjs",
+    "check:wire": "node tools/check-wire-mirror.mjs",
+    "check:packs": "node tools/check-pack-safety.mjs",
+    "check:c4": "node tools/check-c4-freshness.mjs",
+    "check:g-numbers": "node tools/check-g-numbers.mjs",
+    "check:migrations": "node tools/check-migration-numbers.mjs",
+    "check:absent-rows": "node tools/check-absent-rows.mjs",
+    "check:annotations": "node tools/check-capability-annotations.mjs",
+    "check:clocks": "node tools/check-clock-fixtures.mjs",
+    "check": "npm run typecheck && npm run typecheck:server && npm run typecheck:frontend && npm run typecheck:infra && npm run synth:infra && npm run check:counts && npm run check:citations && npm run check:wire && npm run check:packs && npm run check:c4 && npm run check:g-numbers && npm run check:migrations && npm run check:absent-rows && npm run check:annotations && npm run check:clocks && npm run check:derivations && npm run build:frontend && npm test",
+    "check:derivations": "node tools/check-self-measuring-derivations.mjs",
+    "served": "node tools/served-set.mjs",
+    "measure:run": "node tools/run-measure.mjs"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.1.6",
+    "@tailwindcss/vite": "4.1.6",
+    "@types/node": "22.20.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "@vitejs/plugin-react": "5.2.0",
+    "playwright": "1.55.1",
+    "tailwindcss": "4.1.6",
+    "typescript": "5.9.3",
+    "vite": "6.4.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "3.1136.0",
+    "@aws-sdk/client-sqs": "3.1136.0",
+    "fastify": "5.12.5",
+    "pg": "8.23.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "yaml": "2.9.0"
+  }
+}

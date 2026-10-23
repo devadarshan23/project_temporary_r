@@ -1,0 +1,23 @@
+{
+  "name": "reconcile-infra",
+  "private": true,
+  "type": "module",
+  "description": "ReconcileAI infrastructure as code — AWS CDK v2 in TypeScript (G259). THIS MANIFEST IS SEPARATE ON PURPOSE: `aws-cdk-lib` and `constructs` must never enter the ROOT package.json, because `npm ci --omit=dev` at the root must keep producing a container holding the driver and no compiler — the property the Dockerfile states in its own header, and the one G212 refused `@aws-sdk/client-s3` to protect. Every version below is pinned EXACT (G191): no caret, no tilde.",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "synth": "cdk synth --quiet --no-lookups --no-notices --no-version-reporting --no-path-metadata --no-asset-metadata -c planeImageTag=synth-only-not-a-deployable-tag",
+    "deploy:ci-image": "cdk deploy reconcile-ci-image",
+    "deploy:pipeline": "cdk deploy reconcile-pipeline-staging"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.270.0",
+    "constructs": "10.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "aws-cdk": "2.1142.0",
+    "typescript": "5.9.3"
+  }
+}

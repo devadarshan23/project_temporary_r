@@ -1,0 +1,1409 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   APP.CSS · the authenticated customer plane
+   C1 "Reach work" — the operator opens the per-tenant host and stands in
+   /close with the register loaded and the status bar naming the run.
+
+   AUDITED AGAINST THE KERNEL. Four things this file got wrong the first time
+   and the ruling that corrected each:
+
+   1 · A COLOURED DOT PER ROW AND PER STRIP CELL. Two violations at once —
+       THE SIX INDICATORS allows ONE dot in the system (the connection light,
+       whose halo is the life signal) and THE HUE RULE forbids any state
+       depending on hue. Both are gone. State is a WORD; a failing thing is
+       FULL INK and a cleared thing is --recede. The only dot left on this
+       surface is .conn, used once, for the source connection.
+   2 · NO LUMINOUS TOUCH. The kernel's .lit is how this system says the
+       machine is working on something. It is now on the running
+       reconciliation (with .lit--running's 17s sweep) and on the machine's
+       own drafted evidence when you open it.
+   3 · INVENTED BREAKPOINTS. 760/960/1000/1100 were four numbers nobody
+       ruled. The kernel declares NARROW 320–719 · MID 720–1079 ·
+       WIDE 1080–1439 · ULTRA 1440+, and at ULTRA the evidence panel moves
+       INLINE beside the register instead of sitting under it. That is now
+       what happens, which is why the evidence lives OUTSIDE the row list.
+   4 · TOKENS SPENT WERE NOT SHOWN. Every machine artefact on this surface
+       now prints what it cost. A number the customer is billed against
+       should not be something they have to ask for.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background-color:var(--sheet);color:var(--ink);
+  font-family:var(--face-sans);font-size:var(--s3);line-height:var(--lh-body);
+  -webkit-font-smoothing:antialiased}
+/* 🛑 THE RING IS THE KERNEL'S, AND THIS FILE NO LONGER OVERRIDES IT.
+   THIS LINE READ `:focus-visible{outline:none;box-shadow:0 0 0 2px var(--paper),
+   0 0 0 4px var(--ink)}` AND IT SILENTLY REMOVED THE FOCUS INDICATOR FROM 34
+   ELEMENTS ON `C1 Close.dc.html` ALONE.
+
+   `tokens.css` declares the ring as an OUTLINE and argues the choice on its own
+   declaration: *"`outline` and `box-shadow` are different properties: a
+   component's box-shadow cannot replace an outline at ANY specificity, in ANY
+   source order."* That is exactly what went wrong here — every surface button
+   carrying its own decorative `box-shadow` (`.choice`, `.cell`, `.tenant`, the
+   bare `<button>`s) overwrote this rule's shadow and was left with
+   `outline: none`, i.e. NO INDICATOR AT ALL.
+
+   Found 18 Sep 2026 by pointing a rendering browser at the pack for the first
+   time — WCAG 2.2 AA 2.4.7, issue #382. Not a styling preference: a keyboard
+   user could not see where they were.
+
+   ⚠️ DO NOT REINTRODUCE A BOX-SHADOW RING HERE. The kernel's
+   `:focus-visible{outline:2px solid var(--ink);outline-offset:2px}` applies on
+   its own; this file's job is to not fight it. */
+a{color:var(--ink)}
+a:hover{color:var(--accent-deep)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* The app fills the tier it is in; the status bar is the last thing in it, so
+   there is nothing under the bar to leave a gap. */
+.app{background-color:var(--paper);min-height:100vh;
+  display:flex;flex-direction:column}
+@media (min-width:1440px){
+  /* ULTRA · the page centres and stops growing. Past this the register stops
+     being a table and becomes a distance. */
+  .app{max-width:1880px;margin:0 auto;box-shadow:inset 0 0 0 1px var(--rule-strong)}
+}
+
+/* ═══ CHROME ═══════════════════════════════════════════════════════════════ */
+.chrome{display:flex;align-items:center;gap:calc(var(--u)*4);flex-wrap:nowrap;
+  padding:calc(var(--u)*3) calc(var(--u)*5);min-width:0;
+  border-bottom:1px solid var(--rule-strong)}
+/* THE CHROME IS ONE LINE, ALWAYS. A chrome that wraps moves every destination
+   the moment a count changes width, so the bar never wraps: the nav scrolls,
+   the tenant name truncates, and the labels that can be dropped are dropped. */
+@media (max-width:1279px){ .chrome{gap:calc(var(--u)*3)} }
+.chrome > nav{min-width:0;overflow:hidden}
+.chrome .tenant{min-width:calc(var(--u)*20);overflow:hidden;text-overflow:ellipsis;
+  display:block;line-height:var(--target)}
+.chrome .tenant .cc{margin-left:calc(var(--u)*2)}
+.chrome .abtn,.chrome .palbtn,.chrome .whoami,.chrome .meterbtn{flex:none}
+.chrome .abtn{white-space:nowrap}
+.abtn .cnt{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted);
+  margin-left:calc(var(--u)*2)}
+.abtn[aria-pressed="true"] .cnt{color:var(--ink)}
+.chrome .sp{flex:1}
+.tenant{display:flex;align-items:center;gap:calc(var(--u)*2);font:inherit;
+  font-size:var(--s2);min-height:var(--target);padding:0 calc(var(--u)*3);
+  color:var(--ink);background-color:var(--sheet);border:0;cursor:pointer;
+  box-shadow:inset 0 0 0 1px var(--rule-strong);white-space:nowrap}
+.tenant:hover{background-color:var(--tile-hover)}
+.tenant .cc{font-family:var(--face-mono);color:var(--muted)}
+
+.dests{display:flex;align-items:center;gap:calc(var(--u)*5);margin:0;padding:0;
+  list-style:none;flex-wrap:nowrap;min-width:0;overflow-x:auto;
+  scrollbar-width:none;-ms-overflow-style:none}
+.dests::-webkit-scrollbar{display:none}
+.dests > li{flex:none}
+.dests button{font:inherit;font-size:var(--s3);color:var(--muted);
+  background:none;border:0;padding:calc(var(--u)*1) 0;cursor:pointer;
+  min-height:var(--target)}
+.dests button:hover{color:var(--ink)}
+.dests button[aria-current="page"]{color:var(--ink);font-weight:var(--w-emph);
+  box-shadow:inset 0 -2px 0 0 var(--ink)}
+/* A destination the role mapping did not grant is ABSENT, not disabled — the
+   product cannot see the customer's IdP mapping, so it cannot explain it. */
+.dests .door{margin-left:calc(var(--u)*2);padding-left:calc(var(--u)*5);
+  border-left:1px solid var(--rule-strong)}
+.dests .door button{font-size:var(--s2);font-family:var(--face-mono)}
+
+.whoami{display:flex;align-items:center;gap:calc(var(--u)*2);font:inherit;
+  font-size:var(--s2);color:var(--muted);background:none;border:0;
+  cursor:pointer;text-align:left;min-height:var(--target);white-space:nowrap}
+.whoami .init{width:calc(var(--u)*7);height:calc(var(--u)*7);flex:none;
+  display:flex;align-items:center;justify-content:center;
+  background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  font-size:var(--s1);font-weight:var(--w-emph);color:var(--ink)}
+.whoami .sub{display:block;font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted)}
+@media (max-width:1279px){ .whoami > span:not(.init){position:absolute;width:1px;
+  height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap} }
+
+/* ═══ THE ACCOUNT MENU ══════════════════════════════════════════════════════
+   The avatar is a door, not a label. Everything that is about the PERSON
+   rather than about the work lives behind it — who you are, what is waiting on
+   you, how to drive it from the keyboard, and the way out. Signing out is last
+   and is the only item that leaves the product, so it is separated. */
+.acct{position:relative;display:flex;align-items:center;flex:none}
+.acctscrim{position:fixed;inset:0;z-index:var(--z-modal);border:0;padding:0;
+  background:transparent;cursor:default}
+.acctmenu{position:absolute;top:calc(100% + var(--u)*2);right:0;
+  z-index:calc(var(--z-modal) + 1);width:calc(var(--u)*78);
+  max-width:min(92vw,calc(var(--u)*78));background-color:var(--paper);
+  border:1px solid var(--rule-strong);display:flex;flex-direction:column;
+  text-align:left;max-height:80vh;overflow-y:auto}
+.acctwho{padding:calc(var(--u)*3) calc(var(--u)*4);background-color:var(--sheet);
+  border-bottom:1px solid var(--rule-strong)}
+.acctwho b{display:block;font-size:var(--s3);font-weight:var(--w-emph);
+  color:var(--ink)}
+.acctwho span{display:block;font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted);margin-top:calc(var(--u)*1)}
+.acctitem{display:flex;align-items:center;gap:calc(var(--u)*3);width:100%;
+  box-sizing:border-box;font:inherit;font-size:var(--s2);color:var(--ink);
+  background:none;border:0;border-bottom:1px solid var(--rule);
+  padding:calc(var(--u)*2.5) calc(var(--u)*4);cursor:pointer;text-align:left;
+  min-height:var(--target)}
+.acctitem:hover{background-color:var(--row-hover)}
+.acctitem .k{margin-left:auto;font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted);white-space:nowrap}
+.acctitem[data-out="true"]{font-weight:var(--w-emph);
+  border-top:1px solid var(--rule-strong)}
+.acctitem[aria-disabled="true"]{color:var(--muted);cursor:default}
+.acctitem[aria-disabled="true"]:hover{background-color:transparent}
+.acctitem[aria-disabled="true"] .k{color:var(--ink)}
+.acctnote{padding:calc(var(--u)*3) calc(var(--u)*4);font-size:var(--s1);
+  line-height:var(--lh-note);color:var(--muted);margin:0}
+.acctmenu dl.sc{margin:0;padding:calc(var(--u)*2) calc(var(--u)*4) calc(var(--u)*3);
+  display:grid;grid-template-columns:auto 1fr;
+  gap:calc(var(--u)*1.5) calc(var(--u)*4);font-size:var(--s2)}
+.acctmenu dl.sc dt{font-family:var(--face-mono);font-size:var(--s1);
+  font-weight:var(--w-figure);color:var(--ink);white-space:nowrap}
+.acctmenu dl.sc dd{margin:0;color:var(--muted)}
+
+/* The kernel's sweep is an absolutely-positioned ::after parked at
+   translateX(120%) for 88% of its cycle. .lit sets position:relative but does
+   NOT clip, so on any host narrower than the page the light escapes and drags
+   the document sideways — 90px at MID, more at NARROW, because the parked
+   distance is a percentage of the host. The host clips. The animation is the
+   kernel's and is not ours to shorten. */
+.lit--running{overflow:hidden}
+
+/* ═══ THE STRIP ════════════════════════════════════════════════════════════
+   Four reconciliations, and you are already inside one. No dot, no hue: the
+   selected cell carries the accent's one job — wayfinding, which row you are
+   being pointed at — and every state is spelled out in words beside it. */
+.strip{display:grid;grid-template-columns:minmax(0,1fr);
+  border-bottom:1px solid var(--rule-strong);background-color:var(--sheet)}
+@media (min-width:720px){ .strip{grid-template-columns:repeat(2,minmax(0,1fr))} }
+/* AT ULTRA THE RAIL BEHAVES LIKE A ROW OF BROWSER TABS: every cell shares the
+   width equally and truncates rather than wrapping.
+   ⚠️ THE ADD CONTROL SHARES IT TOO, and it did not always. It was pinned to
+   its own words at flex:0 0 auto, which read as the narrowest cell while there
+   were four reconciliations and as the WIDEST the moment a fifth squeezed the
+   flexible ones below its intrinsic width. A fixed cell in a row of shares is
+   a cell whose size depends on how many siblings it has. */
+@media (min-width:1080px){
+  .strip{display:flex;flex-wrap:nowrap}
+  .strip .cell{flex:1 1 0;min-width:0}
+  .cell .st{white-space:nowrap;min-width:0}
+  .cell .st .says{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .cell .st .when{flex:0 0 auto}
+}
+
+/* Adding a reconciliation is an OPERATOR act, so it sits in the rail with the
+   things it creates rather than behind a menu. It is not a reconciliation, so
+   it does not claim a state line — it says what it will ask for. */
+.addcell{border-right:0}
+.addcell .nm{font-weight:var(--w-emph)}
+.addcell .st{color:var(--muted)}
+.addcell .st .when{margin-left:calc(var(--u)*3)}
+@media (min-width:1080px){
+  .addcell .st{display:none}
+  .addcell{align-content:center}
+  .addcell .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+.cell{text-align:left;font:inherit;background:none;border:0;cursor:pointer;
+  padding:calc(var(--u)*3) calc(var(--u)*4);min-width:0;
+  border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  display:grid;gap:calc(var(--u)*1);min-height:var(--target)}
+.cell:hover{background-color:var(--tile-hover)}
+.cell[aria-current="true"]{background-color:var(--accent-quiet);
+  box-shadow:inset 0 -2px 0 0 var(--ink)}
+.cell .nm{font-size:var(--s2);color:var(--ink);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+/* The mascot sits in the name line of the cell that is reading, at the line's
+   own size, with the name's own gap after it. */
+.cell .nm .mascot{margin-right:calc(var(--u)*3);vertical-align:-.05em}
+.cell[aria-current="true"] .nm{font-weight:var(--w-emph)}
+.cell .st{display:flex;align-items:baseline;gap:calc(var(--u)*3);
+  font-family:var(--face-mono);font-size:var(--s1);color:var(--muted)}
+.cell .st .when{margin-left:auto}
+/* Cleared work recedes. That is the whole signal, and it needs no colour. */
+.cell[data-state="clean"] .st{color:var(--recede)}
+
+/* ═══ WHAT THE MACHINE SPENT ═══════════════════════════════════════════════
+   Every artefact the machine produced prints its cost in the same form: a
+   mono figure, tabular, muted, in the agent's ink where it names the agent's
+   own work. It is a MEASUREMENT, like the meter — not a status. */
+.spent{font-family:var(--face-mono);font-size:var(--s1);
+  font-variant-numeric:tabular-nums;color:var(--agent-deep);white-space:nowrap}
+.spent .q{color:var(--muted)}
+
+/* ═══ THE ARRIVAL ══════════════════════════════════════════════════════════ */
+.arrive{display:flex;justify-content:space-between;align-items:flex-end;
+  gap:calc(var(--u)*8);flex-wrap:wrap;padding:calc(var(--u)*5);
+  border-bottom:1px solid var(--rule)}
+.lab{display:block;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  margin-bottom:calc(var(--u)*2)}
+.arrive h1{font-size:var(--s4);font-weight:var(--w-body);
+  letter-spacing:var(--tr-title);line-height:var(--lh-body);
+  margin:0 0 calc(var(--u)*3);max-width:52ch}
+.arrive h1 b{font-weight:var(--w-emph)}
+.period{display:flex;align-items:center;gap:calc(var(--u)*2);flex-wrap:wrap}
+.period button{font:inherit;font-family:var(--face-mono);font-size:var(--s2);
+  min-height:var(--target);min-width:var(--target);padding:0 calc(var(--u)*3);
+  color:var(--ink);background-color:var(--sheet);border:0;cursor:pointer;
+  box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.period button:hover{background-color:var(--tile-hover)}
+.period .cur{display:flex;align-items:center;font-family:var(--face-mono);
+  font-size:var(--s2);padding:0 calc(var(--u)*3);min-height:var(--target);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);white-space:nowrap}
+.period .note{font-size:var(--s2);color:var(--muted)}
+.figs{display:flex;gap:calc(var(--u)*8);align-items:flex-end;flex-wrap:wrap}
+.fig .k{display:block;font-size:var(--s2);color:var(--muted);
+  margin-bottom:calc(var(--u)*1)}
+.fig .v{display:block;font-family:var(--face-mono);font-size:var(--s4);
+  font-weight:var(--w-figure);font-variant-numeric:tabular-nums;color:var(--ink)}
+/* A money figure carries its unit. The unit is smaller and quieter than the
+   number because it is constant across the row and the number is not. */
+.fig .cu{font-size:var(--s2);font-weight:var(--w-body);color:var(--muted);
+  margin-right:calc(var(--u)*2)}
+
+/* THE RUN'S NAME IS THE OPERATOR'S, so the caption is a control. The word
+   "rename" appears on hover and focus and is always present to a screen
+   reader — an affordance that only exists on hover does not exist. */
+.labbtn{display:flex;align-items:baseline;gap:calc(var(--u)*3);
+  font:inherit;background:none;border:0;padding:0;cursor:pointer;
+  text-align:left;min-height:var(--target)}
+.labbtn .lab{margin-bottom:0}
+.labbtn .pen{font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;color:var(--muted)}
+.labbtn:hover .lab,.labbtn:focus-visible .lab{color:var(--ink)}
+.labbtn:hover .pen,.labbtn:focus-visible .pen{color:var(--ink)}
+.renaming{display:flex;align-items:baseline;gap:calc(var(--u)*3);flex-wrap:wrap;
+  margin-bottom:calc(var(--u)*2)}
+.renamein{font:inherit;font-size:var(--s2);color:var(--ink);
+  background-color:var(--paper);border:0;box-shadow:inset 0 0 0 1px var(--ink);
+  padding:0 calc(var(--u)*2);min-height:var(--target);width:min(40ch,100%)}
+.renaming .hint{font-size:var(--s1);color:var(--muted)}
+
+/* ═══ THE WORK AREA ════════════════════════════════════════════════════════
+   The evidence is not a side bar. A side bar puts the machine's reasoning
+   next to the register but detached from the line it concerns, and the
+   operator has to hold the row in their head while reading it. The row
+   itself opens instead, so the reasoning and the acts sit under the line
+   they belong to at every width. */
+.work{display:grid;grid-template-columns:minmax(0,1fr);flex:1;align-items:start}
+
+/* ═══ THE REGISTER ═════════════════════════════════════════════════════════
+   Heterogeneous on purpose: a bank line with no document, three dockets the
+   machine could not read and a duplicate invoice sit in ONE list, because to
+   the person clearing them they are the same kind of work.
+
+   THE REF IS THE ORDER THE RUN RAISED THEM. An earlier draft used A / B.1 /
+   C / D / E, which encoded a hierarchy that does not exist — B.1 implies a
+   B.2 and a parent B, and there is neither. A run raises findings in
+   sequence; the sequence is the only ordering the data actually has, and it
+   is what the audit trail records. */
+.reg{padding:calc(var(--u)*4) calc(var(--u)*5) calc(var(--u)*6);min-width:0}
+/* THE REGISTER IS A TABLE, because it is one: figures under their own
+   headings, read down a column as often as across a row. Separate grid
+   containers for the head, each row and the totals could only ever share a
+   template string — any track sized from its own content resolved to a
+   different width in every one of them. A table with a fixed layout has ONE
+   set of columns by definition, so a heading and its figures cannot drift
+   apart, and alignment becomes a property of the column: prose reads from
+   the left, money from the right. */
+.regt{width:100%;border-collapse:collapse;table-layout:fixed}
+/* THE REGISTER IS READ LINE BY LINE, so the rows are given air: a row is a
+   place the eye rests, not a line in a ledger printout. */
+.regt th,.regt td{padding:calc(var(--u)*4) calc(var(--u)*3);
+  vertical-align:middle;text-align:left}
+.regt th:first-child,.regt td:first-child{padding-left:0}
+.regt th:last-child,.regt td:last-child{padding-right:0}
+/* COLUMN WIDTHS ARE SET BY WHAT EACH COLUMN HOLDS, and they are declared on
+   the header cells, which a fixed table layout reads as the column widths.
+   The money columns hold thirteen tabular digits and a sign and never more;
+   the action column holds two words; the state column holds a short sentence
+   and a score. The line column takes everything left over, because it is the
+   only column whose content has no ceiling. */
+.regt .c-ref{width:calc(var(--u)*7)}
+.regt .c-val{width:calc(var(--u)*30)}
+.regt .c-var{width:calc(var(--u)*30)}
+.regt .c-conf{width:calc(var(--u)*30)}
+.regt .c-state{width:calc(var(--u)*50)}
+.regt .c-act{width:calc(var(--u)*28)}
+@media (min-width:1080px){
+  .regt .c-val{width:calc(var(--u)*36)}
+  .regt .c-var{width:calc(var(--u)*34)}
+  .regt .c-conf{width:calc(var(--u)*34)}
+  .regt .c-state{width:calc(var(--u)*62)}
+  .regt .c-act{width:calc(var(--u)*34)}
+}
+/* A column is hidden by hiding its cells in head, body and foot alike — if
+   the three disagree on how many cells exist, the table stops lining up. The
+   rule is scoped to the table so it outranks the styling on the cells it
+   hides. */
+.regt .tier-wide{display:none}
+@media (min-width:1080px){ .regt th.tier-wide,.regt td.tier-wide{display:table-cell} }
+.regt .tier-mid{display:none}
+@media (min-width:720px){ .regt th.tier-mid,.regt td.tier-mid{display:table-cell} }
+
+.regt thead th{font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  padding-top:0;padding-bottom:calc(var(--u)*2);
+  border-bottom:1px solid var(--rule-strong)}
+.regt .num{text-align:right}
+/* EVERY ROW READS FROM ONE TOP LINE. The cells were centred on the row's
+   height, which is fine only while every cell is the same number of lines:
+   the moment one cell stacks — a status with a sub-line, a status with a
+   sub-line and a wait — the line, the value and the variance float to the
+   middle of a taller row and stop agreeing with the status they belong to.
+   A register is read DOWN a column and ACROSS a line, so the first line of
+   every cell is the thing that must align, and the row is allowed to be as
+   tall as its tallest cell underneath that.
+   THE NUDGES ARE OPTICAL, NOT STRUCTURAL. Top alignment aligns the top of
+   each cell's LINE BOX, and a 12.5px line box has less half-leading than a
+   14px one, so the smaller cells sit 1.5px high on the shared baseline; the
+   action cell is a 32px control whose label is centred inside it, so it needs
+   the opposite correction. */
+.regt tbody tr.row > td{vertical-align:top}
+.regt tbody tr.row > td.ref,
+.regt tbody tr.row > td.num,
+.regt tbody tr.row > td.conf,
+.regt tbody tr.row > td.state{padding-top:calc(var(--u)*4 + 1.5px)}
+.regt tbody tr.row > td.act{padding-top:calc(var(--u)*4 - 5px)}
+.regt tbody tr.row{cursor:pointer;border-bottom:1px solid var(--rule)}
+.regt tbody tr.row:hover{background-color:var(--row-hover)}
+/* The open row is where you are, so it takes the accent's wayfinding job. */
+.regt tbody tr[aria-expanded="true"]{background-color:var(--accent-quiet);
+  border-bottom:0}
+.row .ref{font-family:var(--face-mono);font-size:var(--s2);color:var(--muted);
+  font-variant-numeric:tabular-nums}
+/* A ROW IS AS TALL AS IT HAS TO BE. Where the width allows it, the line and
+   its token count sit on one line and truncate rather than wrap — the full
+   text is in the evidence panel the row opens. */
+.row .what{font-size:var(--s3);text-wrap:pretty}
+.row .what .spent{margin-left:calc(var(--u)*3)}
+@media (min-width:1080px){
+  .regt td.what{display:flex;align-items:baseline;gap:calc(var(--u)*3);
+    white-space:nowrap}
+  .row .what .wl{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .row .what .spent{margin-left:0;flex:0 0 auto}
+}
+/* CLEARED work recedes; nothing else changes. No colour is carrying this. */
+.row[data-kind="cleared"] .what,
+.row[data-kind="cleared"] .num,
+.row[data-kind="cleared"] .state b{color:var(--recede)}
+.row .num{font-family:var(--face-mono);font-size:var(--s2);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+/* THE STATE CELL IS THE WORD AND ITS REASON, two lines. The score moved out
+   into its own column, because it repeats on every row and is only legible as
+   a column of bars read against one another. */
+.row .state{font-size:var(--s2);color:var(--muted)}
+.row .state b{color:var(--ink);font-weight:var(--w-body);display:block}
+.row .act{text-align:right;font-size:var(--s2);white-space:nowrap;
+  color:var(--ink);font-weight:var(--w-emph)}
+.row[data-kind="cleared"] .act{color:var(--muted);font-weight:var(--w-body)}
+/* THE CONFIDENCE FIGURE IN THE REGISTER.
+   The ask was for a visual indicator of good / neutral / unavailable / bad.
+   THE HUE RULE forbids a palette for that and THE ICON RULE forbids a glyph
+   set, so the indicator is the one graphic THE AGENT RULE does permit: a bar
+   whose LENGTH is the score the machine produced, against a tick whose
+   POSITION is the tenant's floor. Below the floor, the fill visibly stops
+   short of the tick and the tick names itself. It survives greyscale and a
+   screenshot, and the word above it still carries the state on its own. */
+/* The state stack is three registers of information — the word, the evidence
+   behind it, the machine's score — so it is given line height and a meter
+   that runs the column's width rather than a fixed stub. */
+/* The score is its own column: it repeats on every row and it is the one
+   quantity in the register that is directly comparable down a column, so the
+   bars line up and the eye reads the shortfalls in one pass. */
+.row .conf .meter{display:block;width:100%;margin-top:0}
+/* The kernel now drops the floor caption below the bar and reads it leftward
+   from the tick, which is what this column needed; nothing to override. */
+.row .conf .meter > .v{font-family:var(--face-mono);font-size:var(--s1);
+  font-variant-numeric:tabular-nums;color:var(--muted)}
+/* Nothing to score against is an ABSENCE, and an absence is not a short bar. */
+.row .conf .noscore{font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted)}
+
+/* ═══ C2 · HOW THE DOCUMENTS ARRIVED ══════════════════════════════════════
+   The first step of the close, and the one a register cannot show: every
+   route in, with its own time and count — including a route that delivered
+   nothing, because "the sources answered" is not a claim a reader can check.
+   It sits above the work for every state, since documents arrive whether or
+   not a run has happened yet. */
+.intake{padding:calc(var(--u)*4) calc(var(--u)*5) 0}
+.intake > .lab{margin-bottom:calc(var(--u)*2)}
+.intake > ul{list-style:none;margin:0;padding:0;display:grid;
+  gap:calc(var(--u)*1) calc(var(--u)*8);
+  border-top:1px solid var(--rule)}
+@media (min-width:720px){ .intake > ul{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (min-width:1080px){ .intake > ul{grid-template-columns:repeat(3,minmax(0,1fr))} }
+.intake > ul > li{display:flex;align-items:baseline;gap:calc(var(--u)*3);
+  padding:calc(var(--u)*2) 0;border-bottom:1px solid var(--rule);
+  font-size:var(--s2);min-width:0}
+.intake > ul > li > .via{color:var(--ink);flex:1 1 auto;min-width:0}
+.intake > ul > li > .when,.intake > ul > li > .n{font-family:var(--face-mono);
+  font-size:var(--s1);color:var(--muted);white-space:nowrap;flex:none}
+.intake .cap{margin:calc(var(--u)*2) 0 0;font-size:var(--s1);color:var(--muted)}
+
+.totals td{padding-top:calc(var(--u)*4);font-size:var(--s2)}
+.totals .num{font-family:var(--face-mono);font-weight:var(--w-figure);
+  font-variant-numeric:tabular-nums}
+.totals .lbl{font-weight:var(--w-emph)}
+
+/* ═══ THE EVIDENCE ═════════════════════════════════════════════════════════
+   The machine's own artefact, so it carries THE LUMINOUS TOUCH — a source
+   with falloff, never a fill. One light per view: the panel when it is open,
+   or the running reconciliation in the strip, and the running one is only
+   ever lit while it is genuinely reading. */
+/* THE ACT IS A CONTROL ON THE ROW, not a word describing one. It sits in the
+   column the register already reads as the action column, and it stops the
+   click from reaching the row, so acting and reading the evidence are two
+   different gestures. */
+.regt td.act{text-align:right}
+.rowact{font:inherit;font-size:var(--s2);font-weight:var(--w-emph);
+  color:var(--ink);background-color:var(--paper);cursor:pointer;border:0;
+  box-shadow:inset 0 0 0 1px var(--rule-strong);min-height:calc(var(--u)*8);
+  padding:0 calc(var(--u)*3);white-space:nowrap}
+.rowact:hover{background-color:var(--tile-hover)}
+.rowact[data-commit="true"]{background-color:var(--ink);color:var(--on-ink);
+  box-shadow:none}
+.rowact[data-commit="true"]:hover{background-color:var(--accent-deep)}
+.row[data-kind="cleared"] .rowact{color:var(--muted);font-weight:var(--w-body)}
+
+/* THE OPENED ROW. The detail is a cell of the same table, spanning every
+   column, so it cannot drift away from its line. The line above it keeps the
+   accent, and a rule down the left edge of the detail ties the two together
+   as one block of attention. */
+.exprow > td.exp{padding:0;background-color:var(--sheet);
+  border-bottom:1px solid var(--rule-strong)}
+.evid{min-width:0}
+.evid-in{padding:calc(var(--u)*5) calc(var(--u)*6);
+  border-left:calc(var(--u)*1) solid var(--ink)}
+.evid h3{font-size:var(--s3);font-weight:var(--w-emph);margin:0 0 calc(var(--u)*3)}
+.evid p{font-size:var(--s2);line-height:var(--lh-note);margin:0 0 calc(var(--u)*3);
+  max-width:64ch}
+.evid p.q{color:var(--muted)}
+/* CHROME RIGHT, WORK LEFT. Fold and close are controls on the panel itself,
+   so they sit together at the end of its heading line; everything that acts
+   on the exception reads from the left with the text. Nothing straddles. */
+.evid-top{display:flex;justify-content:space-between;align-items:baseline;
+  gap:calc(var(--u)*4);margin-bottom:calc(var(--u)*2);flex-wrap:wrap}
+.evid-top > .lab{margin:0}
+.evid-top .chrome{display:flex;align-items:center;gap:calc(var(--u)*4);
+  flex:0 0 auto}
+.evid .fold{font:inherit;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;background:none;border:0;cursor:pointer;
+  color:var(--muted);min-height:var(--target);padding:0}
+.evid .fold:hover{color:var(--ink)}
+.evid .close{font:inherit;font-size:var(--s2);background:none;
+  border:0;cursor:pointer;color:var(--muted);min-height:var(--target);
+  padding:0 calc(var(--u)*2)}
+.evid .close:hover{color:var(--ink)}
+
+/* The detail now has the full width of the register, so the things that
+   read as lists take columns instead of one long scroll. Prose stays at a
+   readable measure — width is for the evidence, not for the sentences. */
+.ev{list-style:none;margin:0 0 calc(var(--u)*4);padding:0}
+@media (min-width:1080px){
+  .ev{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    column-gap:calc(var(--u)*8)}
+}
+@media (min-width:1440px){
+  .ev{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+.ev li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:calc(var(--u)*3);
+  padding:calc(var(--u)*3) 0;border-top:1px solid var(--rule);font-size:var(--s2)}
+.ev .why{display:block;color:var(--muted);margin-top:calc(var(--u)*1);
+  line-height:var(--lh-note)}
+.ev .verdict{font-family:var(--face-mono);font-size:var(--s1);
+  letter-spacing:var(--tr-micro);text-transform:uppercase;color:var(--muted);
+  white-space:nowrap;align-self:start}
+/* Ruled out is REFUSED ink, which is the token that exists for exactly this
+   and carries no hue claim. */
+.ev li[data-v="ruled-out"] .verdict{color:var(--refused)}
+
+/* The kernel's .meter is inline-block against a score; a register of parked
+   fields needs it full width and repeated, which is the one thing added
+   here — the bar, the tick and the caption keep their px, because a 3px bar
+   is a graphic object under 1.4.11 and scaling it changes what was measured. */
+.meters{display:grid;gap:calc(var(--u)*4) calc(var(--u)*8);
+  margin-bottom:calc(var(--u)*4)}
+@media (min-width:1080px){
+  .meters{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+.mrow{display:grid;gap:calc(var(--u)*2);border-bottom:1px solid var(--rule);
+  padding-bottom:calc(var(--u)*3)}
+.mrow .top{display:flex;align-items:baseline;justify-content:space-between;
+  gap:calc(var(--u)*3);font-size:var(--s2)}
+.mrow .top .fv{font-family:var(--face-mono);color:var(--ink)}
+.mrow .meter{display:block;width:100%}
+.mrow .meter > .v{font-size:var(--s1);font-family:var(--face-mono)}
+
+.acts{display:flex;gap:calc(var(--u)*2);flex-wrap:wrap;margin-top:calc(var(--u)*4)}
+.abtn{font:inherit;font-size:var(--s2);min-height:var(--target);
+  padding:0 calc(var(--u)*4);cursor:pointer;border:0;color:var(--ink);
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.abtn:hover{background-color:var(--tile-hover)}
+.abtn[data-commit]{background-color:var(--ink);color:var(--on-ink);
+  font-weight:var(--w-emph);box-shadow:none}
+.abtn[data-commit]:hover{background-color:var(--accent-deep)}
+.abtn[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--ink);
+  font-weight:var(--w-emph)}
+.abtn[aria-disabled="true"]{color:var(--refused);background-color:var(--sheet);
+  cursor:default}
+
+.reasons{display:grid;gap:calc(var(--u)*2);margin-top:calc(var(--u)*4);
+  padding-top:calc(var(--u)*4);border-top:1px solid var(--rule-strong)}
+@media (min-width:1080px){
+  .reasons{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .reasons > .lab,.reasons > .drop,.reasons > .acts{grid-column:1 / -1}
+}
+.reasons .choice{display:flex;align-items:center;justify-content:space-between;
+  gap:calc(var(--u)*3);width:100%;text-align:left;font:inherit;color:var(--ink);
+  font-size:var(--s2);min-height:var(--target);padding:0 calc(var(--u)*3);
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  border:0;cursor:pointer}
+.reasons .choice:hover{background-color:var(--tile-hover)}
+.reasons .choice[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--ink);
+  font-weight:var(--w-emph)}
+.reasons .choice .to{font-family:var(--face-mono);font-size:var(--s1);
+  letter-spacing:var(--tr-micro);text-transform:uppercase;color:var(--muted)}
+.reasons .choice[aria-pressed="true"] .to{color:var(--ink)}
+.drop{padding:calc(var(--u)*4);background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);font-size:var(--s2);
+  color:var(--muted);text-align:center}
+.drop b{display:block;color:var(--ink);font-weight:var(--w-emph);
+  margin-bottom:calc(var(--u)*1)}
+.result{margin-top:calc(var(--u)*4);padding:calc(var(--u)*4);
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--ink);
+  font-size:var(--s2);line-height:var(--lh-note);max-width:80ch}
+.result .id{font-family:var(--face-mono);color:var(--muted)}
+.result .acts{margin-top:calc(var(--u)*3)}
+
+/* ═══ STATED STATES ════════════════════════════════════════════════════════ */
+.stated{padding:calc(var(--u)*8) calc(var(--u)*5);display:grid;
+  gap:calc(var(--u)*3);max-width:72ch}
+.stated h2{font-size:var(--s4);font-weight:var(--w-body);
+  letter-spacing:var(--tr-title);margin:0}
+.stated p{font-size:var(--s2);line-height:var(--lh-note);color:var(--muted);
+  margin:0;max-width:60ch}
+.stated .mono{font-family:var(--face-mono);font-size:var(--s2);color:var(--ink)}
+
+/* ═══ ASK · REPORTS · AUDIT ════════════════════════════════════════════════ */
+.pane{padding:calc(var(--u)*5);display:grid;gap:calc(var(--u)*5);flex:1;
+  align-content:start}
+.pane h2{font-size:var(--s4);font-weight:var(--w-body);
+  letter-spacing:var(--tr-title);margin:0}
+.pane p{font-size:var(--s2);line-height:var(--lh-note);margin:0;max-width:72ch}
+.askbox{display:flex;align-items:center;gap:calc(var(--u)*3);flex-wrap:wrap;
+  padding:0 calc(var(--u)*4);min-height:calc(var(--u)*13);
+  box-shadow:inset 0 0 0 1px var(--ink);font-size:var(--s3);color:var(--muted)}
+.askbox .cue{margin-left:auto;font-family:var(--face-mono);font-size:var(--s1)}
+.answer-blk{padding:calc(var(--u)*5);display:grid;gap:calc(var(--u)*3)}
+.answer-blk .said{font-size:var(--s3);line-height:var(--lh-body);max-width:70ch}
+.cites{list-style:none;margin:0;padding:0}
+.cites li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;
+  gap:calc(var(--u)*4);padding:calc(var(--u)*2) 0;border-top:1px solid var(--rule);
+  font-size:var(--s2);align-items:baseline}
+.cites .n{font-family:var(--face-mono);font-variant-numeric:tabular-nums;
+  text-align:right}
+.cites .src{font-family:var(--face-mono);font-size:var(--s1);
+  letter-spacing:var(--tr-micro);text-transform:uppercase;color:var(--muted)}
+
+/* Every table in this system sits in a single-axis scroller: 1.4.10 Reflow
+   requires the whole interface to work at 320px with no two-dimensional
+   scrolling, and a four-column table does not fit there. */
+.scroller{overflow-x:auto;overscroll-behavior-x:contain}
+.tbl{width:100%;border-collapse:collapse;font-size:var(--s2);min-width:38rem}
+.tbl th,.tbl td{text-align:left;vertical-align:top;font-weight:var(--w-body);
+  padding:calc(var(--u)*3) calc(var(--u)*4) calc(var(--u)*3) 0;
+  border-bottom:1px solid var(--rule)}
+.tbl thead th{font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  border-bottom:1px solid var(--rule-strong)}
+.tbl .mono{font-family:var(--face-mono);font-variant-numeric:tabular-nums}
+
+/* ═══ THE STATUS BAR ═══════════════════════════════════════════════════════
+   C1's exit condition: the register is loaded AND the bar names the run
+   behind it. It is the LAST element in .app, so nothing sits under it. */
+.statusbar{position:sticky;bottom:0;display:flex;align-items:center;
+  gap:calc(var(--u)*4) calc(var(--u)*5);flex-wrap:wrap;
+  padding:calc(var(--u)*3) calc(var(--u)*5);background-color:var(--sheet);
+  border-top:1px solid var(--rule-strong);font-size:var(--s1);color:var(--muted)}
+.statusbar .sp{flex:1}
+.statusbar .bit{white-space:nowrap}
+.statusbar .bit b{color:var(--ink);font-weight:var(--w-body);
+  font-family:var(--face-mono)}
+.statusbar .keys{display:flex;gap:calc(var(--u)*4);flex-wrap:wrap}
+.statusbar .keys kbd{font-family:var(--face-mono);font-size:var(--s1);
+  font-weight:var(--w-figure);color:var(--ink);background:none;
+  margin-right:calc(var(--u)*1)}
+@media (max-width:719px){ .statusbar .keys{display:none} }
+
+/* ═══ THE COMMAND PALETTE ══════════════════════════════════════════════════
+   FIND · GO · DO · ASK, and it is the reason the nav never needs a fourth
+   item. The door in the chrome is a CONTROL, not a search field: it does not
+   accept text where it stands, so it is a button carrying its own key rather
+   than an input that would promise typing it cannot take. */
+.palbtn{display:flex;align-items:center;gap:calc(var(--u)*3);
+  font:inherit;font-size:var(--s2);color:var(--muted);cursor:pointer;
+  background-color:var(--paper);border:1px solid var(--rule-strong);
+  padding:calc(var(--u)*2) calc(var(--u)*3);max-width:calc(var(--u)*72);
+  text-align:left}
+.palbtn:hover{background-color:var(--tile-hover);color:var(--ink)}
+.palbtn > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.palbtn kbd{font-family:var(--face-mono);font-size:var(--s1);
+  font-weight:var(--w-figure);color:var(--ink);background:none;flex:none}
+@media (max-width:1079px){ .palbtn > span{display:none} }
+
+/* THE SCRIM AND THE DIALOG SIT AT --z-modal TOGETHER, because the scrim's job
+   is to make everything under it unreachable, and a scrim a reader can click
+   past is a decoration. The scrim is a button so the pointer route out and
+   the keyboard route out (Esc) are the same act, not two behaviours. */
+.palwrap{position:fixed;inset:0;z-index:var(--z-modal);
+  display:flex;justify-content:center;align-items:flex-start;
+  padding:10vh calc(var(--u)*5) calc(var(--u)*5)}
+.palscrim{position:absolute;inset:0;border:0;padding:0;cursor:default;
+  background-color:var(--scrim)}
+/* THE PALETTE SEPARATES BY GROUND AND RULE, and by the one hairline the
+   surface rule allows under a panel — never by a blur or an elevation, which
+   this kernel does not have. */
+.pal{position:relative;width:100%;max-width:calc(var(--u)*150);
+  display:flex;flex-direction:column;max-height:76vh;
+  background-color:var(--paper);border:1px solid var(--rule-strong);
+  box-shadow:var(--sheet-shadow)}
+/* ONE LINE OF CHROME: what you typed, what it is scoped to, how many rows
+   answered, and the way out. ESC IS THE SHORTCUT, NOT THE MECHANISM, so the
+   close control is real. */
+.pal-head{display:flex;align-items:center;gap:calc(var(--u)*3);flex:none;
+  flex-wrap:wrap;padding:calc(var(--u)*3) calc(var(--u)*4);
+  border-bottom:1px solid var(--rule-strong)}
+.pal-in{flex:1;min-width:12ch;font:inherit;font-size:var(--s3);
+  color:var(--ink);background:transparent;border:0;padding:0}
+.pal-in::placeholder{color:var(--muted)}
+/* THE FOCUS CHIP IS WHAT LETS A COMMAND READ "accept the proposal and post"
+   rather than naming the finding again — and the row it refers to is on
+   screen, which is what makes the permission state honest. */
+.pal-chip{display:inline-flex;align-items:center;flex:none;
+  padding:calc(var(--u)*0.75) calc(var(--u)*2);background-color:var(--sheet);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);
+  font-family:var(--face-mono);font-size:var(--s1);color:var(--ink);
+  white-space:nowrap}
+/* COMPUTED FROM THE ROWS RENDERED, never a figure typed beside a list. */
+.pal-count{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted);
+  white-space:nowrap;flex:none}
+.pal-x{font:inherit;font-size:var(--s2);color:var(--muted);background:none;
+  border:0;cursor:pointer;flex:none;padding:0 calc(var(--u)*1)}
+.pal-x:hover{color:var(--ink)}
+.pal-res{overflow-y:auto}
+/* THE SECTION SAYS WHAT KIND OF THING THE ROWS ARE. The order is fixed —
+   Find, Go, Do, Ask — so the label is orientation, not a ranking signal. */
+.pal-sec{padding:calc(var(--u)*2) calc(var(--u)*4) calc(var(--u)*1.25);
+  font-family:var(--face-mono);font-size:var(--s1);font-weight:var(--w-emph);
+  letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  background-color:var(--sheet);border-bottom:1px solid var(--rule)}
+.pal-list{list-style:none;margin:0;padding:0}
+/* THE ARROW MARKS THE ROW ENTER WOULD RUN, and it is the only thing that
+   does: the ground says "selected", the arrow says "this one acts". */
+.pal-row{display:flex;align-items:center;gap:calc(var(--u)*3);width:100%;
+  box-sizing:border-box;font:inherit;font-size:var(--s3);color:var(--ink);
+  text-align:left;cursor:pointer;background-color:transparent;border:0;
+  border-bottom:1px solid var(--rule);
+  padding:calc(var(--u)*2.25) calc(var(--u)*4)}
+.pal-row .arrow{font-family:var(--face-mono);color:var(--ink);width:1ch;
+  flex:none;visibility:hidden}
+/* .plab, not .lab: this file already owns .lab as the uppercase section
+   label, and a palette row is a sentence. */
+.pal-row .plab{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.pal-row .hint{font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted);white-space:nowrap;flex:none}
+.pal-row:hover{background-color:var(--row-hover)}
+.pal-row[aria-selected="true"]{background-color:var(--tile-hover)}
+.pal-row[aria-selected="true"] .arrow{visibility:visible}
+/* A REFUSED ROW SAYS WHY BESIDE IT, and the reason is read at full ink — the
+   row is dimmed, the reason for the refusal is not. */
+.pal-row[aria-disabled="true"]{color:var(--muted);cursor:default}
+.pal-row[aria-disabled="true"]:hover{background-color:transparent}
+.pal-row[aria-disabled="true"] .hint{color:var(--ink)}
+.pal-msg{padding:calc(var(--u)*3) calc(var(--u)*4);font-size:var(--s2);
+  line-height:var(--lh-note);color:var(--muted);
+  border-bottom:1px solid var(--rule)}
+.pal-foot{display:flex;align-items:center;gap:calc(var(--u)*4);flex:none;
+  flex-wrap:wrap;padding:calc(var(--u)*2.25) calc(var(--u)*4);
+  font-size:var(--s1);color:var(--muted)}
+.pal-foot kbd{font-family:var(--face-mono);font-size:var(--s1);
+  font-weight:var(--w-figure);color:var(--ink);background:none;
+  margin-right:calc(var(--u)*1)}
+.pal-foot .pal-said{margin-left:auto;text-align:right}
+
+/* ═══ TABLE CONTROLS ═════════════════════════════════════════════════════════
+   The toolbar sits ABOVE the table it governs and inside the same block, so a
+   count and the rows it counts are never separated by a scroll. */
+.tbar{display:flex;align-items:center;gap:calc(var(--u)*3);flex-wrap:wrap;
+  padding:calc(var(--u)*2) 0 calc(var(--u)*3)}
+.tbar .tsearch{flex:1;min-width:calc(var(--u)*40);display:flex;
+  align-items:center;gap:calc(var(--u)*2)}
+.tbar input[type="search"],.tbar input[type="text"]{flex:1;min-width:0;font:inherit;
+  font-size:var(--s2);color:var(--ink);background-color:var(--paper);
+  border:0;box-shadow:inset 0 0 0 1px var(--rule-strong);
+  min-height:var(--target);padding:0 calc(var(--u)*3)}
+.tbar input::placeholder{color:var(--muted)}
+.tcount{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted);
+  white-space:nowrap}
+.tpager{display:flex;align-items:center;gap:calc(var(--u)*2);flex:none}
+.tpager button{font:inherit;font-family:var(--face-mono);font-size:var(--s2);
+  min-height:var(--target);min-width:var(--target);cursor:pointer;border:0;
+  color:var(--ink);background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.tpager button:hover{background-color:var(--tile-hover)}
+.tpager button[aria-disabled="true"]{color:var(--refused);cursor:default;
+  background-color:var(--sheet)}
+.tpager button[aria-disabled="true"]:hover{background-color:var(--sheet)}
+.tpager .tpageline{font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted);white-space:nowrap}
+/* THE NARROWING IS STATED, never left to be noticed. */
+.tnarrow{font-size:var(--s1);color:var(--ink);background-color:var(--sheet);
+  box-shadow:inset 0 0 0 1px var(--rule);padding:calc(var(--u)*2) calc(var(--u)*3);
+  margin:0 0 calc(var(--u)*3)}
+/* A HEADER IS A BUTTON WHEN IT SORTS, and it carries the arrow that says so.
+   aria-sort lives on the th, which is what a screen reader reads. */
+.tbl th .tsort{display:flex;align-items:center;gap:calc(var(--u)*2);
+  font:inherit;font-size:inherit;font-weight:inherit;letter-spacing:inherit;
+  text-transform:inherit;color:inherit;background:none;border:0;padding:0;
+  cursor:pointer;text-align:left;min-height:var(--target)}
+.tbl th .tsort:hover{color:var(--ink)}
+.tbl th .tsort .ind{font-family:var(--face-mono);color:var(--ink);width:1ch;
+  flex:none}
+.tbl th[aria-sort="ascending"],.tbl th[aria-sort="descending"]{color:var(--ink)}
+.tbl tr.tfilters th{padding-top:calc(var(--u)*2);padding-bottom:calc(var(--u)*3);
+  vertical-align:top}
+.tbl tr.tfilters input,.tbl tr.tfilters select{width:100%;box-sizing:border-box;
+  font:inherit;font-size:var(--s1);color:var(--ink);background-color:var(--paper);
+  border:0;box-shadow:inset 0 0 0 1px var(--rule-strong);
+  min-height:calc(var(--u)*7);padding:0 calc(var(--u)*2)}
+.tempty{font-size:var(--s2);line-height:var(--lh-note);color:var(--muted);
+  padding:calc(var(--u)*4) 0}
+
+.synthetic{margin:0;padding:calc(var(--u)*4) calc(var(--u)*5) calc(var(--u)*6);
+  font-size:var(--s1);line-height:var(--lh-note);color:var(--muted);
+  max-width:80ch}
+
+
+/* ═══ C3 · TRIAGE ══════════════════════════════════════════════════════════
+   The facets and the order sit ABOVE the register and outside it, because
+   they describe the list rather than belonging to any row in it. The count
+   line reads as a status: it is the sentence that says what the table below
+   it is now showing, and of what. */
+.triage{padding:calc(var(--u)*4) calc(var(--u)*5) 0;display:grid;
+  gap:calc(var(--u)*3)}
+.triage .fac{display:flex;align-items:center;gap:calc(var(--u)*2);flex-wrap:wrap}
+.triage .fac > .lab{margin:0;flex:none}
+.triage .choice{display:flex;align-items:center;gap:calc(var(--u)*2);
+  font:inherit;font-size:var(--s2);color:var(--ink);min-height:var(--target);
+  padding:0 calc(var(--u)*3);background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);border:0;cursor:pointer}
+.triage .choice:hover{background-color:var(--tile-hover)}
+.triage .choice[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--ink);
+  font-weight:var(--w-emph)}
+.triage .choice .to{font-family:var(--face-mono);font-size:var(--s1);
+  font-variant-numeric:tabular-nums;color:var(--muted)}
+.triage .choice[aria-pressed="true"] .to{color:var(--ink)}
+.triage .count{margin:0;font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted)}
+/* THE FACETS THAT DO NOT EXIST are drawn as a hatched hole with the four
+   questions named, because a missing facet is invisible otherwise — the
+   register simply looks like it was never asked. */
+.hole{padding:calc(var(--u)*4);max-width:var(--measure-text)}
+.hole ul{list-style:none;margin:calc(var(--u)*2) 0 0;padding:0;display:grid;
+  gap:calc(var(--u)*1)}
+.hole li{font-family:var(--face-mono);font-size:var(--s2);color:var(--muted)}
+
+/* ═══ THE DELIVERY RECORD ══════════════════════════════════════════════════
+   The source name in the intake list is a control, so it is drawn as one.
+   What it opens is the DELIVERY — not the source's configuration, which is
+   the tenant admin's, and not the file, which never leaves their account. */
+.intake li > .via{font:inherit;font-size:var(--s2);color:var(--ink);
+  text-align:left;background:none;border:0;padding:0;cursor:pointer;
+  flex:1 1 auto;min-width:0;text-decoration:underline;
+  text-decoration-color:var(--rule-strong);text-underline-offset:3px}
+.intake li > .via:hover{color:var(--accent-deep);
+  text-decoration-color:currentColor}
+.intake li > .via[aria-expanded="true"]{font-weight:var(--w-emph);
+  text-decoration-color:currentColor}
+.drec{margin-top:calc(var(--u)*3);padding:calc(var(--u)*4);
+  background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  max-width:var(--measure-text)}
+.drec-top{display:flex;align-items:baseline;justify-content:space-between;
+  gap:calc(var(--u)*3)}
+.drec-top .lab{margin:0}
+.drec .close{font:inherit;font-size:var(--s2);color:var(--muted);
+  background:none;border:0;cursor:pointer}
+.drec .close:hover{color:var(--ink)}
+/* ONE PAIR PER LINE, label left and value right. Declared in full — a grid
+   of one column, no inherited border — because this list sits inside .intake
+   and would otherwise be laid out as the intake list. */
+.drl{list-style:none;margin:calc(var(--u)*3) 0 0;padding:0;display:grid;
+  grid-template-columns:minmax(0,1fr);gap:0;border-top:0}
+.drl li{display:grid;grid-template-columns:minmax(8ch,auto) minmax(0,1fr);
+  align-items:baseline;gap:calc(var(--u)*4);padding:calc(var(--u)*2) 0;
+  border-bottom:1px solid var(--rule);font-size:var(--s2)}
+.drl li > span:first-child{color:var(--muted)}
+/* A PATH IS THE ONE VALUE HERE THAT HAS NO NATURAL BREAK, so it is allowed to
+   break anywhere rather than push past the panel's edge. */
+.drl .n{font-family:var(--face-mono);font-size:var(--s1);color:var(--ink);
+  text-align:right;min-width:0;overflow-wrap:anywhere;white-space:normal}
+.drec p.q{margin:calc(var(--u)*3) 0 0;font-size:var(--s2);
+  line-height:var(--lh-note);color:var(--muted);max-width:60ch}
+
+/* THE CHEVRON IS THE WAIT, and it costs ONE LINE. A register is read down a
+   column, so a row taller than its neighbours reads as a different KIND of
+   row — which a waiting line is not. The marker is therefore a single clipped
+   line under the status: the chevron, then four words. The amount and the
+   consequence live in its title and are written out in full in the panel the
+   row opens, where there is room for a sentence.
+   THE MOUSE-OVER STRENGTHENS INK RATHER THAN REVEALING TEXT. Text appearing
+   on hover would grow the row under the pointer, and a row that changes
+   height is the one thing this marker exists to avoid. */
+.waitm{display:block;margin-top:calc(var(--u)*1);font-family:var(--face-mono);
+  font-size:var(--s1);color:var(--muted);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;cursor:help}
+.waitm .cv{margin-right:calc(var(--u)*1);color:var(--muted)}
+.regt tbody tr.row:hover .waitm,
+.regt tbody tr[aria-expanded="true"] .waitm{color:var(--ink)}
+.regt tbody tr.row:hover .waitm .cv,
+.regt tbody tr[aria-expanded="true"] .waitm .cv{color:var(--accent-deep)}
+
+/* THE STATUS CELL IS THE ONLY ONE THAT STACKS, so it is the cell that sets
+   the row's height. Its parts get the rhythm the evidence panel's notes have,
+   and the status wraps on a sensible break rather than at the column edge. */
+.row .state b{margin-bottom:calc(var(--u)*1);text-wrap:pretty}
+.row .state .why{display:block;line-height:var(--lh-note)}
+
+
+/* ═══ THE METER IS A DOOR ══════════════════════════════════════════════════
+   C8 reads the token meter in the chrome, and the ceiling it is measured
+   against is one screen away — so the figure itself is the control that goes
+   there rather than a fifth nav item competing with four destinations. */
+.meterbtn{font:inherit;background:none;border:0;padding:calc(var(--u)*1) 0;
+  cursor:pointer;text-align:left}
+.meterbtn:hover .spent,.meterbtn[aria-current="page"] .spent{color:var(--ink)}
+.dests .cnt{font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted);margin-left:calc(var(--u)*2)}
+.dests button[aria-current="page"] .cnt{color:var(--ink)}
+
+/* ═══ C6 · ASK AS A SESSION ════════════════════════════════════════════════
+   The turns stack oldest first, because a session is read as a transcript and
+   a transcript that reorders itself is not one. Each answer keeps its own
+   cost: the question "what did this cost" has to be answerable per turn, not
+   only as a monthly total. */
+.askin{flex:1 1 20ch;min-width:0;font:inherit;font-size:var(--s3);
+  color:var(--ink);background:none;border:0;padding:calc(var(--u)*3) 0}
+.askin::placeholder{color:var(--muted)}
+.askbox .abtn{flex:none}
+.turn{display:grid;gap:calc(var(--u)*2)}
+.turn .asked .lab{display:block;margin-bottom:calc(var(--u)*1)}
+/* ═══ A FACET ROW AND ITS CHOICES, ANYWHERE ════════════════════════════════
+   These were written inside .triage and .reasons and are now used in three
+   more places (the trail's search row, Ask's scope row, the suggestions). The
+   base belongs at the top level: a control that looks like a choice in one
+   pane and like a UA button in another is two controls. .triage and .reasons
+   still override what they need. */
+.fac{display:flex;align-items:center;gap:calc(var(--u)*2);flex-wrap:wrap}
+.fac > .lab{margin:0;flex:none}
+.choice{display:flex;align-items:center;gap:calc(var(--u)*2);font:inherit;
+  font-size:var(--s2);color:var(--ink);min-height:var(--target);
+  padding:0 calc(var(--u)*3);background-color:var(--paper);border:0;
+  box-shadow:inset 0 0 0 1px var(--rule-strong);cursor:pointer;
+  text-align:left}
+.choice:hover{background-color:var(--tile-hover)}
+/* THE SELECTED ONE IS CARRIED BY WEIGHT AND A FULL-INK EDGE, never by colour
+   alone — and it must be visible, because the scope of an answer is stated by
+   which chip is pressed. */
+.choice[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--ink);
+  font-weight:var(--w-emph)}
+.choice .to{font-family:var(--face-mono);font-size:var(--s1);
+  letter-spacing:var(--tr-micro);text-transform:uppercase;color:var(--muted)}
+.choice[aria-pressed="true"] .to{color:var(--ink)}
+/* A SOURCE CHIP CARRIES THE STATE OF ITS OWN CONNECTION. The dot is a second
+   reading of words that are already there — silent is stated, not implied by
+   a colour nobody can name. */
+/* A THING WITH A CONNECTION IS NOT A THING WITH A SCOPE. The rule in this
+   system: a chip that stands for a system we do not control is drawn on the
+   sheet ground with its name in mono and a divided status field; a chip that
+   only narrows a query stays on paper in the reading face. Shape and ground
+   carry it, never colour alone. */
+.choice[data-kind="source"]{background-color:var(--sheet);
+  font-family:var(--face-mono);font-size:var(--s1);
+  padding-right:0;align-items:stretch}
+.choice[data-kind="source"] > span:first-child{display:flex;align-items:center}
+.choice[data-kind="source"] .cst{padding:0 calc(var(--u)*3);
+  border-left:1px solid var(--rule-strong);margin-left:calc(var(--u)*1)}
+.choice[data-kind="source"]:hover{background-color:var(--tile-hover)}
+.choice .cst{display:flex;align-items:center;gap:calc(var(--u)*2);
+  font-family:var(--face-mono);font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.choice .cst[data-st="none"]{display:none}
+.choice .cst::before{content:"";width:.45em;height:.45em;border-radius:50%;
+  flex:none;background-color:currentColor}
+.choice .cst[data-st="silent"]{color:var(--ink);font-weight:var(--w-emph)}
+.choice .cst[data-st="silent"]::before{background:none;
+  box-shadow:inset 0 0 0 1px currentColor}
+.choice[aria-pressed="true"] .cst{color:var(--ink)}
+
+/* ═══ ASK IS A SESSION, IN TWO COLUMNS ═════════════════════════════════════
+   Sessions on the left, the thread and its composer on the right. The question
+   is set right on the sheet and the answer stays at full measure on paper —
+   that asymmetry is what makes it read as a conversation, so no bubbles and no
+   radii are needed and R2 holds. Every answer carries where it read from,
+   because in this product the provenance of a sentence is the sentence. */
+.askpane{padding:0;gap:0;grid-template-columns:minmax(0,1fr)}
+@media (min-width:900px){
+  .askpane{grid-template-columns:minmax(0,15rem) minmax(0,1fr)}
+}
+.sessions{background-color:var(--sheet);border-bottom:1px solid var(--rule);
+  padding:calc(var(--u)*4);display:grid;gap:calc(var(--u)*1);align-content:start}
+@media (min-width:900px){
+  .sessions{border-bottom:0;border-right:1px solid var(--rule)}
+}
+.sessions .srow{text-align:left;font:inherit;font-size:var(--s2);
+  color:var(--ink);background:none;border:0;cursor:pointer;
+  padding:calc(var(--u)*3);display:grid;gap:calc(var(--u)*1)}
+/* A ROW THAT OPENS A SESSION SAYS SO UNDER THE POINTER AND UNDER THE KEYBOARD:
+   ground, edge and the word that appears in the meta line. */
+.sessions .srow:hover{background-color:var(--tile-hover);
+  box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.sessions .srow:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.sessions .srow .open{font-family:var(--face-mono);font-size:var(--s1);
+  letter-spacing:var(--tr-micro);text-transform:uppercase;color:var(--muted);
+  visibility:hidden}
+.sessions .srow:hover .open,.sessions .srow:focus-visible .open{visibility:visible}
+.sessions .srow[aria-current="true"] .open{visibility:hidden}
+.sessions .srow .mrow{display:flex;align-items:baseline;
+  gap:calc(var(--u)*3);justify-content:space-between}
+.sessions .srow .when{font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted)}
+.sessions .srow[aria-current="true"]{background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);font-weight:var(--w-emph)}
+/* A SESSION THAT CANNOT BE OPENED says why at full ink and does not pretend to
+   be a control. Same rule as a refused palette row. */
+.sessions .srow[aria-disabled="true"]{color:var(--muted);cursor:default}
+.sessions .srow[aria-disabled="true"]:hover{background:none}
+/* THE FIND SITS ON THE SAME EDGES AS THE ROWS BELOW IT. A field inset from
+   the list it filters reads as belonging to something else. */
+.sessions .ssearch{display:block;margin-bottom:calc(var(--u)*2)}
+.sessions .ssearch input{display:block;width:100%;min-width:0;font:inherit;
+  font-family:var(--face-mono);font-size:var(--s1);color:var(--ink);
+  background-color:var(--paper);border:0;
+  box-shadow:inset 0 0 0 1px var(--rule-strong);
+  min-height:var(--target);padding:0 calc(var(--u)*2)}
+.sessions .ssearch .n{display:block;font-family:var(--face-mono);
+  font-size:var(--s1);color:var(--muted);font-variant-numeric:tabular-nums;
+  margin-top:calc(var(--u)*1)}
+.sessions .snone{margin:calc(var(--u)*2) 0 0;
+  font-size:var(--s1);line-height:var(--lh-note);color:var(--muted)}
+/* A LIST LONGER THAN THE COLUMN SCROLLS IN PLACE rather than pushing the note
+   that explains it off the bottom of the pane. */
+.sessions .slist{display:grid;gap:calc(var(--u)*1);align-content:start;
+  min-height:0;overflow-y:auto;max-height:calc(var(--u)*80);
+  overscroll-behavior:contain}
+@media (min-width:900px){
+  .sessions .slist{max-height:none;overflow-y:auto}
+  .sessions{max-height:100%}
+}
+.sessions .foot{font-size:var(--s1);line-height:var(--lh-note);
+  color:var(--muted);margin-top:calc(var(--u)*3);
+  padding-top:calc(var(--u)*3);border-top:1px solid var(--rule)}
+.askmain{display:grid;grid-template-rows:auto 1fr auto;min-width:0}
+.askhead{display:flex;align-items:baseline;justify-content:space-between;
+  gap:calc(var(--u)*4);flex-wrap:wrap;padding:calc(var(--u)*4) calc(var(--u)*5);
+  border-bottom:1px solid var(--rule)}
+.askhead h2{font-size:var(--s3);letter-spacing:var(--tr-title)}
+.thread{padding:calc(var(--u)*5);display:grid;gap:calc(var(--u)*7);min-width:0}
+.turn{display:grid;gap:calc(var(--u)*3)}
+.turn .asked{font-size:var(--s3);line-height:var(--lh-body);max-width:52ch;
+  justify-self:end;padding:calc(var(--u)*4);background-color:var(--sheet);
+  box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.turn .asked .lab{display:block;margin-bottom:calc(var(--u)*1)}
+/* THE PROVENANCE ROW. Where the answer read from, and what it cost, on one
+   line above the answer — never inferred from the prose. */
+.chips{display:flex;align-items:center;gap:calc(var(--u)*2);flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:calc(var(--u)*1);
+  font-family:var(--face-mono);font-size:var(--s1);color:var(--ink);
+  background-color:var(--paper);padding:calc(var(--u)*1) calc(var(--u)*2);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);white-space:nowrap}
+.chip.stale{color:var(--refused);box-shadow:inset 0 0 0 1px var(--refused)}
+.chips .tok{margin-left:auto;color:var(--muted)}
+/* AN INSIGHT IS THE MACHINE'S READING OF ITS OWN ANSWER, and it is the only
+   place in a turn that offers to act. It sits on the sheet so the answer above
+   it stays the thing being read. */
+.insight{padding:calc(var(--u)*4);background-color:var(--sheet);
+  box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.insight p{font-size:var(--s2);line-height:var(--lh-note);margin:0;
+  max-width:70ch}
+/* I CANNOT ANSWER THAT is a refusal, not a low-confidence answer: no meter, no
+   citations, and --refused ink with the reason named. A refusal drawn as a
+   weak answer is the worst of both. */
+.cannot{padding:calc(var(--u)*4);background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--refused)}
+.cannot .lab{color:var(--refused)}
+.cannot p{font-size:var(--s2);line-height:var(--lh-note);
+  color:var(--refused);margin:0;max-width:70ch}
+.composer{position:sticky;bottom:0;background-color:var(--paper);
+  padding:calc(var(--u)*4) calc(var(--u)*5);border-top:1px solid var(--rule);
+  display:grid;gap:calc(var(--u)*2)}
+.sugg{display:flex;gap:calc(var(--u)*2);flex-wrap:wrap}
+
+/* ═══ C7 · REPORTS IS A CANVAS ═════════════════════════════════════════════
+   Generated close packs on the left, panels people built beneath them, and the
+   report itself on the right. A panel is dragged out of Close or Ask and lands
+   here — so the composition is the operator's, and every panel keeps a line
+   saying where it came from. Nothing about the layout is decorative: the
+   source chip and the export-sheet mapping are the two facts a reader of the
+   finished file needs. */
+.rptpane{padding:0;gap:0;grid-template-columns:minmax(0,1fr)}
+@media (min-width:900px){
+  .rptpane{grid-template-columns:minmax(0,16rem) minmax(0,1fr)}
+}
+.rptside{background-color:var(--sheet);border-bottom:1px solid var(--rule);
+  padding:calc(var(--u)*4);display:grid;gap:calc(var(--u)*1);align-content:start}
+@media (min-width:900px){
+  .rptside{border-bottom:0;border-right:1px solid var(--rule)}
+}
+/* PARTNER FORM FIELDS. The portal borrows the operator's controls, but a
+   claim and a case are typed rather than picked, so the text fields get the
+   same inset edge the choices have instead of a browser default. */
+.pfields{display:grid;gap:calc(var(--u)*3);
+  grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));
+  margin-top:calc(var(--u)*4);text-align:left}
+.pfields label,.pfields > div{display:grid;gap:calc(var(--u)*1.5);min-width:0}
+.pfields input,.drop input,.drop textarea{width:100%;box-sizing:border-box;
+  font:inherit;font-size:var(--s2);color:var(--ink);
+  background-color:var(--paper);border:0;
+  box-shadow:inset 0 0 0 1px var(--rule-strong);
+  min-height:var(--target);padding:calc(var(--u)*1.5) calc(var(--u)*2)}
+.drop textarea{min-height:calc(var(--u)*18);line-height:var(--lh-note);
+  resize:vertical}
+
+/* A CASE ROW IS A DOOR. The history behind it is the only view a partner has
+   of work happening inside a tenant they may not enter, so the row says so
+   rather than being quietly clickable. */
+.caselink{display:block;width:100%;text-align:left;font:inherit;
+  font-size:var(--s2);font-weight:var(--w-emph);color:var(--ink);
+  background:none;border:0;cursor:pointer;padding:0;
+  min-height:var(--target)}
+.caselink:hover{box-shadow:inset 0 -1px 0 var(--ink)}
+.caselink .q{font-weight:var(--w-body)}
+.tbl tr[aria-current="true"]{background-color:var(--sheet)}
+
+.rptside-tray{display:grid;gap:calc(var(--u)*1);align-content:start}
+.rptside .lab{margin:calc(var(--u)*3) 0 calc(var(--u)*1)}
+.rptside .lab:first-child{margin-top:0}
+.pack{text-align:left;font:inherit;font-size:var(--s2);color:var(--ink);
+  background:none;border:0;cursor:pointer;padding:calc(var(--u)*3);
+  display:grid;gap:calc(var(--u)*1)}
+.pack:hover{background-color:var(--tile-hover)}
+.pack .when{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted)}
+.pack[aria-current="true"]{background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);font-weight:var(--w-emph)}
+/* A PANEL IN THE TRAY IS A THING YOU PICK UP. It says what it is and where it
+   came from, and it is a button as well as a drag handle — a canvas reachable
+   only by dragging is a canvas some people cannot use. */
+.pal{text-align:left;font:inherit;font-size:var(--s2);color:var(--ink);
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  border:0;cursor:grab;padding:calc(var(--u)*3);display:grid;
+  gap:calc(var(--u)*1)}
+.pal:hover{background-color:var(--tile-hover)}
+.pal .from{font-family:var(--face-mono);font-size:var(--s1);
+  letter-spacing:var(--tr-micro);text-transform:uppercase;color:var(--muted)}
+.pal[aria-disabled="true"]{color:var(--muted);cursor:default;
+  background-color:var(--sheet)}
+.rptmain{display:grid;grid-template-rows:auto 1fr;min-width:0;position:relative}
+
+/* ═══ THE COMPOSING MODE ══════════════════════════════════════════════════
+   Reading a pack and composing it are two states of one surface, so the
+   editor covers the reading view rather than sitting beside it: there is one
+   arrangement, and two panes showing it would let them disagree. */
+.ed{position:absolute;left:0;top:0;right:0;min-height:100%;z-index:1;
+  background-color:var(--paper);
+  display:grid;grid-template-rows:auto auto auto auto;align-content:start;
+  min-width:0}
+.ed-bar{display:flex;align-items:center;gap:calc(var(--u)*3);flex-wrap:wrap;
+  padding:calc(var(--u)*3) calc(var(--u)*5);
+  border-bottom:1px solid var(--rule-strong)}
+.ed-bar h3{font:inherit;font-size:var(--s3);font-weight:var(--w-emph);
+  letter-spacing:var(--tr-title);margin:0}
+.ed-gap{flex:1}
+/* THE ZOOM READOUT IS MONO AND FIGURE-WEIGHT because it is a number the
+   operator reads back, not a label. */
+.ed-z{display:flex;align-items:center;gap:calc(var(--u)*1);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);background-color:var(--paper)}
+.ed-z b{font-family:var(--face-mono);font-size:var(--s1);
+  font-weight:var(--w-figure);color:var(--ink);min-width:5ch;text-align:center}
+.ed-z button{font:inherit;font-family:var(--face-mono);font-size:var(--s2);
+  min-width:var(--target);min-height:var(--target);padding:0 calc(var(--u)*2);
+  color:var(--ink);background:none;border:0;cursor:pointer}
+.ed-z button:hover{background-color:var(--tile-hover)}
+.ed-meta{display:grid;gap:calc(var(--u)*3);align-items:start;
+  grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));
+  padding:calc(var(--u)*4) calc(var(--u)*5);background-color:var(--sheet);
+  border-bottom:1px solid var(--rule)}
+.ed-meta label,.ed-meta > div{display:grid;gap:calc(var(--u)*1.5);min-width:0}
+.ed-meta .wide{grid-column:1/-1}
+.ed-meta input,.ed-meta textarea{font:inherit;font-size:var(--s2);
+  color:var(--ink);background-color:var(--paper);border:0;
+  box-shadow:inset 0 0 0 1px var(--rule-strong);min-height:var(--target);
+  padding:calc(var(--u)*1.5) calc(var(--u)*2);width:100%;box-sizing:border-box}
+.ed-meta textarea{min-height:calc(var(--u)*14);line-height:var(--lh-note);
+  resize:vertical}
+.ed-note{font-size:var(--s1);line-height:var(--lh-note);color:var(--muted);
+  margin:0;max-width:var(--measure-text)}
+/* RULERS READ IN CELLS, not pixels, because the layout is held in cells and a
+   pixel figure would change meaning with the zoom. */
+.ed-frame{position:relative;display:grid;min-width:0;
+  height:min(68vh,620px);
+  grid-template-columns:minmax(0,13rem) calc(var(--u)*6) minmax(0,1fr);
+  grid-template-rows:calc(var(--u)*5) minmax(0,1fr)}
+/* THE RAIL IS INSIDE THE EDITOR, beside the canvas it feeds: the panels a pack
+   can be made of, grouped by where they are read from. */
+.ed-rail{grid-column:1;grid-row:1/3;overflow-y:auto;background-color:var(--sheet);
+  border-right:1px solid var(--rule);padding:calc(var(--u)*3);
+  display:grid;gap:calc(var(--u)*4);align-content:start}
+.ed-rail-h,.ed-rail-f{font-size:var(--s1);line-height:var(--lh-note);
+  color:var(--muted);margin:0}
+.ed-grp{display:grid;gap:calc(var(--u)*2)}
+.ed-chip{text-align:left;font:inherit;display:grid;gap:calc(var(--u)*0.75);
+  cursor:grab;background-color:var(--paper);border:0;
+  box-shadow:inset 0 0 0 1px var(--rule-strong);padding:calc(var(--u)*2)}
+.ed-chip:hover{background-color:var(--tile-hover)}
+.ed-chip .nm{font-size:var(--s2);color:var(--ink);line-height:var(--lh-note)}
+.ed-chip .mt,.ed-chip .put{font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted)}
+.ed-chip .put{color:var(--ink)}
+.ed-chip[aria-disabled="true"]{cursor:default;background-color:var(--sheet);
+  color:var(--muted)}
+.ed-chip[aria-disabled="true"]:hover{background-color:var(--sheet)}
+.ed-chip[aria-disabled="true"] .nm{color:var(--muted)}
+.ed-chip[aria-disabled="true"] .put{color:var(--ink)}
+.ed-rx{grid-column:3;grid-row:1;border-bottom:1px solid var(--rule)}
+.ed-ry{grid-column:2;grid-row:2;border-right:1px solid var(--rule)}
+.ed-rx,.ed-ry{position:relative;overflow:hidden;background-color:var(--sheet);
+  font-family:var(--face-mono);font-size:var(--s1);color:var(--muted)}
+.ed-rx span{position:absolute;top:0;bottom:0;padding-left:3px;
+  border-left:1px solid var(--rule-strong);display:flex;align-items:center}
+.ed-ry span{position:absolute;left:0;right:0;padding-left:3px;
+  border-top:1px solid var(--rule-strong)}
+.ed-view{grid-column:3;grid-row:2;position:relative;overflow:hidden;
+  background-color:var(--paper);cursor:grab;touch-action:none;min-width:0}
+.ed-view[data-pan="true"]{cursor:grabbing}
+.ed-view[data-over="true"]{outline:1px solid var(--ink);
+  outline-offset:calc(var(--u)*-1)}
+/* THE GRID IS DOTS AT THE CELL, so a card's edge sitting on a line is
+   legible without the ground competing with the cards themselves. */
+.ed-surf{position:absolute;left:0;top:0;width:1440px;height:960px;
+  transform-origin:0 0}
+.ed-surf[data-grid="true"]{
+  background-image:radial-gradient(var(--rule-strong) 1px,transparent 1px);
+  background-position:0 0}
+.ed-ghostbox{position:absolute;box-shadow:inset 0 0 0 1px var(--ink);
+  background-color:var(--tile-hover);display:flex;align-items:flex-start;
+  justify-content:flex-end;padding:calc(var(--u)*1)}
+.ed-ghostbox span{font-family:var(--face-mono);font-size:var(--s1);
+  font-weight:var(--w-figure);color:var(--ink)}
+/* A CARD ON THE CANVAS IS A SHEET-TO-BE, so it carries its number, its source
+   and the person who built it — the three things the reader of the finished
+   pack is entitled to — and a schematic of its shape rather than its data,
+   which is read at full size in the pack itself. */
+.ed-card{position:absolute;display:grid;
+  grid-template-rows:auto minmax(0,1fr) auto auto;
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  cursor:grab;overflow:hidden;min-width:0}
+.ed-card[aria-current="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
+.ed-card-h{display:flex;align-items:center;gap:calc(var(--u)*2);
+  padding:calc(var(--u)*1.5) calc(var(--u)*2);
+  border-bottom:1px solid var(--rule)}
+.ed-card-h .num{font-family:var(--face-mono);font-size:var(--s1);
+  font-weight:var(--w-figure);color:var(--ink);white-space:nowrap;flex:none;
+  background-color:var(--sheet);padding:0 calc(var(--u)*1)}
+.ed-card-h .nm{flex:1;min-width:0;font-size:var(--s1);
+  letter-spacing:var(--tr-micro);text-transform:uppercase;
+  font-weight:var(--w-emph);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.ed-card-h button{font:inherit;font-size:var(--s1);color:var(--muted);
+  background:none;border:0;cursor:pointer;flex:none;
+  padding:0 calc(var(--u)*1);min-height:calc(var(--u)*5)}
+.ed-card-h button:hover{color:var(--ink)}
+.ed-card-b{padding:calc(var(--u)*2);overflow:hidden;min-height:0}
+.ed-card-f{display:flex;gap:calc(var(--u)*3);flex-wrap:nowrap;min-width:0;
+  padding:calc(var(--u)*1.5) calc(var(--u)*2);
+  border-top:1px solid var(--rule);font-family:var(--face-mono);
+  font-size:var(--s1);color:var(--muted);white-space:nowrap;overflow:hidden}
+.ed-card-f > span{flex:1 1 0;min-width:0;overflow:hidden;
+  text-overflow:ellipsis}
+.ed-card-f .own{color:var(--ink)}
+/* THE SCHEMATIC SAYS WHAT SHAPE THE SHEET IS — a header and rows, a paragraph,
+   three figures — and never pretends to be the figures. */
+.sk{display:grid;gap:calc(var(--u)*1.25)}
+.sk-h{height:calc(var(--u)*1.5);background-color:var(--rule-strong)}
+.sk-r{height:calc(var(--u)*1);background-color:var(--rule)}
+.sk-t{font-size:var(--s1);line-height:var(--lh-note);color:var(--muted);
+  margin:0;overflow:hidden}
+.ed-card .figs{gap:calc(var(--u)*3)}
+/* THE COVER CARD IS PINNED: generated from the run, always sheet 1, so it is
+   neither dragged nor numbered by position. The name and the blurb on it are
+   the two things Pack details actually writes. */
+.ed-cover-card{cursor:default;background-color:var(--sheet)}
+/* THE NAME AND THE BLURB ARE THE PACK'S OWN WORDS, so they are edited where
+   they are read: the card routes to the field that holds them. */
+.ed-cov-t{display:block;text-align:left;font:inherit;font-size:var(--s3);
+  font-weight:var(--w-emph);letter-spacing:var(--tr-title);color:var(--ink);
+  background:none;border:0;cursor:text;padding:0;margin:0;width:100%}
+.ed-cov-p{display:grid;gap:calc(var(--u)*1);justify-items:start;
+  text-align:left;font:inherit;font-size:var(--s1);
+  line-height:var(--lh-note);color:var(--muted);background:none;border:0;
+  cursor:text;padding:0;margin:calc(var(--u)*1.5) 0 calc(var(--u)*2);
+  max-width:var(--measure-text)}
+.ed-cov-p .cue{font-family:var(--face-mono);color:var(--ink)}
+.ed-cov-t:hover,.ed-cov-p:hover{box-shadow:inset 0 -1px 0 var(--rule-strong)}
+/* IN COMPOSING MODE THE CARD IS EDITABLE AS FAR AS A COPY MAY GO: the two
+   adaptable settings, and a title of your own once it is your copy. What is
+   not editable says so rather than being silently absent. */
+.ed-nm-in{flex:1;min-width:0;font:inherit;font-size:var(--s1);
+  letter-spacing:var(--tr-micro);text-transform:uppercase;
+  font-weight:var(--w-emph);color:var(--ink);background-color:var(--paper);
+  border:0;box-shadow:inset 0 0 0 1px var(--rule-strong);
+  padding:calc(var(--u)*0.5) calc(var(--u)*1)}
+.ed-set{display:flex;align-items:center;gap:calc(var(--u)*1);flex-wrap:wrap;
+  min-width:0;padding:calc(var(--u)*1.5) calc(var(--u)*2);
+  border-top:1px solid var(--rule)}
+.ed-opt{font:inherit;font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted);background-color:var(--paper);border:0;cursor:pointer;
+  box-shadow:inset 0 0 0 1px var(--rule-strong);
+  padding:calc(var(--u)*0.5) calc(var(--u)*1.5)}
+.ed-opt:hover{background-color:var(--tile-hover);color:var(--ink)}
+.ed-opt[aria-pressed="true"]{color:var(--ink);background-color:var(--sheet);
+  box-shadow:inset 0 0 0 1px var(--ink)}
+.ed-fixed{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted);
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.ed-inl{font:inherit;font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted);background:none;border:0;cursor:text;padding:0;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ed-inl:hover{color:var(--ink);box-shadow:inset 0 -1px 0 var(--rule-strong)}
+.ed-rz{position:absolute;right:0;bottom:0;width:calc(var(--u)*4);
+  height:calc(var(--u)*4);cursor:nwse-resize;
+  background:linear-gradient(135deg,transparent 50%,var(--rule-strong) 50%)}
+/* THE EMPTY CANVAS OFFERS THE THREE PANELS THIS TENANT USES MOST, ghosted,
+   because a board with nothing on it and no route onto it is a dead end for
+   anyone who does not already know the tray is draggable. */
+.ed-start{position:absolute;left:0;top:calc(var(--u)*48);
+  width:calc(var(--u)*110);
+  display:grid;gap:calc(var(--u)*4);padding:calc(var(--u)*4)}
+.ed-start p{font-size:var(--s2);line-height:var(--lh-note);color:var(--muted);
+  margin:0;max-width:var(--measure-text);background-color:var(--paper);
+  padding:calc(var(--u)*2)}
+.ed-seeds{display:grid;gap:calc(var(--u)*3);
+  grid-template-columns:repeat(auto-fit,minmax(11rem,1fr))}
+.ed-seed{text-align:left;font:inherit;display:grid;gap:calc(var(--u)*1);
+  align-content:start;cursor:pointer;background-color:var(--sheet);
+  border:1px dashed var(--rule-strong);padding:calc(var(--u)*3);
+  min-height:calc(var(--u)*24)}
+.ed-seed:hover{background-color:var(--tile-hover);border-style:solid}
+.ed-seed .nm{font-size:var(--s2);color:var(--ink)}
+.ed-seed .mt{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted)}
+.ed-seed .put{font-family:var(--face-mono);font-size:var(--s1);color:var(--ink);
+  margin-top:calc(var(--u)*1)}
+.ed-map{position:absolute;right:calc(var(--u)*3);bottom:calc(var(--u)*3);
+  width:calc(var(--u)*24);height:calc(var(--u)*16);background-color:var(--sheet);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);pointer-events:none}
+.ed-map span{position:absolute;background-color:var(--rule-strong)}
+.ed-map .ed-map-v{background:none;box-shadow:inset 0 0 0 1px var(--ink)}
+.ed-keys{margin:0;
+  padding:calc(var(--u)*3) calc(var(--u)*5);font-size:var(--s1);
+  line-height:var(--lh-note);color:var(--muted);
+  border-top:1px solid var(--rule)}
+.ed-keys kbd{font-family:var(--face-mono);font-size:var(--s1);
+  font-weight:var(--w-figure);color:var(--ink);background:none}
+.rpthead{display:flex;align-items:center;justify-content:space-between;
+  gap:calc(var(--u)*4);flex-wrap:wrap;padding:calc(var(--u)*4) calc(var(--u)*5);
+  border-bottom:1px solid var(--rule)}
+.rpthead .ttl{display:flex;align-items:center;gap:calc(var(--u)*3);
+  flex-wrap:wrap}
+.rpthead h2{font-size:var(--s3);letter-spacing:var(--tr-title)}
+.canvas{padding:calc(var(--u)*5);display:grid;gap:calc(var(--u)*5);
+  min-width:0;align-content:start}
+/* THE DROP STATE IS AN EDGE AND A GROUND SHIFT, not the hatch — the hatch
+   means "not built" everywhere else and may not be borrowed for a hover. */
+.canvas[data-over="true"]{background-color:var(--sheet);
+  outline:1px solid var(--ink);outline-offset:calc(var(--u)*-1)}
+.panel{display:grid;gap:calc(var(--u)*3)}
+/* A PANEL IN THE READING VIEW IS THE SHEET THAT CARD BECOMES, so it carries
+   the same frame: the two surfaces are one arrangement seen twice. */
+.canvas > .panel{background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);padding:calc(var(--u)*4)}
+.panel-h{display:flex;align-items:baseline;justify-content:space-between;
+  gap:calc(var(--u)*4);flex-wrap:wrap;padding-bottom:calc(var(--u)*2);
+  border-bottom:1px solid var(--rule-strong)}
+.panel-h .nm{font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph)}
+.panel-h .sheet{font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted);white-space:nowrap}
+.panel .ctl{display:flex;gap:calc(var(--u)*1)}
+.panel .ctl button{font:inherit;font-family:var(--face-mono);
+  font-size:var(--s1);min-height:calc(var(--u)*6);padding:0 calc(var(--u)*2);
+  color:var(--ink);background-color:var(--paper);border:0;cursor:pointer;
+  box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.panel .ctl button:hover{background-color:var(--tile-hover)}
+/* DISABLED IS --refused ON --sheet, here as everywhere. A control that cannot
+   act and looks exactly like one that can is the defect this system's own
+   kernel names first. */
+.panel .ctl button[aria-disabled="true"]{color:var(--refused);
+  background-color:var(--sheet);cursor:default}
+.panel .said{font-size:var(--s3);line-height:var(--lh-body);max-width:70ch}
+.cover{display:flex;gap:calc(var(--u)*8);flex-wrap:wrap;
+  justify-content:space-between;align-items:flex-start}
+.cover .read{font-size:var(--s3);line-height:var(--lh-body);max-width:56ch}
+/* THE PIN IS DRAWN AND DOES NOT WORK, so it carries the hatch and its reason
+   rather than sitting among the controls that do. */
+.pinbox{padding:calc(var(--u)*4);margin-top:calc(var(--u)*2)}
+.pinbox .acts{margin-top:0}
+
+/* ═══ C7 · A HEADING WITH ITS ONE CONTROL ══════════════════════════════════ */
+.paneh{display:flex;align-items:center;justify-content:space-between;
+  gap:calc(var(--u)*4);flex-wrap:wrap;margin-bottom:calc(var(--u)*3)}
+.paneh > .lab{margin:0}
+.paneh .abtn{margin:0}
+.pane .reasons{margin-bottom:calc(var(--u)*4)}
+.pane .result{margin-bottom:calc(var(--u)*4)}
+/* A REFUSAL IS NOT A RESULT. It keeps the same block so the answer appears
+   where the reader is already looking, and states its refusal in --refused
+   ink with the boundary named. */
+.result.refused{box-shadow:inset 0 0 0 1px var(--refused);color:var(--refused)}
+
+/* ═══ C5 · THE APPROVER'S QUEUE ════════════════════════════════════════════
+   One proposal per block, and the block holds the whole argument: what is
+   proposed, who proposed it, the evidence, and the two things this person may
+   do about it. An approver who has to leave the block to see the evidence is
+   approving a summary. */
+.appr{padding:calc(var(--u)*5);background-color:var(--sheet);
+  box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.appr-top{display:flex;justify-content:space-between;align-items:flex-start;
+  gap:calc(var(--u)*6);flex-wrap:wrap;margin-bottom:calc(var(--u)*4)}
+.appr-top h3{font-size:var(--s4);font-weight:var(--w-body);
+  letter-spacing:var(--tr-title);margin:calc(var(--u)*1) 0 0;max-width:44ch}
+.appr .prop{font-size:var(--s3);line-height:var(--lh-body);max-width:70ch;
+  margin:0 0 calc(var(--u)*2)}
+.appr > .q{font-size:var(--s2);color:var(--muted);margin:0 0 calc(var(--u)*4)}
+.appr .ev{margin-bottom:calc(var(--u)*2)}
+/* The self-approval refusal and the waived-segregation policy are both
+   hatched: one is a routing that does not exist, the other a switch that does
+   not exist, and both would otherwise read as working controls. */
+.selfbox,.waived{padding:calc(var(--u)*4);margin-top:calc(var(--u)*4);
+  max-width:var(--measure-text)}
+.waived p{font-size:var(--s2);line-height:var(--lh-note);color:var(--muted);
+  margin:calc(var(--u)*2) 0 0;max-width:60ch}
+/* A TERMINAL STATE REPORTED LATE still has to read as a fact, not an alarm:
+   the rule is --refused ink and a sentence, with no colour doing the work. */
+.failed{margin-top:calc(var(--u)*4);padding:calc(var(--u)*4);
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--refused);
+  max-width:var(--measure-text)}
+.failed p{font-size:var(--s2);line-height:var(--lh-note);color:var(--refused);
+  margin:calc(var(--u)*2) 0 0}
+
+/* ═══ C8 · THE PLAN ════════════════════════════════════════════════════════ */
+.planfigs{gap:calc(var(--u)*8) calc(var(--u)*10)}

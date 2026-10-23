@@ -1,0 +1,41 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE LUMINOUS TOUCH, COMPOSED WITH THE CLOSE SURFACE — RM-04, G3399, 3 Oct 2026.
+
+   🛑 THE LIGHT COULD NOT PAINT ON A STRIP CELL, MEASURED. The kernel puts the
+   paint on a DOUBLED class — `.lit.lit`, (0,2,0) — precisely "so a later
+   single-class `background:` shorthand cannot erase the light". close.css's
+   button reset `.close .cell{…background:none…}` is ALSO (0,2,0) and loads
+   later, so it tied and won: with `lit lit--running` injected on a cell of the
+   built `shell.html` the audit read `background-image: none`. The kernel's
+   guard was written against a (0,1,0) reset; the app scoped its reset under
+   `.close` and walked straight past it.
+
+   THE REPAIR IS TWO-SIDED AND DELIBERATELY SMALL:
+   · close.css's ONE rule now resets `background-color:transparent` — a button
+     has no default image, so the shorthand's only job was the colour — and no
+     longer touches `background-image` at all. That is the only line of
+     close.css this slice changes (the Close surface belongs to its own slice).
+   · THIS FILE carries what a lit cell must ADD over close.css, at a
+     specificity close.css cannot reach, so the light wins by construction
+     rather than by source order.
+
+   🛑 NOTHING HERE DECLARES A BACKGROUND, and nothing may: the paint is the
+   kernel's and is written once (THE LUMINOUS TOUCH). This file composes the
+   two things close.css REPLACES — the edge and the clip — and nothing else.
+   `tests/design/luminous-cell.test.ts` injects the classes into the built
+   page and reads the computed paint back.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* THE EDGE SURVIVES THE CURRENT-CELL UNDERLINE. `.close .cell[aria-current]`
+   (0,3,0) sets `box-shadow:inset 0 -2px 0 0 var(--ink)`, which REPLACES the
+   kernel's `inset 0 0 0 1px var(--lit-edge)` rather than adding to it. A
+   shadow list is the one way to keep both. (0,4,0). */
+.close .cell.lit[aria-current="true"] {
+  box-shadow: inset 0 0 0 1px var(--lit-edge), inset 0 -2px 0 0 var(--ink);
+}
+
+/* THE SWEEP IS CLIPPED TO ITS CELL. The kernel's `::after` parks at
+   translateX(-120%) between passes; unclipped it hangs outside the cell and
+   drags the strip sideways. The pack carries this as app.css
+   `.lit--running{overflow:hidden}`, which the app had not ported. (0,4,0). */
+.close .cell.lit.lit--running { overflow: hidden; }

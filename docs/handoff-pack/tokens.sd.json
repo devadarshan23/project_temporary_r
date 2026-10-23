@@ -1,0 +1,181 @@
+{
+  "_meta": {
+    "source": "design/system/tokens.css",
+    "authority": "tokens.css is the source of truth. This file is a BUILD INPUT generated from it — do not hand-edit, and do not treat a disagreement between the two as ambiguous: tokens.css wins.",
+    "canonical": "tokens.tokens.json (W3C DTCG) is the canonical interchange and carries the full reasoning for every token. This file carries the same values in Style Dictionary's shape, with each token's ONE JOB as its comment.",
+    "warning": "Any platform file emitted from this source must preserve the light/dark split as two themes over ONE set of names. A build that flattens dark into separate token names (ink-dark, paper-dark) breaks the rule that no component knows which theme it is in."
+  },
+
+  "ground": {
+    "paper":      { "value": "#ffffff", "comment": "The sheet everything sits on." },
+    "sheet":      { "value": "#f1f7f7", "comment": "A panel ON the sheet. 1.08:1 — barely there, and meant to be." },
+    "tile-hover": { "value": "#e7f0f0", "comment": "Pointer over a tile. A ground change, never a hue change. 1.16:1." },
+    "row-hover":  { "value": "#f8fbfb", "comment": "Pointer over a register row. 1.04:1." }
+  },
+
+  "ink": {
+    "base":        { "value": "#00303f", "comment": "14.05 paper / 12.97 sheet. Everything that must be read." },
+    "refused":     { "value": "#4a6166", "comment": "6.57 / 6.07. REFUSED or never built. Never cleared work." },
+    "muted":       { "value": "#566d72", "comment": "5.49 / 5.07. Supporting text. Nothing else." },
+    "recede":      { "value": "#607478", "comment": "4.92 / 4.54. CLEARED work. BELOW AA on sheet — not for text on a panel." },
+    "rule-strong": { "value": "#a4b8bb", "comment": "2.07 / 1.91. Hairline between sections. Never text." },
+    "rule":        { "value": "#cfdedf", "comment": "1.38 / 1.28. Hairline between rows. THE VISIBLE FLOOR." },
+    "on-ink":      { "value": "#ffffff", "comment": "14.05 on ink." },
+    "on-ink-2":    { "value": "#bcccd0", "comment": "8.49 on ink. Secondary on ink grounds." }
+  },
+
+  "agent": {
+    "base":  { "value": "#00866a", "comment": "4.55 / 4.20. MEASUREMENT ONLY — the meter, and nothing else. Below AA on sheet: fine for a 3px graphic object, not for text." },
+    "deep":  { "value": "#014751", "comment": "10.39 / 9.59. Agent TEXT, and the committing button's hover." },
+    "track": { "value": "rgba(0,134,106,.16)", "comment": "The meter's unfilled remainder." }
+  },
+
+  "accent": {
+    "base":  { "value": "#8a4b2a", "comment": "6.73 / 6.21. WAYFINDING ONLY, and it reinforces rather than carries. Deliberately outside the brand's green family — a second green reads as a second agent state." },
+    "deep":  { "value": "#6d3a20", "comment": "9.06 / 8.36. Accent TEXT — the current crumb." },
+    "quiet": { "value": "rgba(138,75,42,.06)", "comment": "The selected row's ground. Paired with the 2px edge, never alone." }
+  },
+
+  "lit": {
+    "hot":       { "value": "rgba(202,246,65,.34)", "comment": "The hot centre at 0%. A SOURCE WITH FALLOFF, never a fill." },
+    "mid":       { "value": "rgba(82,198,227,.22)", "comment": "The falloff at 38%." },
+    "out":       { "value": "rgba(82,198,227,0)",   "comment": "Nothing, by 74%." },
+    "hot-hover": { "value": "rgba(202,246,65,.46)" },
+    "mid-hover": { "value": "rgba(82,198,227,.30)" },
+    "edge":      { "value": "rgba(0,134,106,.22)",  "comment": "The inset hairline around a lit thing." }
+  },
+
+  "hatch": { "value": "rgba(0,48,63,.18)", "comment": "The not-built stripe. 1.42:1 on both light grounds — just above ink.rule. The alpha form is what makes it ground-independent." },
+
+  "mark": {
+    "from":        { "value": "#50c6e9", "comment": "Measured from the brand sheet." },
+    "to":          { "value": "#72c34e", "comment": "Measured from the brand sheet." },
+    "radius":      { "value": "0", "comment": "Square under R2. The single revert point — the sheet's own corner is .09em." },
+    "clear-space": { "value": "1em", "comment": "The badge's own width on every side. In em so it travels with the mark." },
+    "min-size":    { "value": "16px", "comment": "Of badge. Below this, use the glyph alone." }
+  },
+
+  "face": {
+    "sans": { "value": "'IBM Plex Sans', system-ui, sans-serif", "comment": "Carries language." },
+    "mono": { "value": "'IBM Plex Mono', ui-monospace, monospace", "comment": "Carries figures. With tabular-nums, always (R9)." }
+  },
+
+  "size": {
+    "s1": { "value": "0.6875rem",  "comment": "11px. Micro, uppercase, tracked. FIXED — does not scale with the viewport." },
+    "s2": { "value": "0.78125rem", "comment": "12.5px. Label, cell, control, note. FIXED." },
+    "s3": { "value": "0.875rem",   "comment": "14px. Body, the default. FIXED — already at the readable floor." },
+    "s4": { "value": "clamp(1rem,.94rem + .3vw,1.0625rem)", "comment": "16→17px. Title." },
+    "s6": { "value": "clamp(1.75rem,1.2rem + 2.75vw,2.5rem)", "comment": "28→40px. Figure." },
+    "s7": { "value": "clamp(2.25rem,1.1rem + 5.75vw,6rem)", "comment": "36→96px. Display. One per page." }
+  },
+
+  "weight": {
+    "display": { "value": "200", "comment": "size.s7 only." },
+    "lede":    { "value": "300", "comment": "The one lede, and the s6 figure." },
+    "body":    { "value": "400", "comment": "Every sentence." },
+    "figure":  { "value": "500", "comment": "A monospaced thing that must not look bold." },
+    "emph":    { "value": "600", "comment": "Emphasis, and every uppercase micro label." },
+    "mark":    { "value": "700", "comment": "The wordmark and the glyph. Nothing else." }
+  },
+
+  "tracking": {
+    "micro":   { "value": ".1em",    "comment": "size.s1 uppercase. Non-negotiable at 11px." },
+    "title":   { "value": "-.01em",  "comment": "size.s4." },
+    "display": { "value": "-.035em", "comment": "size.s7." },
+    "mark":    { "value": "-.025em", "comment": "The wordmark. Not running text." }
+  },
+
+  "leading": {
+    "display": { "value": "0.95", "comment": "Unitless. size.s7 — sub-single, deliberately." },
+    "body":    { "value": "1.45", "comment": "Unitless. size.s3 and s4." },
+    "note":    { "value": "1.55", "comment": "Unitless. size.s2 prose — LOOSER than body, because smaller lines are easier to lose." }
+  },
+
+  "measure-text": {
+    "text": { "value": "80ch", "comment": "Body and note prose. The ceiling." },
+    "lede": { "value": "64ch", "comment": "The one lede. Shorter because it is bigger." },
+    "act":  { "value": "56ch", "comment": "A sentence a person must ACT on." }
+  },
+
+  "space": {
+    "u":      { "value": "0.25rem", "comment": "4px at a 16px root. Every gap is a multiple. THE HALF-UNIT IS THE FLOOR." },
+    "gutter": { "value": "clamp(1.25rem,.85rem + 2vw,3.5rem)", "comment": "20→56px. The page's own edge." }
+  },
+
+  "target": {
+    "min":   { "value": "1.5rem",  "comment": "24px. WCAG 2.2 AA 2.5.8 floor. In rem so a larger font setting gives a larger target. A floor, not a design target." },
+    "base":  { "value": "2rem",    "comment": "32px. What the system's controls actually are." },
+    "touch": { "value": "2.75rem", "comment": "44px. The phone tab bar only." }
+  },
+
+  "layout": {
+    "measure":   { "value": "73.75rem", "comment": "1180px. A PAGE. Does not grow above the ultra tier." },
+    "col-min":   { "value": "15.5rem",  "comment": "248px. The floor of an auto-fit column." },
+    "form":      { "value": "25.5rem",  "comment": "408px. The entry-tier form column. NOT measure — they move for different reasons." },
+    "bp-narrow": { "value": "720px",    "comment": "CONSTANT, not a usable token — a custom property cannot be read inside @media." },
+    "bp-mid":    { "value": "1080px",   "comment": "CONSTANT." },
+    "bp-wide":   { "value": "1440px",   "comment": "CONSTANT. Above it the drawer becomes an inline column." },
+    "floor":     { "value": "320px",    "comment": "The reflow floor. 1.4.10 — a requirement, not a choice." }
+  },
+
+  "motion": {
+    "spring":   { "value": "linear(0, .231 10%, .624 20%, .922 30%, 1.067 40%, 1.094 50%, 1.067 60%, 1.030 70%, 1.005 80%, .995 90%, 1)", "comment": "A damped spring (zeta 0.6, omega-n 18) sampled at eleven points. Anything that MOVES, on the way IN. Restarts rather than retargeting — that trade is why it is one token and not a library." },
+    "t-spring": { "value": "420ms", "comment": "The spring's settle time." },
+    "t-fade":   { "value": "120ms", "comment": "Opacity and colour, and the way OUT. A leaving element does not bounce." },
+    "sweep":    { "value": "17s",   "comment": "AMBIENT. 88% of the cycle at rest — the rest fraction is the load-bearing part." },
+    "alive":    { "value": "3.6s",  "comment": "AMBIENT. The connection light." },
+    "lv":       { "value": "1.4s",  "comment": "AMBIENT. The agent's level bars." }
+  },
+
+  "depth": {
+    "scrim":        { "value": "rgba(0,48,63,.38)", "comment": "Behind a drawer or a modal. The only exception to the no-shadow rule." },
+    "sheet-shadow": { "value": "0 1px 0 {ink.rule-strong.value}", "comment": "Not a shadow — a hairline under a panel." }
+  },
+
+  "layer": {
+    "popover": { "value": "20", "comment": "Tooltip, menu." },
+    "overlay": { "value": "30", "comment": "Drawer." },
+    "modal":   { "value": "40", "comment": "Dialog, scrim, toast." },
+    "skip":    { "value": "99", "comment": "The skip link. Highest, because it must work when something else has gone wrong." }
+  },
+
+  "dark": {
+    "_comment": "A DIMMED LIGHT THEME — one dark ground, every other step recomputed against it. Same names, same jobs. on-ink and on-ink-2 invert in DIRECTION because an ink ground here is a light panel; the name still describes the job.",
+    "ground": {
+      "paper":      { "value": "#001a22" },
+      "sheet":      { "value": "#012b35", "comment": "1.35:1." },
+      "tile-hover": { "value": "#023b47" },
+      "row-hover":  { "value": "#01222c" }
+    },
+    "ink": {
+      "base":        { "value": "#e8f2f3", "comment": "15.74:1." },
+      "refused":     { "value": "#879ea2", "comment": "6.36:1." },
+      "muted":       { "value": "#7d9498", "comment": "5.60:1." },
+      "recede":      { "value": "#718a8e", "comment": "4.89:1." },
+      "rule-strong": { "value": "#22505d", "comment": "2.03:1." },
+      "rule":        { "value": "#123540", "comment": "1.37:1 — the same relationship to the ground it has in the light theme." },
+      "on-ink":      { "value": "#001a22", "comment": "15.74:1 on dark.ink." },
+      "on-ink-2":    { "value": "#1d4a55", "comment": "8.52:1 on dark.ink." }
+    },
+    "agent": {
+      "base": { "value": "#14a082", "comment": "5.45:1. LIGHTENED — the light hex is 1.5:1 here. Better than the light theme's 4.55, because the green no longer competes with white." },
+      "deep": { "value": "#86dcc5", "comment": "11.15:1." },
+      "track": { "value": "rgba(20,160,130,.22)" }
+    },
+    "accent": {
+      "base":  { "value": "#d99a74", "comment": "7.54:1." },
+      "deep":  { "value": "#eec0a3", "comment": "10.62:1." },
+      "quiet": { "value": "rgba(217,154,116,.14)" }
+    },
+    "lit": {
+      "hot":       { "value": "rgba(202,246,65,.06)", "comment": "A source on a dark ground is the case the luminous touch was always describing. DIMMED by the owner's ruling (G3661, \"Dim the dark glow\") so --muted holds >=4.5:1 everywhere on a lit cell, sweep included." },
+      "mid":       { "value": "rgba(82,198,227,.04)" },
+      "out":       { "value": "rgba(82,198,227,0)" },
+      "hot-hover": { "value": "rgba(202,246,65,.07)" },
+      "mid-hover": { "value": "rgba(82,198,227,.05)" },
+      "edge":      { "value": "rgba(20,160,130,.34)" }
+    },
+    "hatch": { "value": "rgba(232,242,243,.16)", "comment": "1.55:1. INVERTS OR IT DISAPPEARS — a dark stripe on a dark ground is the not-built defect in its purest form." },
+    "depth": { "scrim": { "value": "rgba(0,10,14,.62)" } }
+  }
+}

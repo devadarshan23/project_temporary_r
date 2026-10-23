@@ -1,0 +1,41 @@
+openapi: 3.1.0
+info:
+  title: wire-mirror fixture — ENGINE METER, DELIBERATELY DRIFTED
+  version: 0.0.0
+  description: |
+    Fixture for tools/check-wire-mirror.mjs. NOT a real contract, and NOT a
+    proposal: the enum below is wrong on purpose.
+
+    THE `engine_meter` PAIR WAS POINTED AT THIS FILE AND REQUIRED TO REJECT IT
+    BEFORE IT WAS POINTED AT THE TREE — the 11 Aug 2026 amendment to G109 makes
+    that condition non-optional, and it binds a new PAIR for the same reason it
+    binds a new SOURCE KIND: a pair whose only witness is a green run against a
+    correct wire has never been shown to fail, and a pair registered with the
+    wrong reader compares an empty list against an empty list and reports
+    `DRIFT (0)` against nothing (§5.6, inside the tool written to catch §5.6).
+
+    Against `EngineMeter` in model/reconciliation.ts it is drifted three ways at
+    once, so that a repair of any one of them still leaves the run red:
+
+      • `output_tokens` is MISSING from the wire — the model declares it.
+      • `documents_processed` is ON THE WIRE and the model declares no such
+        engine meter. It is a real member of `METERS` (model/billing.ts) and is
+        here deliberately: the drift this pair most plausibly suffers is
+        somebody widening the engine's four to the billing vocabulary's eight,
+        and the fixture should be wrong in the shape the mistake would take.
+      • `exceptions_raised` and `reconciliations_run` are REORDERED against the
+        model's declaration order. This checker compares sequences, not sets,
+        because "a reordering is the shape that hides the next insertion".
+
+    🛑 NO PRICE HERE EITHER. Invariant 5 binds the fixture as well as the tree:
+    a fixture carrying a `unitPrice` beside a meter would be the first written
+    example of the thing the slice exists to refuse, and examples get copied.
+paths: {}
+components:
+  schemas:
+    EngineMeter:
+      type: string
+      description: |
+        DELIBERATELY DRIFTED. See the file description. Do not sweep this to
+        agree with the model — repairing it deletes the witness.
+      enum: [input_tokens, documents_processed, exceptions_raised, reconciliations_run]

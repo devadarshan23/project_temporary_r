@@ -1,0 +1,3672 @@
+openapi: 3.1.0
+
+info:
+  title: ReconcileAI — Administration (the partner portal and the staff console)
+  version: 0.1.0-draft
+  summary: >-
+    The two control-plane consoles. Declared under G288, mounted by nothing, and
+    carrying no capability on any operation — because `decide()` refuses a
+    platform principal before it reads one.
+  description: |
+    THE TIER THE RECORD HAS CALLED "THE LARGEST v1 GAP" SINCE 5 Aug 2026.
+
+    `docs/contracts/README.md` has carried a section headed "The tier that is
+    missing" for six weeks: *"Every contract written describes a reconciliation
+    happening. Nothing describes setting the system up."* This is that file, and
+    it is written under **G288** (19 Sep 2026), whose premise is mechanical
+    rather than aesthetic: under **G191** `mountTier()` refuses to BOOT on a
+    handler naming an `operationId` no contract declares — *"the server may be a
+    subset of the contract, never a superset of it"* — so **not one line of the
+    partner portal or the staff console was writable, in any order, until this
+    document existed.**
+
+    ┌─ WHAT IT COVERS, AND WHAT IT DELIBERATELY DOES NOT ───────────────────────┐
+    │ G288 names three sources and this file is derived from them:              │
+    │                                                                           │
+    │   `P1 Partner.dc.html`   the partner portal, NINE destinations            │
+    │   `S1 Staff.dc.html`     the staff console, SIX destinations              │
+    │   `User Journeys.dc.html` the control-plane journey steps that name a     │
+    │                          console where a path belongs                     │
+    │                                                                           │
+    │ IT DOES **NOT** COVER THE CUSTOMER-FACING ADMINISTRATION SURFACE, and     │
+    │ that is a scope statement rather than an omission. `README.md`'s absent-   │
+    │ surface table names six: authoring, commercial, tenancy admin, governance, │
+    │ telemetry configuration and evaluation. The FDE's and the tenant admin's   │
+    │ halves of those — definition authoring, tenant user management, legal      │
+    │ holds, subject requests, telemetry policy — are **customer-plane** acts    │
+    │ and none of them is drawn in `P1` or `S1`. They remain owed. The gap this  │
+    │ file closes is the CONSOLE gap; the tenant-admin gap is still open and     │
+    │ `README.md`'s table still describes it correctly.                          │
+    └───────────────────────────────────────────────────────────────────────────┘
+
+    ------------------------------------------------------------------------
+    1 · DECLARED AND UNMOUNTED — G200, AND THIS FILE RELIES ON THE DISTINCTION
+    ------------------------------------------------------------------------
+
+    Nothing here is served. G200 freezes MOUNTING at four operations and its own
+    row says the freeze is *"on MOUNTING, not on declaring — a PR that adds
+    contract operations without mounting them is not in conflict with this
+    row."* No handler exists, `server/*/start.ts` is untouched, and
+    `mountTier()` is never called for this tier.
+
+    ✅ IT IS REGISTERED — G533, 19 Sep 2026 — AND THE PARAGRAPH THAT SAID IT
+    WAS NOT IS QUOTED RATHER THAN DELETED, because it is the paragraph that
+    named the work and predicted its cost exactly:
+
+      *"⚠️ IT IS NOT EVEN REGISTERED. `TIERS` in `server/contract/document.ts`
+      names five tiers and this is not one of them, so `loadTier()` cannot read
+      this file and `tools/check-capability-annotations.mjs` cannot see a
+      single operation below. **That is a deliberate consequence of the scope
+      this slice was given and it is a real hole, named here rather than left
+      to be found:** registering the tier is a two-line change to
+      `server/contract/document.ts` and `server/contract/capability.ts`, the
+      second of which is a `TS2741` until somebody writes down whether this
+      tier's operations carry a capability. §2 below answers that question with
+      an argument; applying it is a `server/` edit and belongs to whoever takes
+      the registration. Until then the control over every annotation in this
+      file is `tests/contracts/administration-wire.test.mjs`, which reads the
+      document directly and applies the same grammar."*
+
+    It was a two-line change, it was a `TS2741`, and §2's answer was taken —
+    **with one correction, which is in §2 itself and matters more than the
+    registration.** What moved: `loadTier('administration')` works;
+    `tools/check-capability-annotations.mjs` walks every operation below with
+    the same `classifyAnnotation()` the router boots through, and its
+    denominator went from 77 to 136. `tests/contracts/administration-wire.test.mjs`
+    is NOT retired — it asserts `x-plane` and `x-admin-authority`, which no
+    checker reads.
+
+    🛑 **NOTHING IS MOUNTED AND REGISTERING DID NOT CHANGE THAT.** G200's
+    distinction is unchanged and G318's sequencing is unchanged: *"INGESTION,
+    EXCEPTIONS, CORRESPONDENCE, AND ONLY THEN THE PARTNER PORTAL AND THE STAFF
+    CONSOLE"*, and *"until H1 and H2 exist, every tenant is created by hand."*
+    Derive the served set, never read it:
+    `grep -rn 'handlers:' server/*/start.ts`.
+
+    ------------------------------------------------------------------------
+    2 · NO OPERATION CARRIES A CAPABILITY, AND THE REASON IS IN `decide()`
+    ------------------------------------------------------------------------
+
+    🛑 THIS IS THE FINDING, AND IT WAS DERIVED FROM THE MODEL RATHER THAN
+    CHOSEN. `decide()` is the single evaluator. Its second step is categorical:
+
+        if (principal.orgClass === ORG_CLASSES.platform) {
+          return deny(DECISION_REASONS.platform_org_holds_no_assignment)
+        }
+
+    **Every platform principal is denied before any capability is looked at.**
+    That is invariant 8 — *"being staff is not access"* — enforced rather than
+    commented, and it is correct. It also means that annotating a staff-console
+    operation `x-capability: view_commercial` would declare a gate **its own
+    principal can never open**: the staff person is `orgClass: platform`, and
+    `decide()` refuses them at the org term whatever verb is named.
+
+    🛑 **THE BRANCH QUOTED ABOVE NO LONGER EXISTS, AND IT STOPPED EXISTING ON
+    THE DAY THIS FILE WAS WRITTEN. G289, 19 Sep 2026** — the same date in this
+    file's own header — **gave `decide()` a FOURTH `OrgClass` ARM: a platform
+    principal is evaluated against a `PlatformRoleAssignment` rather than
+    refused at step two.** The quotation is kept because it is the premise this
+    section reasons from and because it is quoted in `docs/HANDOFF.md`; it is
+    **history, not the tree**. Derive the tree:
+    `grep -n 'platform_org_holds_no_assignment' model/access.ts`.
+
+    🟢 **THE VERDICT IS UNCHANGED AND ITS GROUND IS NARROWER, WHICH IS WHY
+    G533 REGISTERED THIS TIER `false` RATHER THAN RE-ANNOTATING IT.** The arm
+    answers each of the thirteen resource classes and **twelve are `false`**;
+    the one that opens is `commercial`, and nothing in H1 or H2 is commercial.
+    More to the point, the classes most of this file acts on — `substrate` and
+    `catalogue` — are the two `model/governance.ts` documents as having **no
+    capability by statement rather than by omission**. So there is still no
+    verb to name on a staff-console operation, and the exemptions below are
+    still right. **What changed is the REASON: it is no longer "the principal
+    is refused before a capability is read"; it is "the act has no capability
+    to read."**
+
+    🛑 **AND THE COST OF `false` IS NOW WRITTEN DOWN WHERE IT IS ENFORCED, in
+    `server/contract/capability.ts`'s `administration` entry, because this
+    file's §2 did not name it and it is the sharpest thing about this tier:**
+    an `exempt:` operation is one `server/http/app.ts`'s gate NEVER TOUCHES —
+    the hook returns at its first line — and `mountTier()`'s sixth fence keys
+    on a capability, so an exempt operation mints no invariant 10 record
+    either. On the other four `false` tiers that costs nothing, because their
+    callers are machines or hold no session. **Here the caller is a person with
+    a live `tenant.session` row, so a MOUNTED staff-console operation would
+    answer a customer operator.** That is measured rather than asserted, over a
+    real `buildPlane()`, in `tests/http/administration-tier-unmounted.test.ts`
+    §3 — **and it is the load-bearing reason nothing here is mounted**,
+    alongside G318's sequencing.
+
+    The partner arm refuses for a different reason and reaches the same place.
+    A partner principal needs a live `PartnerAccessGrant` whose `scope` admits
+    the capability through `PARTNER_CAPABILITY_MASK`; with no grant the answer
+    is `partner_grant_absent`. **A `PartnerAccessGrant` is per customer tenant**
+    — it is invariant 2's single cross-tenant read path — and **nothing in this
+    document reads a customer tenant.** A partner reading its own arrangement,
+    its own commission or its own people holds no grant, needs none, and would
+    be refused by `decide()` if one were demanded.
+
+    And `PrincipalContext.tenantId` is `TenantId`, non-null. Most of what is
+    below addresses no tenant at all.
+
+    SO EVERY OPERATION HERE STATES AN EXEMPTION, one per operation, on the
+    operation, naming what does govern it — exactly the shape `session.openapi.yaml`
+    uses for the same structural reason: *"a capability here is a verb with no
+    noun."*
+
+    ⚠️ WHAT THIS IS NOT. It is not a gate bought out with prose. `server/contract/capability.ts`
+    warns that the grammar admits `exempt:` anywhere and that
+    ⛔ **SUPERSEDED 20 Sep 2026 — G911. `TIER_REQUIRES_CAPABILITY` NO LONGER
+    EXISTS AND THE VERDICT IS PER OPERATION**, so the paragraph below is the
+    history of a mechanism rather than a description of one. **What it was
+    right about survives and is now enforced more widely**: an exemption here
+    reaches a PERSON, and since G914 a MOUNTED person-facing exemption does
+    not boot unless `server/http/app.ts`'s fourth fence sees
+    `servedWithoutAGate()` at the mount — which is a control this tier never
+    had while its verdict was `false`. **THE ORIGINAL FOLLOWS.**
+    `TIER_REQUIRES_CAPABILITY` is what stops that being a loophole. **The verdict
+    this tier needs is `false`**, and the argument above is the reason — the same
+    verdict `session`, `foundation`, `controlPlane` and `dataPlaneLocal` carry,
+    reached by the same test: is there a human principal `decide()` can evaluate?
+    Here there is a human and there is no evaluation.
+
+    ✅ **APPLIED — G533, `TIER_REQUIRES_CAPABILITY.administration = false`.**
+    ⚠️ **AND RE-EXPRESSED 20 Sep 2026 — G913: the same fact is now
+    `EXEMPT_WITH_A_PERSON_TO_ASK.administration = 45`, a COUNT the gate
+    recomputes rather than a verdict a fence consults.**
+    ⚠️ **AND THE SENTENCE ABOVE — *"the same verdict … reached by the same
+    test"* — IS THE ONE PART OF §2 THAT DID NOT SURVIVE REVIEW, and it is
+    corrected rather than deleted because it is the sentence that makes this
+    verdict look routine.** It is NOT the same test: the other four carry
+    `false` because their callers are machines, are inside a VPC, or hold no
+    session; this one carries it because a HUMAN's act has no capability to
+    name. The verdicts agree and the reasons do not, and the difference is
+    exactly what makes `false` costly here and free there. The cost is
+    enumerated on the entry itself in `server/contract/capability.ts`.
+
+    🛑 THE STANDING CONSEQUENCE, STATED SO NOBODY READS THIS FILE AS CLOSING IT.
+    **There is no authorisation mechanism for a platform principal anywhere in
+    `model/`.** `authorisationPermits()` governs a staff reach INTO a tenant and
+    is the right evaluator for the `[tenant]`-planed operations below. Nothing at
+    all governs a staff act with no tenant in it — listing tenants, publishing a
+    pack, issuing an invoice, accepting a registration. `S1` draws three staff
+    roles with different destinations; `model/access.ts` cannot represent one,
+    because `ORG_CLASSES.platform` holds no `RoleAssignment` by law. **That is a
+    ruling somebody owes, and it is larger than this file.** `x-admin-authority`
+    below names, per operation, which of four things a reader should look for —
+    two of which exist and two of which do not.
+
+    ------------------------------------------------------------------------
+    3 · NO TENANT BUSINESS DATA, ANYWHERE — INVARIANT 3, HELD BY ABSENCE
+    ------------------------------------------------------------------------
+
+    Both consoles are control-plane surfaces and **the control plane publishes
+    downward and never reads tenant data.** `control-plane.openapi.yaml` §2
+    states the boundary in the form this file adopts verbatim: *"An exception, a
+    document value, a counterparty's words, a definition name, a cost-centre
+    label — all of those are theirs, and none of them appears in any schema
+    here."*
+
+    The pack agrees with itself on this and says so twice: `P1`'s status bar
+    reads *"control plane · no tenant data on this surface"* and its footer
+    *"No partner user reaches a tenant host or a row of tenant data."* `S1`'s
+    palette empty state: *"This console holds tenants, partners, the catalogue
+    and the period — **not what is inside a tenant**. A document, an exception
+    or a register row will never be found here."*
+
+    Where the pack draws a control that would breach it, the control is NOT
+    declared here and the reason is recorded in §6.
+
+    ------------------------------------------------------------------------
+    4 · G76's PLANE TAG — `x-plane`, WITH A READER IN THE SAME COMMIT
+    ------------------------------------------------------------------------
+
+    G76 rules the administration tier is ONE file with enforced plane tags, and
+    that *"the checker lands in the same commit as the file — a tag with nothing
+    reading it is §5.6 exactly."* Every operation below carries `x-plane`, a
+    closed two-member vocabulary:
+
+        platform   no tenant is addressed
+        tenant     addressed at exactly one tenant, by `{tenantId}` in the path
+
+    `tests/contracts/administration-wire.test.mjs` asserts the **iff** in both
+    directions — `x-plane: tenant` exactly when the path carries `{tenantId}` —
+    so the tag cannot drift from the shape of the route, and it separately
+    asserts the §3 property over EVERY schema in the file rather than only over
+    `platform`-tagged ones. That is strictly stronger than G76 asks for, and it
+    is stronger for a reason: this whole tier is control-plane, so the
+    prohibition binds both tags.
+
+    ⚠️ `tools/check-plane-tags.mjs` STILL DOES NOT EXIST, and G76 and G241 both
+    say it travels with this file. It does not travel with this one: the checker
+    belongs in `npm run check` under G108, which is a `package.json` edit this
+    slice was fenced out of. **The assertion exists and is in the gate through
+    `npm test`; the `tools/` checker is owed.** Naming the gap is not the same
+    as closing it.
+
+    ------------------------------------------------------------------------
+    5 · `x-admin-authority` — A POINTER, NOT A NEW GATE
+    ------------------------------------------------------------------------
+
+    An `exempt:` reason says a capability does not apply. It does not say what
+    does. Every operation therefore also carries `x-admin-authority`, from a
+    closed four-member vocabulary the suite pins:
+
+        tenant-access-grant    a staff act on ONE tenant. `authorisationPermits()`
+                               plus `PERMITTED_RESOURCES` or a signed
+                               `SupportAuthorisation`. EXISTS in `model/`.
+        partner-arrangement    a partner act on its own commercial record.
+                               The `PartnerArrangement`, and for anything with
+                               money in it `partnerCommercialVisibility()`.
+                               EXISTS in `model/`, currently `@dropped-for-v1`
+                               under G51 and un-dropping under G269.
+        platform-role          a staff act with NO tenant. `S1`'s three roles.
+                               DOES NOT EXIST in `model/` — see §2.
+        partner-portal-role    partner administrator vs partner user vs partner
+                               delivery. DOES NOT EXIST in `model/` — the portal
+                               roster is not a tenant roster and `manage_users`
+                               is classed `authority`, evaluated in a tenant.
+
+    Two of the four resolve to something. **Two of them are the shape of a
+    ruling that has not been taken**, and an operation carrying one of those is
+    a declared operation nobody can yet authorise. The suite counts them, so the
+    number is a fact rather than an impression.
+
+    ✅ **ALL FOUR RESOLVE SINCE 1 Oct 2026, AND THE TABLE ABOVE IS CORRECTED
+    HERE RATHER THAN IN PLACE**, because it is the measurement two suites were
+    armed on. `platform-role` has resolved since G289 (19 Sep 2026) —
+    `PlatformRoleAssignment` and `decide()`'s fourth arm — and this section did
+    not follow it. **`partner-portal-role` resolves since R10, THE OWNER'S
+    RULING:** *"Partner role tables + a fifth arm: new partner_role /
+    partner_role_assignment tables keyed on partnerId, decide() gains a fifth
+    arm, and new resource classes for deals / sandbox / partner staff."*
+    `model/access.ts` §6c, `db/migrations/0250_partner_role.sql`.
+
+    🛑 **AND STILL NOTHING ON THIS TIER NAMES ONE OF R10's SIX VERBS, WHICH IS
+    THE HONEST HALF.** Eight of the nine `partner-portal-role` operations — and
+    `listDealRegistrations`, a `partner-arrangement` one — now have a verb whose
+    name fits, and every one is TABLE-BLOCKED: no deal-registration, sandbox or
+    invitation table exists in either database, and `listPartnerPeople` reads
+    colleagues `tenant."user"` rows, which G447 measures as visible only to
+    their owner. **G300's test is table AND model AND capability**, so each
+    exemption below was REWRITTEN to name the verb and the missing table rather
+    than left asserting that no verb exists. `requestRateCardChange` is the
+    ninth and stays as it was: a commercial conversation, and G271 keeps the
+    partner's commercial path off every verb. `docs/build/completion-plan.md`
+    W5 is the per-operation table.
+
+    ------------------------------------------------------------------------
+    6 · WHAT THE PACK DRAWS AND THIS FILE REFUSES TO DECLARE
+    ------------------------------------------------------------------------
+
+    G264 rules the pack decides what a surface DOES and an invariant decides
+    what is REPRESENTABLE. Six drawn controls lose that meeting, and each is
+    recorded rather than silently dropped:
+
+    · **Open the sandbox** (`P1` `sbx`) — *"Your portal identity carries it, so
+      there is no second sign-in."* Refused by **G270**: a control-plane
+      identity does not cross to a tenant host, and *"no second sign-in is the
+      defect rather than the feature."* The sandbox's lifecycle is declared
+      below; the way IN is signing in to that tenant, under G180's permanent
+      host binding.
+    · **The sandbox's uploaded-document ledger** (`P1` `sbx`) — document names
+      are tenant data. It belongs on that tenant's own capability tier.
+    · **Usage per customer on the commission table** (`P1` `comm`) — refused by
+      **G271**. `PARTNER_MASK_MEMBERSHIP.view_metering` is `[]` and invariant 5
+      is the reason: *"spend and rate together invert to volume."* No schema
+      below carries a usage figure on a partner-facing response.
+    · **The reads on this case** (`S1` `sup`) — an audit table of what staff
+      read inside a tenant. That is `view_access_log`, classed `tenant_data`:
+      a control-plane read of tenant data. The customer's own trail is C11 on
+      the capability tier; the staff view of it needs a data-plane operation
+      under a grant, and is not declarable here.
+    · **Read the trace** (`User Journeys` H5.3, surface `telemetry`) — the
+      pack's Ruling 5 says *"a capability is minted for telemetry."* **None is.**
+      `ACCESS_RESOURCE_CLASSES.telemetry` carries its own note: *"NO CAPABILITY
+      MAPS HERE, and unlike `substrate` and `catalogue` that is an
+      INCONSISTENCY rather than a statement"* (HANDOFF §8 item 1g). And under
+      the `full` telemetry profile a trace carries **verbatim extracted
+      values**, so declaring the read here would put tenant business data on a
+      control-plane operation. Two blockers, either one sufficient.
+    · **Legal hold, breach records, and answering a subject request** (`S1`
+      `sup`) — `place_legal_hold` and `handle_subject_request` are classed
+      `statutory`, which invariant 8 puts beyond reach *"at any price"* and
+      which `tests/contracts/capability-annotation.test.mjs` assertion 3c pins
+      by name. The pack agrees on the third — its palette carries *"Answer a
+      subject request — refused · statutory, and not ours to do"* — and marks
+      the first two *"Specified, not built."* No operation below names either
+      capability, and the suite asserts that.
+
+    ------------------------------------------------------------------------
+    7 · TENANT SCOPE, AND THE ONE SHAPE A REVIEWER MUST LOOK AT
+    ------------------------------------------------------------------------
+
+    **No request body in this document carries a tenant id.** The convention the
+    other five tiers hold is held here too.
+
+    ⚠️ BUT A TENANT IS NAMED IN A PATH, AND THAT IS NOT THE SAME THING — read
+    this before concluding invariant 1 is bent. `/staff/tenants/{tenantId}/…`
+    and `/partner/tenants/{tenantRef}/…` name a tenant as the **subject** of an
+    act, never as the **scope** it is performed in. The distinction is G210's,
+    stated for a different surface: `selectTenantForSession()` *"IS THE CHECK,
+    NEVER THE CHOOSER."* Here:
+
+      · the staff principal's authority comes from a `TenantAccessGrant` that
+        already names one tenant, and the path value is CHECKED against it;
+      · the partner principal's authority comes from `T.partnerId = P`, which is
+        invariant 2's own predicate, and `P` is derived from the session;
+      · a tenant the caller may not reach answers exactly like one that does not
+        exist — `resource_not_found`, never a distinct code — so neither path is
+        an existence oracle.
+
+    This is the one shape in this file a reviewer should examine rather than
+    skim. It is not `InstallationReport.tenantRef`, which G113 removes: that is a
+    tenant id in a REQUEST BODY on a machine-to-machine contract, argued nowhere.
+    This is a path segment on a session-authenticated console, argued here.
+
+    ------------------------------------------------------------------------
+    8 · THE COUNT, DERIVED
+    ------------------------------------------------------------------------
+
+    G288: *"`docs/build/deploy-handoff.md` §5.3 says 57 operations; that figure
+    appears exactly once, with no computation behind it."* It is not reproduced.
+    Derive this file's own, and do not read a number out of this paragraph:
+
+        node tools/check-doc-counts.mjs --derive   # 136 operations, 125 paths
+        grep -cE '^  /'   docs/contracts/administration.openapi.yaml    # 39
+
+    🛑 A `grep -c` FOR THE OPERATION KEY STOOD ON THE FIRST OF THOSE LINES
+    UNTIL 23 Sep 2026, AND IT ANSWERED ONE TOO MANY IN THIS FILE AND ONE TOO
+    MANY ACROSS THE CORPUS — 46 here against 45, and 137 over the seven tiers
+    against 136. **THE EXTRA MATCH WAS THIS PARAGRAPH'S OWN QUOTATION OF IT.**
+    On 23 Sep 2026 a circulated status summary ran it faithfully, and the
+    served-set command beside it, and reported *"29 / 137 operations served"*.
+    The truth was **30 of 136** — wrong in both figures, and undercounting its
+    own wave's work. The instructions were defective, not the reader.
+
+    ⚠️ THE COMMAND IS DESCRIBED HERE AND DELIBERATELY NOT SPELLED, WHICH IS THE
+    REPAIR AND NOT AN EVASION. A derivation that can be copied out of prose
+    that it counts is a derivation that counts its own explanation, and every
+    correction naming it makes it wronger by one more line — which is how
+    G978's command went from three self-matches to five while the finding sat
+    written down. `db/migrations/0200`'s header states the same discipline for
+    a different token: count something *"which no sentence here writes"*. The
+    replacement above parses the YAML instead, so no spelling of any key can
+    move it. `tools/check-self-measuring-derivations.mjs` is the gate that
+    stops the class recurring. *Corrected 23 Sep 2026 — G2081/G2082.*
+
+    The pack side of the derivation, which is what G288 asks to be checkable:
+    nine partner destinations, six staff destinations, and the journey steps
+    whose `surface:` names a console — `staff console` 38, `partner portal` 8,
+    `agent builder` 3, `telemetry` 2, of which 47 sit in the partner and staff
+    journey families and 4 more sit inside customer journeys (V2.3, V2.4, C10.2,
+    C12.1) while naming the staff console. **G288 says 48; the tree says 51
+    across all families and 47 within the two this file is about.** Derive it:
+
+        grep -o "surface:'[a-z ]*'" "docs/handoff-pack/User Journeys.dc.html" \
+          | sort | uniq -c
+
+servers:
+  - url: https://console.reconcileai.app/v1
+    description: |
+      THE STAFF CONSOLE. Every `/staff/**` path below.
+
+      ⚠️ THE HOST IS AN OWNER DECISION OF 19 Sep 2026 AND IT LIFTS A NAMED
+      BLOCKER. **G277** records that *"the consoles have no host at all: the
+      pack's routing table gives a PATH for every public and data-plane row and
+      gives the partner portal and staff console A NAME WHERE A PATH SHOULD BE.
+      Neither principal has a tenant, so neither has a host under G179's
+      grammar."* Two hosts are now registered and named, so the operations below
+      have somewhere to live.
+
+      ⚠️ THE PACK SPELLS BOTH HOSTS DIFFERENTLY and the difference is recorded
+      rather than quietly reconciled: `V3 Sign In.dc.html` carries
+      `https://console.reconcile.ai/tenancy` and `https://partners.reconcile.ai/arrangements`.
+      **The registered domain is `reconcileai.app` and the owner's spelling wins
+      over a string in a prototype.** The pack's `/tenancy` and `/arrangements`
+      landing paths are illustrative — `P1`'s own default destination is `deals`
+      and `arr` is admin-only — and G278 records that the pack ships no URL at
+      all, so there is no route table to be faithful to.
+  - url: https://partners.reconcileai.app/v1
+    description: |
+      THE PARTNER PORTAL. Every `/partner/**` path below.
+
+      🛑 TWO SERVERS, ONE DOCUMENT, AND G76 IS WHY. The ruling is that the
+      administration tier is ONE file — *"one file wins, and the boundary becomes
+      mechanical instead of structural"* — with the boundary carried by
+      `x-plane` rather than by a second file. Splitting on host would put the
+      boundary back in the filesystem, which is the shape G76 settled against.
+
+      ⚠️ A PLANE THAT MOUNTS THIS TIER SERVES ONE HOST AND MUST REFUSE THE
+      OTHER'S PATHS. Nothing below expresses that, and nothing in `server/` can:
+      `basePathOf()` reads `servers[0]` alone, and `mountTier()` has no notion of
+      a per-path host. **That is a question for whoever mounts this tier and it
+      is not answered here** — G180 binds a session to `issuedHost` permanently,
+      which is the mechanism it should be built out of.
+
+tags:
+  - name: P Partner Portal
+    description: |
+      Nine destinations — `deals` `sold` `comm` `cases` `sbx` `arr` `cards`
+      `cat` `people`. **Three are administrator-only: `arr`, `cards` and
+      `people`** — derived from `P1 Partner.dc.html`'s own render gates, where
+      `showArr`, `showCards` and `showPeople` each carry `&& admin` and
+      `showCat` does not. The nav hides them; the command palette draws them
+      disabled with the hint *"partner administrators only"*, which is a 403
+      rather than a 404 and is why every administrator-only operation below
+      declares one.
+  - name: S Staff Console
+    description: |
+      Six destinations — `ten` `cat` `build` `bill` `ptnr` `sup` — over three
+      roles whose grants `S1 Staff.dc.html` states: FDE holds `ten cat build`,
+      billing holds `bill ptnr cat`, support holds `sup ten`. *"A destination the
+      role does not need is ABSENT, not disabled."*
+
+security:
+  - sessionContext: []
+
+paths:
+
+  # ================================================================== P9
+  # Deals · "the registry, and the one write this portal has"
+  /partner/registrations:
+    get:
+      tags: [P Partner Portal]
+      operationId: listDealRegistrations
+      x-capability: view_deals
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: The claims this partner has registered, and where each one stands.
+      description: |
+        `P1`'s `deals` destination. The columns are the pack's: customer, shape,
+        registered, last activity, standing.
+
+        🛑 A COLLIDING CLAIM IS NEVER ATTRIBUTED, AND THE RESPONSE SHAPE IS WHAT
+        HOLDS THAT. The pack: *"We are not telling you whose — a registry that
+        named the holder would be a map of everyone's pipeline."* No schema in
+        this document has a field for the rival's identity, so the disclosure is
+        unrepresentable rather than forbidden by a note.
+
+        ⚠️ PRECEDENCE AND EXPIRY ARE UNSPECIFIED AND ARE NOT INVENTED HERE.
+        `User Journeys` P9.4 and P9.5 are both branches with `exists:'neither'`
+        and no stall owner: *"Nothing specifies precedence — first to register,
+        or first to bring the meeting"*, and *"No expiry is specified, and
+        without one the registry becomes a land-grab."* What the pack does
+        settle is that a claim does not expire and goes `dormant`, so `standing`
+        carries that member and carries nothing that would imply a clock.
+      parameters:
+        - $ref: '#/components/parameters/Standing'
+      responses:
+        '200':
+          description: The partner's own claims.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [registrations]
+                properties:
+                  registrations:
+                    type: array
+                    items: { $ref: '#/components/schemas/DealRegistrationSummary' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+    post:
+      tags: [P Partner Portal]
+      operationId: submitDealRegistration
+      x-capability: register_deal
+      x-plane: platform
+      x-admin-authority: partner-portal-role
+      summary: The portal's headline write. A request, never a commitment.
+      description: |
+        **THE ONE WRITE THE PACK COUNTS.** `User Journeys` P9: *"The portal's
+        only WRITE, and it is a request rather than a commitment: partners
+        submit, staff approve. That is what keeps a read-only visibility surface
+        from quietly becoming a system partners can enter facts into."*
+
+        The response says so in its own status: **202, not 201.** *"It is a
+        request until we accept it, and the time we received it is what decides
+        precedence… Nothing is registered yet."* A 201 would assert a resource
+        that does not exist until `acceptRegistration` runs.
+
+        ⚠️ A PARTNER ADMINISTRATOR DOES NOT HOLD THIS, AND THE PACK IS EXPLICIT
+        THAT THE ABSENCE IS THE DESIGN: *"Registering a deal belongs to sales, so
+        the control is absent here rather than drawn and refused."* The console
+        hides the control; the wire must still refuse it, because a hidden
+        control is not a gate. `x-admin-authority: partner-portal-role` is the
+        pointer, and §5 records that the mechanism it points at does not exist.
+
+        🛑 THE COLLISION REFUSAL HAS NO ERROR CODE AND USES A WEAKER ONE.
+        `errors.yaml` is CLOSED and holds no member meaning *"another partner
+        already holds a claim on this company."* `validation_failed` is returned
+        instead, which is true and insufficiently diagnostic — under a
+        restrictive `SpanAttributePolicy` the code is the only channel that
+        survives redaction, so this refusal is currently indistinguishable from
+        a malformed body. `errors.yaml` budgets *"roughly 23 further members"*
+        and this is one of them. **Minting it is a contract change and a ruling,
+        and is not taken here.**
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DealRegistrationRequest' }
+      responses:
+        '202':
+          description: |
+            RECEIVED, AND NOT REGISTERED. The receipt time is returned because
+            it is the fact that decides precedence, and a caller that cannot see
+            it cannot later argue about it.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DealRegistrationReceipt' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403':
+          description: |
+            A partner administrator, or partner delivery. Neither may register.
+            `capability_not_held` — reused rather than re-minted, and it names
+            the right thing even though what is not held here is a portal role
+            rather than a `Capability`: the caller was never granted the verb.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '422':
+          description: |
+            `validation_failed`. Two arms behind one code, and the second is the
+            gap named above: a body that does not satisfy the chosen shape, and
+            a company on which a claim already stands.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ================================================================== P5
+  # Tenants sold · "onboarding state, and nothing inside them"
+  /partner/tenants:
+    get:
+      tags: [P Partner Portal]
+      operationId: listTenantsSold
+      x-capability: 'exempt: this is invariant 2 read as a predicate over the partner own book rather than as a grant into one tenant — T.partnerId = P is the filter, and effectivePartnerCapabilities() returns an empty list to a principal holding no PartnerAccessGrant'
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: The customers this partner sold, and how far each has got.
+      description: |
+        `User Journeys` P5.5 is a stall with `exists:'neither'`: *"Partner cannot
+        see progress — their customer is onboarding and they have no way to know
+        where it is stuck"*, stalled on *"1CloudHub delivery, by email."* This
+        operation is what closes it, and the onboarding state is therefore the
+        load-bearing field rather than a decoration.
+
+        🛑 INVARIANT 2 IS THE WHOLE OF THE RESPONSE SHAPE. The partner reads
+        **commercial metadata**: name, deployment mode, onboarding stage, live
+        date, which arrangement applies. It reads no exception, no document, no
+        run, no figure from the tenant's ledger. `P1`: *"No register, no
+        exceptions, no documents, no usage detail below the billing line. P7 is
+        refused and costed."*
+
+        ⚠️ THE STAGE NOTE SAYS WHOSE STALL IT IS, and that is a product decision
+        the pack argues: a partner told *"stalled 19 days"* with no owner chases
+        the wrong party. The note is platform-authored text about our own
+        delivery work — our operational fact, not the customer's business data,
+        which is the same distinction `control-plane.openapi.yaml` draws for a
+        patch level.
+      responses:
+        '200':
+          description: The partner's book.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [tenants]
+                properties:
+                  tenants:
+                    type: array
+                    items: { $ref: '#/components/schemas/SoldTenantSummary' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+  /partner/access-grants:
+    get:
+      tags: [P Partner Portal]
+      operationId: listPartnerAccessGrants
+      x-capability: 'exempt: reading WHICH grants exist is not exercising one — a caller holding no live PartnerAccessGrant is refused every capability by decide() and must still be able to see that the list is empty, which is the whole point of drawing it'
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: The grants into customer tenants. In v1 this list is empty.
+      description: |
+        🛑 DRAWN, AND EMPTY ON PURPOSE. `P1` renders this table with every row
+        reading `none · commercial metadata only`, and G264's reconciliation
+        names it: *"P7 stays refused and the grant is the exception that proves
+        it — drawn in the portal with nobody holding one, granted only by a
+        named person at the customer, time-bounded and revocable… Absence of a
+        grant is what keeps a partner a reseller."*
+
+        **THERE IS NO REQUEST OPERATION AND THE ABSENCE IS THE PACK'S OWN
+        DECISION**, quoted so nobody adds one: *"There is no button here to
+        request one, because the request is a commercial and legal act between
+        you and your customer."* A live grant *"almost certainly makes the
+        partner a sub-processor, which their customer's own contract has to
+        permit"* — which is not something a POST can establish.
+
+        The schema carries `grantedBy`, `expiresAt` and `revokedAt` because
+        `PartnerGrantTerms` does, and a list that could not express a live grant
+        would have to be rewritten the day one is issued.
+      responses:
+        '200':
+          description: |
+            The grants. In v1, `[]` — and `[]` is the answer, not an error.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [grants]
+                properties:
+                  grants:
+                    type: array
+                    items: { $ref: '#/components/schemas/PartnerGrantView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+  /partner/tenants/{tenantRef}/escalation-enquiries:
+    post:
+      tags: [P Partner Portal]
+      operationId: askAboutEscalation
+      x-capability: 'exempt: asking a question about a tenant is not an act on it — nothing in the tenant changes, no tenant row is read, and the enquiry lands with a partner manager rather than in the tenant plane'
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: P8 — ask about moving a resold tenant to its own AWS account.
+      description: |
+        `P1`'s *"Ask about an escalation"*, on the `sold` destination. The pack's
+        answer is a human one: *"Your partner manager picks it up, and the first
+        thing we need is an introduction to their cloud engineer."*
+
+        ⚠️ `{tenantRef}` IS THE ONE PATH SHAPE §7 EXISTS TO ARGUE. The partner
+        names one of its own sold tenants; `T.partnerId = P` is checked against
+        the session-derived `P`, and a tenant that fails the check answers
+        `resource_not_found` — identical to one that does not exist, so the path
+        is not an oracle over other partners' books.
+
+        **This mints no escalation.** `User Journeys` P8.1 puts the escalation
+        itself on the staff console, and `openByoaEscalation` below is that
+        operation. This one opens a conversation, which is what the pack draws.
+      parameters:
+        - $ref: '#/components/parameters/TenantRef'
+      responses:
+        '202':
+          description: |
+            Received by a partner manager. ACCEPTED, NOT CREATED — no escalation
+            exists until staff open one, and a 201 would say otherwise.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ================================================================== P6
+  # Commission · "what is owed, and on what basis"
+  /partner/commission:
+    get:
+      tags: [P Partner Portal]
+      operationId: getCommissionStatement
+      x-capability: 'exempt: G271 rules the partner commercial read is served by partnerCommercialVisibility() and NEVER by a capability — view_commercial is out of every PARTNER_CAPABILITY_MASK scope, so naming it here would declare a gate this operation own principal can never pass'
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: The period position — billed, margin, commission owed, and the basis.
+      description: |
+        `P1`'s `comm`. Four figures and a line per customer.
+
+        🛑 **NO USAGE COLUMN. G271, AND THE REFUSAL IS THE DESIGN OF THIS
+        SCHEMA.** The pack draws *"The usage total behind each line is yours to
+        see"*; invariant 5 refuses it in its own words — *"a raw usage record is
+        volume in the clear"* — and `PARTNER_MASK_MEMBERSHIP.view_metering` is
+        `[]` because *"spend and rate together invert to volume."* G271 also
+        records that the model tried the pack's shape and threw it away:
+        `PartnerTenantLine` is **a union of four verdicts** rather than a row of
+        numbers, and `PartnerTenantLineBase.active` is *"a flag, never a count"*,
+        because the earlier flat shape *"FORCED the leak it existed to
+        prevent."*
+
+        `CommissionLine` below is therefore a discriminated union over the four
+        verdicts `partnerCommercialVisibility()` yields, and **a client cannot
+        reach a figure without having read the discriminator**, which is the
+        same mechanism `capability.openapi.yaml` uses for admission.
+
+        ⚠️ THE PACK ALSO STATES A SECOND REASON THE COLUMN COULD NOT WORK EVEN IF
+        IT WERE PERMITTED, and it is worth carrying: *"Per-user attribution is
+        not possible for either of us — usage records ship without a user id."*
+        No schema in this file carries a user dimension on anything metered.
+      parameters:
+        - $ref: '#/components/parameters/PeriodKey'
+      responses:
+        '200':
+          description: The statement.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommissionStatement' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /partner/commission/queries:
+    post:
+      tags: [P Partner Portal]
+      operationId: queryCommissionStatement
+      x-capability: 'exempt: raising a query changes nothing and reads nothing — it routes a question to a partner manager, and the answer arrives outside the product entirely'
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: Disagree with a line. A conversation, never a drill-down.
+      description: |
+        `P1`: *"a query is a conversation with us rather than a drill-down."*
+        `User Journeys` H7.3 says what the boundary buys: *"The portal narrows a
+        dispute from 'show me everything' to 'explain this total', which is the
+        most it can do without breaching the data plane."*
+
+        **There is no export operation on this destination and the pack draws no
+        button for one.** `export_data` is `tenant_data` and
+        `PARTNER_MASK_MEMBERSHIP.export_data` is `[]` — *"Bulk egress under a
+        human's name. Never a partner's."*
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CommissionQueryRequest' }
+      responses:
+        '202':
+          description: Raised against the period. A person answers it.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '422': { $ref: '#/components/responses/Invalid' }
+
+  # ================================================================== P7'
+  # Cases · "the path P7 leaves open"
+  /partner/cases:
+    get:
+      tags: [P Partner Portal]
+      operationId: listPartnerCases
+      x-capability: 'exempt: a case is a record between the partner and 1CloudHub about a tenant, held on the control plane — the partner is a party to it rather than a grantee of the tenant, so there is no tenant scope for decide() to evaluate a capability in'
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: The cases this partner raised. Both portal roles reach them.
+      description: |
+        `P1`'s `cases`, the destination the pack calls *"the path P7 leaves
+        open"*. P7 — a partner supporting its own tenant directly — is `refused`
+        in `User Journeys` and the ruling is quoted there: *"1CloudHub is always
+        the support path, and it is priced into the partner deal. Delegated
+        tenant grants are NOT pursued."* A case is what replaces it.
+
+        The case carries a **proposed** severity and a **decided** one, and the
+        pack is firm that both are shown: *"you say how urgent it looks from
+        where you stand; we decide the severity the commitment is measured
+        against… Where we disagree with your reading, the case says both."* Two
+        fields, never one.
+      responses:
+        '200':
+          description: The partner's cases.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [cases]
+                properties:
+                  cases:
+                    type: array
+                    items: { $ref: '#/components/schemas/PartnerCaseSummary' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+  /partner/tenants/{tenantRef}/cases:
+    post:
+      tags: [P Partner Portal]
+      operationId: raisePartnerCase
+      x-capability: 'exempt: raising a case writes a control-plane record and touches nothing inside the tenant it names — the tenant is the SUBJECT of the case, checked against T.partnerId, never a scope the caller is operating in'
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: Raise one, on behalf of a tenant this partner sold.
+      description: |
+        The pack's second write, and the one `P1`'s footer counts beside the
+        registration.
+
+        🛑 **THE TENANT IS IN THE PATH AND NOT IN THE BODY, AND THIS FILE'S OWN
+        SUITE IS WHY.** The request carried `tenantRef` as a body field in the
+        first draft and `tests/contracts/administration-wire.test.mjs` assertion
+        J2 went red on it — **the shape G113 removes from
+        `control-plane.openapi.yaml`, arriving in a new file by exactly the
+        route the record says it arrives: nobody decided to put it there.** It
+        is recorded rather than quietly fixed, because a control catching its
+        own author on its first run is the evidence that the control is worth
+        having. See §7 for why the path form is a different thing: the value is
+        CHECKED against `T.partnerId = P`, never used as a scope.
+
+        🛑 **NO ATTACHMENT, AND THE ABSENCE IS INVARIANT 6 ARRIVING AT A
+        SURFACE.** The pack: *"Your own words only. There is nowhere here to
+        attach their documents, exports or screenshots."* `PartnerCaseRequest`
+        admits a narrative and nothing else — no blob, no reference, no URL. A
+        partner that could attach a customer's document would be moving tenant
+        data onto the control plane by hand, which is the reach §3 closes.
+
+        **VISIBILITY IS FIXED AT RAISE TIME AND CANNOT BE WIDENED LATER.** The
+        pack: *"Chosen when the case is raised, because it changes who reads
+        every later message."* There is no operation below that edits it — a
+        thread whose audience can change retroactively has an audience nobody
+        can reason about.
+
+        ⚠️ SEVERITY IS PROPOSED, AND THE REQUEST FIELD IS NAMED FOR THAT.
+        `proposedSeverity`, never `severity`: a caller that could set the
+        decided value would be setting the commitment they are then owed.
+      parameters:
+        - $ref: '#/components/parameters/TenantRef'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PartnerCaseRequest' }
+      responses:
+        '201':
+          description: |
+            The case exists. A 201 HERE AND A 202 ON A REGISTRATION, and the
+            difference is real: a case is a record the moment it is raised, and
+            a registration is not a record until staff accept it.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PartnerCaseSummary' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Invalid' }
+
+  /partner/cases/{caseId}:
+    get:
+      tags: [P Partner Portal]
+      operationId: getPartnerCase
+      x-capability: 'exempt: one case the calling partner authored, addressed by its own id and refused as not-found to anybody else — the record is control-plane and names no tenant row, so no resource class applies'
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: One case, with its whole thread. The history IS the view.
+      description: |
+        The only drill-down in the partner portal, and `P1` says why there is
+        only one: *"THE HISTORY IS THE WHOLE VIEW. Clicking a case opens every
+        message in order and a way to write back; there is nothing else to show,
+        **because everything else about the problem is inside a tenant this
+        reader may not enter.**"*
+
+        That sentence is the design of the response. `PartnerCaseDetail` is the
+        summary plus an ordered message list, and it has no diagnostic section,
+        no run reference and no exception reference — not because they were
+        forgotten but because each would be a tenant read.
+
+        ⚠️ A MESSAGE IS PARTY-AUTHORED TEXT AND IS NOT COUNTERPARTY CONTENT.
+        `PartnerCaseMessage.text` is written by a partner user or by 1CloudHub
+        support — both parties to the case. It is not ingested material and
+        invariant 6's admission machinery does not apply to it; what does apply
+        is that nothing may paste a tenant's document into it, which is a
+        property of the absent attachment path rather than of this field.
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: The case and every message on it, oldest first.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PartnerCaseDetail' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /partner/cases/{caseId}/messages:
+    post:
+      tags: [P Partner Portal]
+      operationId: replyToPartnerCase
+      x-capability: 'exempt: writing back on a thread the caller is a party to reaches no tenant resource, and the visibility set fixed at raise time — not a capability — is what decides who reads it'
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: Send to support. Appends to the thread and nothing else.
+      description: |
+        Append-only, deliberately. There is no edit and no delete below, and
+        that is the same rule `AuditEvent` holds for the same reason: a thread
+        whose earlier messages can change is not a history.
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CaseMessageRequest' }
+      responses:
+        '201':
+          description: Appended.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PartnerCaseMessage' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Invalid' }
+
+  /partner/cases/{caseId}/resolution-requests:
+    post:
+      tags: [P Partner Portal]
+      operationId: requestPartnerCaseResolution
+      x-capability: 'exempt: this is a REQUEST to close rather than a close — the partner cannot transition the case, so there is no act on any resource for a capability to gate and no tenant in which to gate it'
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: Resolved for us — and it does not close the case.
+      description: |
+        🛑 **A REQUEST, AND THE VERB IS THE ARGUMENT.** The pack: *"Noted as
+        resolved from your side. **We do not close it on your word alone** — the
+        case concerns a tenant you cannot see, so support confirms with your
+        customer first and then closes it."*
+
+        This is why the path is `/resolution-requests` and the method is POST,
+        rather than a `PATCH` that sets a closed state. A verb that reads as a
+        state transition would hand the partner a transition it does not hold,
+        and the wire would then be asserting something the server has to quietly
+        refuse. **The shape refuses it instead.**
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '202':
+          description: |
+            Noted. The case does not move, and the response does not pretend it
+            did — there is no state in this body.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ================================================================== P sbx
+  # Sandbox · a tenant like any other, and it is the partner's
+  /partner/sandbox:
+    get:
+      tags: [P Partner Portal]
+      operationId: getSandboxTenant
+      x-capability: view_sandbox
+      x-plane: platform
+      x-admin-authority: partner-portal-role
+      summary: The demo tenant's standing, seed version and reset cycle.
+      description: |
+        🛑 **THE DOCUMENT LEDGER IS NOT HERE, AND THAT IS §3 RATHER THAN AN
+        OVERSIGHT.** `P1` draws a table of uploaded documents with names and
+        loaded-by lines. A document name is tenant data; a control-plane
+        operation may not return one. The ledger belongs on the sandbox
+        tenant's own capability tier, reached by signing in to that tenant.
+
+        🛑 **AND THERE IS NO `openSandbox`. G270.** The pack draws *"Opening the
+        register at the sandbox host. Your portal identity carries it, so there
+        is no second sign-in"* — and G270 rules that *"a control-plane identity
+        does not cross to a tenant host, and 'no second sign-in' is the DEFECT
+        rather than the feature."* It is G179's named failure and G210's in one
+        control: *"tenant stops arriving in a request body and starts arriving
+        in an unvalidated dropdown."* **The sandbox survives as a thing and the
+        route to it changes** — it is a tenant, reached by signing in to it,
+        with a session bound to its own host under G180.
+
+        What survives here is everything that is genuinely commercial: is it
+        live, which seeded story it carries, when it next resets, and that it is
+        metered and billed to the partner's wholesale card.
+      responses:
+        '200':
+          description: |
+            The sandbox, live, requested or absent. A standing of `none` is a
+            live answer and not a 404 — the destination exists whether or not a
+            tenant does. `requested` (G3701) is an open request nobody has
+            provisioned yet.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SandboxView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+    post:
+      tags: [P Partner Portal]
+      operationId: requestSandboxTenant
+      x-capability: operate_sandbox
+      x-plane: platform
+      x-admin-authority: partner-portal-role
+      summary: Ask for one. Provisioning is ours, and it takes days.
+      description: |
+        `P1`'s *"Ask for one"*, with the pack's own figures beside it: about two
+        days to set up, and it runs in the partner's own AWS account.
+
+        202, because nothing exists when this returns. Under **G276** BYOA is
+        back in v1 and the partner sandbox is *"a tenant in the partner's own
+        account"*, so provisioning it is a deployment rather than a row.
+
+        ⚠️ `User Journeys` HAS NO STEP FOR ANY OF THIS. The sandbox appears in
+        `P1` in full and in the journey pack not at all — zero steps across all
+        nine partner journeys. **It is the one partner destination with no
+        journey behind it**, which is worth knowing before treating the five
+        sandbox and trial operations as equally well-evidenced with the rest.
+      responses:
+        '202':
+          description: Requested. A person provisions it.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '409':
+          description: |
+            `idempotency_conflict` — a sandbox already stands. One per partner,
+            which is what `getSandboxTenant` returning a singular resource
+            already says.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+    delete:
+      tags: [P Partner Portal]
+      operationId: handBackSandboxTenant
+      x-capability: operate_sandbox
+      x-plane: platform
+      x-admin-authority: partner-portal-role
+      summary: Hand it back. The tenant goes, and so does the billing line.
+      description: |
+        The pack draws this as a plain control and it is the most destructive
+        thing in the portal: it tears down a tenant and stops the wholesale line
+        that goes with it.
+
+        ⚠️ **THERE IS NO CONFIRMATION SHAPE ON THE WIRE, AND THAT IS A KNOWN
+        THINNESS RATHER THAN A DECISION.** `S1` puts a two-step *"Check it →
+        Create it"* arming pattern on tenant creation and on an adjustment; `P1`
+        puts none on this. Whether a destructive control needs a typed
+        confirmation is a design question the pack answers inconsistently, and
+        this file follows the pack rather than inventing the stricter form.
+      responses:
+        '204':
+          description: |
+            Torn down. IDEMPOTENT — handing back a sandbox that is already gone
+            is the same answer, for the same reason `signOut` is idempotent.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+  /partner/sandbox/resets:
+    post:
+      tags: [P Partner Portal]
+      operationId: resetSandboxTenant
+      x-capability: operate_sandbox
+      x-plane: platform
+      x-admin-authority: partner-portal-role
+      summary: Reset it now. Purges uploads, restores the seeded story.
+      description: |
+        The pack is precise about what a purge is and the precision matters:
+        *"not archived, not hidden."* A reset that archived would leave a
+        partner's demo material — and whatever a prospect handed them — sitting
+        somewhere nobody is counting.
+
+        A reset also happens on a cycle without anybody asking; this operation
+        is the manual arm of the same act, which is why the resource is
+        `resets` and not `reset`.
+      responses:
+        '202':
+          description: Reset accepted. The seed version it restores is returned.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SandboxResetReceipt' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /partner/trial-tenant-requests:
+    post:
+      tags: [P Partner Portal]
+      operationId: requestTrialTenant
+      x-capability: register_deal
+      x-plane: platform
+      x-admin-authority: partner-portal-role
+      summary: A trial tenant for a prospect. The partner never signs into it.
+      description: |
+        The pack: *"We create a trial tenant in the prospect's name and your
+        accepted registration attributes it to you. **You will not be able to
+        sign into it.**"*
+
+        Two things are load-bearing in that sentence and both are in the request
+        shape. **Attribution runs through an accepted registration**, so the body
+        names one rather than naming a company again — a second free-text company
+        would be a second claim path around the registry's precedence rule. And
+        the partner gets no access, which is why there is no reciprocal read
+        operation for a trial tenant anywhere below.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TrialTenantRequest' }
+      responses:
+        '202':
+          description: Requested.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '422': { $ref: '#/components/responses/Invalid' }
+
+  # ================================================================== P1'
+  # Arrangement · "the record every other surface reads from"
+  /partner/arrangement:
+    get:
+      tags: [P Partner Portal]
+      operationId: getPartnerArrangement
+      x-capability: 'exempt: the arrangement is the partner own contractual record and it is the thing x-admin-authority points AT — gating it on a capability would require a tenant, and an arrangement is not held in one'
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: The eight decided lines. Administrator-only, and read-only.
+      description: |
+        `P1`'s `arr` is **the one destination with zero controls**, and the pack
+        argues the absence rather than leaving it: *"Every line above is set
+        from the 1CloudHub side, at registration or by amendment, and none of it
+        is a field on this surface… A change is a conversation with your partner
+        manager."*
+
+        So there is a GET here and no PUT, no PATCH and no change-request
+        operation. `requestRateCardChange` exists because `P1` draws that
+        control on `cards`; nothing equivalent is drawn here.
+
+        ⚠️ `User Journeys` P1.2 IS THE SHARPEST LINE IN THE PARTNER FAMILY AND
+        IT IS ABOUT THIS RESPONSE: *"visibility derives from the arrangement and
+        is never configured beside it — which is the right construction and has
+        no surface to express it."* The visibility line below is therefore
+        **derived and read-only**, and there is deliberately no field anywhere in
+        this document that sets it. A configurable visibility beside a derived
+        one is two sources of truth for who may read a customer's money.
+      responses:
+        '200':
+          description: The arrangement.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PartnerArrangementView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/AdministratorOnly' }
+
+  # ================================================================== P2
+  # Rate cards · what you pay, and what you charge
+  /partner/rate-cards:
+    get:
+      tags: [P Partner Portal]
+      operationId: listPartnerRateCards
+      x-capability: 'exempt: a partner reading the two cards on its own arrangement reads commercial facts about itself, and view_commercial is out of every PARTNER_CAPABILITY_MASK scope precisely so that the partner path stays partnerCommercialVisibility() rather than a verb'
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: Wholesale and retail, per line, with the margin between them.
+      description: |
+        `User Journeys` P2.3 settles the method list: *"✅ visible in the portal;
+        changing it is still a conversation, because a retail card is part of an
+        arrangement rather than a setting"*, and the stall reads *"The portal
+        shows the card and does not edit it."*
+
+        **GET only. There is no PUT on a rate card in this document**, on either
+        console — see `listCatalogueRateCards` for the staff side, which is
+        read-only for a different reason.
+      responses:
+        '200':
+          description: The cards.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [lines]
+                properties:
+                  lines:
+                    type: array
+                    items: { $ref: '#/components/schemas/RateCardLine' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/AdministratorOnly' }
+
+  /partner/rate-cards/change-requests:
+    post:
+      tags: [P Partner Portal]
+      operationId: requestRateCardChange
+      x-capability: 'exempt: a request to amend an arrangement is a commercial conversation with a partner manager — it changes no record, reads no tenant, and resolves outside the product'
+      x-plane: platform
+      x-admin-authority: partner-portal-role
+      summary: Ask to change a retail price. A request, not a field.
+      description: |
+        `P1`: *"A retail card is part of an arrangement, not a setting, so this
+        is a request and a conversation rather than a field you edit. Cards
+        already issued to a customer stand: a change takes effect on the next
+        period and is **never retroactive**."*
+
+        The never-retroactive rule is the same one `raiseAdjustment` is built
+        on, arriving from the other side of the relationship. It is stated on
+        both so that neither reads as a local convention.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RateCardChangeRequest' }
+      responses:
+        '202':
+          description: Raised with a partner manager.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/AdministratorOnly' }
+        '422': { $ref: '#/components/responses/Invalid' }
+
+  # ================================================================== P4
+  # Catalogue · what you may resell
+  /partner/catalogue:
+    get:
+      tags: [P Partner Portal]
+      operationId: listResaleCatalogue
+      x-capability: 'exempt: catalogue is the one class ACCESS_RESOURCE_CLASSES documents as having NO capability by statement rather than by omission — no tenant principal may write it and a platform principal writing it needs no tenant grant, so there is no verb to name'
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: The blueprints in this partner's resale scope, and the ones outside it.
+      description: |
+        `User Journeys` P4.2 is a branch with `exists:'neither'` and no stall
+        owner: *"Partner cannot see the catalogue, so the thing they are selling
+        from is something they have been told about rather than shown."* This
+        operation is what closes it.
+
+        **IT LISTS WHAT IS OUT OF SCOPE AS WELL AS WHAT IS IN**, because `P1`
+        does: not-in-your-scope and not-released-to-any-partner are distinct
+        answers, and collapsing them would tell a partner to ask for something
+        nobody can have.
+
+        **The pane offers no control to widen it.** `P1` says so and this file
+        agrees: `setPartnerResaleScope` is on the staff console, where `User
+        Journeys` P4.1 and H3.4 both put it.
+
+        ⚠️ VISIBLE TO EVERY PORTAL ROLE, NOT ADMINISTRATOR-ONLY — corrected
+        against the brief for this work, which listed `cat` among the three
+        revealed by the whoami switch. `P1`'s render gate for the catalogue
+        carries no admin term, its nav entry sits outside every `isPAdmin`
+        guard, and the palette marks admin-only on `arr`, `cards` and `people`
+        alone. **The administrator-only trio is `arr` `cards` `people`.**
+      responses:
+        '200':
+          description: The catalogue, in scope and out.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [blueprints]
+                properties:
+                  blueprints:
+                    type: array
+                    items: { $ref: '#/components/schemas/ResaleCatalogueEntry' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+  # ================================================================== P3
+  # People · who at the firm sees this portal
+  /partner/people:
+    get:
+      tags: [P Partner Portal]
+      operationId: listPartnerPeople
+      x-capability: view_partner_staff
+      x-plane: platform
+      x-admin-authority: partner-portal-role
+      summary: Who at this firm reaches the portal, and what each of them carries.
+      description: |
+        `P1`'s `people`, administrator-only.
+
+        🛑 **THIS IS THE CLEAREST INSTANCE OF §2's GAP AND IT IS WORTH READING
+        AS ONE.** There is a verb in `CAPABILITIES` that names this act —
+        `manage_users` — and it cannot be used: `CAPABILITY_RESOURCE_CLASS`
+        classes it `authority`, `decide()` evaluates `authority` inside a
+        tenant, and a partner organisation's own roster is not held in any
+        tenant. **The capability roster has no member for administering a
+        non-tenant organisation**, and nothing below invents one.
+
+        ✅ **THAT SENTENCE WENT FALSE ON 1 Oct 2026 — R10, THE OWNER'S — AND
+        IS KEPT RATHER THAN DELETED because it is the clearest statement of
+        the gap R10 closes.** `view_partner_staff` and `manage_partner_staff`
+        are classed `partner_staff`, a class held in no tenant and answered on
+        `decide()`'s fifth arm. The exemption above was rewritten in the same
+        commit; it read: *"manage_users is classed authority and authority is
+        evaluated IN A TENANT — a partner organisation own roster is not a
+        tenant roster, so the only capability whose name fits is one this
+        principal could never hold."* 🛑 **THE OPERATION IS STILL NOT GATED,
+        BECAUSE THE ROSTER IS STILL UNREADABLE**: `0250` keys partner roles on
+        the SESSION (a colleague's row is invisible by design), the names and
+        emails live on `tenant."user"` (G447: visible only to its owner), and
+        `state` — invited, signed in — has no producer at all.
+
+        The third role the table carries — **partner delivery** — is listed and
+        is not invitable, because `User Journeys` P7 refuses it any access at
+        all: *"the role exists in the partner's org chart and has no access
+        here."* It appears in a read and in no write.
+
+        ✅ **OPEN INVITATIONS ARE ON THE ROSTER SINCE 2 Oct 2026 — G2904,
+        derived, closing G2808 — AS A SECOND ARRAY, NOT AS A FIFTH STATE OF
+        `PartnerPerson`.** `PartnerPerson.name` is `required` and nothing
+        produces a name before redemption (G2807's argument, unchanged), so an
+        invitee cannot be a `PartnerPerson` without either inventing a name or
+        taking the guarantee away from every roster client. `invitations`
+        carries the 201's own `InvitedPartnerPerson` — the same three fields,
+        `state: invited` — for every offer that is STANDING (its clock has not
+        run out) and UNREDEEMED. A redeemed offer's person is in `people`; a
+        lapsed offer is in neither, because it no longer offers anything.
+      responses:
+        '200':
+          description: The roster.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [people, invitations]
+                properties:
+                  people:
+                    type: array
+                    items: { $ref: '#/components/schemas/PartnerPerson' }
+                  invitations:
+                    type: array
+                    description: |
+                      Standing, unredeemed offers, in `InvitedPartnerPerson`'s
+                      shape (G2904). Empty, never absent.
+                    items: { $ref: '#/components/schemas/InvitedPartnerPerson' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/AdministratorOnly' }
+
+  /partner/invitations:
+    post:
+      tags: [P Partner Portal]
+      operationId: invitePartnerPerson
+      x-capability: manage_partner_staff
+      x-plane: platform
+      x-admin-authority: partner-portal-role
+      summary: Invite a partner administrator or a partner user. Two roles, not three.
+      description: |
+        **AN INVITATION REACHES THIS PORTAL AND NOTHING ELSE**, and the pack
+        states the boundary in the customer's favour: *"Your people sign in with
+        your own organisation's identity provider, so you add and remove them
+        where you already manage everyone — **we only hold what role they carry
+        here.**"* That is **G266** arriving as a product decision rather than as
+        a correction: the credential carries the organisation, this record
+        carries the role, and the two are deliberately different systems.
+
+        ⚠️ **THERE IS NO REMOVE AND NO REVOKE, AND THE PACK SAYS SO IN ITS OWN
+        VOICE:** *"Delivery and revocation — Sending the mail, and removing a
+        person who has left. **Neither exists.**"* That is a real hole with a
+        real consequence — a departed employee's portal role outlives their
+        employment until somebody edits a row — and it is recorded here rather
+        than papered over with a `DELETE` nothing implements.
+
+        ⚠️ **THE JOURNEY PACK PUTS THIS ACT ON THE OTHER CONSOLE.** `User
+        Journeys` P3.1 reads *"Admins invited — step 03 of partner onboarding"*
+        with a staff-console surface. `P1` draws the form in the portal and
+        `S1`'s partners destination has no invite control at all, so **two of
+        the three sources agree and this file follows them.** The disagreement
+        is named rather than resolved; if the staff side turns out to own it,
+        the operation moves and this paragraph is the record of why it was here.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PartnerInvitationRequest' }
+      responses:
+        '201':
+          description: |
+            Invited. The person reaches nothing until they authenticate against
+            the partner's own connection — and at that FIRST sign-in the
+            invitation is REDEEMED into a portal role, in the same transaction
+            that provisions them (G2801, the owner's ruling of 2 Oct 2026).
+
+            🛑 **THE BODY IS AN `InvitedPartnerPerson`, NOT A `PartnerPerson`,
+            AND IT HAS NO `name` — THE OWNER'S RULING, VERBATIM:** *"Drop `name`
+            from invitePartnerPerson's 201 (filled at redemption)."* Until
+            2 Oct 2026 this answer was a `PartnerPerson`, whose `name` is
+            `required`, while the request carries none — so mounting it would
+            have shipped a 500 on every success (G2630: the serialiser throws on
+            a missing required field). The name is the display name the
+            partner's own directory asserts, projected onto the person at their
+            first sign-in; nothing on this side knows it before then.
+
+            ⚠️ **A SEPARATE SCHEMA RATHER THAN `name` MADE OPTIONAL ON
+            `PartnerPerson`, ARGUED (G2807):** `listPartnerPeople` always has a
+            name — it reads role-holders, each of whom has signed in — and
+            loosening that schema would take a guarantee away from every client
+            of the roster to accommodate an answer the roster never gives.
+            ✅ **AND THE ROSTER LISTS STANDING INVITATIONS SINCE 2 Oct 2026
+            (G2904, closing G2808)** — in its `invitations` array, in this
+            same shape, until redeemed; the invitee then appears in `people`
+            as a role-holder. ⚠️ This sentence read *"AND THE ROSTER STILL DOES
+            NOT LIST INVITATIONS (G2808)"* and is corrected rather than deleted.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvitedPartnerPerson' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/AdministratorOnly' }
+        '422': { $ref: '#/components/responses/Invalid' }
+
+  /partner/notifications:
+    get:
+      tags: [P Partner Portal]
+      operationId: listPartnerNotifications
+      x-capability: 'exempt: a notice says THAT something happened and where to go, carrying no figure and no counterparty — the moment it carried either it would become a read and would need the capability that governs what it disclosed'
+      x-plane: platform
+      x-admin-authority: partner-arrangement
+      summary: Needs you — and a notice is not a read.
+      description: |
+        `P1`'s bell, and the constraint the pack puts on it is the whole schema:
+        *"Every line here says **that** something happened and where to go. None
+        of them carries a figure, a customer's counterparty or a document."*
+        `S1` states the same rule for the staff tray and adds the edge:
+        *"**The moment a notice carries a figure or a counterparty it becomes a
+        read.**"*
+
+        `Notification` below therefore has a kind, a destination and a raised
+        time, and no amount, no name and no free text. A notice that could carry
+        a number would be a disclosure channel nobody had authorised, sitting
+        outside every capability check by construction.
+
+        **No mail, no Teams, no Slack.** The pack defers push delivery
+        deliberately and nothing here mints a channel.
+      responses:
+        '200':
+          description: The notices, and which of them are the caller's to act on.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [notifications]
+                properties:
+                  notifications:
+                    type: array
+                    items: { $ref: '#/components/schemas/Notification' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+  /staff/tenants/{tenantId}:
+    get:
+      tags: [S Staff Console]
+      operationId: getTenantRecord
+      x-capability: 'exempt: the record is the tenant commercial and deployment shape rather than anything inside it, and a platform principal is denied by decide() categorically — authorisationPermits() and the customer own supportAccessMode are what bound this read'
+      x-plane: tenant
+      x-admin-authority: tenant-access-grant
+      summary: One tenant in full — mode, residency, retention, support access, plan.
+      description: |
+        The detail half of `S1`'s *"tenancy, and one tenant in full"*.
+
+        🛑 **WHAT SUPPORT SEES HERE IS BOUNDED BY THE CUSTOMER'S OWN CHOICE, AND
+        THE BOUND IS A TENANT FACT RATHER THAN A CONSOLE ONE.** `S1` draws three
+        support access modes — nothing without a grant, metadata and runs,
+        metadata only — and `User Journeys` H5.1 makes reading it the first step
+        of an incident: *"the support access mode chosen at tenant creation
+        decides what we may see. **Their decision, not ours.**"*
+
+        `x-admin-authority: tenant-access-grant` is the pointer that resolves:
+        `authorisationPermits()` checks `NON_DELEGABLE_RESOURCES` first, then
+        the grant, then `PERMITTED_RESOURCES` or a signed
+        `SupportAuthorisation`. **That is the one authorisation path in this
+        whole file that exists in `model/` today.**
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: The record.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TenantRecord' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /staff/tenants/{tenantId}/onboarding:
+    get:
+      tags: [S Staff Console]
+      operationId: listOnboardingSteps
+      x-capability: view_substrate
+      x-plane: tenant
+      x-admin-authority: tenant-access-grant
+      summary: H2 — the ordered sequence, and whose hands each step is in.
+      description: |
+        ✅ **GATED SINCE 21 Sep 2026 — R8, THE OWNER'S RULING — AND THE RETIRED
+        EXEMPTION IS QUOTED RATHER THAN DELETED, because its second clause was
+        true when it was written and is the sentence a reader would have quoted
+        onward.** It read:
+
+        > `x-capability: 'exempt: onboarding state is 1CloudHub own delivery
+        > record about its own work — the same class of fact
+        > control-plane.openapi.yaml calls "our operational fact" — and a
+        > platform principal has no evaluable capability in any case'`
+
+        🛑 **THE FIRST CLAUSE STILL STANDS AND IS WHY THE CLASS IS `substrate`:
+        this state is OUR delivery record, not the tenant's business.** What
+        expired is the SECOND — *"a platform principal has no evaluable
+        capability in any case"* — which was a fact about the capability set
+        rather than about this operation. **G601 minted `view_substrate`**, of
+        resource class `substrate`, which `PLATFORM_ASSIGNMENT_REACHES` opens,
+        so `decide()`'s fourth arm can ALLOW it.
+
+        ⚠️ **AND G911 IS WHAT MADE ANNOTATING IT *HERE* POSSIBLE.** Until
+        `TIER_REQUIRES_CAPABILITY` was retired, a capability on this tier was
+        refused by `check:annotations`'s check E — keyed on the FILE — and the
+        only way to gate a console operation was to cut it into
+        `platform-console.openapi.yaml`. Check E now keys on `o.caller`, this
+        document declares `security: [sessionContext]`, and the owner's own
+        surviving objection to the split shape is on that document's face:
+        *"it is still contract surgery and still a ruling."* **In-place is less
+        surgery than a second split.**
+
+        ⚠️ **INVARIANT 8 IS UNTOUCHED AND THE LINE IS `model/access.ts`'s OWN:**
+        *"the moment a `view_substrate` operation returns an exception, a
+        document or a figure it has left this class, and the gate it needs is a
+        `TenantAccessGrant`."* This operation returns six step keys, six titles
+        and six owners, all of them constants in `model/onboarding.ts`, plus a
+        count and a reason 1CloudHub typed. **Nothing it publishes is read out
+        of the tenant's database.**
+
+
+        `User Journeys` H2.9 is a branch whose stall names exactly what this
+        operation exists for: *"Stalls at any of four steps, and there is no
+        state to report it against"*, resolved by *"Onboarding is now a tracked
+        pipeline with a state per step in the staff console. **This is what makes
+        'why is this customer not live' answerable, and what stops the first
+        invoice arriving before the first run.**"*
+
+        The second clause is not decoration: H6.4 is the same defect arriving as
+        a commercial problem — *"Invoice arrives before the first run, because
+        the lease was issued and onboarding stalled at a step nobody was
+        tracking."* **Two journeys share one defect and this is the read that
+        closes both.**
+
+        `whoseHands` is a first-class field rather than prose, for the reason
+        `listTenantsSold` gives on the partner side: a stall with no named owner
+        is chased by the wrong party.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: The steps, in the order that is load-bearing.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [steps]
+                properties:
+                  steps:
+                    type: array
+                    items: { $ref: '#/components/schemas/OnboardingStep' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /staff/tenants/{tenantId}/onboarding/{stepKey}/completion:
+    post:
+      tags: [S Staff Console]
+      operationId: completeOnboardingStep
+      x-capability: view_substrate
+      x-plane: tenant
+      x-admin-authority: tenant-access-grant
+      summary: Mark the next step done. Only ever the next one.
+      description: |
+        ✅ **GATED SINCE 21 Sep 2026 — R8, THE OWNER'S RULING. The retired
+        exemption is quoted rather than deleted:**
+
+        > `x-capability: 'exempt: marking our own delivery step done records a
+        > fact about 1CloudHub work rather than acting on any tenant resource,
+        > and no class in ACCESS_RESOURCE_CLASSES names a delivery pipeline'`
+
+        🛑 **ITS FIRST CLAUSE IS WHY THE CLASS IS `substrate` AND ITS SECOND IS
+        THE ONE THAT EXPIRED.** *"No class names a delivery pipeline"* was a
+        search for a class named after the ACT; `substrate` is the class of
+        *"which planes exist and under what licence"*, and a delivery record
+        about our own work sits inside it — which is the argument
+        `db/migrations-control/0030_onboarding_record.sql` already makes for
+        putting the table in the control database at all.
+
+        🛑 **IT CARRIES A `view_` VERB WHILE IT WRITES, AND THAT IS STATED
+        RATHER THAN TIDIED.** R8 names `view_substrate` for all three
+        operations, and a paraphrased ruling is a changed ruling.
+        `provision_substrate` exists in the same class (G601) and would read
+        better on a write — **but nothing in `model/` records a capability's
+        MODE**, so `decide()` and `authorize()` evaluate the two identically
+        and the difference today is a NAME with no mechanical consequence.
+        **Splitting the reads from the writes is therefore a second ruling, not
+        a tidy-up**, and it is the one to take if a principal should ever be
+        able to READ the sequence without being able to ADVANCE it.
+
+
+        `S1`'s rule, and the whole reason the sequence is drawn as a sequence:
+        *"the first step that is not done is the only one that can be done."*
+
+        A caller naming any other step is refused `step_not_current` — an
+        existing member of the closed enum, minted for a procedure step and
+        exactly right here. **Reusing it rather than minting a twin** is the same
+        discipline `session.openapi.yaml` states for `session_invalid`: *"a
+        session-flavoured twin of an existing code would be the second
+        vocabulary this tier exists not to create."*
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/StepKey'
+      responses:
+        '200':
+          description: The step, done.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OnboardingStep' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403':
+          description: |
+            Not an FDE. `S1` gates both onboarding writes on that role alone.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: |
+            `step_not_current` — the named step is not the next one.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  /staff/tenants/{tenantId}/onboarding/{stepKey}/override:
+    post:
+      tags: [S Staff Console]
+      operationId: forceOnboardingStep
+      x-capability: view_substrate
+      x-plane: tenant
+      x-admin-authority: tenant-access-grant
+      summary: Force a blocked gate, out of order, and permanently on the record.
+      description: |
+        ✅ **GATED SINCE 21 Sep 2026 — R8, THE OWNER'S RULING. The retired
+        exemption is quoted rather than deleted:**
+
+        > `x-capability: 'exempt: forcing a gate marks our own delivery steps
+        > out of order and stamps a permanent record of it — an act on the
+        > delivery pipeline, which no resource class names and which decide()
+        > could not evaluate for a platform principal regardless'`
+
+        🛑 **THIS IS THE ONE OF THE THREE WHERE THE GATE BUYS THE MOST**, and it
+        is worth saying why rather than letting the annotation look uniform.
+        The other two are bounded: a read publishes constants, and a completion
+        advances a counter by one along a sequence the model already refuses to
+        break. **This one writes a row that nothing in the cluster can ever
+        amend or remove** — `0030`'s append-only trigger raises for every role
+        including the admin — so a caller who reaches it leaves a permanent mark
+        under 1CloudHub's name, with their reason on it, about a customer.
+        *"Exempt"* meant that act was reachable by anyone the tier let in.
+
+        ⚠️ **AND THE `view_` VERB IS THE SAME NAMED TENSION AS ON
+        `completeOnboardingStep`** — see that operation's description. R8 names
+        `view_substrate` for all three; `provision_substrate` would read better
+        here than anywhere, and nothing in `model/` records a MODE for either,
+        so the choice is a name rather than a gate today.
+
+
+        `S1` draws this as a modal that will not commit without a typed reason,
+        and the effect is deliberately wide: forcing a step marks that step
+        **and everything above it** done, and stamps the record permanently with
+        the reason.
+
+        🛑 **THE REASON IS REQUIRED AND IT IS THE ONLY RECORD OF WHY THE
+        SEQUENCE WAS BROKEN.** It is the same argument H8.3 makes for an
+        adjustment's reason — *"the adjustment reason is the only record of why
+        the two disagree, so it is load-bearing rather than a note"* — and it is
+        why `reason` is `required` rather than optional, with a minimum length
+        the schema states.
+
+        ⚠️ **THE FORCED MARK IS PERMANENT AND NOTHING BELOW CLEARS IT.** There
+        is no un-force operation, by design: a gate that can be un-forced leaves
+        no evidence it was ever forced, which is the whole value of the mark.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/StepKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ForceStepRequest' }
+      responses:
+        '200':
+          description: |
+            Forced. Every step up to and including this one is now done, and the
+            record carries the reason for as long as the tenant exists.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [steps]
+                properties:
+                  steps:
+                    type: array
+                    items: { $ref: '#/components/schemas/OnboardingStep' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403':
+          description: Not an FDE.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Invalid' }
+
+  /staff/tenants/{tenantId}/extraction-floor:
+    get:
+      tags: [S Staff Console]
+      operationId: getExtractionFloor
+      x-capability: 'exempt: the floor is a per-tenant threshold and configure_tolerance is the verb that would name it, but decide() denies a platform principal at the org term before reaching any capability — so the governing control is the delivery grant that reaches the configuration class, not the verb'
+      x-plane: tenant
+      x-admin-authority: tenant-access-grant
+      summary: H4 — the confidence floor this tenant's runs answer to.
+      description: |
+        Three figures, as `S1` draws them: the pack default, this tenant's
+        floor, and how much a run parked for a person.
+
+        ⚠️ **THE TENANT CANNOT SEE THIS NUMBER, AND THAT IS A CONSTRAINT ON THE
+        OTHER CONTRACT RATHER THAN ON THIS ONE.** `User Journeys` H4.3 is
+        explicit: *"a facet or a field printing it would be asserting a value the
+        tenant has no access to."* Nothing in `capability.openapi.yaml` publishes
+        it today and nothing should start.
+
+        ⚠️ **AND THE SEGREGATION-OF-DUTIES CONFLICT IS A CHOSEN ONE.** The pack
+        names it rather than hiding it: *"The one segregation-of-duties conflict
+        the product chose on purpose: the same party sets the threshold and is
+        measured on the outcome."* Recorded here because a reader deciding
+        whether this operation needs a second approver should know the question
+        was asked and answered.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: The floor, the default it departs from, and the parked count.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExtractionFloorView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+    put:
+      tags: [S Staff Console]
+      operationId: setExtractionFloor
+      x-capability: 'exempt: setting the floor is an act on the configuration class that PERMITTED_RESOURCES.delivery already reaches, and the FDE holding that grant is a platform principal decide() refuses categorically — authorisationPermits() is the evaluator and configure_tolerance names a verb no staff principal can be evaluated for'
+      x-plane: tenant
+      x-admin-authority: tenant-access-grant
+      summary: Set it. Effective on the next run, never on a run already made.
+      description: |
+        PUT rather than PATCH because there is exactly one value and it is
+        wholly replaced; a partial update of a single scalar is a shape with no
+        second state.
+
+        **Effective on the NEXT run.** `S1` says so and the reason is the same
+        one that governs a rate card: a threshold applied backwards changes what
+        a completed period meant.
+
+        🛑 **THIS IS THE CONTROL-PLANE WRITING DOWNWARD, WHICH IS THE ONLY
+        DIRECTION INVARIANT 3 ALLOWS.** The floor is published to the plane and
+        pulled by it, exactly as a pack version or a policy bundle is —
+        `control-plane.openapi.yaml`'s own convention, *"every operation is
+        data-plane-initiated."* Nothing here reads into the tenant, and the
+        `parkedForAPerson` figure on the GET is a count the plane reports
+        upward rather than a query we run downward.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExtractionFloorRequest' }
+      responses:
+        '200':
+          description: The new floor.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExtractionFloorView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: |
+            `bounds_not_configured`, `bound_not_a_number`, `bound_negative` or
+            `bound_zero` — REUSED FROM THE SESSION-BOUND FAMILY RATHER THAN
+            RE-MINTED, and they fit better than they look. G139's argument is
+            about a threshold that must refuse on absence rather than default,
+            and `bound_not_a_number` is the dangerous arm it exists for: *"every
+            comparison against `NaN` is false, so a `NaN` bound expires nothing
+            and FAILS OPEN."* A `NaN` extraction floor fails open in exactly the
+            same way — every confidence clears it — so the same codes name the
+            same hazard. `User Journeys` H3.2: *"a missing floor is a refusal
+            rather than a default."*
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  /staff/tenants/{tenantId}/tag-policy:
+    get:
+      tags: [S Staff Console]
+      operationId: getTenantTagPolicy
+      x-capability: 'exempt: configure_tag_policy is the verb that names this and it is classed configuration, but the reader is a platform principal and decide() denies those at the org term — so the grant reaching configuration is the control and the verb is unreachable'
+      x-plane: tenant
+      x-admin-authority: tenant-access-grant
+      summary: H9 — the tag keys seen, their coverage, and which one drives chargeback.
+      description: |
+        `S1` draws key, values seen, whether it drives chargeback, and coverage
+        this period.
+
+        ⚠️ **COVERAGE HAS AN IRREVERSIBLE EDGE AND THE SCHEMA CARRIES IT.**
+        `S1`: records emitted before the vocabulary was agreed stay untagged
+        *forever*. `coveragePercent` is therefore accompanied by
+        `untaggedBeforePolicy`, so a reader can tell a live coverage problem
+        from a permanent historical one. A single percentage would conflate the
+        two and the first would look like the second.
+
+        The values are the customer's vocabulary and the keys are the customer's
+        keys. **That is the one place this operation comes closest to §3**, and
+        it stays the right side of it: a tag KEY is configuration the customer
+        declared to us for chargeback, and the response carries no tagged record
+        and no value from one.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: The tag policy as it stands.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TagPolicyView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+    put:
+      tags: [S Staff Console]
+      operationId: nominateChargebackKey
+      x-capability: 'exempt: configure_tag_policy is the verb and it is unreachable for the same reason as the read — decide() refuses the platform org before any capability, and the tenant side of this decision is the customer own act on their own surface'
+      x-plane: tenant
+      x-admin-authority: tenant-access-grant
+      summary: Nominate the one key that drives chargeback.
+      description: |
+        `User Journeys` H9.2 and C10.2 are **the same act named in two
+        journeys** — *"Nominate the chargeback key — one key drives it, and the
+        vocabulary is theirs"*, and *"one key, and everything downstream depends
+        on it."* One endpoint, two journeys, and this is it.
+
+        **ONE KEY, NOT A SET.** The request admits a single key because the pack
+        does: chargeback with two keys is chargeback with no answer when they
+        disagree.
+
+        ⚠️ `S1` MARKS THIS *"Specified, not built. Nominating the key is a
+        database write on our side; the vocabulary is a conversation with no
+        surface at either end."* Two journeys make it a step and the surface
+        record says it has no control. **The journeys win here** — a write named
+        twice with a stated owner is better evidence than a drawn pane's
+        omission — and the disagreement is recorded rather than resolved.
+
+        The refusal arm is `tag_vocabulary_violation`, an existing member, for a
+        key outside the vocabulary the customer declared.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChargebackKeyRequest' }
+      responses:
+        '200':
+          description: Nominated.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TagPolicyView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: |
+            `tag_vocabulary_violation` — a key the customer's declared
+            vocabulary does not hold.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  /staff/tenants/{tenantId}/licence-position:
+    get:
+      tags: [S Staff Console]
+      operationId: getLicencePosition
+      x-capability: 'exempt: a licence position is a substrate fact — the plane a tenant runs on and its licence to run — and substrate is documented as having NO capability by statement, because a platform release reaches it and a grant does not'
+      x-plane: tenant
+      x-admin-authority: tenant-access-grant
+      summary: H10 — what runs in their account, under what licence, and whose call it is.
+      description: |
+        `S1` draws runtime, licence, where it runs, and a position of clear,
+        notice-required or theirs-to-accept.
+
+        ⚠️ **H10 HAS NO JOURNEY STEP WITH A CONSOLE ON IT.** All three of its
+        steps carry no surface at all, so this operation rests on `S1` alone.
+        That is weaker evidence than most of this file and is stated rather than
+        left to be discovered.
+
+        It is BYOA-only in substance: under `hosted` the runtime is ours and the
+        question does not arise. **G276** put BYOA back in v1 and **G281** kept
+        hosted as one multi-tenant account, so the two answers are genuinely
+        different and the field is not vestigial.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: The position, per runtime.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [runtimes]
+                properties:
+                  runtimes:
+                    type: array
+                    items: { $ref: '#/components/schemas/LicencePositionRow' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /staff/billing/adjustments:
+    post:
+      tags: [S Staff Console]
+      operationId: raiseAdjustment
+      x-capability: 'exempt: an adjustment is a commercial act and view_commercial is a READ verb by construction — model/access.ts records that the absence of a write verb on commercial is scope rather than principle — so there is no verb to name and the actor is a platform principal besides'
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: An adjustment on the NEXT invoice. An issued invoice stands.
+      description: |
+        🛑 **PRICING IS NEVER RETROACTIVE AND AN ISSUED INVOICE STANDS.** `User
+        Journeys` H8.3: *"✅ it stands. Pricing is never retroactive, and a
+        correction is a manual adjustment on the next invoice, carrying a
+        reason."* `S1` says the same and adds the sharp part: *"It lands on the
+        next invoice, not this one."*
+
+        **THE REASON IS REQUIRED, AND `S1` SAYS WHO READS IT:** *"The reason you
+        type is not an internal note — **it is printed on their invoice.**"* H8.3
+        adds the archival reason, which is stronger: because cards carry
+        effective dates and not versions, *"an old invoice may not be
+        reproducible from the current card — the adjustment reason is the only
+        record of why the two disagree, so it is load-bearing rather than a
+        note."*
+
+        ⚠️ **AN ADJUSTMENT NAMES A TENANT AND THE PATH DOES NOT.** The subject is
+        in the body as `againstInvoiceId`, which resolves the tenant, rather than
+        as a tenant id — so §7's path argument is not even needed here and the
+        no-tenant-in-a-body convention is held exactly.
+
+        `period_closed` is the refusal arm for an adjustment aimed at a period
+        that has already gone.
+
+        ⚠️ `S1` DRAWS A TWO-STEP ARMING — *"Check it → Carry it forward"* — AND
+        NOTHING ON THE WIRE EXPRESSES IT. A confirmation step is client
+        behaviour here, which is the honest reading of a drawn control, but it
+        means the server accepts a single unconfirmed call. Whether a
+        money-moving write needs a wire-level confirmation is an open question
+        and is not answered here.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdjustmentRequest' }
+      responses:
+        '201':
+          description: |
+            Carried forward. It appears on the NEXT invoice and the response
+            says which period that is, so nobody has to infer it.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdjustmentReceipt' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: |
+            `validation_failed` for a body that is incomplete — a reason shorter
+            than the floor is the common case — or `period_closed` where the
+            target period has gone.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ================================================================== S ptnr
+  # Partners · the registration queue and the domain list
+  /staff/partners/registrations:
+    get:
+      tags: [S Staff Console]
+      operationId: listRegistrationQueue
+      x-capability: 'exempt: a registration names a company that is not a tenant and may never become one — there is no tenantId, no resource class, and the reader is a platform principal decide() denies at the org term'
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: Registrations waiting on us, oldest first, with collisions flagged.
+      description: |
+        `S1`: *"A partner submits; **we accept or refuse**. The time of receipt
+        is what decides precedence, so the queue is read oldest first."*
+
+        **THE COLLISION FLAG IS COMPUTED HERE AND IT IS THE ONLY PLACE EITHER
+        PARTY LEARNS OF ONE.** Staff see that a claim collides and against which
+        earlier date; the submitting partner sees a refusal and a date and never
+        a name — `submitDealRegistration`'s own note, and `P1`'s *"a registry
+        that named the holder would be a map of everyone's pipeline."*
+        **The asymmetry is the design**, and it lives in two schemas rather than
+        in a rule somebody has to remember.
+
+        `company` is a filter because `User Journeys` V2.3 needs one: *"Match a
+        deal registration — partners register deals up front, so the lead is
+        matched to a registration rather than attributed after the fact."* That
+        is a control-plane step inside a visitor journey, and it is one of the
+        four this file counts in §8.
+
+        ⚠️ **THE CONSOLE NEVER SEES A LEAD.** `User Journeys` V2.9 and its
+        ruling 16 both say so: *"The product knows about tenants; the CRM knows
+        about people who are not tenants yet."* **There is no `Lead` anywhere in
+        this document** and the match runs the other way — from a lead in the
+        CRM to a registration here.
+      parameters:
+        - $ref: '#/components/parameters/Company'
+      responses:
+        '200':
+          description: The queue.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [registrations]
+                properties:
+                  registrations:
+                    type: array
+                    items: { $ref: '#/components/schemas/RegistrationQueueRow' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+  /staff/partners/registrations/{registrationId}/acceptance:
+    post:
+      tags: [S Staff Console]
+      operationId: acceptRegistration
+      x-capability: 'exempt: accepting a claim binds a company to a partner in the registry and touches no tenant at all — the subject is a company that may never become one, so there is no scope a capability could be evaluated in'
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: Accept it. The registry is the record; the CRM holds a copy.
+      description: |
+        `User Journeys` P9.3: *"Staff approve it, and it becomes matchable. **The
+        control plane is the system of record; the CRM copy is downstream.**"*
+
+        🛑 **ACCEPTING A COLLIDING CLAIM IS REFUSED BY THE SURFACE ITSELF**, and
+        `S1` writes the refusal in the first person: *"Not accepted… accepting
+        this one would give two partners the same company."* That is a 409 and
+        not a 422 — the request is well-formed and the world is in a state that
+        forbids it.
+
+        ⚠️ `idempotency_conflict` IS THE CODE AND IT IS AN IMPERFECT FIT, NAMED
+        AS ONE. It is the closest existing member for *"a claim already stands
+        on this company"* and it does not say that; `errors.yaml` is closed and
+        holds nothing better. Minting the right member is the same owed change
+        `submitDealRegistration` names, seen from the staff side.
+
+        ⚠️ **`User Journeys` H11.1 NAMES A THIRD TRANSITION THAT `S1` DOES NOT
+        DRAW:** *"approve, reject, or **ask for more**."* Two operations are
+        declared here because two controls are drawn. The third is recorded as
+        owed rather than invented.
+      parameters:
+        - $ref: '#/components/parameters/RegistrationId'
+      responses:
+        '200':
+          description: Accepted. The partner now holds the company, from a date.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RegistrationQueueRow' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: |
+            A claim already stands on this company. `idempotency_conflict`, with
+            the caveat above. *"Refuse it instead, or resolve the earlier claim
+            first."*
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  /staff/partners/registrations/{registrationId}/refusal:
+    post:
+      tags: [S Staff Console]
+      operationId: refuseRegistration
+      x-capability: 'exempt: refusing a claim writes a registry outcome about a company that is not a tenant, so no resource class applies and no PrincipalContext can be built for the platform actor taking it'
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: Refuse it. The partner is told one fact, and it is a date.
+      description: |
+        🛑 **WHAT A REFUSED PARTNER IS TOLD IS A SECURITY PROPERTY AND IT LIVES
+        IN THIS OPERATION'S ABSENT FIELDS.** `S1` states the disclosure exactly:
+        the partner is told *"one fact — claimed earlier by another partner, on
+        08 Nov 2025."* A date, and no name.
+
+        `RefusalRequest` therefore carries an internal note and **nothing that
+        reaches the partner**. There is no message field, no reason the partner
+        reads, and no rival reference. A free-text reason forwarded to the
+        submitter is how the holder's identity would leak, one refusal at a
+        time.
+      parameters:
+        - $ref: '#/components/parameters/RegistrationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefusalRequest' }
+      responses:
+        '200':
+          description: Refused.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RegistrationQueueRow' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Invalid' }
+
+  /staff/partners:
+    get:
+      tags: [S Staff Console]
+      operationId: listPartnerRegistry
+      x-capability: 'exempt: the registry is the platform own record of who its partners are — standing, cards, billing arrangement, tenants and claims — and a partner is not a tenant, so there is no scope and no class'
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: Every partner, with standing, cards, arrangement and claims held.
+      description: |
+        `S1`'s partner registry, read-only on that surface.
+
+        ⚠️ **THERE IS NO CREATE-A-PARTNER OPERATION HERE AND `User Journeys` P1.1
+        SAYS THERE SHOULD BE:** *"Partner registered, and the billing arrangement
+        chosen. **This one choice decides visibility, invoicing and who the
+        customer's contract is with.**"* `S1` draws the registry as a table and
+        draws no control that adds a row — P1's own note is *"Executed entirely
+        by us. The partner supplies information and signs; no partner user
+        touches a system"*, which in practice today means a database write.
+
+        **This is a genuine hole rather than a scoping choice**, and it is the
+        one place where following `S1` over `User Journeys` leaves an act with
+        no operation at all: partner creation and arrangement selection. It is
+        recorded here and owed.
+      responses:
+        '200':
+          description: The registry.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [partners]
+                properties:
+                  partners:
+                    type: array
+                    items: { $ref: '#/components/schemas/PartnerRegistryRow' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+  /staff/sign-in-domains:
+    get:
+      tags: [S Staff Console]
+      operationId: listSignInDomains
+      x-capability: 'exempt: configure_identity is the verb that governs an IdentityConnection and it is classed identity, evaluated in a tenant — the sign-in domain list is the platform lookup table that resolves an address to an organisation BEFORE any tenant exists in the request'
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: The domains that resolve at sign-in, and which customer each names.
+      description: |
+        `S1`'s domain list: *"The lookup at sign-in resolves an address to an
+        organisation, and this list is what it resolves against."*
+
+        🛑 **THIS IS THE TABLE `resolveHomeRealm` READS, AND THAT MAKES IT THE
+        HIGHEST-CONSEQUENCE LIST IN THIS FILE.** `session.openapi.yaml` records
+        that the realm operation leaks a DOMAIN-existence signal deliberately —
+        *"a 200 for a claimed domain and a 422 for an unclaimed one"* — and that
+        the leak *"is the first question for the D6 threat model G165 is still
+        owed."* Every row added here widens that signal by one domain.
+
+        ⚠️ `configure_identity` EXISTS AND STILL DOES NOT FIT, WHICH IS WORTH
+        BEING PRECISE ABOUT. It was minted for *"registering an `IdentityConnection`,
+        verifying its domains, disabling it"* and is classed `identity` so a
+        delivery grant can reach a customer's SSO. **That is the per-tenant
+        connection.** This list is the platform-wide resolution table consulted
+        before any tenant is known. The two are adjacent and are not the same
+        object, and using the verb here would imply a delivery grant on one
+        tenant reaches the fleet's sign-in routing.
+      responses:
+        '200':
+          description: The list, with the count of what resolves today.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SignInDomainList' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+    post:
+      tags: [S Staff Console]
+      operationId: addSignInDomain
+      x-capability: 'exempt: adding a row to the platform sign-in resolution table happens before any tenant is resolved, so there is no tenantId and no PrincipalContext — and configure_identity governs a tenant IdentityConnection rather than this table'
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: Add a domain. It widens a boundary that cannot be narrowed quietly.
+      description: |
+        🛑 **THE PACK'S OWN WARNING, KEPT VERBATIM BECAUSE IT IS THE WHOLE
+        ARGUMENT FOR THIS OPERATION HAVING NO TWIN:** *"Every addition widens a
+        boundary that cannot be narrowed again quietly… **Removing it later does
+        not unlearn what resolving already told somebody.**"*
+
+        **THERE IS NO REMOVE OPERATION.** `S1` draws none, and the sentence above
+        is why a delete would be misleading rather than merely absent: it would
+        read as an undo for something that cannot be undone. `User Journeys`
+        H11.2 says *"add/remove"*; the surface draws add alone and this file
+        follows the surface.
+
+        The domain is normalised before comparison — `normaliseClaimedDomain()`
+        in `model/domain.ts` — for the reason `session.openapi.yaml` states on
+        `RealmRequest`: *"a host comparison that is not case-insensitive refuses
+        a legitimate request on a capitalised value, which is a failure a
+        customer finds and a test does not."*
+
+        `domain_claimed_by_more_than_one_connection` is the refusal arm, reused
+        exactly: **it is the takeover state**, and `session.openapi.yaml` records
+        that picking either claimant *"would pick an `orgClass` for the user —
+        the reach invariant 2 exists to close."* This operation is where that
+        state would be created, so it is where it is refused.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SignInDomainRequest' }
+      responses:
+        '201':
+          description: Added. It resolves from now on.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SignInDomainRow' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '422':
+          description: |
+            `validation_failed` for a malformed domain, or
+            `domain_claimed_by_more_than_one_connection` where the domain is
+            already claimed — the takeover state, refused at the point it would
+            be created.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ================================================================== S sup
+  # Support · cases, and the one statutory act we may reach
+  /staff/cases:
+    get:
+      tags: [S Staff Console]
+      operationId: listStaffCases
+      x-capability: 'exempt: the queue spans every tenant so there is no single tenantId, and the reader is support — a platform principal decide() denies at the org term, whose reach into any one tenant is authorisationPermits() rather than a verb'
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: Every open case. We own all of them, whoever raised them.
+      description: |
+        `S1`: *"Raised by a partner on a customer's behalf, or by a customer
+        directly. **We own every one of them, because 1CloudHub is always the
+        support path.**"*
+
+        The access column is what a support engineer reads first: the support
+        access mode that customer chose, and whether break-glass is open. It is
+        a fact about the grant rather than about the problem, and it decides
+        what the next screen can contain.
+      parameters:
+        - $ref: '#/components/parameters/Severity'
+      responses:
+        '200':
+          description: The queue.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [cases]
+                properties:
+                  cases:
+                    type: array
+                    items: { $ref: '#/components/schemas/StaffCaseSummary' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+  /staff/cases/{caseId}:
+    get:
+      tags: [S Staff Console]
+      operationId: getStaffCase
+      x-capability: 'exempt: one case, its severity, the mode that bounds it and whether break-glass stands — all facts about the grant rather than reads through it, and taken by a platform principal decide() refuses categorically'
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: One case, with the mode that bounds it and the standing authorisation behind it.
+      description: |
+        `S1`'s case detail, minus one section — see below.
+
+        **THE STANDING AUTHORISATION IS PART OF THIS RESPONSE AND THAT IS THE
+        POINT.** `S1` renders what was authorised at signing: the hours ceiling,
+        the classes it names, and the customer's notification path. A support
+        engineer deciding whether to break glass needs to read the ceiling
+        before drafting the request, not after being refused by it. This is
+        `SupportAuthorisation` surfaced, and `authorisationPermits()` is what
+        enforces it.
+
+        🛑 **THE READS-ON-THIS-CASE AUDIT TABLE IS NOT IN THIS RESPONSE, AND THE
+        OMISSION IS §3 RATHER THAN AN OVERSIGHT.** `S1` draws it — at, who, what
+        was read, under which authority, including machine refusals — and says
+        *"Every row here is also a row in the customer's own audit trail, at
+        C11."* **That is `view_access_log`, classed `tenant_data`**, so returning
+        it from a control-plane operation would be the control plane reading
+        tenant data. The customer's own trail is C11 on the capability tier; the
+        staff view of it needs a data-plane operation under a grant, and is
+        owed.
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: The case.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StaffCaseDetail' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /staff/cases/{caseId}/break-glass-requests:
+    post:
+      tags: [S Staff Console]
+      operationId: requestBreakGlass
+      x-capability: 'exempt: this REQUESTS a grant rather than exercising one — invariant 8 makes the grant itself the mechanism, authorisationPermits() the evaluator, and no capability in the roster names the act of asking a colleague to approve a reach'
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: Ask to read past the mode the customer chose. A second person approves.
+      description: |
+        🛑 **TWO PEOPLE, AND THE RULE IS RE-CHECKED WHEN THE GRANT IS USED
+        RATHER THAN ONLY WHEN IT IS ISSUED.** `S1`: *"Nobody at the customer is
+        woken. **A second 1CloudHub person approves**, and the grant refuses to
+        evaluate if the raiser and the approver are the same — checked again when
+        it is used, not only when it is issued."*
+
+        Both halves are on the wire. `approverId` is required, and the two
+        refusal codes are the existing pair that already mean exactly this:
+        `approval_second_approver_required` where no approver is named, and
+        `approval_segregation_violation` where the approver is the raiser.
+        **Reused, not re-minted** — they were written for a resolution approval
+        and they name the same two properties here.
+
+        **THE REASON IS REQUIRED AND IS LONGER THAN A GESTURE.** `S1`'s form will
+        not commit under ten characters, and the request carries it because the
+        customer's own trail is where it ends up.
+
+        🛑 **NOTHING BEHIND THIS EXISTS.** `S1` is blunt: *"Specified, not built.
+        Nothing issues the grant, expires it, enforces the negotiated ceiling, or
+        writes the reason into the customer's trail."* What `model/` does have is
+        the shape — `SupportAuthorisation`, `PERMITTED_RESOURCES`,
+        `NON_DELEGABLE_RESOURCES`, `MAX_GRANT_HOURS` and `authorisationPermits()`
+        — so this operation is declared against real types and an unbuilt path.
+
+        ⚠️ **`secret` IS REACHABLE UNDER A DELIVERY GRANT AND `statutory` IS NOT,
+        AT ANY PRICE.** G60 and G75 put `secret` into `PERMITTED_RESOURCES.delivery`
+        as a standing 90-day reach and removed it from `NON_DELEGABLE_RESOURCES`,
+        leaving `statutory` alone there — and `authorisationPermits()` checks
+        that list **first, before the null check, before withdrawal.** The
+        `classes` field below may therefore name `secret` and may never name
+        `statutory`, and `tests/contracts/administration-wire.test.mjs` asserts
+        the second half by name.
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BreakGlassRequest' }
+      responses:
+        '202':
+          description: |
+            Sent to the named approver. NOT A GRANT — nothing is readable until
+            the approver acts, and the response carries no grant, no expiry and
+            no token.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: |
+            `approval_second_approver_required` — no approver named.
+            `approval_segregation_violation` — the approver is the raiser.
+            `validation_failed` — the reason is too thin to be one.
+            `classification_ceiling_exceeded` — the classes asked for exceed
+            what the customer authorised at signing, which is the ceiling
+            `getStaffCase` returns so that this refusal is avoidable.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  /staff/cases/{caseId}/diagnostic-bundle-requests:
+    post:
+      tags: [S Staff Console]
+      operationId: requestDiagnosticBundle
+      x-capability: 'exempt: this asks the CUSTOMER to run a command and send us the output — the platform reads nothing, reaches nothing and is granted nothing, so there is no act in any tenant for a capability to gate'
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: The step before any grant. The customer runs it and sends it.
+      description: |
+        `S1` calls it *"the workhorse, and **the step before any grant**"*, and
+        the contents are enumerated so that the request is not a blank cheque:
+        *"engine and schema versions, applied migrations, packs in force,
+        configuration with secrets elided, recent error codes with counts, queue
+        depths. **No document content and no extracted values.**"*
+
+        **The bundle never transits this operation.** The customer produces it
+        and sends it; there is no upload here, and
+        `control-plane.openapi.yaml`'s `uploadDiagnosticBundle` — a plane-side
+        push under SigV4 — is a different thing on a different wire. This
+        operation asks.
+
+        🛑 `S1`: *"Neither end of it exists — no command for the customer to run,
+        no stated contents, and no transport."* The contents ARE stated, in the
+        pack, and this description is the first place they appear in a contract.
+        The command and the transport are owed.
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '202':
+          description: Asked. The customer decides whether to run it.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /staff/notifications:
+    get:
+      tags: [S Staff Console]
+      operationId: listStaffNotifications
+      x-capability: 'exempt: the same rule as the partner tray — a notice says THAT something happened and where to go, and the moment it carried a figure or a counterparty it would become a read needing the capability that governs what it disclosed'
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: What needs you, and what is somebody else's.
+      description: |
+        `S1`'s tray, with two lists: the signed-in role's own, and other people's
+        shown inert *"for the picture"*.
+
+        **THE CONSTRAINT IS THE SAME AS THE PARTNER TRAY AND `S1` STATES THE
+        EDGE MOST SHARPLY:** *"A tenant is named here and nothing inside one is.
+        A notice is not a read… **The moment a notice carries a figure or a
+        counterparty it becomes a read.**"*
+
+        A tenant NAME is permitted here and is not permitted in the partner
+        tray, and the difference is invariant 2: staff reach tenants by grant and
+        a partner reaches only its own book. The schema is shared; what differs
+        is what the server may fill in, which is a property of the reader rather
+        than of the shape.
+
+        **`assignedToMe` is a field rather than two endpoints**, because `S1`
+        renders both lists on one surface and the inert half is the point:
+        somebody else's alert is context, not noise.
+
+        **No mail, no channel.** `S1`'s footer: *"Nothing here pages anyone."*
+      responses:
+        '200':
+          description: The notices.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [notifications]
+                properties:
+                  notifications:
+                    type: array
+                    items: { $ref: '#/components/schemas/Notification' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+components:
+
+  securitySchemes:
+    sessionContext:
+      type: apiKey
+      in: cookie
+      name: __Host-reconcile_session
+      description: |
+        THE SESSION HANDLE, AS AN `HttpOnly` COOKIE — G386, 19 Sep 2026.
+
+        ⚠️ THIS SCHEME READ `in: header` / `name: X-Session` UNTIL THAT RULING
+        AND IS CORRECTED RATHER THAN DUPLICATED, because a second scheme would
+        leave four tiers declaring two credentials for one session and every
+        `security:` list in this file would have to choose between them.
+
+        The ruling: *"`Set-Cookie`, `HttpOnly` `Secure` `SameSite=Lax`, on the
+        tenant host, in production. Page script cannot read it, so the
+        exfiltration class `frontend/src/api/plane.ts`'s origin allowlist
+        exists to guard STOPS BEING POSSIBLE rather than being blocked."*
+
+        🛑 `X-Session` IS NOT DECLARED ANYWHERE ANY MORE AND THAT IS
+        DELIBERATE. It survives in exactly one place —
+        `server/dev/session-header.ts` — reachable only through a dynamic
+        import that runs when `RECONCILE_LOCAL_TEST_AUTH` is exactly `1`, so a
+        deployed plane holds no code that reads it. **A local-only channel
+        behind a flag is not part of the contract**; declaring it here would
+        publish a second way in and invite a client to use it. G192's own
+        argument, one channel over.
+
+        ⚠️ AND CSRF IS NOW A LIVE CONCERN THE HEADER DESIGN DID NOT HAVE. A
+        custom header is never attached by a cross-site form; a cookie is
+        attached by the browser. `SameSite=Lax` keeps it off every cross-site
+        `POST`, `PUT`, `PATCH` and `DELETE` — which is every state-changing
+        operation served today — and it is **not** a complete answer: a
+        state-changing `GET` reached by a top-level navigation would carry it,
+        and there is none only because nobody has written one.
+        `server/data-plane/session-cookie.ts` states the bound precisely. No
+        `csrfToken` is declared here, and minting one is a ruling.
+
+        ⚠️ THE CONTROL-PLANE TIER IS UNCHANGED AND STILL CARRIES A HEADER. That
+        is not an oversight: its credential is a machine channel secret read
+        from `RECONCILE_CONTROL_*`, not a person's session, and no browser is
+        involved. Two different credentials that happened to share a header
+        name now differ in the contract as they always differed in fact.
+  parameters:
+    TenantId:
+      name: tenantId
+      in: path
+      required: true
+      description: |
+        The tenant this act is ABOUT. Read §7 of this document's description
+        before treating it as a scope: the caller's authority comes from a
+        `TenantAccessGrant` that already names a tenant, and this value is
+        checked against it rather than establishing it.
+      schema: { type: string }
+    TenantRef:
+      name: tenantRef
+      in: path
+      required: true
+      description: |
+        A tenant in the calling partner's own book. `T.partnerId = P` is checked
+        against the session-derived `P` — invariant 2's own predicate — and a
+        tenant failing the check answers `resource_not_found`, identically to
+        one that does not exist.
+      schema: { type: string }
+    CaseId:
+      name: caseId
+      in: path
+      required: true
+      schema: { type: string }
+    RegistrationId:
+      name: registrationId
+      in: path
+      required: true
+      schema: { type: string }
+    StepKey:
+      name: stepKey
+      in: path
+      required: true
+      description: The onboarding step. Only the next one may be completed.
+      schema: { type: string }
+    PeriodKey:
+      name: periodKey
+      in: path
+      required: true
+      description: |
+        The billing period. `control-plane.openapi.yaml` §4 owns the rule this
+        depends on — *"the clock is theirs, the period is ours"* — and the
+        sequence number rather than a timestamp is what makes a late arrival
+        attributable to the period it belongs to.
+      schema: { type: string }
+    Standing:
+      name: standing
+      in: query
+      required: false
+      description: Narrow the registry to one standing.
+      schema: { type: string }
+    Severity:
+      name: severity
+      in: query
+      required: false
+      description: The DECIDED severity, never the proposed one.
+      schema: { type: string }
+    Company:
+      name: company
+      in: query
+      required: false
+      description: |
+        Match registrations by claimed company — `User Journeys` V2.3, matching
+        a lead in the CRM to a registration here. The match runs from the CRM
+        inward; the console never sees a lead.
+      schema: { type: string }
+
+  responses:
+    Unauthenticated:
+      description: |
+        No valid session — `session_invalid`. Reused rather than re-minted, for
+        the reason `session.openapi.yaml` gives: a console-flavoured twin would
+        be a second vocabulary.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+    Denied:
+      description: |
+        Authenticated, and not permitted — `capability_not_held`.
+
+        ⚠️ THE CODE NAMES A CAPABILITY AND NOTHING HERE HAS ONE, WHICH IS WORTH
+        BEING HONEST ABOUT RATHER THAN QUIET. `errors.yaml` minted it for G200's
+        request-time gate and defined it by the caller's position rather than by
+        the mechanism: *"`capability_not_held` is the caller never having been
+        granted the verb at all"*, as against `policy_denied`, which is *"F3
+        evaluating a policy and refusing THIS ACT."* A console caller refused
+        here has not been granted the verb — by a grant, a portal role or a
+        staff role — so the diagnostic distinction the enum exists to protect
+        survives, and a support engineer reading a redacted span still learns
+        *widen this* rather than *a policy fired*.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+    AdministratorOnly:
+      description: |
+        A partner-portal destination the caller's role does not hold —
+        `arr`, `cards` or `people`. `capability_not_held`.
+
+        🛑 A 403 AND NOT A 404, AND THE PACK CHOSE IT. The nav HIDES these three
+        and the command palette DRAWS them disabled with the hint *"partner
+        administrators only"*. **Hidden in one place and named in another means
+        the existence of the destination is not secret**, so a 404 would be a
+        lie the client can already see through. The existence of a destination
+        is not sensitive; who may reach it is enforced.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+    NotFound:
+      description: |
+        `resource_not_found`. RETURNED IDENTICALLY for a row that does not exist,
+        a tenant outside the caller's grant, and a tenant sold by another
+        partner — copied deliberately from `capability.openapi.yaml`, where the
+        same paragraph ends *"distinguishing them would make this endpoint an
+        existence oracle across the tenant boundary."* Here the boundary is the
+        partner book as well as the tenant.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+    Invalid:
+      description: |
+        `validation_failed`. The body does not satisfy the schema.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  schemas:
+
+    # --- shared -----------------------------------------------------------
+
+    DecimalAmount:
+      type: string
+      pattern: '^-?[0-9]+(\.[0-9]+)?$'
+      description: |
+        MONEY AS A DECIMAL STRING — **G111 and G112**. `Money.amountMinor` is
+        `bigint` in the model after G65 and G71, and *"every boundary calls the
+        codec"*. A JSON number silently loses the top of a large minor-unit
+        amount, which is the failure G112 exists to prevent. Every amount in
+        this document is this type; none is a `number`.
+
+    Notification:
+      type: object
+      additionalProperties: false
+      description: |
+        A NOTICE, AND A NOTICE IS NOT A READ. The fields are exactly what `P1`
+        and `S1` permit: that something happened, where to go, when, and whose
+        it is.
+
+        🛑 WHAT IS ABSENT IS THE CONTROL. No amount, no counterparty, no
+        document, no free text. `S1`: *"The moment a notice carries a figure or
+        a counterparty it becomes a read."* A `detail` string here would be a
+        disclosure channel outside every authorisation check, filled in by
+        whoever wrote the notice-producing code.
+      required: [kind, destination, raisedAt, assignedToMe]
+      properties:
+        kind:
+          type: string
+          description: |
+            What happened, from a closed platform vocabulary — an onboarding
+            stall, an expiring grant, a waiting registration. Closed for the
+            same reason `ErrorCode` is: a free-text kind is a free-text
+            disclosure.
+        destination:
+          type: string
+          description: Which destination answers it. A console slug, never a URL.
+        subjectName:
+          type: string
+          description: |
+            ⚠️ STAFF ONLY, AND THE ASYMMETRY IS INVARIANT 2. A tenant may be
+            NAMED in the staff tray — `S1` permits it and permits nothing
+            inside one. It is absent from every partner-tray response, because
+            a partner's notice concerns its own book and naming anything else
+            would reach past it. One schema, two fillings; the reader decides,
+            not the shape.
+        raisedAt: { type: string }
+        assignedToMe:
+          type: boolean
+          description: |
+            `S1` renders other people's notices inert *"for the picture"*, and
+            `P1` splits waiting-on-you from answered. One flag, two lists, no
+            second endpoint.
+
+    # --- partner: registry ------------------------------------------------
+
+    DealRegistrationRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        TWO SHAPES, DISCRIMINATED, BECAUSE `P1` MAKES THEM TWO FORMS: a **deal**
+        carries a value and a close date; a **customer claim** carries a
+        rationale and a resale scope and, in the pack's words, has *"no
+        expiry"*.
+
+        A single optional-everything shape would admit a deal with no value and
+        a claim with a close date — two states with no meaning, which §5.5 says
+        not to make representable. The discriminator is required.
+
+        `additionalProperties: false` is load-bearing rather than tidy: ajv runs
+        with `removeAdditional: false` under G191, so a smuggled field is
+        REJECTED rather than stripped. Under Fastify's default it would be
+        silently deleted and the request served.
+      required: [shape, company]
+      properties:
+        shape:
+          type: string
+          enum: [deal, customer_claim]
+        company:
+          type: string
+          description: |
+            The company claimed. Counterparty-authored text, compared after
+            normalisation, and it is the key precedence is decided on.
+        annualValue:
+          $ref: '#/components/schemas/DealValue'
+        expectedClose:
+          type: string
+          description: Deal shape only.
+        contact:
+          type: string
+          description: The partner's contact at that company. Deal shape only.
+        rationale:
+          type: string
+          description: |
+            *"Why you, in one line."* Customer-claim shape only.
+        resaleScope:
+          type: array
+          items: { type: string }
+          description: |
+            What the partner is selling into, from its own resale scope.
+            Customer-claim shape only.
+
+    DealValue:
+      type: object
+      additionalProperties: false
+      description: |
+        A DEAL'S VALUE, WITH ITS CURRENCY — **G3561, THE OWNER'S RULING
+        (3 Oct 2026)**: *"Deal registration carries a currency: amount +
+        currency through the money codec (model/money.ts, G111); the form
+        defaults to SGD and shows it."* `P1`: *"Deal value, SGD a year"*.
+
+        ⚠️ THIS WAS `DecimalAmount` UNTIL THAT RULING — a decimal string with
+        no currency and no exponent, which the model said in its own voice was
+        *"NOT `Money`, so G111's codec has nothing to apply"*. It is the
+        codec's `MoneyWire` now, `capability.openapi.yaml`'s `Money` shape:
+        exact integer MINOR units as a decimal string (G112 — never a JSON
+        number), the currency the submitter DECLARED, and the exponent.
+        `parseMoneyWire()` is the only conversion. A zero or negative value is
+        a 422 (`deal_value_not_positive`, the model's).
+      required: [currency, amountMinor, exponent]
+      properties:
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          description: ISO 4217, e.g. 'SGD'. Checked as stated, never as a member.
+        amountMinor: { type: string, pattern: '^-?[0-9]+$' }
+        exponent: { type: integer, minimum: 0, maximum: 18 }
+
+    DealRegistrationReceipt:
+      type: object
+      additionalProperties: false
+      description: |
+        NOT A REGISTRATION. The pack: *"It is a request until we accept it…
+        Nothing is registered yet."* There is no id of a registered thing here
+        because no registered thing exists.
+      required: [receivedAt, standing]
+      properties:
+        receivedAt:
+          type: string
+          description: |
+            AUTHORITATIVE, AND OURS. The same rule
+            `control-plane.openapi.yaml` §4 states: *"Ordering, period
+            assignment and billing use ours, never theirs."* Precedence is
+            decided on this value, so a submitter-supplied time would let a
+            partner backdate a claim.
+        standing: { type: string }
+
+    DealRegistrationSummary:
+      type: object
+      additionalProperties: false
+      description: |
+        🛑 NO FIELD NAMES A RIVAL. *"We are not telling you whose — a registry
+        that named the holder would be a map of everyone's pipeline."* The
+        disclosure is unrepresentable rather than forbidden by a note.
+      required: [registrationId, company, shape, registeredAt, standing]
+      properties:
+        registrationId: { type: string }
+        company: { type: string }
+        shape: { type: string }
+        registeredAt: { type: string }
+        lastActivityAt:
+          type: string
+          description: |
+            What dormancy is computed from. The pack: *"A claim does not expire.
+            It goes dormant when nothing happens on it."*
+        standing:
+          type: string
+          description: |
+            waiting, accepted, dormant or refused. ⚠️ THERE IS NO EXPIRED
+            MEMBER AND THERE IS NO EXPIRY DATE ANYWHERE IN THIS SCHEMA, because
+            `User Journeys` P9.5 records that none is specified and that its
+            absence is a live hazard — *"without one the registry becomes a
+            land-grab."* Inventing one here would answer an open question by
+            accident.
+
+    # --- partner: tenants sold and grants ---------------------------------
+
+    SoldTenantSummary:
+      type: object
+      additionalProperties: false
+      description: |
+        COMMERCIAL METADATA AND NOTHING ELSE. Invariant 2 is what this shape is
+        for: a partner reads that a tenant exists, how it is deployed, and how
+        far along it is. No count of anything inside it.
+      required: [tenantRef, name, deploymentMode, stage]
+      properties:
+        tenantRef: { type: string }
+        name: { type: string }
+        deploymentMode:
+          type: string
+          description: |
+            hosted or byoa. Both are live under **G276**, which reversed G36 and
+            put BYOA back in v1; **G281** keeps hosted as one multi-tenant
+            account isolated by RLS.
+        stage: { type: string }
+        stageNote:
+          type: string
+          description: |
+            WHOSE STALL IT IS. Platform-authored text about our own delivery
+            work — our operational fact, in the sense
+            `control-plane.openapi.yaml` uses for a patch level — never anything
+            the tenant wrote.
+        liveSince: { type: string }
+        arrangement: { type: string }
+
+    PartnerGrantView:
+      type: object
+      additionalProperties: false
+      description: |
+        Mirrors `PartnerGrantTerms`. In v1 the collection is empty, and the
+        shape is declared anyway so that a list which could not express a live
+        grant does not have to be rewritten the day one is issued.
+      required: [tenantRef, scope, grantedBy, expiresAt, revokedAt]
+      properties:
+        tenantRef: { type: string }
+        scope:
+          type: string
+          description: |
+            One of the three `PARTNER_ACCESS_SCOPES` — commercial_only,
+            exceptions_read, exceptions_operate. The mask INTERSECTS and never
+            adds: *"a partner may operate on a customer's exceptions and may
+            never be the approving authority for them."*
+        grantedBy:
+          type: string
+          description: A named person at the CUSTOMER. Never anyone here.
+        expiresAt:
+          type: string
+          description: |
+            Required, never null. *"An open-ended grant is not a grant."*
+        revokedAt: { type: [string, 'null'] }
+
+    # --- partner: commission ----------------------------------------------
+
+    CommissionStatement:
+      type: object
+      additionalProperties: false
+      description: |
+        🛑 NO USAGE TOTAL, ANYWHERE IN THIS SCHEMA OR IN ITS LINES — **G271**.
+      required: [period, billedWholesale, billedRetail, margin, commissionOwed, basis, lines]
+      properties:
+        period: { type: string }
+        billedWholesale: { $ref: '#/components/schemas/DecimalAmount' }
+        billedRetail: { $ref: '#/components/schemas/DecimalAmount' }
+        margin: { $ref: '#/components/schemas/DecimalAmount' }
+        commissionOwed: { $ref: '#/components/schemas/DecimalAmount' }
+        basis:
+          type: string
+          description: |
+            Invoiced revenue, per the arrangement — and read from it rather than
+            assumed, because `P1` records a partner whose basis was amended from
+            collected revenue in March 2026.
+        lines:
+          type: array
+          items: { $ref: '#/components/schemas/CommissionLine' }
+
+    CommissionLine:
+      type: object
+      additionalProperties: false
+      description: |
+        🛑 A DISCRIMINATED VERDICT, NOT A ROW OF NUMBERS, AND THE MODEL ALREADY
+        TRIED THE OTHER SHAPE. `PartnerTenantLine` is a union of four verdicts
+        and `PartnerTenantLineBase.active` is *"a flag, never a count"*, because
+        the earlier flat shape *"FORCED the leak it existed to prevent."* G271
+        records that the pack draws exactly the flat table the union was minted
+        to make unrepresentable.
+
+        `visibility` is the discriminator and a client cannot reach a figure
+        without having read it — the same mechanism `capability.openapi.yaml`
+        uses so that *"a client cannot reach citable content without having read
+        the discriminator."*
+
+        **THERE IS NO USAGE FIELD ON THIS OBJECT AND THERE MAY NEVER BE ONE.**
+      required: [customer, visibility]
+      properties:
+        customer: { type: string }
+        visibility:
+          type: string
+          description: |
+            Which of `partnerCommercialVisibility()`'s four verdicts applies to
+            this tenant — roster only, band only, base spend without rate, or
+            full wholesale. **A mask intersects capabilities and cannot express
+            "the band and nothing inside it"**, which is why this is a
+            derivation and not a capability.
+        band:
+          type: string
+          description: Present only under a verdict that permits a band.
+        wholesale:
+          $ref: '#/components/schemas/DecimalAmount'
+        retail:
+          $ref: '#/components/schemas/DecimalAmount'
+        margin:
+          $ref: '#/components/schemas/DecimalAmount'
+        invoiceId:
+          type: string
+          description: Which invoice the line sits on.
+
+    CommissionQueryRequest:
+      type: object
+      additionalProperties: false
+      required: [period, question]
+      properties:
+        period: { type: string }
+        question:
+          type: string
+          description: |
+            *"Explain this total"*, never *"show me everything."* The answer
+            arrives from a partner manager and not from this API.
+
+    # --- partner: cases ---------------------------------------------------
+
+    PartnerCaseRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        🛑 NO ATTACHMENT FIELD OF ANY KIND — no blob, no reference, no URL.
+        *"Your own words only."* A partner that could attach a customer's
+        document would be moving tenant data onto the control plane by hand.
+
+        🛑 AND NO TENANT FIELD. It was here in the first draft and assertion J2
+        removed it; the tenant is the path segment on
+        `POST /partner/tenants/{tenantRef}/cases`. `P1` carries the case *"by
+        name rather than by a position in a list the sandbox shifts"*, which the
+        path satisfies exactly.
+      required: [narrative, proposedSeverity, visibility]
+      properties:
+        narrative:
+          type: string
+          description: |
+            The partner's own account of the problem. Party-authored text, not
+            ingested material.
+        proposedSeverity:
+          type: string
+          description: |
+            PROPOSED. *"You say how urgent it looks from where you stand; we
+            decide the severity the commitment is measured against."* A caller
+            that could set the decided value would be setting the commitment
+            they are then owed.
+        visibility:
+          type: string
+          description: |
+            Who reads the thread — the two parties, or the two parties plus the
+            customer's named contact. FIXED HERE AND NOWHERE ELSE: *"Chosen when
+            the case is raised, because it changes who reads every later
+            message."* No operation in this document edits it.
+
+    PartnerCaseSummary:
+      type: object
+      additionalProperties: false
+      required: [caseId, title, tenantRef, proposedSeverity, state, visibility]
+      properties:
+        caseId: { type: string }
+        title: { type: string }
+        tenantRef: { type: string }
+        proposedSeverity: { type: string }
+        decidedSeverity:
+          type: string
+          description: |
+            OURS, AND SHOWN BESIDE THE PROPOSAL RATHER THAN REPLACING IT.
+            *"Where we disagree with your reading, the case says both."* Null
+            until we have read it.
+        commitment:
+          type: string
+          description: |
+            Derived from the DECIDED severity, and the clock starts *"when we
+            receive it rather than when you wrote it."*
+        state: { type: string }
+        visibility: { type: string }
+
+    PartnerCaseDetail:
+      allOf:
+        - $ref: '#/components/schemas/PartnerCaseSummary'
+        - type: object
+          additionalProperties: false
+          required: [messages]
+          properties:
+            messages:
+              type: array
+              items: { $ref: '#/components/schemas/PartnerCaseMessage' }
+
+    PartnerCaseMessage:
+      type: object
+      additionalProperties: false
+      required: [author, authorRole, at, text]
+      properties:
+        author: { type: string }
+        authorRole:
+          type: string
+          description: Which side wrote it. The thread is two-party by design.
+        at: { type: string }
+        text: { type: string }
+
+    CaseMessageRequest:
+      type: object
+      additionalProperties: false
+      required: [text]
+      properties:
+        text: { type: string }
+
+    # --- partner: sandbox -------------------------------------------------
+
+    SandboxView:
+      type: object
+      additionalProperties: false
+      description: |
+        LIFECYCLE ONLY. No document ledger, and no `openUrl` — see
+        `getSandboxTenant` for G270 and for §3.
+      required: [standing]
+      properties:
+        standing:
+          type: string
+          description: |
+            live, requested or none. Absence is an answer, not a 404.
+
+            ⚠️ THIS SAID *"live or none"* UNTIL 4 Oct 2026 — G3701, applying
+            NP-01, THE OWNER'S RULING: *"Report 'requested': getSandboxTenant
+            gains a 'requested' state (contract change) and the portal shows
+            the pending request."* `requested` is an open
+            `requestSandboxTenant` with no provisioned sandbox yet; it is not
+            a live one, and a second ask still answers 409.
+        requestedAt:
+          type: string
+          description: |
+            When the firm asked. Present on the `requested` arm alone (G3701).
+        seedVersion: { type: string }
+        nextResetAt: { type: string }
+        awsAccountId:
+          type: string
+          description: |
+            The PARTNER's own AWS account. Under **G276** the sandbox is a BYOA
+            tenant, so this is their account id and not ours.
+        residency: { type: string }
+        monthlyWholesale:
+          $ref: '#/components/schemas/DecimalAmount'
+
+    SandboxResetReceipt:
+      type: object
+      additionalProperties: false
+      required: [seedVersion]
+      properties:
+        seedVersion:
+          type: string
+          description: |
+            What it was restored to. Uploads are PURGED — *"not archived, not
+            hidden"* — so there is nothing else to report.
+
+    TrialTenantRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        ATTRIBUTION RUNS THROUGH AN ACCEPTED REGISTRATION and not through a
+        second free-text company, which would be a claim path around the
+        registry's precedence rule.
+      required: [registrationId]
+      properties:
+        registrationId: { type: string }
+        note: { type: string }
+
+    # --- partner: arrangement, cards, catalogue, people -------------------
+
+    PartnerArrangementView:
+      type: object
+      additionalProperties: false
+      description: |
+        READ-ONLY, AND EVERY FIELD IS SET FROM THE 1CloudHub SIDE. *"None of it
+        is a field on this surface."*
+      required: [standing, signedAt, billingArrangement, territory, lines, visibility]
+      properties:
+        standing: { type: string }
+        signedAt: { type: string }
+        billingArrangement:
+          type: string
+          description: |
+            Partner-billed or customer-billed. `User Journeys` P1.1: *"This one
+            choice decides visibility, invoicing and who the customer's contract
+            is with."*
+        territory:
+          type: array
+          items: { type: string }
+        visibility:
+          type: string
+          description: |
+            🛑 DERIVED FROM THE ARRANGEMENT AND NEVER CONFIGURED BESIDE IT —
+            `User Journeys` P1.2, *"which is the right construction and has no
+            surface to express it."* There is no field in this document that
+            sets it, on either console. A configurable visibility beside a
+            derived one is two sources of truth for who may read a customer's
+            money.
+        lines:
+          type: array
+          description: The eight decided lines, each with whose decision it was.
+          items:
+            type: object
+            additionalProperties: false
+            required: [what, value, whose, governs]
+            properties:
+              what: { type: string }
+              value: { type: string }
+              whose: { type: string }
+              governs: { type: string }
+
+    RateCardLine:
+      type: object
+      additionalProperties: false
+      required: [line, wholesale]
+      properties:
+        line: { type: string }
+        wholesale: { $ref: '#/components/schemas/DecimalAmount' }
+        retail:
+          $ref: '#/components/schemas/DecimalAmount'
+        margin:
+          $ref: '#/components/schemas/DecimalAmount'
+
+    RateCardChangeRequest:
+      type: object
+      additionalProperties: false
+      required: [line, proposedRetail, rationale]
+      properties:
+        line: { type: string }
+        proposedRetail: { $ref: '#/components/schemas/DecimalAmount' }
+        rationale: { type: string }
+
+    ResaleCatalogueEntry:
+      type: object
+      additionalProperties: false
+      description: |
+        IN SCOPE AND OUT OF SCOPE ARE DISTINCT ANSWERS, and out of scope has two
+        reasons — not in this partner's agreement, and not released to any
+        partner. Collapsing them would tell a partner to ask for something
+        nobody can have.
+      required: [blueprint, reconciles, scope]
+      properties:
+        blueprint: { type: string }
+        reconciles: { type: string }
+        scope: { type: string }
+        tenantsSold:
+          type: integer
+          description: |
+            How many of this partner's own tenants run it. A count of the
+            partner's own book, which invariant 2 already permits it to
+            enumerate.
+
+    PartnerPerson:
+      type: object
+      additionalProperties: false
+      required: [name, email, role, state]
+      properties:
+        name: { type: string }
+        email: { type: string }
+        role:
+          type: string
+          description: |
+            partner administrator, partner user, or partner delivery. **The
+            third appears here and in no write** — `User Journeys` P7 refuses it
+            all access: *"the role exists in the partner's org chart and has no
+            access here."*
+        reaches:
+          type: string
+          description: What the role reaches, in the pack's own words.
+        state: { type: string }
+
+    InvitedPartnerPerson:
+      type: object
+      additionalProperties: false
+      description: |
+        THE 201 OF `invitePartnerPerson` — an offer, not a person. No `name`:
+        *"filled at redemption"* (G2801, the owner's). `state` is `invited` on
+        every answer, because the answer is given before anybody has signed in.
+      required: [email, role, state]
+      properties:
+        email: { type: string }
+        role:
+          type: string
+          description: |
+            The role invited into, by its label — the same field the roster
+            carries for a role-holder.
+        state:
+          type: string
+          enum: [invited]
+
+    PartnerInvitationRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        TWO ROLES ARE INVITABLE, NOT THREE. Partner delivery is refused access
+        by ruling, so offering it here would mint an invitation to nothing.
+      required: [email, role]
+      properties:
+        email: { type: string }
+        role:
+          type: string
+          enum: [partner_administrator, partner_user]
+
+    TenantSummary:
+      type: object
+      additionalProperties: false
+      required: [tenantId, name, deploymentMode, residency, stage, supportAccessMode]
+      properties:
+        tenantId: { type: string }
+        name: { type: string }
+        soldVia: { type: string }
+        deploymentMode: { type: string }
+        residency: { type: string }
+        stage: { type: string }
+        stageNote: { type: string }
+        plan: { type: string }
+        supportAccessMode: { type: string }
+
+    TenantRecord:
+      allOf:
+        - $ref: '#/components/schemas/TenantSummary'
+        - type: object
+          additionalProperties: false
+          required: [retention, telemetryProfile, environment, permanentFields]
+          properties:
+            retention: { type: string }
+            telemetryProfile: { type: string }
+            environment: { type: string }
+            permanentFields:
+              type: array
+              items: { type: string }
+              description: |
+                WHICH FIELDS CANNOT BE AMENDED, STATED BY THE SERVER RATHER THAN
+                KNOWN BY THE CLIENT. `S1` puts the callout on the screen — *"Mode
+                and residency are frozen on this record"* — and a console that
+                hard-coded which two would go stale the day a third joined them.
+
+    OnboardingStep:
+      type: object
+      additionalProperties: false
+      required: [stepKey, title, state, whoseHands]
+      properties:
+        stepKey: { type: string }
+        title: { type: string }
+        state:
+          type: string
+          enum: [blocked, next, done, done_forced]
+          description: |
+            **Exactly one step is `next`** — *"the first step that is not done
+            is the only one that can be done."*
+
+            🛑 **THE `enum` LANDED 21 Sep 2026 AND `model/onboarding.ts` ASKED
+            FOR IT BY NAME, FROM THE COMMIT THAT MOUNTS THIS OPERATION.** That
+            module's `STEP_STATES` declaration read: *"`OnboardingStep.state` is
+            `type: string` in the contract with the four values named only in a
+            `description`, so `tools/check-wire-mirror.mjs` has no pair to
+            register and a drift between these members and that prose is caught
+            by nobody. That is stated rather than fixed … It is owed by the
+            commit that mounts `listOnboardingSteps`."* **This is that commit**,
+            and the pair is registered as `step_states`.
+
+            ⚠️ **THE FOURTH MEMBER IS `done_forced` AND THE PROSE SAID
+            `done-and-forced`. THE PROSE WAS THE ONLY SPELLING EITHER SIDE HAD
+            AND IT MATCHED NOTHING.** `model/onboarding.ts` has declared
+            `doneForced: 'done_forced'` since G535, and no serialiser, handler
+            or test ever emitted a hyphen — so writing `done-and-forced` into
+            the `enum` would have invented a wire value the product does not
+            produce, then pinned it. **The enum takes the value the tree
+            emits**; the English phrase survives in this sentence, where it is
+            prose about a member rather than a second spelling of one.
+        whoseHands:
+          type: string
+          enum: [ours, theirs, both]
+          description: |
+            A stall with no named owner is chased by the wrong party, which is
+            `User Journeys` H2.9's whole complaint.
+
+            ⚠️ **ALSO PINNED 21 Sep 2026, FOR THE SAME REASON AND AT LOWER
+            RISK**: these three are `model/onboarding.ts#WHOSE_HANDS`'s members
+            verbatim, and unlike `state` there was never a second spelling to
+            reconcile.
+        forcedReason:
+          type: string
+          description: |
+            PERMANENT, AND THE ONLY RECORD OF WHY THE SEQUENCE WAS BROKEN. There
+            is no operation that clears it: a gate that can be un-forced leaves
+            no evidence it was ever forced.
+
+    ForceStepRequest:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 7
+          description: |
+            REQUIRED, and the floor exists for the same reason `MIN_REASON_CHARS`
+            does on an annotation: to reject the thing a person types when they
+            have not made the decision the field is asking for. `S1` will not
+            commit under seven characters.
+
+    ExtractionFloorView:
+      type: object
+      additionalProperties: false
+      required: [packDefault, tenantFloor]
+      properties:
+        packDefault:
+          type: number
+          description: |
+            ⚠️ A NUMBER AND NOT A DECIMAL STRING, and the difference from money
+            is the point: a confidence floor is a ratio the engine compares,
+            not an amount a codec round-trips. G111 governs `Money`, and this is
+            not money.
+        tenantFloor: { type: number }
+        parkedForAPerson:
+          type: integer
+          description: |
+            How many rows the last run parked. A COUNT REPORTED UPWARD BY THE
+            PLANE, never a query we run downward — invariant 3, and the same
+            posture `control-plane.openapi.yaml` takes for every aggregate.
+
+    ExtractionFloorRequest:
+      type: object
+      additionalProperties: false
+      required: [floor]
+      properties:
+        floor:
+          type: number
+          exclusiveMinimum: 0
+          exclusiveMaximum: 1
+          description: |
+            REFUSES ON ABSENCE RATHER THAN DEFAULTING — `User Journeys` H3.2.
+            The bounds are exclusive at both ends because `S1` commits only for
+            a value strictly between them, and because a floor of zero clears
+            everything and a floor of one clears nothing.
+
+    TagPolicyView:
+      type: object
+      additionalProperties: false
+      required: [keys]
+      properties:
+        chargebackKey:
+          type: string
+          description: ONE key drives chargeback, or none does yet.
+        keys:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [key, valuesSeen, coveragePercent]
+            properties:
+              key: { type: string }
+              valuesSeen: { type: integer }
+              coveragePercent: { type: number }
+              untaggedBeforePolicy:
+                type: integer
+                description: |
+                  THE IRREVERSIBLE PART, SEPARATED FROM THE FIXABLE PART.
+                  Records emitted before the vocabulary was agreed stay untagged
+                  forever; a single coverage percentage would make a permanent
+                  historical gap look like a live one somebody could close.
+
+    ChargebackKeyRequest:
+      type: object
+      additionalProperties: false
+      required: [key]
+      properties:
+        key:
+          type: string
+          description: |
+            ONE KEY, NOT A SET. Chargeback with two keys is chargeback with no
+            answer when they disagree. Refused with
+            `tag_vocabulary_violation` if it is outside the declared vocabulary.
+
+    LicencePositionRow:
+      type: object
+      additionalProperties: false
+      required: [runtime, licence, whereItRuns, position]
+      properties:
+        runtime: { type: string }
+        licence: { type: string }
+        whereItRuns: { type: string }
+        position:
+          type: string
+          description: clear, notice required, or theirs to accept.
+
+    AdjustmentRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        NO TENANT FIELD. The subject is an invoice, which resolves the tenant,
+        so the no-tenant-in-a-body convention is held exactly rather than
+        argued around.
+      required: [againstInvoiceId, amount, reason]
+      properties:
+        againstInvoiceId: { type: string }
+        amount: { $ref: '#/components/schemas/DecimalAmount' }
+        reason:
+          type: string
+          minLength: 7
+          description: |
+            🛑 REQUIRED, AND THE CUSTOMER READS IT. `S1`: *"The reason you type
+            is not an internal note — it is printed on their invoice."* And
+            `User Journeys` H8.3 gives the archival reason, which is stronger:
+            because cards carry effective dates and not versions, this reason is
+            *"the only record of why the two disagree, so it is load-bearing
+            rather than a note."*
+
+    AdjustmentReceipt:
+      type: object
+      additionalProperties: false
+      required: [adjustmentId, appearsOnPeriod]
+      properties:
+        adjustmentId: { type: string }
+        appearsOnPeriod:
+          type: string
+          description: |
+            THE NEXT PERIOD, NAMED RATHER THAN INFERRED. *"It lands on the next
+            invoice, not this one."*
+
+    # --- staff: partners --------------------------------------------------
+
+    RegistrationQueueRow:
+      type: object
+      additionalProperties: false
+      description: |
+        🛑 THE ASYMMETRY IS THE DESIGN. This schema carries `collidesWithClaimAt`
+        and `DealRegistrationSummary` does not. Staff see that a claim collides
+        and against which earlier date; the submitting partner sees a refusal
+        and a date and never a name.
+      required: [registrationId, partner, company, shape, receivedAt, standing]
+      properties:
+        registrationId: { type: string }
+        partner: { type: string }
+        company: { type: string }
+        shape: { type: string }
+        receivedAt:
+          type: string
+          description: |
+            AUTHORITATIVE AND OURS. Precedence is decided on receipt, so the
+            queue is read oldest first.
+        collidesWithClaimAt:
+          type: string
+          description: |
+            The date of the earlier claim, where one stands. Null where the row
+            is clear. **The earlier claimant is not named in this field or in
+            any other**, on either side of the transaction.
+        standing: { type: string }
+
+    RefusalRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        🛑 NOTHING IN THIS BODY REACHES THE PARTNER. `S1` states the disclosure
+        exactly: the refused partner is told *"one fact — claimed earlier by
+        another partner, on 08 Nov 2025."* A date, and no name. A free-text
+        reason forwarded to the submitter is how the holder's identity would
+        leak, one refusal at a time.
+      required: [internalNote]
+      properties:
+        internalNote:
+          type: string
+          description: For us. Never rendered to the partner.
+
+    PartnerRegistryRow:
+      type: object
+      additionalProperties: false
+      required: [partnerId, partner, standing, billingArrangement, tenantCount, claimsHeld]
+      properties:
+        partnerId: { type: string }
+        partner: { type: string }
+        standing: { type: string }
+        cards:
+          type: array
+          items: { type: string }
+        billingArrangement: { type: string }
+        tenantCount: { type: integer }
+        claimsHeld: { type: integer }
+
+    SignInDomainList:
+      type: object
+      additionalProperties: false
+      required: [domains, resolvingToday]
+      properties:
+        resolvingToday:
+          type: integer
+          description: |
+            How wide the sign-in existence signal currently is. Surfaced as a
+            number because it only ever grows, and because
+            `session.openapi.yaml` records the signal as *"the first question
+            for the D6 threat model G165 is still owed."*
+        domains:
+          type: array
+          items: { $ref: '#/components/schemas/SignInDomainRow' }
+
+    SignInDomainRow:
+      type: object
+      additionalProperties: false
+      required: [domain, customer, addedAt]
+      properties:
+        domain: { type: string }
+        customer: { type: string }
+        addedAt: { type: string }
+
+    SignInDomainRequest:
+      type: object
+      additionalProperties: false
+      required: [domain, customer]
+      properties:
+        domain:
+          type: string
+          description: |
+            Compared after normalisation — `normaliseClaimedDomain()`. *"A host
+            comparison that is not case-insensitive refuses a legitimate request
+            on a capitalised value, which is a failure a customer finds and a
+            test does not."*
+        customer: { type: string }
+
+    # --- staff: support ---------------------------------------------------
+
+    StaffCaseSummary:
+      type: object
+      additionalProperties: false
+      required: [caseId, title, tenantId, raisedBy, decidedSeverity, supportAccessMode, breakGlass]
+      properties:
+        caseId: { type: string }
+        title: { type: string }
+        tenantId: { type: string }
+        raisedBy:
+          type: string
+          description: A partner on a customer's behalf, or the customer.
+        proposedSeverity: { type: string }
+        decidedSeverity: { type: string }
+        commitment: { type: string }
+        supportAccessMode:
+          type: string
+          description: |
+            WHAT THE CUSTOMER CHOSE, AND IT IS THE FIRST THING A SUPPORT
+            ENGINEER READS. `User Journeys` H5.1: *"Their decision, not ours."*
+        breakGlass:
+          type: string
+          description: not open, waiting on an approver, or open with an expiry.
+
+    StaffCaseDetail:
+      allOf:
+        - $ref: '#/components/schemas/StaffCaseSummary'
+        - type: object
+          additionalProperties: false
+          required: [standingAuthorisation]
+          properties:
+            standingAuthorisation:
+              $ref: '#/components/schemas/StandingAuthorisationView'
+
+    StandingAuthorisationView:
+      type: object
+      additionalProperties: false
+      description: |
+        `SupportAuthorisation`, SURFACED SO THE CEILING IS READ BEFORE THE
+        REQUEST IS DRAFTED RATHER THAN AFTER IT IS REFUSED.
+
+        🛑 `classes` MAY NAME `secret` AND MAY NEVER NAME `statutory`. G60 and
+        G75 put `secret` into `PERMITTED_RESOURCES.delivery` as a standing
+        90-day reach and removed it from `NON_DELEGABLE_RESOURCES`, leaving
+        `statutory` alone there — and `authorisationPermits()` checks that list
+        FIRST, before the null check and before withdrawal. Invariant 8: *"a
+        statutory obligation is not the customer's to delegate to a processor."*
+      required: [authorisedAt, ceilingHours, classes, notificationPath]
+      properties:
+        authorisedAt:
+          type: string
+          description: At signing. Not during an incident.
+        ceilingHours:
+          type: integer
+          description: |
+            `MAX_GRANT_HOURS` for the purpose. *"An open-ended grant is not a
+            grant."*
+        classes:
+          type: array
+          items: { type: string }
+          description: |
+            The resource classes the customer authorised. `statutory` is not a
+            legal member at any price, and the suite asserts that by name.
+        notificationPath: { type: string }
+
+    BreakGlassRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        TWO PEOPLE, AND THE RULE IS RE-CHECKED AT USE. *"The grant refuses to
+        evaluate if the raiser and the approver are the same — checked again
+        when it is used, not only when it is issued."*
+      required: [reason, approverId, classes]
+      properties:
+        reason:
+          type: string
+          minLength: 11
+          description: |
+            *"Why you need to read past it."* `S1` will not commit under ten
+            characters, and this reason ends up in the customer's own trail.
+        approverId:
+          type: string
+          description: |
+            A second 1CloudHub person, and never the raiser.
+            `approval_segregation_violation` where they are the same.
+        classes:
+          type: array
+          items: { type: string }
+          description: |
+            What is being asked for, bounded by the standing authorisation's
+            ceiling. `classification_ceiling_exceeded` where it is not, and
+            **`statutory` is refused whatever the authorisation says** — it is
+            checked before everything else.

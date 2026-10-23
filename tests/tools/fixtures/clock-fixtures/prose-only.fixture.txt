@@ -1,0 +1,32 @@
+/**
+ * THE FALSE POSITIVE THIS CONTROL WOULD OTHERWISE HAVE — and it is not a
+ * hypothetical, it is the state of the real tree.
+ *
+ * After G1209 repaired `tests/db/identity-substrate.test.ts`, the loudest
+ * `now() - interval '1 day'` remaining in that file is the REPAIR'S OWN
+ * NARRATION, inside a block comment, explaining the defect that was fixed. Two
+ * more sites are the same shape: `tests/db/membership-revocation.test.ts` §10
+ * quotes `UPDATE tenant.membership SET expires_at = now() - interval '1 hour'`
+ * in a comment, and `db/migrations/0035_membership_liveness_voids_sessions.sql`
+ * quotes the same measurement behind `--`.
+ *
+ * A scanner that matched raw source would report all three as defective for
+ * ever — including the file that was repaired, BECAUSE it was repaired and said
+ * so. `CLAUDE.md` catalogues this class about a dozen times: the
+ * `@dropped-for-v1` awk that armed on prose ABOUT a drop, and the
+ * `jwtVerify\|createRemoteJWKSet` grep quoted in six documents as proof no
+ * verifier existed, whose three hits were all prose quoting the command.
+ *
+ * So: this file carries a real frozen clock reaching a real evaluator, and a
+ * past-direction interval that exists ONLY in comments — both the block form
+ * above and the line form below. The correct verdict is `half`, not `FIRED`.
+ */
+
+const NOW = '2026-09-19T12:00:00.000Z' as Timestamp
+
+// A historical note: this row used to read now() - interval '3 hours'.
+const verdict = decide({
+  principal,
+  capability: 'approve_resolution',
+  now: NOW,
+})

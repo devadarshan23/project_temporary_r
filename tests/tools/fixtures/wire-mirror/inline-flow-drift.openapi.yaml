@@ -1,0 +1,24 @@
+openapi: 3.1.0
+info:
+  title: wire-mirror fixture — INLINE FLOW, DELIBERATELY DRIFTED
+  version: 0.0.0
+  description: |
+    Fixture for tools/check-wire-mirror.mjs. NOT a real contract, and NOT a
+    proposal: the enum below is wrong on purpose.
+
+    Against `FixtureRunStatus` in model-fixture.ts it is drifted twice over —
+    `completed` is MISSING from the wire, and `cancelled` is on the wire while
+    the model declares no such state. The `literal_union` source kind was
+    pointed at this file and required to reject it BEFORE it was pointed at
+    `model/domain.ts`. A source kind with no red fixture is a source kind that
+    has never been shown to fail.
+paths: {}
+components:
+  schemas:
+    FixtureRun:
+      type: object
+      additionalProperties: false
+      required: [runId, status]
+      properties:
+        runId: { type: string }
+        status: { type: string, enum: [queued, running, cancelled, failed] }

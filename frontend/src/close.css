@@ -1,0 +1,616 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   CLOSE.CSS — the signed-in chrome, the C1 Close surface and the status bar,
+   PORTED FROM docs/handoff-pack/app.css (G3091, the owner's ruling of
+   2 Oct 2026: "Pack-faithful, quiet").
+
+   EVERY VALUE IS A KERNEL REFERENCE. Nothing here states a colour, a size or a
+   spacing unit — each line reads a token from docs/handoff-pack/tokens.css,
+   exactly as the pack's own app.css does, so a token moved in the kernel moves
+   this surface with it.
+
+   SCOPED, NOT GLOBAL. The pack's app.css is written for a page that is only the
+   app, so it styles `body`, `a` and bare class names like `.lab`, `.row` and
+   `.choice`. Here the same rules are scoped under `.chrome`, `.close` and
+   `.statusbar`, because Setup, the finding and the run account share this
+   bundle and already carry their own `.choice` / `.abtn` (shell.css, scoped
+   under `.setup`). The selectors are the pack's; only the scope is added.
+
+   THE QUIET UNBUILT CONTROL — `[data-soon]` (components/Soon.tsx). The pack
+   itself draws a disabled `.abtn` in `--refused`; the ruling says MUTED, so a
+   control nothing serves takes `--muted` and keeps its drawn shape. No hatch
+   and no plate: the hatch primitive stays on the specimen, where it is still
+   measured.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══ THE APP FRAME ═════════════════════════════════════════════════════════ */
+.app{background-color:var(--paper);min-height:100vh;display:flex;flex-direction:column}
+.app > .route{flex:1}
+/* NX-01 — THE OWNER'S RULING (4 Oct 2026, G3702): *"Frame the whole app: move
+   the frame to wrap chrome + main as the pack draws; stop the main region
+   taking focus on click."* The pack's `.app{box-shadow:inset …}` is kept as
+   the pack states it, but here the chrome and the status bar paint an opaque
+   background OVER an inset shadow, so the hairline outlined `main` alone — and
+   `main` takes focus on a click (`tabindex="-1"`), so it read as a focus ring.
+   The frame is drawn ABOVE the app's own children instead, by a positioned
+   `::after` that takes no pointer and sits under every popover. */
+@media (min-width:1440px){
+  .app{max-width:1880px;margin:0 auto;position:relative}
+  .app::after{content:"";position:absolute;inset:0;pointer-events:none;
+    box-shadow:inset 0 0 0 1px var(--rule-strong);z-index:calc(var(--z-popover) - 1)}
+}
+/* The Close screen draws edge to edge, as C1 does; the other routes keep the
+   route root's own padding. */
+.app > .route:has(> .close){padding:0;gap:0;display:flex;flex-direction:column}
+.app > .route > .close{flex:1}
+.close > .statusbar{margin-top:auto}
+
+/* ═══ THE QUIET UNBUILT CONTROL ════════════════════════════════════════════ */
+[data-soon]{cursor:default}
+.chrome [data-soon][aria-disabled] .cc,.chrome [data-soon][aria-disabled] kbd{color:var(--muted)}
+.chrome [data-soon]:hover,.close [data-soon]:hover,.statusbar [data-soon]:hover{background-color:transparent}
+.chrome .tenant[data-soon]:hover,.chrome .palbtn[data-soon]:hover{background-color:var(--sheet)}
+.close .abtn[data-soon],.finding-acts .abtn[data-soon]{background-color:var(--sheet)}
+
+/* ═══ CHROME ═══════════════════════════════════════════════════════════════
+   THE CHROME IS ONE LINE, ALWAYS. A chrome that wraps moves every destination
+   the moment a count changes width, so the bar never wraps: the nav scrolls,
+   the tenant name truncates, and the labels that can be dropped are dropped. */
+.chrome{display:flex;align-items:center;gap:calc(var(--u)*4);flex-wrap:nowrap;
+  padding:calc(var(--u)*3) calc(var(--u)*5);min-width:0;background-color:var(--paper);
+  border-bottom:1px solid var(--rule-strong);font-family:var(--face-sans);font-size:var(--s3)}
+@media (max-width:1279px){ .chrome{gap:calc(var(--u)*3)} }
+.chrome .mark{display:inline-flex;align-items:center;text-decoration:none;
+  min-height:var(--target);flex:none}
+.chrome .logo{--logo-size:1.0625rem}
+.chrome .logo .mascot{--mascot-size:1em}
+.chrome > nav{min-width:0;overflow:hidden}
+.chrome .tipwrap{flex:none}
+/* N-01 (G3477) — THE NAME TRUNCATES WITH AN ELLIPSIS, AS THE PACK DRAWS IT
+   (`app.css`: `.chrome .tenant{…text-overflow:ellipsis;display:block;
+   line-height:var(--target)}`). This read `display:flex`, and `text-overflow`
+   does not apply to a flex container's anonymous children — so at 1024 and
+   820 the chip was cut mid-glyph ("Meridian Group Pte Ltd  a") with no
+   ellipsis at all. A block box with one line of inline content is the shape
+   the ellipsis needs; the line-height centres it in the control's height. */
+/* NS-02 (G3710): `line-height` comes AFTER `font:inherit`. The `font`
+   shorthand resets line-height, so the order above it was undone and the chip's
+   text sat at the top of its box (y≈22 in 14–46) instead of centred. The pack
+   states line-height in a separate, more specific rule; one rule needs the
+   order. */
+.chrome .tenant{display:block;font:inherit;line-height:var(--target);
+  font-size:var(--s2);min-height:var(--target);padding:0 calc(var(--u)*3);
+  color:var(--ink);background-color:var(--sheet);border:0;cursor:pointer;
+  box-shadow:inset 0 0 0 1px var(--rule-strong);white-space:nowrap;text-align:left;
+  min-width:calc(var(--u)*20);overflow:hidden;text-overflow:ellipsis}
+.chrome .tenant > span[aria-hidden]{margin-left:calc(var(--u)*2)}
+.chrome .tenant:hover{background-color:var(--tile-hover)}
+.chrome .tenant .cc{font-family:var(--face-mono);color:var(--muted);margin-left:calc(var(--u)*2)}
+.chrome .sp{flex:1}
+
+.chrome .dests{display:flex;align-items:center;gap:calc(var(--u)*5);margin:0;padding:0;
+  list-style:none;flex-wrap:nowrap;min-width:0;overflow-x:auto;
+  scrollbar-width:none;-ms-overflow-style:none}
+.chrome .dests::-webkit-scrollbar{display:none}
+.chrome .dests > li{flex:none}
+.chrome .dests a{display:inline-flex;align-items:center;font:inherit;font-size:var(--s3);
+  color:var(--muted);text-decoration:none;padding:calc(var(--u)*1) 0;min-height:var(--target)}
+.chrome .dests a:not([data-soon]):hover{color:var(--ink)}
+.chrome .dests a[aria-current="page"]{color:var(--ink);font-weight:var(--w-emph);
+  box-shadow:inset 0 -2px 0 0 var(--ink)}
+/* C3-08 — Approvals is a destination drawn as a button (it is a view of /close,
+   not a route), so it takes the links' shape and underline exactly. */
+.chrome .dests .destbtn{display:inline-flex;align-items:center;font:inherit;
+  font-size:var(--s3);color:var(--muted);background-color:transparent;border:0;cursor:pointer;
+  padding:calc(var(--u)*1) 0;min-height:var(--target)}
+.chrome .dests .destbtn:hover{color:var(--ink)}
+.chrome .dests .destbtn[aria-current="page"]{color:var(--ink);font-weight:var(--w-emph);
+  box-shadow:inset 0 -2px 0 0 var(--ink)}
+.chrome .door{flex:none;padding-left:calc(var(--u)*5);border-left:1px solid var(--rule-strong)}
+.chrome .door button{font:inherit;font-size:var(--s2);font-family:var(--face-mono);
+  background:none;border:0;padding:0;min-height:var(--target)}
+
+.chrome .palbtn{display:flex;align-items:center;gap:calc(var(--u)*3);flex:none;
+  font:inherit;font-size:var(--s2);color:var(--muted);cursor:pointer;
+  background-color:var(--paper);border:1px solid var(--rule-strong);
+  padding:calc(var(--u)*2) calc(var(--u)*3);max-width:calc(var(--u)*72);text-align:left}
+.chrome .palbtn > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chrome .palbtn kbd{font-family:var(--face-mono);font-size:var(--s1);
+  font-weight:var(--w-figure);color:var(--ink);background:none;flex:none}
+@media (max-width:1079px){ .chrome .palbtn > span{display:none} }
+
+.chrome .abtn{display:inline-flex;align-items:center;flex:none;white-space:nowrap;
+  font:inherit;font-size:var(--s2);min-height:var(--target);
+  padding:0 calc(var(--u)*4);cursor:pointer;border:0;color:var(--ink);
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.chrome .abtn:hover{background-color:var(--tile-hover)}
+.chrome .abtn[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--ink);font-weight:var(--w-emph)}
+.chrome .abtn--static{cursor:default}
+.chrome .abtn .cnt,.chrome .destbtn .cnt{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted);
+  margin-left:calc(var(--u)*2)}
+.chrome .abtn[aria-pressed="true"] .cnt{color:var(--ink)}
+
+.chrome .meterbtn{flex:none;font:inherit;background:none;border:0;
+  padding:calc(var(--u)*1) 0;text-align:left}
+.chrome .spent,.close .spent{font-family:var(--face-mono);font-size:var(--s1);
+  font-variant-numeric:tabular-nums;color:var(--agent-deep);white-space:nowrap}
+.chrome .spent .q,.close .spent .q{color:var(--muted)}
+.chrome [data-soon] .spent{color:var(--muted)}
+.chrome .spent .met,.close .spent .met{color:var(--agent-deep)}
+.close .spent[data-unmeasured]{color:var(--muted)}
+
+/* THE AVATAR IS A DOOR. Everything about the PERSON rather than the work lives
+   behind it, and Setup is a door in it rather than a fourth destination. */
+.chrome .acct{position:relative;display:flex;align-items:center;flex:none}
+.chrome .whoami{display:flex;align-items:center;gap:calc(var(--u)*2);font:inherit;
+  font-size:var(--s2);color:var(--muted);background:none;border:0;cursor:pointer;
+  text-align:left;min-height:var(--target);white-space:nowrap;list-style:none}
+.chrome .whoami::-webkit-details-marker{display:none}
+.chrome .whoami .init{width:calc(var(--u)*7);height:calc(var(--u)*7);flex:none;
+  display:flex;align-items:center;justify-content:center;
+  background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  font-size:var(--s1);font-weight:var(--w-emph);color:var(--ink)}
+.chrome .whoami .sub{display:block;font-family:var(--face-mono);font-size:var(--s1);color:var(--muted)}
+@media (max-width:1279px){ .chrome .whoami > span:not(.init){position:absolute;width:1px;
+  height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap} }
+.chrome .acctmenu{position:absolute;top:calc(100% + var(--u)*2);right:0;margin:0;padding:0;
+  list-style:none;z-index:calc(var(--z-modal) + 1);width:calc(var(--u)*78);
+  max-width:min(92vw,calc(var(--u)*78));background-color:var(--paper);
+  border:1px solid var(--rule-strong);display:flex;flex-direction:column;text-align:left;
+  /* N-09 (G3477) — the pack caps the menu (`app.css`: max-height:80vh;
+     overflow-y:auto). The theme row made it the tallest anchored surface, and
+     on a short viewport its foot — Sign out — fell off the screen. The LAYER
+     (`--z-modal + 1`) is copied from `app.css` and stays a pack question. */
+  max-height:80vh;overflow-y:auto}
+.chrome .acctwho{padding:calc(var(--u)*3) calc(var(--u)*4);background-color:var(--sheet);
+  border-bottom:1px solid var(--rule-strong)}
+.chrome .acctwho b{display:block;font-size:var(--s3);font-weight:var(--w-emph);color:var(--ink)}
+.chrome .acctwho span{display:block;font-family:var(--face-mono);font-size:var(--s1);
+  color:var(--muted);margin-top:calc(var(--u)*1)}
+.chrome .acctmenu .tipwrap{display:block}
+.chrome .acctitem{display:flex;align-items:center;gap:calc(var(--u)*3);width:100%;
+  box-sizing:border-box;font:inherit;font-size:var(--s2);color:var(--ink);text-decoration:none;
+  background:none;border:0;padding:calc(var(--u)*2.5) calc(var(--u)*4);cursor:pointer;
+  text-align:left;min-height:var(--target)}
+.chrome a.acctitem:hover,.chrome button.acctitem:not([data-soon]):hover{background-color:var(--row-hover)}
+.chrome .acctitem .cnt{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted);margin-left:auto}
+.chrome .acctmenu .sep{height:1px;background-color:var(--rule)}
+
+/* ═══ THE STRIP ════════════════════════════════════════════════════════════
+   The reconciliations, and you are already inside one. No dot, no hue: the
+   selected cell carries the accent's one job — wayfinding — and every state is
+   spelled out in words beside it. AT WIDE THE RAIL BEHAVES LIKE A ROW OF TABS:
+   every cell shares the width equally and truncates rather than wrapping. */
+.close{display:flex;flex-direction:column;min-width:0;font-family:var(--face-sans);
+  font-size:var(--s3);color:var(--ink)}
+.close .strip{display:grid;grid-template-columns:minmax(0,1fr);
+  border-bottom:1px solid var(--rule-strong);background-color:var(--sheet)}
+@media (min-width:720px){ .close .strip{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (min-width:1080px){
+  .close .strip{display:flex;flex-wrap:nowrap}
+  .close .strip > .cell,.close .strip > .tipwrap{flex:1 1 0;min-width:0}
+  /* C3-14 (G3843) — the sub-line WRAPS rather than being cut: at 1440 the
+     ellipsis hid every clause after the second. */
+  .close .cell .st{min-width:0}
+  .close .cell .st .says{min-width:0}
+  .close .cell .st .when{flex:0 0 auto}
+}
+.close .strip > .tipwrap{display:grid}
+.close .cell{text-align:left;font:inherit;background-color:transparent;border:0;cursor:pointer;
+  padding:calc(var(--u)*3) calc(var(--u)*4);min-width:0;color:inherit;
+  border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);
+  display:grid;gap:calc(var(--u)*1);min-height:var(--target);align-content:start}
+.close .cell:hover{background-color:var(--tile-hover)}
+.close .cell[aria-current="true"]{background-color:var(--accent-quiet);box-shadow:inset 0 -2px 0 0 var(--ink)}
+/* RM-04 is `fix/ui-foundations`' (G3399): the reset above is the colour alone,
+   and `luminous.css` composes the lit edge with the current underline and
+   clips the sweep. This slice adds only the mark's spacing, below. */
+/* RM-02 — the Reconcile mark at working energy, before the name of the
+   reconciliation that is reading. `app.css:217`. */
+.close .cell .nm .mascot{--mascot-size:1em;margin-right:calc(var(--u)*3);vertical-align:-.05em}
+.close .cell .nm{font-size:var(--s2);color:var(--ink);overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.close .cell[aria-current="true"] .nm{font-weight:var(--w-emph)}
+.close .cell .st{display:flex;align-items:baseline;gap:calc(var(--u)*3);
+  font-family:var(--face-mono);font-size:var(--s1);color:var(--muted)}
+.close .cell .st .when{margin-left:auto}
+/* C3-16 (G3844) — a completed run's sub-line keeps --muted. It drew --recede,
+   which is CLEARED work (not a run's status) and measures 4.10:1 on --sheet in
+   dark, below AA; --muted holds AA on --sheet in both themes. */
+.close .cell.note{cursor:default}
+.close .cell.note:hover{background-color:transparent}
+.close .addcell{border-right:0}
+.close .addcell .nm{font-weight:var(--w-emph)}
+.close .addcell[data-soon] .nm{color:var(--muted)}
+@media (min-width:1080px){
+  .close .addcell .st{display:none}
+  .close .addcell{align-content:center}
+}
+
+/* ═══ HOW THE DOCUMENTS ARRIVED ════════════════════════════════════════════ */
+.close .lab{display:block;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  margin-bottom:calc(var(--u)*2)}
+.close .intake{padding:calc(var(--u)*4) calc(var(--u)*5) 0}
+.close .intake > ul{list-style:none;margin:0;padding:0;display:grid;
+  gap:calc(var(--u)*1) calc(var(--u)*8);border-top:1px solid var(--rule)}
+@media (min-width:720px){ .close .intake > ul{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (min-width:1080px){ .close .intake > ul{grid-template-columns:repeat(3,minmax(0,1fr))} }
+.close .intake > ul > li{display:flex;align-items:baseline;gap:calc(var(--u)*3);
+  padding:calc(var(--u)*2) 0;border-bottom:1px solid var(--rule);font-size:var(--s2);min-width:0}
+.close .intake .via{color:var(--ink);flex:1 1 auto;min-width:0}
+.close .intake .via[data-soon]{font:inherit;background:none;border:0;padding:0;text-align:left;
+  text-decoration:underline;text-underline-offset:.2em;text-decoration-color:var(--rule-strong)}
+.close .intake .when,.close .intake .n{font-family:var(--face-mono);
+  font-size:var(--s1);color:var(--muted);white-space:nowrap;flex:none}
+.close .intake .cap{margin:calc(var(--u)*2) 0 0;font-size:var(--s1);color:var(--muted)}
+
+/* ═══ THE ARRIVAL ══════════════════════════════════════════════════════════ */
+.close .arrive{display:flex;justify-content:space-between;align-items:flex-end;
+  gap:calc(var(--u)*8);flex-wrap:wrap;padding:calc(var(--u)*5);
+  border-bottom:1px solid var(--rule)}
+.close .arrive h1{font-size:var(--s4);font-weight:var(--w-body);
+  letter-spacing:var(--tr-title);line-height:var(--lh-body);
+  margin:0 0 calc(var(--u)*3);max-width:52ch}
+.close .arrive h1 b{font-weight:var(--w-emph)}
+/* C3-07/C3-08 — the approver's claim goes to Approvals: the same bold sentence,
+   as a button, underlined so it reads as the way there. */
+.close .arrive h1 .claimbtn{font:inherit;font-weight:var(--w-emph);color:inherit;background-color:transparent;
+  border:0;padding:0;cursor:pointer;text-align:left;text-decoration:underline;
+  text-underline-offset:.15em;text-decoration-color:var(--rule-strong)}
+.close .runline{display:flex;align-items:baseline;gap:calc(var(--u)*3);min-height:var(--target)}
+.close .labbtn{display:inline-flex;align-items:baseline;text-decoration:none;color:var(--muted)}
+.close .labbtn{gap:calc(var(--u)*2)}
+.close .labbtn .lab{margin-bottom:0}
+.close .labbtn .rid{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted);
+  text-decoration:underline;text-underline-offset:.2em;text-decoration-color:var(--rule-strong)}
+.close .labbtn:hover .rid{color:var(--ink)}
+.close .labbtn:hover .lab,.close .labbtn:focus-visible .lab{color:var(--ink)}
+.close .pen{font:inherit;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;background:none;border:0;padding:0}
+.close .period{display:flex;align-items:center;gap:calc(var(--u)*2);flex-wrap:wrap}
+.close .period button{font:inherit;font-family:var(--face-mono);font-size:var(--s2);
+  min-height:var(--target);min-width:var(--target);padding:0 calc(var(--u)*3);
+  color:var(--ink);background-color:var(--sheet);border:0;cursor:pointer;
+  box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.close .period button:hover{background-color:var(--tile-hover)}
+.close .period button[aria-disabled="true"]{color:var(--muted);cursor:default;background-color:var(--sheet)}
+.close .period .cur{display:flex;align-items:center;font-family:var(--face-mono);
+  font-size:var(--s2);padding:0 calc(var(--u)*3);min-height:var(--target);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);white-space:nowrap}
+.close .period .note{font-size:var(--s2);color:var(--muted)}
+.close .figs{display:flex;gap:calc(var(--u)*8);align-items:flex-end;flex-wrap:wrap}
+.close .fig .k{display:block;font-size:var(--s2);color:var(--muted);margin-bottom:calc(var(--u)*1)}
+.close .fig .v{display:block;font-family:var(--face-mono);font-size:var(--s4);
+  font-weight:var(--w-figure);font-variant-numeric:tabular-nums;color:var(--ink)}
+.close .fig .v[data-unmeasured]{color:var(--muted);font-weight:var(--w-body)}
+.close .fig .met{color:var(--agent-deep)}
+.close .fig[data-soon]{font:inherit;background:none;border:0;padding:0;text-align:left}
+.close .fig[data-soon] .v{color:var(--muted);font-weight:var(--w-body)}
+/* RV-07 — the machine mark keeps its ONE meaning on a quiet figure: the value
+   is unmeasured and muted, the `∴` is still the agent's. */
+.close .fig[data-soon] .met{color:var(--agent-deep)}
+
+/* ═══ TRIAGE — the facets and the order, above the register and outside it ═ */
+.close .triage{padding:calc(var(--u)*4) calc(var(--u)*5) 0;display:grid;gap:calc(var(--u)*3)}
+.close .triage .trirow{display:flex;gap:calc(var(--u)*7);flex-wrap:wrap;align-items:center}
+.close .fac{display:flex;align-items:center;gap:calc(var(--u)*2);flex-wrap:wrap}
+.close .fac > .lab{margin:0;flex:none}
+.close .choice{display:flex;align-items:center;gap:calc(var(--u)*2);
+  font:inherit;font-size:var(--s2);color:var(--ink);min-height:var(--target);
+  padding:0 calc(var(--u)*3);background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);border:0;cursor:pointer}
+.close .choice:hover{background-color:var(--tile-hover)}
+.close .choice[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--ink);font-weight:var(--w-emph)}
+.close .choice .to{font-family:var(--face-mono);font-size:var(--s1);
+  font-variant-numeric:tabular-nums;color:var(--muted)}
+.close .choice[aria-pressed="true"] .to{color:var(--ink)}
+.close .count{margin:0;font-family:var(--face-mono);font-size:var(--s1);color:var(--muted)}
+
+/* ═══ THE REGISTER ═════════════════════════════════════════════════════════ */
+.close .reg{padding:calc(var(--u)*4) calc(var(--u)*5) calc(var(--u)*6);min-width:0}
+.close .regt{width:100%;border-collapse:collapse;table-layout:fixed}
+.close .regt th,.close .regt td{padding:calc(var(--u)*4) calc(var(--u)*3);
+  vertical-align:middle;text-align:left}
+.close .regt th:first-child,.close .regt td:first-child{padding-left:0}
+.close .regt th:last-child,.close .regt td:last-child{padding-right:0}
+.close .regt .c-ref{width:calc(var(--u)*7)}
+.close .regt .c-val{width:calc(var(--u)*30)}
+.close .regt .c-var{width:calc(var(--u)*30)}
+.close .regt .c-conf{width:calc(var(--u)*30)}
+.close .regt .c-state{width:calc(var(--u)*50)}
+.close .regt .c-act{width:calc(var(--u)*28)}
+@media (min-width:1080px){
+  .close .regt .c-val{width:calc(var(--u)*36)}
+  .close .regt .c-var{width:calc(var(--u)*34)}
+  .close .regt .c-conf{width:calc(var(--u)*34)}
+  .close .regt .c-state{width:calc(var(--u)*62)}
+  .close .regt .c-act{width:calc(var(--u)*34)}
+}
+.close .regt .tier-wide{display:none}
+@media (min-width:1080px){ .close .regt th.tier-wide,.close .regt td.tier-wide{display:table-cell} }
+.close .regt .tier-mid{display:none}
+@media (min-width:720px){ .close .regt th.tier-mid,.close .regt td.tier-mid{display:table-cell} }
+.close .regt thead th{font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  padding-top:0;padding-bottom:calc(var(--u)*2);border-bottom:1px solid var(--rule-strong)}
+.close .regt .num{text-align:right}
+/* N-11 (G3477) — THE CELLS SHARE A BASELINE BY `vertical-align`, NOT BY SHIMS.
+   This aligned a row's mono figures and its 32px action button to the line
+   text with `padding-top:calc(var(--u)*4 + 1.5px)` and `calc(var(--u)*4 - 5px)`
+   — two optical nudges the kernel's DEPTH section refuses (*"1.5px occurs
+   once … Not a step"*). A table cell aligned on `baseline` puts every cell's
+   FIRST line on one baseline, which is the property the nudges approximated
+   for one font size and broke for any other. */
+.close .regt tbody tr.row > td{vertical-align:baseline}
+/* The act cell's control is a 32px box whose text sits lower than a line of
+   prose; on the unit scale its cell starts higher, so the LINE TEXT sets the
+   row's baseline and the button rides on it rather than pushing it down. */
+.close .regt tbody tr.row > td.act{padding-top:calc(var(--u)*2)}
+.close .regt tbody tr.row{cursor:pointer;border-bottom:1px solid var(--rule)}
+.close .regt tbody tr.row:hover{background-color:var(--row-hover)}
+.close .regt tbody tr[data-open]{background-color:var(--accent-quiet);border-bottom:0}
+/* C3-19 (G3848) — the row's ONE disclosure control: the line number, as a
+   real button. It keeps the ref cell's mono figure and draws only a focus. */
+.close .regt .rowtog{font:inherit;color:inherit;background-color:transparent;border:0;padding:0;
+  cursor:pointer;min-width:calc(var(--u)*6);text-align:left}
+.close .row .ref{font-family:var(--face-mono);font-size:var(--s2);color:var(--muted);
+  font-variant-numeric:tabular-nums}
+.close .row .what{font-size:var(--s3);text-wrap:pretty}
+.close .row .what .spent{margin-left:calc(var(--u)*3)}
+.close .row .what a.spent{color:var(--muted);text-decoration:underline;
+  text-underline-offset:.2em;text-decoration-color:var(--rule-strong)}
+.close .row .what a.spent:hover{color:var(--ink)}
+@media (min-width:1080px){
+  .close .regt td.what{display:flex;align-items:baseline;gap:calc(var(--u)*3)}
+  .close .row .what .wl{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .close .row .what .spent{margin-left:0;flex:0 0 auto}
+}
+.close .row[data-kind="cleared"] .what,.close .row[data-kind="cleared"] .num,
+.close .row[data-kind="cleared"] .state b{color:var(--recede)}
+.close .row .num{font-family:var(--face-mono);font-size:var(--s2);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.close .row .num .cu,.close .totals .num .cu{color:var(--muted)}
+.close .row .sev{font-size:var(--s2);color:var(--ink)}
+.close .row .state{font-size:var(--s2);color:var(--muted)}
+.close .row .state b{color:var(--ink);font-weight:var(--w-body);display:block}
+.close .row .act{text-align:right;font-size:var(--s2);white-space:nowrap;
+  color:var(--ink);font-weight:var(--w-emph)}
+.close .row .conf .noscore{font-family:var(--face-mono);font-size:var(--s1);color:var(--muted)}
+.close .rowact{font:inherit;font-size:var(--s2);font-weight:var(--w-emph);
+  color:var(--ink);background-color:var(--paper);cursor:pointer;border:0;
+  box-shadow:inset 0 0 0 1px var(--rule-strong);min-height:calc(var(--u)*8);
+  padding:0 calc(var(--u)*3);white-space:nowrap}
+.close .rowact:hover{background-color:var(--tile-hover)}
+.close .row[data-kind="cleared"] .rowact{color:var(--muted);font-weight:var(--w-body)}
+.close .totals td{padding-top:calc(var(--u)*4);font-size:var(--s2)}
+.close .totals .num{font-family:var(--face-mono);font-weight:var(--w-figure);font-variant-numeric:tabular-nums}
+.close .totals .lbl{font-weight:var(--w-emph)}
+.close .totals .q{color:var(--muted);font-weight:var(--w-body);font-family:var(--face-sans);white-space:nowrap}
+
+/* THE EMPTY REGISTER is a sentence in the pack's `.stated` voice, never a
+   blank table — silence reads as fine. */
+.close .stated{padding:calc(var(--u)*8) 0;display:grid;gap:calc(var(--u)*3);max-width:72ch}
+.close .stated h2{font-size:var(--s4);font-weight:var(--w-body);letter-spacing:var(--tr-title);margin:0}
+.close .stated p{font-size:var(--s2);line-height:var(--lh-note);color:var(--muted);margin:0}
+
+/* ═══ THE EVIDENCE — the row itself opens ═════════════════════════════════ */
+.close .exprow > td.exp{padding:0;background-color:var(--sheet);border-bottom:1px solid var(--rule-strong)}
+.close .evid-in{padding:calc(var(--u)*5) calc(var(--u)*6);border-left:calc(var(--u)*1) solid var(--ink)}
+.close .evid h3{font-size:var(--s3);font-weight:var(--w-emph);margin:0 0 calc(var(--u)*3)}
+.close .evid p{font-size:var(--s2);line-height:var(--lh-note);margin:0 0 calc(var(--u)*3);max-width:64ch}
+.close .evid p.q{color:var(--muted)}
+.close .evid-top{display:flex;justify-content:space-between;align-items:baseline;
+  gap:calc(var(--u)*4);margin-bottom:calc(var(--u)*2);flex-wrap:wrap}
+.close .evid-top > .lab{margin:0}
+.close .evid-top .evctl{display:flex;align-items:center;gap:calc(var(--u)*4);flex:0 0 auto}
+.close .evid .fold{font:inherit;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;color:var(--muted);min-height:var(--target);
+  display:inline-flex;align-items:center;background:none;border:0;padding:0;cursor:pointer}
+/* NC-06 — the finding route, moved off the close control's corner to the
+   panel's foot. */
+.close .evid .evlink{margin:calc(var(--u)*4) 0 0}
+.close .evid .evlink a{color:var(--ink);text-decoration:underline;
+  text-underline-offset:.2em;text-decoration-color:var(--rule-strong)}
+.close .evid .fold:hover{color:var(--ink)}
+.close .evid .x{font:inherit;font-size:var(--s2);background:none;border:0;cursor:pointer;
+  color:var(--muted);min-height:var(--target);padding:0 calc(var(--u)*2)}
+.close .evid .x:hover{color:var(--ink)}
+.close .ev{list-style:none;margin:0 0 calc(var(--u)*4);padding:0}
+@media (min-width:1080px){ .close .ev{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:calc(var(--u)*8)} }
+.close .ev li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:calc(var(--u)*3);
+  padding:calc(var(--u)*3) 0;border-top:1px solid var(--rule);font-size:var(--s2)}
+.close .ev .why{display:block;color:var(--muted);margin-top:calc(var(--u)*1);line-height:var(--lh-note)}
+.close .ev .verdict{font-family:var(--face-mono);font-size:var(--s1);
+  letter-spacing:var(--tr-micro);text-transform:uppercase;color:var(--muted);white-space:nowrap;align-self:start}
+.close .acts,.finding-acts{display:flex;gap:calc(var(--u)*2);flex-wrap:wrap;margin-top:calc(var(--u)*4)}
+.close .abtn,.finding-acts .abtn{font:inherit;font-size:var(--s2);min-height:var(--target);
+  padding:0 calc(var(--u)*4);cursor:pointer;border:0;color:var(--ink);
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong)}
+.close .abtn:not([data-soon]):hover{background-color:var(--tile-hover)}
+.close .abtn[data-commit]:not([data-soon]){background-color:var(--ink);color:var(--on-ink);
+  font-weight:var(--w-emph);box-shadow:none}
+
+/* A tooltip on a control at the RIGHT edge opens leftward. The panel is placed
+   at `left:0` by the primitive and is `max-content` wide, so at the right edge
+   it would widen the document even while it is invisible. */
+.chrome .sp ~ .tipwrap .tip,.chrome .acct .tip,.statusbar .sp ~ .tipwrap .tip,
+.close .strip > .tipwrap:last-child .tip{left:auto;right:0}
+
+/* ═══ THE STATUS BAR — the last thing in the app, naming the run behind it ═
+   Its stacking is LOCAL — above the register it scrolls over, below every
+   kernel layer — and is bound to the kernel's lowest layer rather than spelled
+   as a literal (G3434; `tests/app/css-raw-values.test.ts`). */
+.statusbar{position:sticky;bottom:0;display:flex;align-items:center;
+  gap:calc(var(--u)*4) calc(var(--u)*5);flex-wrap:wrap;z-index:calc(var(--z-popover) - 2);
+  padding:calc(var(--u)*3) calc(var(--u)*5);background-color:var(--sheet);
+  border-top:1px solid var(--rule-strong);font-size:var(--s1);color:var(--muted);
+  font-family:var(--face-sans)}
+.statusbar .sp{flex:1}
+.statusbar .bit{white-space:nowrap}
+.statusbar .bit b{color:var(--ink);font-weight:var(--w-body);font-family:var(--face-mono)}
+.statusbar [data-soon]{font:inherit;background:none;border:0;padding:0;text-align:left}
+.statusbar .keys{display:flex;gap:calc(var(--u)*4);flex-wrap:wrap}
+.statusbar .keys kbd{font-family:var(--face-mono);font-size:var(--s1);
+  font-weight:var(--w-figure);color:var(--muted);background:none;margin-right:calc(var(--u)*1)}
+@media (max-width:719px){ .statusbar .keys{display:none} }
+.statusbar .tip{top:auto;bottom:calc(100% + var(--u) * 2)}
+
+/* G4071 — THE NARROW STATUS BAR IS ONE TAPPABLE ROW THAT OPENS THE FULL
+   GRAMMAR AS A SHEET (Handoff Specification, primitive 12 · Responsive;
+   Design System *The phone shell*). Ported by value from the pack's own
+   `system-page.css` `.statusrow`, every value a kernel token. Below 720px the
+   Close surface's three-slot bar is not drawn and this row is; at 720 and up
+   the reverse. The grammar is not dropped and not truncated — the row wraps
+   rather than ellipsising, and the sheet carries every slot.
+   ⚠️ U-27 (G4181): KEYED ON `data-narrow-row`, NOT ON `.close`. The bar and
+   the row are `StatusGrammar.tsx`'s on all three surfaces — Close, the staff
+   console and the partner portal — so the rule follows the component rather
+   than a surface somebody has to remember to list. */
+.statusrow{display:none}
+@media (max-width:719px){
+  .statusbar[data-narrow-row]{display:none}
+  .statusrow{display:flex;align-items:center;justify-content:space-between;
+    gap:calc(var(--u)*3);width:100%;font:inherit;font-family:var(--face-sans);font-size:var(--s2);
+    color:var(--muted);background-color:var(--sheet);border:0;
+    border-top:1px solid var(--rule);padding:calc(var(--u)*2) calc(var(--u)*4);
+    min-height:var(--target);cursor:pointer;text-align:left}
+  .statusrow b{color:var(--ink);font-weight:var(--w-figure);font-family:var(--face-mono)}
+  .statusrow .more{font-size:var(--s1);color:var(--muted);flex:none;white-space:nowrap}
+}
+.statussheet{display:grid;gap:calc(var(--u)*3);font-size:var(--s2);color:var(--muted)}
+.statussheet > *{margin:0;padding-bottom:calc(var(--u)*3);border-bottom:1px solid var(--rule)}
+.statussheet > :last-child{border-bottom:0;padding-bottom:0}
+.statussheet b{color:var(--ink);font-weight:var(--w-body);font-family:var(--face-mono)}
+.statussheet [data-soon]{font:inherit;background:none;border:0;padding:0;text-align:left}
+
+/* ═══ 3 Oct 2026 — fix/ui-close-surface (G3421–G3440) ═════════════════════ */
+
+/* RV-09 — a key-cap for a binding that WORKS is ink; only the unbuilt keys
+   (inside the quiet control) are muted. */
+.statusbar .keys{align-items:baseline}
+.statusbar .keys kbd{color:var(--ink)}
+.statusbar .keys .keys-soon{display:flex;gap:calc(var(--u)*4);flex-wrap:wrap}
+.statusbar .keys .keys-soon kbd{color:var(--muted)}
+.statusbar .keys > .tipwrap{display:inline-flex}
+
+/* N-02 — THE OWNER'S RULING (G3478): *"a quiet (unbuilt) commit button like
+   Accept is a hairline OUTLINE with muted text; no new kernel ground."*
+   ⚠️ THIS FILLED THE QUIET COMMIT WITH `--muted` UNTIL 3 Oct 2026 (RV-04,
+   G3430), and the rule is corrected rather than deleted: `--muted` is an INK
+   step used there as a GROUND — *"Three grounds only … A fourth ground is a
+   finding"* — and in dark it became the loudest slab in the row. The commit
+   keeps its WEIGHT (the one act among alternatives) and takes the paper ground
+   and a hairline, where the quiet alternatives beside it sit on `--sheet`.
+   Declared at a specificity the quiet ink rule at the foot of this file cannot
+   tie. */
+.close .abtn[data-commit][data-soon][aria-disabled="true"],
+.close .rowact[data-commit][data-soon][aria-disabled="true"]{
+  background-color:var(--paper);color:var(--muted);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);font-weight:var(--w-emph)}
+.close .rowact[data-commit]:not([data-soon]){background-color:var(--ink);color:var(--on-ink);box-shadow:none}
+.close a.rowact{display:inline-flex;align-items:center;text-decoration:none}
+.close .row .act{cursor:default}
+
+/* RV-15 — a column header is one line of micro label at every width. */
+.close .regt thead th{white-space:nowrap}
+
+/* The line's quiet route to its finding — RC-15: a word, not the reference. */
+.close .row .what a.open{font-family:var(--face-sans);font-size:var(--s1);white-space:nowrap}
+
+/* WHOSE MOVE — RC-04: take and put down live in the evidence panel. */
+.close .whose{margin:0 0 calc(var(--u)*4);padding-top:calc(var(--u)*3);border-top:1px solid var(--rule)}
+.close .whose > .lab{margin-bottom:calc(var(--u)*1)}
+.close .whose p{margin:0}
+.close .whose .acts{margin-top:calc(var(--u)*2)}
+
+/* The narrow tier's second line (RC-07): value · status · whose move, folded
+   into the Line cell when the register triages to three columns. */
+.close .row .what .fold2{display:none}
+
+/* ═══ RESPONSIVE — RC-06 / RC-07 / RV-06 ══════════════════════════════════
+   Design System, *Responsive*: *"320px is the floor … no two-dimensional
+   scrolling … no layout may set a min-width that exceeds 320px at the narrow
+   tier."* The DOCUMENT never scrolls sideways at any width ≥ 320px; a table
+   that is wider than its column scrolls inside its OWN single-axis scroller. */
+.close .reg{overflow-x:auto}
+
+/* MID (720–1079): *"The desktop shell returns — one bar, nine controls,
+   destinations inline. The register keeps all five columns inside its
+   scroller."* So the wide columns come back, the table takes the width they
+   need, and the scroller carries it. */
+@media (min-width:720px) and (max-width:1079px){
+  .close .regt th.tier-wide,.close .regt td.tier-wide{display:table-cell}
+  .close .regt{min-width:calc(var(--u)*240)}
+}
+/* The chrome at mid — the pack's 820 frame: logo · entity · Close · Ask ·
+   ⌘K · Needs you · the meter's figure · the avatar. The destinations KEEP
+   their width (they were collapsing to nothing); the audit door goes first,
+   the meter's prose before its figure. */
+@media (max-width:1279px){
+  .chrome > nav{flex:none}
+  .chrome .door{display:none}
+  .chrome .meterbtn .q{display:none}
+}
+@media (max-width:1079px){
+  .chrome .tenant{min-width:0;max-width:calc(var(--u)*40)}
+  /* N-10 (G3477) — the pack's 820 frame draws Close · Ask; Reports (quiet
+     today) is drawn on the wide bar and in the narrow tier's tab bar. */
+  .chrome .dests > li[data-dest="reports"]{display:none}
+}
+
+/* NARROW (< 720): *"The phone shell: three chrome controls, destinations in a
+   bottom tab bar, the status bar as a tappable row … the register triages to
+   three columns."* The bar keeps the mark, the palette key and the avatar; the
+   entity, the destinations, the door, "Needs you" and the meter are reached
+   through the tab bar and the account menu. */
+@media (max-width:719px){
+  .chrome{padding:calc(var(--u)*3);gap:calc(var(--u)*3)}
+  .chrome .tenant,.chrome > nav,.chrome .door,.chrome .meterbtn,
+  .chrome > .abtn,.chrome > .tipwrap:has(> .tenant),.chrome > .tipwrap:has(> .meterbtn){display:none}
+  .close .regt .c-val{width:calc(var(--u)*24)}
+  .close .row .what .fold2{display:block;margin-top:calc(var(--u)*1);font-family:var(--face-mono);
+    font-size:var(--s1);color:var(--muted);font-variant-numeric:tabular-nums}
+  .close .row .what a.open{display:none}
+  .close .arrive{padding:calc(var(--u)*4)}
+  .close .figs{gap:calc(var(--u)*5)}
+  .close .triage,.close .intake{padding-left:calc(var(--u)*4);padding-right:calc(var(--u)*4)}
+  .close .reg{padding-left:calc(var(--u)*4);padding-right:calc(var(--u)*4)}
+  .close .evid-in{padding:calc(var(--u)*4)}
+  .statusbar{padding:calc(var(--u)*2) calc(var(--u)*4)}
+  .statusbar .bit{white-space:normal}
+}
+
+/* THE BOTTOM TAB BAR — the narrow tier's destinations (`system-page.css`
+   `.tabbar`, Design System *The phone shell*): three destinations, one per tab,
+   44px tall, NEVER a fourth. Hidden at mid and above, where the destinations
+   are inline in the chrome. */
+.tabbar{display:none}
+@media (max-width:719px){
+  .tabbar{display:flex;position:sticky;bottom:0;z-index:calc(var(--z-popover) - 1);background-color:var(--paper);
+    border-top:1px solid var(--rule-strong)}
+  .tabbar > a,.tabbar > .tipwrap{flex:1;display:flex}
+  .tabbar .tab{flex:1;display:flex;align-items:center;justify-content:center;font:inherit;
+    font-size:var(--s2);color:var(--muted);background:none;border:0;border-top:2px solid transparent;
+    min-height:calc(var(--u)*11);padding:calc(var(--u)*2) 0;text-decoration:none}
+  .tabbar .tab[aria-current="page"]{color:var(--ink);font-weight:var(--w-emph);border-top-color:var(--accent)}
+  .close > .statusbar{position:static}
+}
+
+/* RM-12 (G3479) — HOVER IS A TRANSITION, NOT A SNAP. The kernel's motion rule:
+   *"Everything else that moves is a TRANSITION on a property, timed by
+   --t-spring (a move) or --t-fade (an opacity or colour change)."* Every
+   control on the chrome and the Close surface snapped between grounds and
+   inks. Colour, ground and edge now fade on `--t-fade`, linear; the kernel's
+   reduced-motion guard makes each of them instant. Nothing here moves a box. */
+.chrome .tenant,.chrome .dests a,.chrome .abtn,.chrome .palbtn,.chrome .whoami,
+.chrome .acctitem,.chrome .meterbtn,.close .cell,.close .choice,.close .abtn,
+.close .rowact,.close .regt tbody tr.row,.close .evid .fold,.close .evid .x,
+.close .evid .evlink a,.close .row .what a.spent,.tabbar .tab{
+  transition:background-color var(--t-fade) linear,color var(--t-fade) linear,
+    box-shadow var(--t-fade) linear}
+
+/* THE QUIET CONTROL'S INK IS DECLARED LAST, so it wins every tie with the
+   drawn shape's own colour above it — the shape is the pack's, the ink says
+   it is not live. */
+.chrome [data-soon][aria-disabled="true"],.close [data-soon][aria-disabled="true"],
+.statusbar [data-soon][aria-disabled="true"],.finding-acts [data-soon][aria-disabled="true"]{color:var(--muted)}

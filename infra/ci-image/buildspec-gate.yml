@@ -1,0 +1,124 @@
+# =====================================================================
+# THE GATE. G108 — `npm ci` THEN `npm run check`, AND NOTHING ELSE.
+#
+# 🛑 THE `build` PHASE BELOW HAS EXACTLY TWO COMMANDS AND MAY NEVER HAVE A THIRD.
+# `.github/workflows/check.yml` carries the same instruction in its own words —
+# "DO NOT ADD A STEP HERE" — and `tests/ci/gate.test.ts` fails if that file ever
+# grows a second command. G108's reason is not tidiness: one definition of green,
+# and CI runs the command a contributor runs, so nobody is green locally and red
+# in CI. A checker or a service named here and absent from `npm run check` is a
+# thing a contributor cannot run.
+#
+# ⚠️ `pre_build` STARTS A DATABASE, AND THAT IS ENVIRONMENT, NOT A GATE STEP —
+# AND THE DISTINCTION IS WRITTEN DOWN HERE BECAUSE IT IS THE ONE A LATER READER
+# WILL STRETCH. The line between the two is whether it makes a CLAIM ABOUT THE
+# CODE. Starting a server that this image already built and initdb'd asserts
+# nothing about the repository; `npm run check` asserts everything. So:
+#
+#   ALLOWED here      making the machine be what the image promised
+#   NOT ALLOWED here  a linter · a scanner · a formatter · a coverage gate ·
+#                     a second test command · an `npx playwright install` ·
+#                     `docker run postgres` · anything with a threshold
+#
+# If something belongs in the gate, it belongs in `npm run check`, where a
+# contributor gets it too. That is the whole of G108.
+#
+# ┌─ WHY THIS RUNS ON THE CUSTOM IMAGE AND NOT A CURATED ONE ──────────────────┐
+# │ `CI=true` below arms `databaseRequiredUnderCi()` and                        │
+# │ `browserRequiredUnderCi()` in `tests/reachability.ts`, which turn a silent  │
+# │ stand-down into an EXIT CODE. On a machine without PostgreSQL and chromium  │
+# │ that is simply a red gate — which is correct, and useless. This buildspec   │
+# │ is only a gate on the image `infra/ci-image/Dockerfile` builds, where the   │
+# │ dependency's ABSENCE is the anomaly. PR #257 is what the other arrangement  │
+# │ looks like: a trunk merged with `npm run check` EXIT 1 in its own PR body,  │
+# │ over a CI check reporting success.                                          │
+# └────────────────────────────────────────────────────────────────────────────┘
+#
+# ┌─ WHAT THE CDK SIDE OWES THIS FILE (assumed, not built here) ───────────────┐
+# │ · `environmentType: ARM_CONTAINER`, `buildImage` = the ECR image this       │
+# │   directory builds, referenced BY DIGEST (G262).                            │
+# │ · `gitCloneDepth: 0` — a FULL clone. `tools/check-g-numbers.mjs` compares    │
+# │   against `origin/main` and a merge base and prints "unavailable            │
+# │   (non-fatal)" without them, which is a quietly weaker gate rather than a   │
+# │   red one. A shallow clone does not fail this build; it hollows it.          │
+# │ · No `reports:` and no `artifacts:` — the gate produces a verdict, not a    │
+# │   payload. Build, migrate and deploy are SEPARATE PIPELINE STAGES that run  │
+# │   after a green gate (docs/tech-stack.md §9.1–§9.2), never steps inside it. │
+# └────────────────────────────────────────────────────────────────────────────┘
+# =====================================================================
+version: 0.2
+
+env:
+  variables:
+    # 🛑 THE ONE VARIABLE THAT CHANGES WHAT GREEN MEANS. `tests/reachability.ts`
+    # conditions both guards on `CI` deliberately — "a contributor on a laptop
+    # with no PostgreSQL must still get a runnable suite" — so the claim CI makes
+    # is defended without making the suite unrunnable off CI. Unset this and the
+    # eleven database-dependent suites and the nine browser-dependent ones go
+    # back to standing down silently, and this whole image stops being worth
+    # building. Derive both counts rather than quoting these:
+    #   grep -rln probeDatabase tests/ | grep -v fixtures | grep '\.test\.' | wc -l
+    #   grep -rln browserRequiredUnderCi tests/ | grep '\.test\.' \
+    #     | grep -v reachability-guards | wc -l
+    CI: "true"
+
+    # ⚠️ EVERYTHING ELSE THE SUITE NEEDS IS INHERITED FROM THE IMAGE AND IS NOT
+    # RESTATED HERE — `RECONCILE_DB_HOST`, `RECONCILE_DB_PORT`,
+    # `RECONCILE_DB_ADMIN`, `RECONCILE_CONTROL_DB_*`, `PLAYWRIGHT_BROWSERS_PATH`.
+    # They are facts about that machine's cluster and cache; a copy here would be
+    # a second place for them to drift, and the copy is the one a reader would
+    # trust. Derive them: `docker run --rm <image> env | sort`.
+    #
+    # ⚠️ DELIBERATELY ABSENT: `RECONCILE_APP_PASSWORD` and
+    # `RECONCILE_MIGRATOR_PASSWORD`. `db/env.ts` returns `undefined` for both by
+    # design and says why: a trust-authenticated local cluster has no password to
+    # give. Setting them here would make every connection fail, loudly, for a
+    # reason that looks like a permissions bug.
+
+phases:
+  install:
+    commands:
+      # No `runtime-versions`. Node is IN the image, pinned there and asserted
+      # against `engines.node` at image build time. A `runtime-versions` block
+      # here would ask CodeBuild's runtime manager for a second Node, and the
+      # version the gate ran would stop being the version the image promised.
+      - node --version
+      - npm --version
+
+  pre_build:
+    commands:
+      # 1 · FAIL FAST IF THIS IS NOT THE IMAGE. Without it, pointing the project
+      #     at a curated image gives a red gate whose message is about a database
+      #     rather than about the mistake that was actually made.
+      - |
+        if ! command -v reconcile-pg-start >/dev/null 2>&1; then
+          echo "🛑 THIS IS NOT THE ReconcileAI CI IMAGE."
+          echo "   /usr/local/bin/reconcile-pg-start is absent, so this build is running on"
+          echo "   some other image. G258: the gate runs where it can execute every"
+          echo "   assertion. Point the project at the ECR image infra/ci-image builds."
+          exit 1
+        fi
+
+      # 2 · THE ENVIRONMENT, STATED RATHER THAN ASSUMED. Not a gate step: it
+      #     asserts nothing about the repository.
+      - reconcile-pg-start
+
+      # 3 · The browser, named in the log so a later reader of a green build can
+      #     see WHICH revision was present. `ls` is not evidence that it runs —
+      #     the image's own build refused to finish unless it did (step 6 of the
+      #     Dockerfile), and `browserSkip()` re-establishes it inside the run.
+      - ls -d "$PLAYWRIGHT_BROWSERS_PATH"/chromium_headless_shell-*
+
+  build:
+    commands:
+      # 🛑 TWO COMMANDS. THE SAME TWO `.github/workflows/check.yml` RUNS.
+      - npm ci
+      - npm run check
+
+# `/root/.npm` only — the npm cache, which changes nothing about what runs.
+# ⚠️ NOT `node_modules`: `npm ci` deletes and rebuilds it from the lockfile, and
+# a cached `node_modules` restored over a changed lockfile is the shape where a
+# gate passes against dependencies nobody committed.
+cache:
+  paths:
+    - "/root/.npm/**/*"

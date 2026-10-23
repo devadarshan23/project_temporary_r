@@ -1,0 +1,50 @@
+# The build context, narrowed.
+#
+# The Dockerfile COPYs four directories by name, so nothing else can reach the
+# image — but everything not excluded here is still SENT to the daemon on every
+# build, and this repository's largest directories are the ones no plane needs.
+#
+# 🛑 AN EXCLUSION HERE OUTRANKS A `COPY` THERE, AND IT DOES NOT LOSE QUIETLY.
+# A path excluded from the context never reaches the daemon, so a `COPY` naming
+# it does not silently copy nothing — the build FAILS, before any of the layers
+# below it, and both planes die with it. This file listed `model` while the
+# Dockerfile had already gained `COPY model ./model`; the two disagreed and the
+# image could not be built at all. `tests/http/engine-on-served-path.test.ts`
+# now subtracts this file's exclusions from that file's `COPY` set, so the pair
+# cannot disagree again without an assertion saying so.
+#
+# ⚠️ `node_modules` FIRST AND FOR A REASON BEYOND SPEED. `npm ci --omit=dev` runs
+# inside the image; a host `node_modules` copied in would be the DEVELOPMENT tree,
+# built against a different platform, and it would shadow the install. That
+# failure looks like a native-binding error at start-up and reads like a bug in
+# the driver.
+node_modules
+.git
+.github
+
+# Not a plane's business.
+#
+# ⚠️ `model` WAS IN THIS LIST AND IS DELIBERATELY GONE. It is removed rather than
+# negated with `!model` so that this list holds one rule per line and no line
+# argues with another. The reason it was here is still the right reason for the
+# names that remain — a plane has no business with a test, a checker or a
+# mockup — and it stopped being true of `model/` the moment
+# `server/data-plane/run-vocabulary.ts` made `RUN_TRIGGER_KINDS` a VALUE import
+# on the served path. See the `COPY model ./model` comment in `Dockerfile`.
+tests
+tools
+Mockups
+assets
+design
+.claude
+.impeccable
+
+# `docs/contracts/` IS copied in — ruling 1 makes it the router, not documentation.
+# Everything else under docs/ is the design record and does not ship.
+docs/*
+!docs/contracts
+
+*.md
+compose.yaml
+Dockerfile
+.dockerignore

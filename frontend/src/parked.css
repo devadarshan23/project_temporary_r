@@ -1,0 +1,68 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PARKED.CSS — C9's parked pile on the register (rows 18 and 19),
+   feat/ui-parked-pile, G3501–G3510, 3 Oct 2026.
+
+   Its own file so the Close surface's stylesheet is not edited by this slice.
+   Scoped under `:is(.close,.setup) .parked`, so nothing here reaches the register's table,
+   the strip, Setup or the chrome. The vocabulary is the pack's own — `.lab`,
+   `.choice`, `.abtn[data-commit]`, `.acts` — which close.css already draws;
+   this file lays out only what is new: the line, the pane, the sample's keys.
+   Every value is a kernel token (`tests/app/css-raw-values.test.ts`).
+
+   ⚠️ "Scoped under `.close .parked`" WENT FALSE ON 4 Oct 2026 — G3782. Row
+   18's *"Both places"*: the same pile is drawn on Setup, so every rule is
+   scoped `:is(.close,.setup) .parked` and the tail of this file sets only what
+   differs there (Setup's `.page` already carries the gutter). Nothing here
+   reaches the register's table, the sources table or the chrome.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:is(.close,.setup) .parked{padding:calc(var(--u)*4) calc(var(--u)*5) 0;display:grid;gap:calc(var(--u)*2);min-width:0}
+:is(.close,.setup) .parked > .lab{margin:0}
+:is(.close,.setup) .parked .parked-sum{margin:0;font-size:var(--s2);color:var(--ink)}
+:is(.close,.setup) .parked .q{color:var(--muted)}
+:is(.close,.setup) .parked .mono{font-family:var(--face-mono);font-variant-numeric:tabular-nums}
+:is(.close,.setup) .parked ul{list-style:none;margin:0;padding:0}
+:is(.close,.setup) .parked-lines{border-top:1px solid var(--rule)}
+:is(.close,.setup) .parked-lines > li{border-bottom:1px solid var(--rule);min-width:0}
+:is(.close,.setup) .parked-line{font:inherit;font-size:var(--s2);color:inherit;background-color:transparent;
+  border:0;cursor:pointer;text-align:left;width:100%;min-height:var(--target);
+  padding:calc(var(--u)*2) 0;display:flex;flex-wrap:wrap;align-items:baseline;
+  gap:calc(var(--u)*1) calc(var(--u)*4);min-width:0}
+:is(.close,.setup) .parked-line:hover{background-color:var(--tile-hover)}
+:is(.close,.setup) .parked-line[aria-expanded="true"]{font-weight:var(--w-emph)}
+:is(.close,.setup) .parked-line .fn{font-family:var(--face-mono);flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+:is(.close,.setup) .parked-line .src,:is(.close,.setup) .parked-line .why,:is(.close,.setup) .parked-line .when{
+  font-size:var(--s1);color:var(--muted);flex:none}
+:is(.close,.setup) .parked-line .when{font-family:var(--face-mono)}
+:is(.close,.setup) .parked-drains > li{font-size:var(--s1);color:var(--muted);padding:calc(var(--u)*1) 0}
+
+:is(.close,.setup) .parked-pane{padding:calc(var(--u)*4);margin:0 0 calc(var(--u)*3);
+  background-color:var(--sheet);box-shadow:inset 0 0 0 1px var(--rule);
+  display:grid;gap:calc(var(--u)*4);min-width:0}
+:is(.close,.setup) .parked-pane p{margin:0;font-size:var(--s2);line-height:var(--lh-note);max-width:72ch}
+:is(.close,.setup) .parked-facts{margin:0;display:grid;gap:calc(var(--u)*2)}
+@media (min-width:720px){ :is(.close,.setup) .parked-facts{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:calc(var(--u)*8)} }
+:is(.close,.setup) .parked-facts > div{display:grid;gap:calc(var(--u)*1);min-width:0}
+:is(.close,.setup) .parked-facts dt{font-size:var(--s1);color:var(--muted)}
+:is(.close,.setup) .parked-facts dd{margin:0;font-size:var(--s2);overflow-wrap:anywhere}
+:is(.close,.setup) .parked-sample{display:grid;gap:calc(var(--u)*2)}
+:is(.close,.setup) .parked-sample > .lab{margin:0}
+:is(.close,.setup) .parked-keys{display:flex;flex-wrap:wrap;gap:calc(var(--u)*2)}
+:is(.close,.setup) .parked-keys > li{font-size:var(--s1);padding:calc(var(--u)*1) calc(var(--u)*2);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);overflow-wrap:anywhere}
+:is(.close,.setup) .parked-raise{display:grid;gap:calc(var(--u)*3);min-width:0}
+:is(.close,.setup) .parked-raise > .lab{margin:0}
+:is(.close,.setup) .parked-raise .acts{margin-top:0}
+:is(.close,.setup) .parked-field{display:grid;gap:calc(var(--u)*1);font-size:var(--s2)}
+:is(.close,.setup) .parked-field > span{color:var(--muted)}
+:is(.close,.setup) .parked-field input{font:inherit;font-family:var(--face-mono);font-size:var(--s2);color:var(--ink);
+  background-color:var(--paper);border:0;box-shadow:inset 0 0 0 1px var(--rule-strong);
+  min-height:var(--target);padding:calc(var(--u)*2);width:100%;max-width:48ch;box-sizing:border-box}
+:is(.close,.setup) .parked .result{font-size:var(--s2);margin:0}
+@media (max-width:719px){ .close .parked{padding-left:calc(var(--u)*4);padding-right:calc(var(--u)*4)} }
+
+/* Setup's half (G3782). `.page` owns the gutter, so the pile adds none; the
+   raise's type suggestions lay out as Setup's own `.choices` do. */
+.setup .parked{padding:calc(var(--u)*8) 0 0}
+.setup .parked .fac{display:flex;flex-wrap:wrap;gap:calc(var(--u)*2)}
+.setup .parked [data-pairing-offer]{margin-top:0}

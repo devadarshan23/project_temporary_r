@@ -1,0 +1,31 @@
+openapi: 3.1.0
+info:
+  title: wire-mirror fixture — LINE FINDING REFUSAL DRIFT (the red witness for `line_finding_refusal_kinds`)
+  version: 0.0.0
+  description: |
+    Fixture for tools/check-wire-mirror.mjs. NOT a real contract, and
+    DELIBERATELY WRONG.
+
+    G109's amendment: a pair is verified RED against a drifted fixture BEFORE it
+    is pointed at the tree.
+
+    DRIFT IN BOTH DIRECTIONS AT ONCE:
+      • MISSING — `residue_row_not_unique` is absent. That is the arm which
+                  refuses to PICK ONE of two rows at a single address, and a wire
+                  that dropped it would leave a client with no vocabulary for the
+                  one case where opening a finding is a silent choice about which
+                  finding gets opened.
+      • EXTRA   — `match_group_not_found` is present, and it is the exact shape
+                  G228 rules against. It presupposes that a residue row HAS a
+                  match group to look for; a residue row is addressed at line
+                  grain and has none, which is why the ruling minted a second row
+                  type instead of widening `Exception`. A refusal arm naming a
+                  match group is the widening arriving through the wire.
+paths: {}
+components:
+  schemas:
+    LineFindingRefusalKind:
+      type: string
+      enum:
+        - no_such_residue_row
+        - match_group_not_found

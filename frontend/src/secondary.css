@@ -1,0 +1,189 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECONDARY.CSS — the run account, the finding, the post/approve surface, the
+   approvals queue and the quiet Ask / Reports pages (RC-01, RC-08, RC-09, C4,
+   C5 — 3 Oct 2026).
+
+   PORTED FROM docs/handoff-pack/app.css (and the breadcrumb from
+   system-page.css), exactly as close.css is: every value is a kernel token, and
+   the selectors are the pack's with ONE scope added — `.page` — so these rules
+   cannot reach the Close surface, Setup or the chrome, which carry their own.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* N-08 (G3477) — the drill-downs hold the kernel's page width. This read
+   `max-width:1440px`, a raw px that is neither the token nor its value: 1440 is
+   `--bp-wide`, a BREAKPOINT, and the kernel's page width is `--measure`
+   (*"ULTRA 1440+ — --measure holds and the page centres"*). */
+.page{padding:calc(var(--u)*5);display:grid;gap:calc(var(--u)*6);align-content:start;
+  max-width:var(--measure);color:var(--ink)}
+.page h1{font-size:var(--s4);font-weight:var(--w-body);letter-spacing:var(--tr-title);
+  line-height:var(--lh-body);margin:0;max-width:52ch}
+.page h2{font-size:var(--s3);font-weight:var(--w-emph);margin:0 0 calc(var(--u)*3)}
+.page h3{font-size:var(--s3);font-weight:var(--w-emph);margin:0 0 calc(var(--u)*2)}
+.page p{font-size:var(--s2);line-height:var(--lh-note);margin:0;max-width:72ch}
+.page p.q,.page .q{color:var(--muted)}
+.page .mono{font-family:var(--face-mono);font-variant-numeric:tabular-nums}
+.page .lab{display:block;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  margin-bottom:calc(var(--u)*2)}
+.page section{display:grid;gap:calc(var(--u)*2);min-width:0}
+
+/* ═══ 4 · BREADCRUMB — `<Trail>`: last crumb is never a link ═══════════════ */
+.page .trail{display:flex;align-items:center;gap:calc(var(--u)*2);flex-wrap:wrap;
+  font-size:var(--s2);color:var(--muted);padding:0;margin:0}
+.page .trail .crumb{color:var(--ink);text-decoration:underline;text-underline-offset:3px;
+  text-decoration-thickness:1px;min-height:var(--target-min)}
+.page .trail .crumb:hover{text-decoration-thickness:2px}
+.page .trail .sep{color:var(--rule-strong)}
+.page .trail [aria-current="page"]{color:var(--accent-deep);text-decoration:none;
+  font-weight:var(--w-figure);font-family:var(--face-mono)}
+
+/* ═══ FIGURES ═══════════════════════════════════════════════════════════════ */
+.page .figs{display:flex;gap:calc(var(--u)*8);align-items:flex-end;flex-wrap:wrap}
+.page .fig .k{display:block;font-size:var(--s2);color:var(--muted);margin-bottom:calc(var(--u)*1)}
+.page .fig .v{display:block;font-family:var(--face-mono);font-size:var(--s4);
+  font-weight:var(--w-figure);font-variant-numeric:tabular-nums;color:var(--ink)}
+.page .fig .v[data-unmeasured]{color:var(--muted);font-weight:var(--w-body)}
+.page .fig .cu{font-size:var(--s2);font-weight:var(--w-body);color:var(--muted);
+  margin-right:calc(var(--u)*2)}
+
+/* ═══ FACTS — a label column and a value column ═════════════════════════════ */
+.page .facts{display:grid;grid-template-columns:max-content minmax(0,1fr);
+  gap:calc(var(--u)*2) calc(var(--u)*6);margin:0;font-size:var(--s2)}
+.page .facts dt{color:var(--muted)}
+.page .facts dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.page .facts dd.mono,.page .facts dd .mono{font-family:var(--face-mono);
+  font-variant-numeric:tabular-nums}
+
+/* ═══ CHIPS — a closed word on a quiet plate ════════════════════════════════ */
+.page .chips{display:flex;align-items:center;gap:calc(var(--u)*2);flex-wrap:wrap}
+.page .chip{display:inline-flex;align-items:center;gap:calc(var(--u)*1);
+  font-size:var(--s1);color:var(--ink);background-color:var(--paper);
+  padding:calc(var(--u)*1) calc(var(--u)*2);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  white-space:nowrap}
+.page .chip[data-severity="critical"],.page .chip[data-severity="high"]{
+  box-shadow:inset 0 0 0 1px var(--ink);font-weight:var(--w-emph)}
+.page .chip.stale{color:var(--refused);box-shadow:inset 0 0 0 1px var(--refused)}
+
+/* ═══ THE EVIDENCE BLOCK ════════════════════════════════════════════════════ */
+.page .evid-in{padding:calc(var(--u)*5) calc(var(--u)*6);
+  border-left:calc(var(--u)*1) solid var(--ink)}
+/* RMR-05 (G3475) — on the finding page the evidence is the view's ONE light
+   (`app.css`: the light is *"on the machine's own drafted evidence when you
+   open it"*), so the sheet ground is the UNLIT state only: the kernel's
+   `.lit.lit` owns the lit paint, and this rule must not tie with it. */
+.page .evid-in:not(.lit){background-color:var(--sheet)}
+
+/* RMR-07 (G3476) — the live sign above a running run's account. The paint is
+   the kernel's `.lit.lit` and the sweep its `.lit--running`; this places it. */
+.liverun{display:flex;align-items:center;gap:calc(var(--u)*3);max-width:var(--measure);
+  padding:calc(var(--u)*3) calc(var(--u)*5);overflow:hidden}
+.liverun p{margin:0;font-size:var(--s2);line-height:var(--lh-note);color:var(--ink)}
+.liverun b{font-weight:var(--w-emph)}
+.page .evid-in p{margin-bottom:calc(var(--u)*3)}
+.page .ev{list-style:none;margin:0 0 calc(var(--u)*4);padding:0}
+@media (min-width:1080px){
+  .page .ev{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:calc(var(--u)*8)}
+}
+.page .ev li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:calc(var(--u)*3);
+  padding:calc(var(--u)*3) 0;border-top:1px solid var(--rule);font-size:var(--s2)}
+.page .ev .why{display:block;color:var(--muted);margin-top:calc(var(--u)*1);line-height:var(--lh-note)}
+.page .ev .verdict{font-family:var(--face-mono);font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;color:var(--muted);white-space:nowrap;align-self:start}
+.page .ev li[data-v="ruled-out"] .verdict{color:var(--refused)}
+
+/* ═══ ACTS ══════════════════════════════════════════════════════════════════ */
+.page .acts{display:flex;gap:calc(var(--u)*2);flex-wrap:wrap;margin-top:calc(var(--u)*2)}
+.page .abtn{font:inherit;font-size:var(--s2);min-height:var(--target);
+  padding:0 calc(var(--u)*4);cursor:pointer;border:0;color:var(--ink);
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong);
+  display:inline-flex;align-items:center;text-decoration:none}
+.page .abtn:hover{background-color:var(--tile-hover)}
+.page .abtn[data-commit]{background-color:var(--ink);color:var(--on-ink);
+  font-weight:var(--w-emph);box-shadow:none}
+.page .abtn[data-commit]:hover{background-color:var(--accent-deep)}
+.page .abtn[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--ink);font-weight:var(--w-emph)}
+.page .abtn[aria-disabled="true"]{color:var(--refused);background-color:var(--sheet);cursor:default}
+.page .abtn[data-soon]{color:var(--muted);background-color:var(--sheet);cursor:default}
+
+/* ═══ CHOICES AND A REASON ══════════════════════════════════════════════════ */
+.page .reasons{display:grid;gap:calc(var(--u)*2);margin-top:calc(var(--u)*2);
+  padding-top:calc(var(--u)*4);border-top:1px solid var(--rule-strong)}
+@media (min-width:1080px){
+  .page .reasons{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .page .reasons > .lab,.page .reasons > .acts,.page .reasons > .field,
+  .page .reasons > p{grid-column:1 / -1}
+}
+.page .choice{display:flex;align-items:center;justify-content:space-between;
+  gap:calc(var(--u)*3);width:100%;text-align:left;font:inherit;color:var(--ink);
+  font-size:var(--s2);min-height:var(--target);padding:0 calc(var(--u)*3);
+  background-color:var(--paper);box-shadow:inset 0 0 0 1px var(--rule-strong);border:0;cursor:pointer}
+.page .choice:hover{background-color:var(--tile-hover)}
+.page .choice[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--ink);font-weight:var(--w-emph)}
+.page .choice[aria-disabled="true"]{color:var(--muted);cursor:default;background-color:var(--sheet)}
+.page .choice .to{font-size:var(--s1);letter-spacing:var(--tr-micro);text-transform:uppercase;
+  color:var(--muted)}
+.page .field{display:grid;gap:calc(var(--u)*1);font-size:var(--s2)}
+.page .field > span{color:var(--muted)}
+.page .field textarea,.page .field input{font:inherit;font-size:var(--s2);color:var(--ink);
+  background-color:var(--paper);border:0;box-shadow:inset 0 0 0 1px var(--rule-strong);
+  min-height:var(--target);padding:calc(var(--u)*2);width:100%;max-width:72ch}
+.page .field textarea{min-height:calc(var(--u)*20);resize:vertical}
+
+.page .result{padding:calc(var(--u)*4);background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--ink);font-size:var(--s2);line-height:var(--lh-note);max-width:80ch}
+.page .result .id{font-family:var(--face-mono);color:var(--muted)}
+.page .failed{padding:calc(var(--u)*4);background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--refused);max-width:var(--measure-text);
+  font-size:var(--s2);line-height:var(--lh-note);color:var(--refused)}
+
+/* ═══ C5 · ONE PROPOSAL, AND THE APPROVALS QUEUE ════════════════════════════ */
+.page .appr{padding:calc(var(--u)*5);background-color:var(--sheet);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);display:grid;gap:calc(var(--u)*2)}
+.page .appr-top{display:flex;justify-content:space-between;align-items:flex-start;
+  gap:calc(var(--u)*6);flex-wrap:wrap}
+.page .appr-top h3{font-size:var(--s4);font-weight:var(--w-body);letter-spacing:var(--tr-title);
+  margin:calc(var(--u)*1) 0 0;max-width:44ch}
+.page .appr .prop{font-size:var(--s3);line-height:var(--lh-body);max-width:70ch}
+.page .selfbox{padding:calc(var(--u)*4);background-color:var(--paper);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);max-width:var(--measure-text)}
+.page .eyes{list-style:none;margin:0;padding:0;display:grid;gap:calc(var(--u)*1);font-size:var(--s2)}
+.page .eyes li{display:flex;gap:calc(var(--u)*3);align-items:baseline}
+.page .eyes .who{font-family:var(--face-mono)}
+.page .eyes [data-eye="empty"]{color:var(--muted)}
+
+/* ═══ TABLES ON THESE PAGES ═════════════════════════════════════════════════ */
+.page .tbl{width:100%;border-collapse:collapse;font-size:var(--s2)}
+.page .tbl th{text-align:left;font-size:var(--s1);letter-spacing:var(--tr-micro);
+  text-transform:uppercase;font-weight:var(--w-emph);color:var(--muted);
+  padding:calc(var(--u)*2) calc(var(--u)*3);border-bottom:1px solid var(--rule-strong)}
+.page .tbl td{padding:calc(var(--u)*2) calc(var(--u)*3);border-bottom:1px solid var(--rule);
+  vertical-align:top}
+.page .tbl th.num,.page .tbl td.num{text-align:right;font-family:var(--face-mono);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.page .tbl td.mono{font-family:var(--face-mono)}
+.page .tbl tr[data-trouble] td{color:var(--ink);font-weight:var(--w-emph)}
+.page .tblwrap{overflow-x:auto;max-width:100%}
+/* G4074 — POSITIONED, so the `.sr-only` labels inside a table (an absolutely
+   positioned 1px box — Setup's "Acts" header among them) take the SCROLLER as
+   their containing block. Unpositioned, they escaped its overflow and widened
+   the PAGE to 700px at 390 while the table itself scrolled correctly: the only
+   element past the right edge was `SPAN.sr-only`, width 1 (measured, not
+   guessed). `staff.css` RS-01 (G3583) found and fixed the same escape on the
+   staff console's `.scroller`; this is that repair on the tenant pages. */
+.page .tblwrap{position:relative}
+.page .pager{display:flex;align-items:center;gap:calc(var(--u)*3);flex-wrap:wrap;
+  font-size:var(--s2);color:var(--muted)}
+
+/* ═══ LAYOUT ════════════════════════════════════════════════════════════════ */
+.page .stack{display:grid;gap:calc(var(--u)*6);min-width:0}
+.page .head{display:grid;gap:calc(var(--u)*3);min-width:0}
+
+/* ═══ STATED STATES · ASK · REPORTS ═════════════════════════════════════════ */
+.page .stated{padding:calc(var(--u)*8) 0;display:grid;gap:calc(var(--u)*3);max-width:72ch}
+.page .stated h2{font-size:var(--s4);font-weight:var(--w-body);letter-spacing:var(--tr-title);margin:0}
+.page .stated p{color:var(--muted)}
+.page .askbox{display:flex;align-items:center;gap:calc(var(--u)*3);
+  padding:0 calc(var(--u)*4);min-height:calc(var(--u)*13);
+  box-shadow:inset 0 0 0 1px var(--rule-strong);font-size:var(--s3);color:var(--muted);
+  max-width:72ch;background-color:var(--sheet)}
+.page .askbox .cue{margin-left:auto;font-family:var(--face-mono);font-size:var(--s1)}

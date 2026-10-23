@@ -1,0 +1,447 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE FOUR OVERLAY SURFACES — ported from design/system/overlays.html.
+
+   THE KERNEL REMAINS THE ONLY PLACE A VALUE IS DECLARED, exactly as
+   frontend/src/bridge.css requires and frontend/src/shell.css obeys. Every
+   colour below is `var(--…)`, every length is a multiple of `var(--u)` or a
+   kernel type step. Nothing here states a hex, a px colour or a rem.
+
+   ─── CASCADE ───────────────────────────────────────────────────────────────
+
+   ⚠️ THIS SHEET IS UNLAYERED AND IMPORTED AFTER THE KERNEL, like shell.css, and
+   it obeys shell.css's mechanical rule for the same reason:
+
+     🛑 NOTHING IN THIS FILE MAY DECLARE `background` OR `background-image` ON
+     `.nb`, ON `.lit`, OR ON ANY ANCESTOR SELECTOR THAT COULD REACH ONE.
+
+   An overlay is a container and a not-built mark can sit inside one — a refused
+   control in a drawer is the ordinary case, not the exotic one. So every
+   background below is declared on the overlay's OWN class and never through a
+   descendant selector, and the two that could collide with a lit surface carry
+   the same `:not(.lit)` guard the drawn design uses.
+
+   ─── WHAT THE KERNEL DECIDES AND THIS FILE MAY NOT ─────────────────────────
+
+   design/system/tokens.css, THE OVERLAY SURFACE:
+     AN OVERLAY IS  --paper ground · a 1px --rule-strong edge · radius 0 ·
+                    NO shadow. A drawer takes the edge on the side it enters
+                    from and nowhere else.
+
+   design/system/tokens.css, THE TOOLTIP SURFACE:
+     A TOOLTIP IS  --ink ground · --on-ink text · --on-ink-2 for a second line ·
+                   radius 0 · no edge, because the ground already separates it.
+
+   ⚠️ NO REDUCED-MOTION BLOCK IS ADDED HERE AND THAT IS DELIBERATE. The kernel's
+   guard at the foot of tokens.css sets `transition-duration`, not only
+   `animation-duration`, so it covers the tooltip's fade; and the three
+   ENTRANCES below are applied through the kernel's `--enter-*` tokens, which
+   that same guard sets to `none`. A second guard would be a second spelling of
+   a rule that is already held — which is the defect this whole slice is about.
+   ⚠️ THIS SAID "all four durations used below" UNTIL 3 Oct 2026 (RM-05) and
+   there was exactly ONE, `--t-enter`, which the kernel does not declare — so
+   the tooltip's transition was invalid at computed-value time and snapped.
+
+   ─── MOTION — the owner's rulings of 3 Oct 2026 (RM-08 · RM-09) ───────────
+   The toast rises on `--enter-toast`; the modal's scrim fades on
+   `--enter-scrim`; the drawer and the dialog arrive on `--enter-drawer` and
+   `--enter-modal`. All four keyframes live in the KERNEL and none is declared
+   here — "a component may APPLY one and may not DECLARE one".
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── THE LAYER AND THE SCRIM ───────────────────────────────────────────────
+   🛑 THE SCRIM EXISTS BECAUSE A MODAL MUST DIM WHAT IT BLOCKS, and the kernel
+   names it as one of exactly two exceptions to "a surface separates by RULE or
+   by GROUND". `--scrim` is the kernel's token; this file does not mix its own.
+
+   ⚠️ THE DRAWER IS NOT SCRIMMED AND THE MODAL IS. The drawn design draws the
+   distinction and gives the reason: a drawer dims the register and LEAVES IT
+   LEGIBLE, because evidence sits beside the decision — you are reading the row
+   while you ask about it. A modal is a decision that blocks, so it dims. Two
+   treatments over one another would be a third ground. */
+.ov-layer {
+  position: fixed;
+  inset: 0;
+  /* THE KERNEL'S LAYER SCALE (tokens.css, LAYER): a drawer is --z-overlay and
+     a dialog is --z-modal, both above the toast region, which is above the
+     tooltip at --z-popover.
+     ⚠️ THIS WAS `z-index: 5` (tip 3, toasts 4) UNTIL 3 Oct 2026 (RV-12) and its
+     comment said "the kernel declares no z-index scale" — false since the
+     pack's kernel landed with --z-popover · --z-overlay · --z-modal · --z-skip.
+     The ORDER is unchanged; the numbers are now the kernel's. */
+  z-index: var(--z-overlay);
+  display: flex;
+}
+
+.ov-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+}
+
+.ov-layer:is([data-overlay='modal'],[data-leaving='modal']) {
+  z-index: var(--z-modal);
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--u) * 6);
+}
+/* RM-09: the modal's scrim fades in; the drawer's is transparent and does not. */
+.ov-layer[data-overlay='modal'] .ov-scrim { animation: var(--enter-scrim); }
+.ov-layer[data-overlay='modal'] .ov { animation: var(--enter-modal); }
+.ov-layer[data-overlay='drawer'] .ov { animation: var(--enter-drawer); }
+/* RMR-03 (G3479) — THE WAY OUT IS A PLAIN FADE ON `--t-fade`, NEVER THE
+   SPRING (`tokens.css`: *"A LEAVING ELEMENT DOES NOT BOUNCE"*). `Surface.tsx`
+   keeps an inert, nameless ghost of the last frame for one fade; this fades it
+   by running the kernel's own `fade-in` BACKWARDS, so no keyframe is declared
+   here (*"A component may APPLY one … and may not DECLARE one"*). The layer
+   lets every pointer through while it goes, and under reduced motion it is not
+   drawn at all — the overlay is simply gone. */
+.ov-layer[data-leaving] { pointer-events: none; }
+.ov-layer[data-leaving='modal'] .ov-scrim,
+.ov-layer[data-leaving] .ov { animation: fade-in var(--t-fade) linear reverse both; }
+@media (prefers-reduced-motion: reduce) {
+  .ov-layer[data-leaving], .toasts-leaving { display: none; }
+}
+
+/* 🛑 THE DRAWER'S SCRIM IS TRANSPARENT, NOT ABSENT. The element stays so the
+   click-to-close path is the same on both surfaces — one close path, not two —
+   and the register behind it is dimmed by opacity instead, which is what keeps
+   it LEGIBLE rather than merely visible. */
+.ov-layer:is([data-overlay='drawer'],[data-leaving='drawer']) .ov-scrim { background: transparent; }
+.ov-layer:is([data-overlay='drawer'],[data-leaving='drawer']) { justify-content: flex-end; }
+
+/* ─── THE OVERLAY BOX ───────────────────────────────────────────────────────
+   --paper ground, 1px --rule-strong edge, radius 0, NO shadow. */
+.ov {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--rule-strong);
+  border-radius: 0;
+  max-height: 100%;
+  max-width: 100%;
+}
+.ov:not(.lit) { background: var(--paper); }
+
+/* 🛑 "A DRAWER TAKES THE EDGE ON THE SIDE IT ENTERS FROM AND NOWHERE ELSE."
+   The kernel's sentence, spelled as the rule it is. */
+.ov-layer:is([data-overlay='drawer'],[data-leaving='drawer']) .ov {
+  border-width: 0 0 0 1px;
+  width: min(74%, calc(var(--u) * 120));
+  height: 100%;
+  max-height: 100%;
+}
+/* G4072 — THE NARROW TIER: *"Drawer — Full-height sheet, no left edge"*
+   (Design System, per-primitive responsive behaviour), and *"Narrow: full
+   width, no left edge — 92% of 360px leaves a 28px strip of register that
+   shows nothing and reads as a mistake"* (Handoff Specification, primitive 8). */
+@media (max-width: 719px) {
+  .ov-layer:is([data-overlay='drawer'],[data-leaving='drawer']) .ov {
+    width: 100%;
+    border-width: 0;
+  }
+}
+.ov-layer:is([data-overlay='modal'],[data-leaving='modal']) .ov { width: min(100%, calc(var(--u) * 90)); }
+
+.ov-head {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--u) * 3);
+  padding: calc(var(--u) * 4);
+  border-bottom: 1px solid var(--rule);
+}
+.ov-title {
+  flex: 1;
+  margin: 0;
+  font-size: var(--s4);
+  font-weight: var(--w-emph);
+  color: var(--ink);
+}
+.ov-x {
+  font: inherit;
+  font-size: var(--s2);
+  line-height: var(--lh-solid);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: calc(var(--u) * 1.5);
+  cursor: pointer;
+}
+.ov-x:hover { color: var(--ink); }
+
+.ov-body {
+  flex: 1;
+  overflow: auto;
+  padding: calc(var(--u) * 4);
+  font-size: var(--s2);
+  color: var(--muted);
+}
+.ov-body p { margin: 0 0 calc(var(--u) * 2); }
+.ov-body p:last-child { margin-bottom: 0; }
+
+.ov-foot {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 2.5);
+  flex-wrap: wrap;
+  padding: calc(var(--u) * 4);
+  border-top: 1px solid var(--rule);
+}
+
+/* The refusal readout. Monospaced like every other readout in the system, and
+   `role="status"` in the markup rather than a colour here — nothing turns red,
+   so the state survives greyscale and survives being colourblind. */
+.ov-why {
+  margin: 0;
+  padding: 0 calc(var(--u) * 4) calc(var(--u) * 4);
+  font-family: var(--face-mono);
+  font-size: var(--s1);
+  color: var(--muted);
+}
+.ov-why:empty { display: none; }
+
+/* ─── THE FIELD ─────────────────────────────────────────────────────────────
+   🛑 THE INVALID STATE IS THE EDGE DOUBLED AND SWITCHED TO FULL --ink, NEVER A
+   HUE CHANGE. tokens.css, BORDER WEIGHT: "an emphasised edge is the 1px edge
+   DOUBLED and switched to full --ink". Nothing turns red. */
+.field { display: block; margin: 0 0 calc(var(--u) * 3); }
+.field-l {
+  display: block;
+  font-size: var(--s1);
+  letter-spacing: var(--tr-micro);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.field-h {
+  display: block;
+  margin: calc(var(--u) * 1) 0 calc(var(--u) * 1.5);
+  font-size: var(--s1);
+  color: var(--muted);
+}
+.field-i {
+  display: block;
+  width: 100%;
+  min-height: calc(var(--u) * 16);
+  font: inherit;
+  font-size: var(--s2);
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule-strong);
+  border-radius: 0;
+  padding: calc(var(--u) * 2.5);
+}
+.field[data-invalid] .field-i { border-color: var(--ink); border-width: 2px; }
+
+/* ─── THE BUTTON ────────────────────────────────────────────────────────────
+   ⚠️ NO `:focus-visible` RULE IS WRITTEN HERE, AND ITS ABSENCE IS THE POINT.
+   G240 made the ring a real `outline`, declared ONCE in the kernel, and an
+   `outline` cannot be replaced by a component's `box-shadow` at any specificity
+   in any source order. Every restatement of the ring was retired with it. A
+   local ring rule here would be the twelfth spelling G240 deleted. */
+.btn {
+  font: inherit;
+  font-size: var(--s2);
+  line-height: var(--lh-solid);
+  border: 0;
+  border-radius: 0;
+  padding: calc(var(--u) * 2.5) calc(var(--u) * 4);
+  background: var(--sheet);
+  color: var(--ink);
+  cursor: pointer;
+}
+.btn:hover { background: var(--tile-hover); }
+.btn--primary { background: var(--ink); color: var(--on-ink); }
+.btn--primary:hover { box-shadow: inset 0 0 0 1px var(--on-ink-2); }
+.btn--quiet { background: transparent; color: var(--muted); }
+.btn--quiet:hover { background: var(--row-hover); color: var(--ink); }
+.btn--small { font-size: var(--s1); padding: calc(var(--u) * 2) calc(var(--u) * 3); }
+
+/* 🛑 THE REFUSED CONTROL IS STYLED FROM `aria-disabled`, NEVER FROM `:disabled`.
+   The `disabled` attribute is refused throughout this slice — it removes the
+   control from the tab order and makes its reason unreachable by keyboard by
+   construction — so the ONLY refused state this file can paint is this one.
+   A `:disabled` rule here would be an invitation to use the attribute. */
+.btn[aria-disabled='true'] { background: var(--sheet); color: var(--muted); cursor: default; }
+.btn[aria-disabled='true']:hover { background: var(--sheet); }
+
+/* ─── 3 · THE TOOLTIP ───────────────────────────────────────────────────────
+   🛑 HIDDEN BY OPACITY AND `pointer-events`, NEVER BY `display:none` AND NEVER
+   BY `visibility:hidden`. Both remove the panel from the accessibility tree, so
+   every `aria-describedby` pointing at it resolves to NOTHING and the reason
+   exists only while it is painted. tokens.css: "A TOOLTIP MUST NEVER LEAVE THE
+   ACCESSIBILITY TREE."
+
+   🛑 AND THE OPEN STATE HAS EXACTLY ONE WRITER, WHICH IS THE SCRIPT.
+   `[data-on]` is set and cleared by React and by nothing else. There is NO
+   `:hover`, `:focus-visible` or `:focus-within` selector in this file that
+   reaches a panel — a script can clear an attribute and cannot clear a CSS
+   state, so Escape would write the panel shut and leave it painted, which is
+   WCAG 2.2 AA 1.4.13 failing while every review of the source says it passes.
+   Hover still opens it, through `pointerenter` writing this same attribute.
+
+   Reproduce — the expected result is NOTHING:
+     grep -nE ':hover|:focus-visible|:focus-within' frontend/src/overlays.css \
+       | grep -i 'tip' */
+.tipwrap { position: relative; display: inline-block; }
+.tip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + var(--u) * 2);
+  z-index: var(--z-popover);
+  width: max-content;
+  /* U-25 (G4187): the cap is ALSO the viewport less the panel's own inset on
+     each side, so a panel can always fit — G4097 measured 34ch (~255px at
+     --s2) overflowing any viewport under ~272. `--tip-inset` is the panel's
+     inline padding, and `Tooltip.tsx` reads the same padding back as the gap
+     `tooltipShift()` keeps from the viewport edge. */
+  --tip-inset: calc(var(--u) * 3);
+  max-width: min(34ch, calc(100vw - var(--tip-inset) * 2));
+  background: var(--ink);
+  color: var(--on-ink);
+  border-radius: 0;
+  padding: calc(var(--u) * 2.5) var(--tip-inset);
+  font-size: var(--s2);
+  line-height: var(--lh-note);
+  opacity: 0;
+  pointer-events: none;
+  /* `linear`, not an ease — tokens.css: "an opacity fade has no distance to ease
+     across", which is why a tooltip is not a third duration.
+     ⚠️ RM-05 (G3394): this read `var(--t-enter)`, a token the kernel retired
+     for --t-spring + --t-fade. An undeclared var() makes the declaration
+     invalid at computed-value time, so the fade resolved to `all 0s` and every
+     tooltip SNAPPED. `--t-fade` is the kernel's opacity duration (120ms). */
+  transition: opacity var(--t-fade) linear;
+}
+.tip[data-on] { opacity: 1; pointer-events: auto; }
+
+/* 🛑 G4091 — THE OWNER'S RULING ON G4077: *"Flip-on-open + 1px closed box."*
+   A CLOSED panel takes a 1px box. Until this rule a closed `.tip` kept its full
+   34ch box at `opacity: 0`, so a quiet control near the right edge widened the
+   PAGE whether or not anybody had opened its tooltip — Close scrolled sideways
+   at 390 (G4077: scrollWidth 403, the culprit a "Coming soon" panel at
+   x 306–403). The box shrinks; it does NOT leave the accessibility tree: no
+   display-none, no visibility-hidden (tests/design/overlays.test.ts refuses both), the element stays connected and
+   `aria-describedby` still resolves — `.sr-only`'s own shape in the kernel
+   (`width:1px;height:1px;padding:0;overflow:hidden`), and
+   design/system/filtering.html's shut tooltip before it.
+   ⚠️ `1px` IS THE ONE LENGTH HERE THAT IS NOT `var(--u)`, AND THE KERNEL RULES
+   THAT IT STAY A LITERAL: tokens.css, BORDER WEIGHT — *"1px … a token for a
+   constant that never varies adds a spelling without adding a decision"*.
+   🛑 THE COLLAPSE WAITS FOR THE FADE. RMR-03 gives a leaving surface a plain
+   fade, so shrinking the box the instant `data-on` clears would snap the
+   panel shut; instead the box properties take a 0s transition DELAYED by
+   `--t-fade`, and `allow-discrete` lets `max-height: none → 1px` and
+   `overflow` wait with them. Opening is the base `.tip` transition (opacity
+   alone), so an opened panel is full size in the same frame — which is what
+   lets `Tooltip.tsx` measure it and FLIP it (the other half of the ruling,
+   `tooltip.ts`'s `tooltipFlip()`). */
+.tip:not([data-on]) {
+  max-width: 1px;
+  max-height: 1px;
+  padding: 0;
+  overflow: hidden;
+  transition:
+    opacity var(--t-fade) linear,
+    max-width 0s linear var(--t-fade),
+    max-height 0s linear var(--t-fade),
+    padding 0s linear var(--t-fade),
+    overflow 0s linear var(--t-fade);
+  transition-behavior: allow-discrete;
+}
+/* Under reduced motion the fade is .001ms (the kernel's guard), so the box has
+   nothing to wait for: holding it open for --t-fade would put the sideways
+   scroll back for that long with nothing visible to show for it. */
+@media (prefers-reduced-motion: reduce) {
+  .tip:not([data-on]) { transition-delay: 0s; }
+}
+/* THE FLIP. `data-flip` is written by `Tooltip.tsx` on open, from
+   `tooltipFlip()`, and only when the panel would otherwise cross the viewport
+   edge. The selector carries `.tip.tip[data-tip]` so it outranks `close.css`'s
+   right-edge anchors (`.chrome .sp ~ .tipwrap .tip`, 0-4-0) whichever sheet
+   loads last — a flip that lost the cascade would be measured and then
+   ignored. */
+.tipwrap > .tip.tip[data-tip][data-flip='end'] { left: auto; right: 0; }
+.tipwrap > .tip.tip[data-tip][data-flip='start'] { left: 0; right: auto; }
+/* U-25 (G4187) — WHEN NEITHER ANCHOR FITS. `tooltipShift()` answers the
+   panel's left relative to its wrapper and `Tooltip.tsx` writes it as
+   `--tip-shift`; the fallback is the start anchor, never an unset `left`. */
+.tipwrap > .tip.tip[data-tip][data-flip='shift'] { left: var(--tip-shift, 0); right: auto; }
+/* U-25 (G4188) — THE VERTICAL FLIP. `tooltipFlipVertical()` writes
+   `data-flip-y` on open when the panel would cross the viewport's foot or
+   top; the gap is the base rule's own `--u * 2`. Same specificity guard as
+   the horizontal flip, so it outranks `close.css`'s `.statusbar .tip`. */
+.tipwrap > .tip.tip[data-tip][data-flip-y='above'] { top: auto; bottom: calc(100% + var(--u) * 2); }
+.tipwrap > .tip.tip[data-tip][data-flip-y='below'] { top: calc(100% + var(--u) * 2); bottom: auto; }
+.tip b { color: var(--on-ink); font-weight: var(--w-emph); }
+.tip .sub { display: block; color: var(--on-ink-2); font-size: var(--s1); }
+
+/* The beside-text of a refused control. G189 is a REVERSAL and it is ADDITIVE:
+   this half is kept and the tooltip is added. It is never hidden, at any
+   breakpoint, by any rule. */
+.refused { display: inline-block; }
+.refused-why { max-width: 46ch; }
+
+/* ─── 4 · THE TOAST ─────────────────────────────────────────────────────────
+   🛑 THE TWO SLOTS ARE PERSISTENT AND `:empty` HIDES THEM WITHOUT REMOVING
+   THEM. `display:none` on an empty live region is safe — the region is not the
+   thing being announced and it is re-shown before its first child arrives —
+   whereas unmounting it would delete a region the screen reader was watching.
+   This is the one place the property differs from the tooltip's, and it differs
+   because nothing points an `aria-describedby` at a toast slot. */
+.toasts {
+  position: fixed;
+  right: var(--gutter);
+  bottom: calc(var(--u) * 6);
+  /* Between the tooltip (--z-popover) and a drawer (--z-overlay): the kernel
+     spaces its layers by ten "so a component can sit between two without
+     reopening the scale". Was the literal `4` (RV-12). */
+  z-index: calc(var(--z-popover) + 1);
+  display: grid;
+  gap: calc(var(--u) * .5);
+  justify-items: end;
+  max-width: calc(100% - var(--gutter) * 2);
+}
+.toasts-slot { display: grid; gap: calc(var(--u) * .5); justify-items: end; }
+.toasts-slot:empty { display: none; }
+/* RMR-03 — a dismissed toast's ghost fades on `--t-fade` where it stood, OUTSIDE
+   both live regions (so a removal is never announced) and inert. */
+.toasts-leaving { pointer-events: none; }
+.toasts-leaving:empty { display: none; }
+.toasts-leaving .toast { animation: fade-in var(--t-fade) linear reverse both; }
+
+.toast {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: calc(var(--u) * 3);
+  align-items: start;
+  padding: calc(var(--u) * 3) calc(var(--u) * 4);
+  border: 1px solid var(--rule-strong);
+  border-radius: 0;
+  max-width: calc(var(--u) * 76);
+  /* RM-06/RM-08 (G3396): THE OWNER'S RULING — toast-in moved into the kernel.
+     This read `animation: none`, because the keyframe lived in a page sheet the
+     app does not import. Rising on the spring at --t-spring; under reduced
+     motion the kernel sets the token to `none`. */
+  animation: var(--enter-toast);
+}
+.toast:not(.lit) { background: var(--paper); }
+/* 🛑 EMPHASIS IS THE EDGE DOUBLED AND SWITCHED TO FULL --ink, ON ONE SIDE.
+   tokens.css names the toast's left edge as one of the two places 2px is used
+   in the whole record.
+   ⚠️ RM-11 (G3479): THIS EDGE WAS SCOPED TO `[data-kind='fail']` UNTIL 3 Oct
+   2026 AND THE PACK DRAWS IT ON EVERY TOAST (`system-page.css` `.toast{…
+   border-left:2px solid var(--ink)…}` — *"The 2px left edge is the EMPHASIS
+   rule, not a hue"*). A toast IS the emphasis: the outcome of an act you just
+   took. A failure is told apart by its words and by its assertive slot, never
+   by an edge the others lack. */
+.toast { border-left: 2px solid var(--ink); }
+.toast-t { margin: 0; font-size: var(--s2); font-weight: var(--w-emph); color: var(--ink); }
+.toast-b { margin: calc(var(--u) * 1) 0 0; font-size: var(--s2); color: var(--muted); line-height: var(--lh-note); }
+.toast-m {
+  display: block;
+  margin-top: calc(var(--u) * 1.5);
+  font-family: var(--face-mono);
+  font-size: var(--s1);
+  color: var(--recede);
+}
+.toast-a { display: flex; gap: calc(var(--u) * 2); margin-top: calc(var(--u) * 2.5); flex-wrap: wrap; }

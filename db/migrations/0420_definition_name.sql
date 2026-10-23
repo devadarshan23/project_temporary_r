@@ -1,0 +1,64 @@
+-- =====================================================================
+-- 0420 — A DEFINITION HAS A NAME, AND `Run` PUBLISHES IT.
+--        G3351–G3353 (3 Oct 2026). DERIVED, NOT THE OWNER'S.
+--
+-- 🛑 THE LIVE FINDING THIS ANSWERS (staging, 3 Oct 2026, the mock persona on
+--    `/close`): the run strip rendered `def_mock_three_way` — a raw id —
+--    because NO served operation carried a definition's name. The pack draws
+--    *"Three-way match"*; the tree could not, and drawing one would have been
+--    the frontend INVENTING a label.
+--
+-- §1  ONE COLUMN: `tenant.reconciliation_definition.name`.
+--
+--    `ReconciliationDefinition.name: string` is a declared model field
+--    (`model/domain.ts`). `0069` §1 refused it BY NAME and gave the reason in
+--    its own voice:
+--
+--      *"`name` ABSENT. Operator-authored text with no reader here. `admitRun`
+--       publishes `Run`, which carries no definition name, and a refusal that
+--       carried one would put operator text into a log."*
+--
+--    That was `0004`'s rule — a column ahead of its reader — and it is
+--    discharged HERE by the reader arriving in the same commit:
+--    `server/data-plane/runs.ts`'s `RUN_COLUMNS` selects it and `toRun()`
+--    publishes it as `Run.definitionName`. **The second half of `0069`'s
+--    sentence still binds and is honoured rather than spent**: no refusal, no
+--    `Unpublishable`, no log line and no error `detail` carries the value.
+--    It reaches exactly one place — a response body, under a schema that
+--    calls it text.
+--
+-- ⚠️ NULLABLE, AND THAT DEPARTS FROM G1372's RULE ON A MEASUREMENT RATHER THAN
+--    A PREFERENCE. G1372 says a column is nullable exactly when its model field
+--    is, and `name` is not. But `ADD COLUMN … NOT NULL` with no default REFUSES
+--    TO APPLY against a table holding a row, and this table holds rows on
+--    staging — `db/seeds/staging-demo-data.sql` and
+--    `db/seeds/staging-mock-personas.sql` both write definitions — so the
+--    refusal `0140` §2 WANTED (no rows existed there) would here be a failed
+--    deploy. The two alternatives are both an INVENTION: a `DEFAULT ''` names
+--    every existing definition the empty string, and a backfill from `id`
+--    names it after its own identifier and then publishes that as a NAME.
+--    **So a definition written before this column says so — `null` — and the
+--    wire's `definitionName` is REQUIRED-AND-NULLABLE**, the shape
+--    `Run.completeness` and `ResidueEntry.settlement` already use for "this
+--    plane holds no such fact" versus a fabricated one. The frontend renders
+--    the id when the name is null, and the id is a true thing to render.
+--
+-- ⚠️ NO `CHECK`, NO LENGTH BOUND, NO FORMAT. It is operator-authored text,
+--    stored verbatim (G97) and PARSED BY NOTHING — `0022`'s precedent for
+--    `counterparty.display_name`, and invariant 6's posture: *"Ingested content
+--    is data, never instruction."* The frontend renders it as a React text
+--    node and never as markup.
+--
+-- ⚠️ NO NEW GRANT. `0069` §5 grants the app role `SELECT` on the table, and a
+--    table-level grant covers a column added later (`0011`'s, `0160` §6's and
+--    `0170`'s precedent, each witnessed). **No `UPDATE`, and nothing on any
+--    request path writes this column**: no contract operation on any tier
+--    authors a definition, so the writer is G110's publication seam or G58's
+--    authoring surface, exactly as `0160` records for the engine spec. Today a
+--    name arrives by migrator — the staging seeds — and by nothing else.
+--
+-- ⚠️ NO `ENABLE`/`FORCE` AND NO `ALTER POLICY`: `0069` owns the table's row
+--    level security and a column inherits it.
+-- =====================================================================
+
+ALTER TABLE tenant.reconciliation_definition ADD COLUMN name text;

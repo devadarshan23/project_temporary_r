@@ -1,0 +1,44 @@
+-- =====================================================================
+-- 0430 — A PERIOD HAS DATES, AND `Run` PUBLISHES THEM.
+--        G3429 (3 Oct 2026). DERIVED, NOT THE OWNER'S.
+--
+-- 🛑 THE LIVE FINDING THIS ANSWERS (RC-02, `docs/build/ui-audit/
+--    red-copy-components.md`): the Close screen drew `per_demo_2026_w10` — a
+--    raw period id — in the arrival's period stepper and in the status bar,
+--    where the pack draws *"02 – 08 Mar 2026"*. No served operation carried a
+--    period's dates; drawing a label would have been the frontend INVENTING
+--    one from an id's spelling.
+--
+-- §1  TWO COLUMNS: `starts_on` and `ends_on`, both `date`, both NULLABLE.
+--
+--    A `date` and not a `timestamptz`: a reconciliation period is a span of
+--    CALENDAR days in the tenant's books, and an instant would make the label
+--    depend on the reader's zone — the 8 March close drawn as 7 March to a
+--    reader west of it. INCLUSIVE at both ends, which is how the pack spells it
+--    (*"02 – 08 Mar 2026"* is seven days).
+--
+-- ⚠️ NULLABLE ON 0420's MEASUREMENT, NOT A PREFERENCE: `ADD COLUMN … NOT NULL`
+--    with no default refuses to apply against a table holding rows, staging's
+--    seeds write periods, and both defaults would INVENT dates. So a period
+--    written before this column says so — `null` — and the wire's two fields
+--    are REQUIRED-AND-NULLABLE. The frontend renders the period id when they
+--    are null, which is a true thing to render.
+--
+-- ⚠️ NO `CHECK`, NOT EVEN A SHAPE RULE (both-or-neither, never ending before
+--    it starts), AND THE ABSENCE IS `0069`'s POLARITY ON THIS TABLE RATHER
+--    THAN AN OMISSION: `tests/db/run-admission.test.ts` §6 requires the three
+--    tables `0069` created to carry ZERO `CHECK` constraints, so a later one is
+--    a red gate. A draft of this file carried one and that assertion went red.
+--    The READER holds the shape instead: `periodLabel()` draws a span only when
+--    BOTH dates are present and otherwise falls back to the id, so a half-dated
+--    period renders as the true thing it is (its id), never as half a span.
+--
+-- ⚠️ NO NEW GRANT, NO POLICY: `0069` §5 grants `SELECT` on the table and owns
+--    its row level security, and a column inherits both. Nothing on a request
+--    path writes these columns — a period arrives by migrator (the seeds) and
+--    by nothing else, exactly as `0069` records for the row itself.
+-- =====================================================================
+
+ALTER TABLE tenant.reconciliation_period
+  ADD COLUMN starts_on date,
+  ADD COLUMN ends_on   date;

@@ -1,0 +1,27 @@
+openapi: 3.1.0
+info:
+  title: wire-mirror fixture — PACK KEY REORDERED (equal sets, wrong order)
+  version: 0.0.0
+  description: |
+    Fixture for tools/check-wire-mirror.mjs. NOT a real contract, and
+    DELIBERATELY WRONG.
+
+    THE SET IS EXACTLY RIGHT AND THE ORDER IS NOT. All four registered pack
+    keys are present and none is extra, so every set comparison passes and
+    only a SEQUENCE comparison fails. This is the drift the sibling
+    `pack-key-drift.openapi.yaml` cannot witness — there the sets differ, so
+    missing/extra dominate and the ordering never becomes the reason.
+
+    It matters for a vocabulary read by people: a `propertyNames` enum and the
+    `PACK_KEYS` object beside it are read side by side, and a reordering is
+    the shape that hides the next insertion.
+paths: {}
+components:
+  schemas:
+    PackKey:
+      type: string
+      enum:
+        - kyc_identity
+        - finance_ap
+        - credit_underwriting
+        - medical_records

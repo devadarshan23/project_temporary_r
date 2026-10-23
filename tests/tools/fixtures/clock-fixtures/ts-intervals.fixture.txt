@@ -1,0 +1,14 @@
+/* TWO properties in one fixture.
+ *
+ * 1 · A `--` in a TypeScript file is NOT a comment opener. It is a decrement,
+ *     or — as here — the inside of a SQL string in a template literal. If the
+ *     SQL dialect were applied to `.ts`, the first interval below would be
+ *     blanked and only one would survive. Both must survive.
+ *
+ * 2 · Units are read singular and plural, and they scale: '2 hours' must
+ *     measure twice '1 hour'.
+ *
+ * Correct result: exactly two past intervals, 2h then 1h, in source order. */
+
+await mig.query(`SELECT 1 -- kept, and so is now() - interval '2 hours'`)
+await mig.query(`UPDATE t SET b = now() - interval '1 hour'`)

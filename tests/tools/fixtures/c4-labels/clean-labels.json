@@ -1,0 +1,6 @@
+{
+  "_README": ["A clean fixture."],
+  "renderedZone": { "text": "a zone label the template really renders", "status": "DESIGNED", "ruling": null },
+  "renderedDatabase": { "text": "a database label the template really renders", "status": "PARTLY", "ruling": "G185" },
+  "renderedNote": { "text": "a note the template really renders", "status": "DESIGNED", "ruling": null }
+}

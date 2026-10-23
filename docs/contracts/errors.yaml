@@ -1,0 +1,198 @@
+openapi: 3.1.0
+
+info:
+  title: ReconcileAI — Shared Error Vocabulary
+  version: 0.1.0-draft
+  description: |
+    ONE vocabulary, referenced by all FIVE tiers. Not foundation's, not
+    capability's, not session's — the system's.
+
+    This file exists because it had to. The three tier specs were written
+    concurrently on 5 Aug and the capability spec copied the enum at 27 members
+    while the control-plane spec was extending it to 40. Within an afternoon
+    there were two ErrorCode definitions that disagreed by 13 members, in a
+    document set whose stated premise is a single vocabulary. A copied enum
+    diverges; a referenced one cannot.
+
+    THE ENUM BELOW NOW HOLDS 89 MEMBERS. ⚠️ IT SAID 88 UNTIL 22 Sep 2026, 87
+    UNTIL 19 Sep 2026 AND 71 UNTIL THE SESSION TIER LANDED; the 27-and-40
+    figures above are the origin story, not the count. The sixteen that took
+    it to 87 are the arms of DOMAIN_ROUTING_REFUSALS,
+    SIGN_IN_ATTEMPT_REFUSALS and SESSION_BOUND_REFUSAL_REASONS, mirrored by
+    exact name and by nothing else. Derive it, never read it:
+    `grep -c '^        - ' docs/contracts/errors.yaml`.
+
+    ⚠️ AND THE "89" ABOVE WAS ALREADY ONE BEHIND WHEN G3441 ARRIVED — the
+    command returned 90 — and it is left standing as the history it is rather
+    than swept to another number. THE MEMBER G3441 ADDS IS
+    `resolution_not_configured` (3 Oct 2026, DERIVED, not the owner's): the
+    tenant has no `tenant.approval_config` row, or the exception's definition
+    has no `tenant.definition_archetype` row, so no approval gate or offered
+    set can be evaluated. It replaces a 500 `upstream_unavailable` that every
+    client rendered as "try again" — a refusal that is DETERMINISTIC, which a
+    retry can never help. 🛑 IT IS STILL FAIL-CLOSED: the chain does not default
+    to the weakest gate; it says plainly that resolutions are not set up.
+
+    THE EIGHTY-NINTH IS `reversal_window_expired`, minted 22 Sep 2026 under
+    THE OWNER'S ruling that a resolution is reversible for 24 hours from the
+    post — `model/domain.ts`'s `REVERSAL_WINDOW_HOURS`. It closes a finding
+    (`docs/build/pack-tree-join.md`, G1733) that `reverseResolution` was
+    served and mounted with the window enforced NOWHERE — no constant, no
+    column, no check, no contract field — so a reversal was unbounded in
+    time on a live operation.
+
+    THE EIGHTY-EIGHTH IS `capability_not_held`, minted 19 Sep 2026 with G200's
+    request-time gate (server/http/app.ts, decision 4 of its header). 🛑 IT IS
+    NOT `policy_denied`, AND REUSING THAT ONE WAS THE OBVIOUS SHORTCUT AND IS
+    REFUSED. The two sit three lines apart in this enum and mean opposite things
+    about what the caller should do next: `policy_denied` is F3 evaluating a
+    policy and refusing THIS ACT — the caller holds the verb and the act was
+    still refused — while `capability_not_held` is the caller never having been
+    granted the verb at all. Collapsing them destroys exactly the diagnostic
+    distinction this file's own argument for a closed enum exists to protect:
+    "under a restrictive SpanAttributePolicy the error class is the only
+    diagnostic channel that survives redaction", so a support engineer reading a
+    redacted span would be unable to tell "widen this grant" from "this policy
+    fired", which are answered by different people. Adding a member is what this
+    file says to do — the enum "must be exhaustive BEFORE launch" — and the
+    paragraph below already budgets roughly 23 further members for the same
+    reason.
+
+    STILL TO ADD. The decisions of 5 Aug (docs/access-and-agency.md 8-10) require
+    roughly 23 further members — org resolution, notification, support
+    authorisation, the inverted egress polarity, the two new resource classes and
+    the commercial floors — plus one rename, `export_class_excluded` ->
+    `export_class_not_permitted`, whose current name encodes the polarity that
+    decision 8.6 inverts.
+
+    WHY IT IS CLOSED. Under a restrictive SpanAttributePolicy the error class is
+    the only diagnostic channel that survives redaction — a free-text message is
+    stripped and undiagnosable. It follows that this enum must be exhaustive
+    BEFORE launch: adding a code later means shipping an engine release into a
+    customer account before the thing you just learned about can be diagnosed.
+
+    `Problem.detail` is for humans reading a screen. It is never the diagnostic
+    channel, and it MUST NOT carry field values, record contents, or
+    customer-authored strings.
+
+paths: {}
+
+components:
+  schemas:
+
+    Problem:
+      type: object
+      description: RFC 9457.
+      additionalProperties: false
+      required: [type, title, status, code]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        code: { $ref: '#/components/schemas/ErrorCode' }
+        detail:
+          type: string
+          description: |
+            Human-facing only. MUST NOT contain field values, record contents or
+            customer-authored strings — it is stripped from telemetry, so
+            anything load-bearing put here is invisible exactly when it matters.
+
+    ErrorCode:
+      type: string
+      description: |
+        Closed and shared. Listed alphabetically; any tier may return any code.
+
+        (This read "grouped by origin in the source order below". The members
+        are strictly alphabetical and there are no groups.)
+      enum:
+        - access_grant_absent
+        - adjustment_currency_mismatch
+        - admission_already_decided
+        - admission_class_above_agent_ceiling
+        - admission_role_insufficient
+        - admission_second_person_required
+        - admitting_step_carries_tools
+        - approval_quorum_unmet
+        - approval_rejection_reason_required
+        - approval_second_approver_required
+        - approval_segregation_violation
+        - attestation_chain_broken
+        - attestation_sequence_gap
+        - attestation_signature_invalid
+        - autonomy_override_reason_required
+        - bound_negative
+        - bound_not_a_number
+        - bound_not_an_integer
+        - bound_zero
+        - bounds_not_configured
+        - capability_not_held
+        - classification_ceiling_exceeded
+        - connection_disabled
+        - data_plane_decommissioned
+        - data_plane_unknown
+        - definition_not_active
+        - disposition_not_offered
+        - disposition_requires_adjustment
+        - document_type_unknown
+        - domain_claimed_by_more_than_one_connection
+        - domain_not_claimed
+        - domain_not_verified
+        - entitlement_ceiling_breached
+        - entitlement_exhausted
+        - entitlement_expired
+        - exception_already_resolved
+        - export_class_excluded
+        - export_destination_not_allowed
+        - export_forbidden_by_policy
+        - idempotency_conflict
+        - idle_exceeds_lifetime
+        - lease_revoked
+        - membership_absent
+        - message_not_admitted
+        - model_provider_throttled
+        - model_residency_violation
+        - model_unavailable_in_account
+        - non_synthetic_ingest_refused
+        - outbound_channel_not_permitted
+        - outbound_endpoint_unverified
+        - pack_not_entitled
+        - pack_version_unsupported
+        - period_closed
+        - policy_bundle_version_unsupported
+        - policy_denied
+        - policy_redacted
+        - policy_requires_approval
+        - proposal_not_executable
+        - proposal_superseded
+        - rate_limited
+        - recommendation_superseded
+        - required_evidence_missing
+        - resolution_not_configured
+        - resource_not_found
+        - retention_class_unknown
+        - reversal_window_expired
+        - sanitisation_rejected
+        - schema_version_unsupported
+        - sender_unverified
+        - sequence_regressed
+        - session_idle_exceeds_ceiling
+        - session_invalid
+        - session_lifetime_exceeds_ceiling
+        - sign_in_attempt_challenge_mismatch
+        - sign_in_attempt_connection_mismatch
+        - sign_in_attempt_handle_mismatch
+        - sign_in_attempt_replayed
+        - signature_key_unknown
+        - slot_fill_incomplete
+        - step_awaiting_reply
+        - step_not_current
+        - subject_location_unregistered
+        - tag_vocabulary_violation
+        - tenant_context_missing
+        - tenant_suspended
+        - tool_out_of_scope
+        - trigger_not_enabled
+        - upload_expired
+        - upstream_unavailable
+        - user_disabled
+        - validation_failed

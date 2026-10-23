@@ -1,0 +1,1442 @@
+openapi: 3.1.0
+
+info:
+  title: ReconcileAI — Platform Console (the staff-console operations a platform role can be decided about)
+  version: 0.1.0-draft
+  summary: >-
+    The FOURTEEN staff-console operations that name a real capability, split out
+    of `administration.openapi.yaml` under the owner's ruling of 19 Sep 2026 so
+    that the tier carrying them can be `TIER_REQUIRES_CAPABILITY: true`.
+    Annotated and registered. Mounted by nothing.
+  description: |
+    🛑 **THE OWNER'S OWN SURVIVING OBJECTION, CARRIED HERE RATHER THAN RESOLVED,
+    BECAUSE IT IS RIGHT: "IT IS STILL CONTRACT SURGERY AND STILL A RULING."**
+    A seventh tier is a thing to argue, not a refactor. This file exists because
+    `TIER_REQUIRES_CAPABILITY` is a `Record<TierName, boolean>` and a `TierName`
+    is a FILE, so the only way to gate SOME of `administration.openapi.yaml` was
+    to make those operations a different file. **That means the file boundary is
+    now carrying an authorisation decision**, which is §5.1's own shape — a rule
+    keyed on a convenient landmark (which document an operation is written in)
+    rather than on the property it protects (whether the operation names a
+    capability a principal could hold). The deeper repair is a per-operation
+    verdict, and **it is not taken here and nobody has ruled on it.** Read §7.
+
+    ------------------------------------------------------------------------
+    1 · THE RULING SAID TWENTY-SIX. THE MEASUREMENT SAYS FOURTEEN.
+    ------------------------------------------------------------------------
+
+    🛑 **THIS IS THE FINDING OF THE SLICE AND IT CONTRADICTS THE PREMISE IT WAS
+    COMMISSIONED ON.** The owner's ruling is *"`platform-console.openapi.yaml`
+    takes the 26"* — the operations carrying `x-admin-authority: platform-role`
+    — and **G602's own table says `platform-role` (26) — ✅ annotatable since
+    G601.** That row is wrong about twelve of the twenty-six, and the error is
+    the one G602 itself is about: it treats `x-admin-authority: platform-role`
+    as the property when the property is *"does a capability exist, in a class
+    `PLATFORM_ASSIGNMENT_REACHES` opens, whose mode fits this act"*.
+
+    **G601 minted FIVE capabilities and opened THREE of thirteen classes.** The
+    whole reachable vocabulary for a platform principal is six verbs. Derive
+    both, never read them:
+
+        awk '/^export const PLATFORM_ASSIGNMENT_REACHES/,/^}/' model/access.ts \
+          | grep -E '^  [a-z_]+: true,'
+        awk '/^export const CAPABILITY_RESOURCE_CLASS/,/^}/' model/access.ts \
+          | grep -E "'(substrate|catalogue|commercial)'"
+
+        substrate    view_substrate · provision_substrate
+        catalogue    view_catalogue · author_catalogue · publish_catalogue
+        commercial   view_commercial
+
+    **Fourteen of the twenty-six act on one of those three classes and take one
+    of those six verbs. Twelve do not, and they STAY in
+    `administration.openapi.yaml` with their exemptions intact.** Moving them
+    here would have required annotating them with a capability that does not
+    exist, or leaving an `exempt:` on a `true` tier — which `check:annotations`
+    refuses as check D. **Either way the split would have been a red gate, not
+    a delivery.** The twelve, each with the reason the act has no verb:
+
+      · `raiseAdjustment` — **the sharpest of the twelve.** `commercial` IS
+        open, so this one looks annotatable and is not: `view_commercial` is a
+        READ verb and this is a POST that moves money. `model/access.ts`
+        records that *"the absence of a write verb on commercial is scope
+        rather than principle"*. Annotating a write with a read verb is a
+        weaker gate wearing a stronger name — §5.6 — and a `write_commercial`
+        is a capability nobody has minted. **An owner's ruling, not a
+        builder's.**
+      · `listRegistrationQueue`, `acceptRegistration`, `refuseRegistration`,
+        `listPartnerRegistry` — the partner registry is *"the platform's own
+        record of who its partners are"*. A partner is not a tenant and is not
+        one of the thirteen `ACCESS_RESOURCE_CLASSES`, so there is no class and
+        therefore no verb.
+      · `listSignInDomains`, `addSignInDomain` — classed `identity`, and
+        `PLATFORM_ASSIGNMENT_REACHES.identity` is **`false` DELIBERATELY**, on
+        G289's second-order argument: *"a principal who may rewrite identity
+        connections may rewrite the axis this very arm dispatches on."* This is
+        the one of the twelve that is refused rather than merely unbuilt, and
+        it must not be "fixed" by opening the class.
+      · `listStaffCases`, `getStaffCase`, `requestBreakGlass`,
+        `requestDiagnosticBundle` — invariant 8's grant path. These are facts
+        about a `TenantAccessGrant` rather than reads through one, and the
+        evaluator is `authorisationPermits()`, which `decide()` does not
+        consult. `requestBreakGlass` in particular *"REQUESTS a grant rather
+        than exercising one"*, and no capability in the roster names the act of
+        asking a colleague to approve a reach.
+      · `listStaffNotifications` — a notice says THAT something happened and
+        where to go, carrying no figure and no counterparty. No class.
+
+    ⚠️ **SO THE STAFF CONSOLE IS NOW SPLIT ACROSS TWO FILES AND THAT IS A REAL
+    COST, NAMED RATHER THAN DISCOVERED.** `S1 Staff.dc.html`'s six destinations
+    do not partition along this line: `ten` is here and its onboarding detail is
+    not, `bill` is here and `raiseAdjustment` is not, `ptnr` is here for resale
+    scope and there for the registry. **A reader looking for the staff console
+    must now read both documents.** The alternative was a tier that could not be
+    annotated at all, which is where we started.
+
+    ------------------------------------------------------------------------
+    2 · EVERY OPERATION HERE NAMES A CAPABILITY, AND A TEST DERIVES THAT IT IS
+        REACHABLE RATHER THAN TRUSTING THE NAME
+    ------------------------------------------------------------------------
+
+    `TIER_REQUIRES_CAPABILITY['platformConsole']` is **`true`** — the second
+    `true` in that table, and the first since it was written. The argument is
+    the one `server/contract/capability.ts` states for the `capability` tier:
+    **every operation on this tier has a HUMAN PRINCIPAL and an evaluator that
+    can answer about them.** `decide()`'s fourth arm (G289) is that evaluator,
+    `PlatformRoleAssignment` is the instrument, and `db/migrations/0009`'s three
+    tables are its substrate.
+
+    🛑 **A NAME IS NOT A GATE, AND THIS IS THE CONTROL THAT MAKES THE
+    DIFFERENCE.** An annotation naming a capability whose class the platform arm
+    refuses would pass `check:annotations` — which reads the GRAMMAR and the
+    TIER and says so in its own output — while asserting nothing, because
+    `decide()` would refuse every caller at
+    `capability_is_platform_only`'s sibling branch and the operation would be
+    unreachable rather than gated. §5.6, arriving as a green checker.
+    `tests/contracts/platform-console-reachability.test.mjs` derives the join —
+    `x-capability` → `CAPABILITY_RESOURCE_CLASS` → `PLATFORM_ASSIGNMENT_REACHES`
+    — and requires every one of the fourteen to land on a `true`.
+
+    ⚠️ **WHAT THAT CONTROL DOES NOT CHECK, STATED SO ITS SILENCE IS NOT READ AS
+    EVIDENCE: MODE.** Nothing in `model/` records whether a capability is a read
+    or a write, so no test here can catch a write annotated with a read verb —
+    which is exactly `raiseAdjustment`'s problem and exactly why it is not in
+    this file. The control is a TRIPWIRE instead: that suite asserts
+    `raiseAdjustment` is ABSENT here for as long as `commercial` has no write
+    verb, so the commit that moves it has to mint one or delete an assertion.
+
+    ------------------------------------------------------------------------
+    3 · NO TENANT BUSINESS DATA — INVARIANT 3, AND THE ASSERTION TRAVELS
+    ------------------------------------------------------------------------
+
+    **The control plane publishes downward and never reads tenant data.** Every
+    word of `administration.openapi.yaml` §3 binds here unchanged, and
+    `control-plane.openapi.yaml` §2's sentence is adopted verbatim as it is
+    there: *"An exception, a document value, a counterparty's words, a
+    definition name, a cost-centre label — all of those are theirs, and none of
+    them appears in any schema here."*
+
+    🛑 **THE ASSERTION MOVED WITH THE OPERATIONS RATHER THAN BEING LEFT BEHIND,
+    AND THAT IS THE PART OF THIS SPLIT MOST LIKELY TO HAVE GONE WRONG SILENTLY.**
+    `tests/contracts/administration-wire.test.mjs` assertion G3 walks EVERY
+    schema in that file for sixteen forbidden property names. Fourteen
+    operations and twenty exclusive schemas leaving that file would have left
+    invariant 3 unasserted for all of them, with every suite still green — an
+    absence is what a review misses. The new suite carries G3, G2, J1 and J2
+    over the schemas that moved.
+
+    ⚠️ **ONE OPERATION HERE IS `x-plane: tenant` AND IT IS THE ONE A REVIEWER
+    SHOULD LOOK AT.** `openByoaEscalation` names a tenant in its path. It is
+    here rather than left behind because the document's own §7 argument holds:
+    the path names the **subject** of an act, never the **scope** it is
+    performed in, and the act is a decision about a tenant's future SUBSTRATE
+    rather than a reach into it — which is why it carries
+    `x-admin-authority: platform-role` rather than `tenant-access-grant`. Its
+    request and its 202 carry no tenant business data and G3 above is what says
+    so. **The nine operations that genuinely reach into one tenant are all
+    `tenant-access-grant` and all stayed behind.**
+
+    ------------------------------------------------------------------------
+    4 · ONE SERVER, AND THAT IS A PROPERTY THE SPLIT BUYS BACK
+    ------------------------------------------------------------------------
+
+    Every path here is `/staff/**`, so this document declares **one** server.
+    `administration.openapi.yaml` declares two and records the cost in its own
+    voice: *"A plane that mounts this tier serves one host and must refuse the
+    other's paths. Nothing below expresses that, and nothing in `server/` can:
+    `basePathOf()` reads `servers[0]` alone."* **That problem does not exist in
+    this file** — there is nothing for `servers[0]` to be wrong about. It is
+    unchanged for the file this was cut from, which still carries both hosts and
+    still owes that answer.
+
+    `x-plane` and `x-admin-authority` are kept from the source document rather
+    than dropped as redundant. `x-admin-authority` is constant here —
+    `platform-role`, on all fourteen — and is kept because a reader arriving
+    from `administration.openapi.yaml` §5 needs the vocabulary to be the same in
+    both halves, and because a key that disappears on a split reads as a key
+    that was decided against.
+
+    ------------------------------------------------------------------------
+    5 · NOTHING IS MOUNTED, AND THE BLOCKER IS NOT THIS DOCUMENT
+    ------------------------------------------------------------------------
+
+    🛑 **REGISTERING A TIER AND SERVING ONE ARE DIFFERENT ACTS**, and
+    `server/contract/document.ts` says so above its own `TIERS` object: *"ADDING
+    A KEY HERE IS NOT MOUNTING ANYTHING."* No handler exists, `server/*/start.ts`
+    is untouched, and `mountTier()` is never called for this tier. Derive the
+    served set, never read it: `grep -rn 'handlers:' server/*/start.ts`.
+
+    **What blocks a mount is `mountTier()`'s SIXTH FENCE, and it is a real
+    blocker rather than a backlog.** G301 refuses to boot a gated operation
+    whose handler mints no invariant 10 record; `authorize()` mints an
+    `AuthorizationGrant`, which `extends TenantScoped`, and
+    `db/migrations/0010` keys its policy on `app.tenant_id`. **A platform
+    principal acting on the fleet has no tenant**, so there is nowhere for that
+    record to live. That is G728's finding, arrived at from the console-session
+    side, and it is unchanged by this document: *"where a tenant-less act's
+    record lives is an owner's ruling."*
+
+    ⚠️ **AND THE SECOND BLOCKER IS THAT NOBODY HOLDS ANY OF THE SIX VERBS.**
+    Nothing has ever written a `tenant.platform_role_assignment` row —
+    `grep -rn 'platform_role' server/dev/` returns nothing — so `platformHeld`
+    is `[]` for every principal this substrate can produce, and G300's test
+    (table AND model AND capability) fails on the third part for want of a
+    holder rather than for want of a verb. **Mounting one of these today would
+    answer 403 to everybody**, which G296 and G300 both call worse than an
+    honest 404 from the router.
+
+    ------------------------------------------------------------------------
+    6 · WHAT THIS FILE DID NOT CHANGE
+    ------------------------------------------------------------------------
+
+    No operation gained a response code, a schema, a parameter or a path. No
+    error code was minted — `errors.yaml` is a CLOSED enum and every refusal
+    named below was already a member of it before the split. Every `$ref` below
+    resolved inside `administration.openapi.yaml` before the cut and resolves
+    inside this file after it; the nine components both halves reach are
+    DUPLICATED rather than shared, which is the convention this corpus already
+    holds in sixteen places (`Denied`, `Unauthenticated`, `DataClass`,
+    `FieldPath` and twelve more each live in more than one tier). Derive it:
+
+        node -e "…" # see tests/contracts/platform-console-wire.test.mjs §K
+
+    ------------------------------------------------------------------------
+    7 · THE OBJECTION, RESTATED AT THE END BECAUSE IT IS NOT DISCHARGED
+    ------------------------------------------------------------------------
+
+    **A tier is a file, and this file exists to hold a boolean.** If
+    `TIER_REQUIRES_CAPABILITY` were per OPERATION — derivable from whether the
+    annotation names a capability at all — none of this surgery would have been
+    necessary, the staff console would still be one document, and the twelve
+    operations that stayed behind would carry their exemptions beside the
+    fourteen that carry verbs, which is where a reader would look for them.
+    **That is the repair. It is not taken here**, because per-operation
+    verdicts change how `mountTier()`'s fourth and sixth fences are computed for
+    every tier in the product, and that is an owner's ruling with a blast radius
+    well beyond this document.
+
+    Until it is taken, the honest statement about this file is the owner's own:
+    **it is still contract surgery and still a ruling.**
+
+servers:
+  - url: https://console.reconcileai.app/v1
+    description: |
+      THE STAFF CONSOLE, and the only host this document declares.
+
+      ⚠️ THE HOST IS AN OWNER DECISION OF 19 Sep 2026 AND IT LIFTS A NAMED
+      BLOCKER. **G277** records that *"the consoles have no host at all … Neither
+      principal has a tenant, so neither has a host under G179's grammar."*
+      `model/serving-host.ts` §7 now resolves a console host BY LOOKUP (G726),
+      exactly as a tenant host resolves, and a console session carries no tenant
+      at all.
+
+      🛑 THIS DOCUMENT DECLARES ONE SERVER AND `administration.openapi.yaml`
+      DECLARES TWO, which is the one structural thing the split improves rather
+      than merely moves. `basePathOf()` reads `servers[0]` alone; with a single
+      host there is nothing for it to be wrong about. The two-host question is
+      unchanged for the file this was cut from and is still owed there.
+
+tags:
+  - name: S Staff Console
+    description: |
+      Six destinations — `ten` `cat` `build` `bill` `ptnr` `sup` — over three
+      roles whose grants `S1 Staff.dc.html` states: FDE holds `ten cat build`,
+      billing holds `bill ptnr cat`, support holds `sup ten`. *"A destination the
+      role does not need is ABSENT, not disabled."*
+
+      ⚠️ **THIS TAG NOW SPANS TWO DOCUMENTS AND NEITHER HALF IS THE WHOLE
+      CONSOLE.** `sup` is entirely in `administration.openapi.yaml`; `ten`,
+      `bill` and `ptnr` are split between the two; `cat` and `build` are wholly
+      here. §1 of this file's description says why and names the cost.
+
+security:
+  - sessionContext: []
+
+paths:
+
+  # ================================================================== S ten
+  # Tenancy · "every tenant, and where each one has got to"
+  /staff/tenants:
+    get:
+      tags: [S Staff Console]
+      operationId: listTenants
+      x-capability: view_substrate
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: Every tenant, with the mode and residency that cannot be changed.
+      description: |
+        `S1`'s `ten` list. The columns are the pack's: customer, mode and
+        residency, onboarding stage, plan, support access.
+
+        **Support reaches this destination and the FDE reaches it, and they read
+        different things.** `S1`: *"A destination the role does not need is
+        ABSENT, not disabled… Support reaches Tenants because an incident is
+        always about one."* What support may read is bounded by the support
+        access mode that customer chose, which is a per-tenant fact rather than
+        a console setting — so the bound lives on `getTenantRecord` below and
+        not on this list.
+
+        🛑 NO TENANT BUSINESS DATA. A stage, a mode, a region and a plan are our
+        operational facts about our own delivery and the commercial shape we
+        agreed. There is no exception count, no document count and no figure
+        from any ledger on this response.
+      parameters:
+        - $ref: '#/components/parameters/OnboardingStage'
+      responses:
+        '200':
+          description: The tenancy roster.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [tenants]
+                properties:
+                  tenants:
+                    type: array
+                    items: { $ref: '#/components/schemas/TenantSummary' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+    post:
+      tags: [S Staff Console]
+      operationId: createTenant
+      x-capability: provision_substrate
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: Four choices, and two of them are permanent.
+      description: |
+        `S1`'s create form and `User Journeys` H1.1, which is the sharper
+        statement of it: *"Account and tenant created, with deployment mode,
+        residency, retention and support access mode. **Four decisions that
+        cannot be changed later without a migration.**"*
+
+        The request body separates them for exactly that reason. `deploymentMode`
+        and `residency` are **permanent**; `retention` and `supportAccessMode`
+        are amendable and the amendment is recorded. `S1`'s own callout: *"Mode
+        and residency are frozen on this record… we provision a second tenant and
+        migrate into it… and this one goes read-only at cutover."*
+
+        🛑 **THIS ONE OPERATION SETS TWO VALUES WHOSE AMENDMENT WOULD BE AN
+        `authority` ACT, AND NOTHING GATES IT. That is the finding, not the
+        feature.** `configure_telemetry` is classed `authority` rather than
+        `configuration` precisely because — in `model/access.ts`'s own words — a
+        delivery grant must not set the classification ceiling on what lands in
+        a trace; the pack says the same thing in product language about the
+        `full` profile: *"a delivery grant must never be able to set it, because
+        it turns the one class delivery may read into an exfiltration path."*
+        **At creation there is no tenant, so there is no `authority` to check,
+        and the profile is simply chosen.** The same is true of
+        `supportAccessMode`. A create-time write that would be a privileged
+        amendment one second later is a hole, and it is named here rather than
+        closed by a capability this file does not hold the ruling to apply.
+
+        **RESIDENCY IS SEVEN MEMBERS, NOT FIVE — G267**, which added
+        `ap-southeast-3` (Jakarta) and `ap-southeast-5` (Kuala Lumpur) on a
+        residency ground, and left G256's refusal of `us-east-1` untouched.
+        ⚠️ **The enum is NOT declared inline below.** `RegionKey` is mirrored on
+        the wire and G267 records that `tools/check-wire-mirror.mjs` has never
+        registered the pair — *"27 pairs, `RegionKey` among them: false"* — so
+        every contract copy of it is unchecked. Declaring a sixth unchecked copy
+        would widen a known drift. `residency` is `type: string` with the
+        derivation named on it, and registering the pair is the fix.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TenantCreationRequest' }
+      responses:
+        '201':
+          description: The tenant record.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TenantRecord' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403':
+          description: |
+            Not an FDE. `S1` gates this control on the FDE role alone — *"an FDE
+            creates tenants"* — and billing and support reach the destination
+            without it. `capability_not_held`.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/Invalid' }
+
+  /staff/tenants/{tenantId}/byoa-escalations:
+    post:
+      tags: [S Staff Console]
+      operationId: openByoaEscalation
+      # THE ONLY `x-plane: tenant` OPERATION ON THIS TIER, and the verb is the
+      # reason it belongs here rather than behind `tenant-access-grant`: the act
+      # decides a tenant will be REBUILT in the customer's own account, which is
+      # substrate — "the plane a tenant runs on and its licence to run" — and not
+      # a reach into the tenant. The tenant is the SUBJECT, never the scope; §7 of
+      # `administration.openapi.yaml` argues the distinction and G210 is its
+      # source. Nine operations that genuinely reach INTO one tenant stayed there.
+      x-capability: provision_substrate
+      x-plane: tenant
+      x-admin-authority: platform-role
+      summary: Open a hosted-to-BYOA move. Commercial and security, not technical.
+      description: |
+        `User Journeys` C12.1 and P8.1 are the same decision from the two sides
+        that can take it: *"Decide to escalate — commercial and security, not
+        technical."* The partner's `askAboutEscalation` opens a conversation;
+        **this opens the escalation.**
+
+        🛑 **IT DOES NOT MIGRATE ANYTHING AND MUST NOT READ AS IF IT DOES.**
+        `P1` draws the move as five steps ending in a cutover and says it is
+        all-or-nothing: *"documents, runs, resolutions, approvals and the audit
+        trail move together, and the new plane is authoritative from cutover."*
+        None of that is declared here, and the pack itself records that there is
+        *"no state to show while it runs."* A migration surface is owed and is
+        not invented.
+
+        **`x-admin-authority: platform-role` rather than `tenant-access-grant`**,
+        and the difference is deliberate: this is not a reach into the tenant,
+        it is a decision about the tenant's future substrate. It is one of the
+        operations §2's missing ruling governs.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ByoaEscalationRequest' }
+      responses:
+        '202':
+          description: |
+            Opened. A second tenant is provisioned and migrated into by a path
+            that has no contract yet; this one records the decision.
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: |
+            `idempotency_conflict` — the tenant is already BYOA, or an
+            escalation already stands on it.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ================================================================== S cat
+  # Catalogue · "what exists to sell, and what it costs"
+  /staff/catalogue/blueprints:
+    get:
+      tags: [S Staff Console]
+      operationId: listCatalogueBlueprints
+      x-capability: view_catalogue
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: The blueprints that exist, at which version, and who may install them.
+      description: |
+        `S1`'s `cat`, held by the FDE and by billing, **with no write control at
+        all**: *"Authoring a pack happens in the agent builder; publishing it is
+        what puts it here."*
+
+        The scope column — who may install a blueprint — is the read side of
+        `setPartnerResaleScope` below, and the two must agree. Nothing enforces
+        that agreement; it is one endpoint writing what another reads, which is
+        the ordinary shape, but it is stated because a resale scope that
+        disagrees with what a partner's portal shows is a commercial dispute
+        rather than a display bug.
+      responses:
+        '200':
+          description: The catalogue.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [blueprints]
+                properties:
+                  blueprints:
+                    type: array
+                    items: { $ref: '#/components/schemas/CatalogueBlueprint' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+  /staff/catalogue/rate-cards:
+    get:
+      tags: [S Staff Console]
+      operationId: listCatalogueRateCards
+      # CONTENTIOUS, AND ARGUED RATHER THAN ASSUMED: this sits in the `cat`
+      # section but the resource is a PRICE, not a blueprint. The document's own
+      # superseded exemption said so — "view_commercial is the verb that names a
+      # rate card and it is classed commercial" — and its only objection was that
+      # the verb is "evaluated in a tenant", which G289's fourth arm ended.
+      # `view_catalogue` would read the platform's price list under a verb that
+      # means "what exists to sell", and the two diverge the moment a blueprint is
+      # visible to a role its price is not.
+      x-capability: view_commercial
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: Plans and cards, with effective dates. Never retroactive.
+      description: |
+        `User Journeys` H8.2 settles the versioning question and this schema
+        follows it: *"✅ **effective dates rather than full versioning**, so a
+        change applies forward and an in-flight tenant is not repriced
+        mid-period."* Every card carries `effectiveFrom` and no card carries a
+        version chain.
+
+        🛑 **THE COST OF THAT CHOICE IS RECORDED IN THE JOURNEY AND IS CARRIED
+        HERE RATHER THAN LEFT IN IT:** *"Effective dates without versioning means
+        an old invoice may not be reproducible from the current card — the
+        adjustment reason is the only record of why the two disagree, so it is
+        load-bearing rather than a note."* That sentence is why
+        `AdjustmentRequest.reason` is required.
+
+        **READ ONLY, AND `S1` ARGUES THE ABSENCE:** *"Issuing a card, and
+        assigning one — Both are ours and neither is a control here… A card
+        assignment is part of an arrangement, so it is amended where the
+        arrangement is, not where the prices are listed."* ⚠️ `User Journeys`
+        H8.1 and P2.1 DISAGREE — both make editing and assigning a staff-console
+        write. **`S1` wins on the surface question under G264** and the
+        disagreement is recorded; if the journeys are right, this path gains a
+        PUT and this paragraph is the record of why it did not have one.
+      responses:
+        '200':
+          description: Plans and cards.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [cards]
+                properties:
+                  cards:
+                    type: array
+                    items: { $ref: '#/components/schemas/CatalogueRateCard' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+  /staff/partners/{partnerId}/resale-scope:
+    put:
+      tags: [S Staff Console]
+      operationId: setPartnerResaleScope
+      # THE WRITE SIDE OF `listCatalogueBlueprints`, which says so in its own
+      # description: "The scope column — who may install a blueprint — is the read
+      # side of `setPartnerResaleScope` below, and the two must agree." Authoring
+      # a catalogue is `author_catalogue`; the subject being a partner rather than
+      # a tenant is what kept it exempt before, and a platform assignment needs no
+      # tenant to be evaluated in.
+      x-capability: author_catalogue
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: Which blueprints this partner may resell.
+      description: |
+        `User Journeys` P4.1 — *"Catalogue scoped: which blueprints this partner
+        may resell"* — and H3.4 — *"Scope who may resell it, per partner."*
+        **Two journeys, one act, and both put it on the staff console.**
+
+        PUT and not POST: the scope is a set, wholly replaced, and an add-one
+        endpoint would make removing the last blueprint a different operation
+        from removing any other.
+
+        This is the write behind `listResaleCatalogue`'s read, and the pair is
+        the reason `P4.2`'s branch — *"the thing they are selling from is
+        something they have been told about rather than shown"* — closes.
+      parameters:
+        - $ref: '#/components/parameters/PartnerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ResaleScopeRequest' }
+      responses:
+        '200':
+          description: The scope as it now stands.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ResaleScopeRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Invalid' }
+
+  # ================================================================== S build
+  # Agent builder · the surface that is in v1 and in no model
+  /staff/builder/packs:
+    get:
+      tags: [S Staff Console]
+      operationId: listBuilderPacks
+      x-capability: view_catalogue
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: The packs a person may open in the builder, draft and published.
+      description: |
+        🛑 **READ `S1`'s OWN WARNING BEFORE ANY OF THE FOUR BUILDER OPERATIONS,
+        BECAUSE IT IS THE LARGEST MODEL GAP THIS FILE TOUCHES:** *"The agent
+        builder is central and tenant-scoped and it is in v1 — but it is in
+        neither the data model nor the three-module vocabulary. **Nothing above
+        exports from the model: not a pack, not a document type, not a rule, not
+        a version.** Until it does, a published pack is a row a person
+        maintains."* `User Journeys` H3.5 is the same finding as a branch with
+        `exists:'neither'` and no owner.
+
+        **So these four operations are declared against nouns `model/` does not
+        have.** Every other schema in this file mirrors something declared in
+        `model/` or in a sibling contract; these four mirror the pack's drawing
+        and nothing else. They are named as the weakest-founded operations here
+        rather than presented as equal to the rest.
+
+        ⚠️ **AND NO SCHEMA BELOW IS CALLED `PackKey`.** `tools/check-wire-mirror.mjs`
+        registers a `PackKey` pair against `model/`, and a second declaration of
+        that name in a second file would give the pair two sites to resolve to.
+        The path parameter is `packKey` and the schema does not exist.
+      responses:
+        '200':
+          description: The packs, with the state of each.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [packs]
+                properties:
+                  packs:
+                    type: array
+                    items: { $ref: '#/components/schemas/BuilderPackSummary' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+
+  /staff/builder/packs/{packKey}/draft:
+    get:
+      tags: [S Staff Console]
+      operationId: getPackDraft
+      x-capability: view_catalogue
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: The five parts of a pack, as the draft stands.
+      description: |
+        `S1` defines the noun and the definition is the response shape: *"A pack
+        is five parts: the **document types** it reads, the **patterns** that
+        identify them, the **rules** it applies, the **thresholds** those rules
+        answer to, and the **source roles** it needs — which is what an install
+        binds to a customer's real systems."*
+
+        **A type is identified by source and pattern TOGETHER**, which is why
+        `DocumentTypeRow` carries both and neither is optional.
+
+        🛑 **EDITING HERE CHANGES THE DRAFT; THE PUBLISHED VERSION IS WHAT
+        TENANTS RUN.** Everything below operates on the draft alone. There is no
+        operation that edits a published version, because *"a pack changing
+        under a tenant mid-period changes what their period means."*
+
+        ⚠️ THE CLOSEST EXISTING VERBS ARE `author_definition` and `author_rule`,
+        and both are classed `configuration` — which
+        `PERMITTED_RESOURCES.delivery` reaches. Using either here would imply a
+        delivery grant could author the *fleet's* packs rather than one tenant's
+        configuration. That is the exact shape G128 refused when it minted
+        `promote_learning` rather than reusing `author_procedure`. **The verb
+        this surface needs does not exist and minting it is a ruling.**
+      parameters:
+        - $ref: '#/components/parameters/PackKey'
+      responses:
+        '200':
+          description: The draft.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PackDraft' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /staff/builder/packs/{packKey}/draft/rules:
+    post:
+      tags: [S Staff Console]
+      operationId: addPackDraftRule
+      x-capability: author_catalogue
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: Add a rule to the draft. It does nothing until a tenant installs the version.
+      description: |
+        `S1` is careful about how little this does and the carefulness is right:
+        *"Added to the draft. **It does nothing until the draft is published and
+        a tenant installs that version.**"*
+
+        Three fields, all required, because `S1`'s form will not commit without
+        all three: what it is called, what it compares, and the threshold it
+        answers to.
+
+        ⚠️ **A THRESHOLD REFUSES ON ABSENCE RATHER THAN DEFAULTING** — `User
+        Journeys` H3.2, *"a missing floor is a refusal rather than a default"* —
+        which is why `threshold` is `required` here and why `setExtractionFloor`
+        borrows the session-bound refusal family for the same hazard.
+      parameters:
+        - $ref: '#/components/parameters/PackKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PackRuleRequest' }
+      responses:
+        '201':
+          description: In the draft, and inert.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PackRuleRow' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Invalid' }
+
+  /staff/builder/packs/{packKey}/versions:
+    post:
+      tags: [S Staff Console]
+      operationId: publishPackVersion
+      # PUBLISHING IS ITS OWN VERB AND NOT `author_catalogue`, because the blast
+      # radius differs: authoring touches a draft, publishing reaches THE FLEET.
+      # G601 minted the two separately for exactly this. `install_pack` — the verb
+      # that sounds right — is the TENANT act and stays on the capability tier.
+      # ⚠️ G110's publication seam does not exist, so this verb gates an operation
+      # nothing serves; `model/governance.ts` records that the `catalogue` risk is
+      # INVARIANT 6's rather than invariant 8's.
+      x-capability: publish_catalogue
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: Publish the draft. Mints a version and scopes who may install it.
+      description: |
+        `S1`: *"Publishing **mints a version and scopes who may install it**.
+        Tenants already running an earlier version stay on it until an install
+        moves them."*
+
+        🛑 **THIS IS INVARIANT 3 IN ITS PLAINEST FORM AND `User Journeys` H3.3
+        SAYS SO ON THE STEP:** *"Publish downward — the control plane publishes
+        and never reads tenant data."*
+
+        🛑 **AND THIS IS WHERE G110's SECOND CALL SITE BELONGS, WHICH IS THE
+        REASON `administration.openapi.yaml` WAS BLOCKING AN INVARIANT.** G110
+        rules the two pack validators get **both** call sites — CI, and *"a
+        publication seam that refuses"* — because *"a control that exists only in
+        CI stops existing the moment a pack arrives by another route."*
+        `tools/check-pack-safety.mjs` is the CI half by its own first line; the
+        publication half *"is not built and not started, blocked on an
+        `administration.openapi.yaml` that does not exist."* **The file now
+        exists and this operation is the seam.** The 422 below is where
+        `validateProcedureInjectionSafety()` and `validateAgentToolBindings()`
+        refuse.
+
+        ⚠️ **DECLARING THE SEAM IS NOT BUILDING IT, AND INVARIANT 6 STAYS HALF
+        CLOSED UNTIL SOMEBODY MOUNTS THIS.** G200 forbids mounting it today.
+        What has changed is that the blocker G110, G224 and G241 all name is the
+        file, and the file is here.
+      parameters:
+        - $ref: '#/components/parameters/PackKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PackPublishRequest' }
+      responses:
+        '201':
+          description: |
+            Published. The minted version and the resale scope it carries.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BuilderPackSummary' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: |
+            🛑 **G110's PUBLICATION SEAM REFUSES HERE.** Three arms, all existing
+            members: `admitting_step_carries_tools` and `tool_out_of_scope` are
+            what `validateProcedureInjectionSafety()` and
+            `validateAgentToolBindings()` find — invariant 6, *"ingested content
+            is data, never instruction"* — and `validation_failed` covers a
+            draft that is merely incomplete.
+
+            ⚠️ `tools/check-pack-safety.mjs` records that the tree's corpus is
+            EMPTY — every pack in `model/examples.ts` carries no procedure
+            templates and nothing constructs an `AgentDefinition` — so the CI
+            half *"validates zero procedures and zero agents"* and reports a
+            vacuous finding rather than a clean pass. **A seam mounted against
+            an empty corpus would be vacuous in the same way**, and whoever
+            mounts this owes a fixture that it rejects.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ================================================================== S bill
+  # Billing · from meter to invoice
+  /staff/billing/periods/{periodKey}:
+    get:
+      tags: [S Staff Console]
+      operationId: getBillingPeriod
+      x-capability: view_commercial
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: The period — metered, invoiced to customers, invoiced to partners, carried.
+      description: |
+        `S1`'s `bill` header figures, and one rule stated on the surface: *"A
+        tenant sold by a partner is **never invoiced to the customer**."* The
+        two invoiced totals are therefore disjoint rather than overlapping, and
+        a reader adding them gets the period.
+
+        🛑 **THIS IS THE ONE PLACE IN THIS FILE WHERE `metering` AND `commercial`
+        MEET, AND INVARIANT 5 IS WHY THEY ARE SEPARATE CLASSES.** A metered
+        total and an invoiced total sit side by side here for a **platform**
+        reader, which is exactly the pairing `PARTNER_MASK_MEMBERSHIP.view_metering: []`
+        keeps away from a partner: *"spend and rate together invert to volume."*
+        The partner-facing `getCommissionStatement` carries no metered figure
+        for that reason; this one does, because the audience is us.
+
+        ⚠️ **MONEY ON THE WIRE IS A DECIMAL STRING, NOT A NUMBER — G111 AND
+        G112.** Every amount in this file is `type: string` with a numeric
+        pattern, because `Money.amountMinor` is `bigint` in the model and *"every
+        boundary calls the codec."* A JSON number would lose the top of a large
+        minor-unit amount silently, which is the failure G112 exists to prevent.
+        ⚠️ Both rulings are `not applied` on the existing tiers — `docs/INDEX.md`
+        records `valueAtRiskAtLeastMinor` still typed as a number — **so this
+        file is consistent with the RULING and inconsistent with its siblings**,
+        deliberately: a new file written to the superseded shape would have to be
+        migrated by the pass that fixes the others.
+      parameters:
+        - $ref: '#/components/parameters/PeriodKey'
+      responses:
+        '200':
+          description: The period.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BillingPeriodView' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /staff/billing/periods/{periodKey}/invoices:
+    get:
+      tags: [S Staff Console]
+      operationId: listInvoices
+      x-capability: view_commercial
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: The invoices in the period, with their shape and state.
+      description: |
+        `S1`'s controlled table: invoice, to, shape, lines, total, state.
+
+        **`shape` is not decoration.** It records whether the invoice is retail
+        to a direct customer, wholesale to a partner, or both where the partner
+        sets its own price — `User Journeys` H6.3 — and it is what makes the
+        no-double-invoicing rule on `getBillingPeriod` checkable rather than
+        asserted.
+      parameters:
+        - $ref: '#/components/parameters/PeriodKey'
+        - $ref: '#/components/parameters/InvoiceState'
+      responses:
+        '200':
+          description: The invoices.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [invoices]
+                properties:
+                  invoices:
+                    type: array
+                    items: { $ref: '#/components/schemas/InvoiceSummary' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /staff/billing/invoices/{invoiceId}:
+    get:
+      tags: [S Staff Console]
+      operationId: getInvoice
+      x-capability: view_commercial
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: One invoice, as it is printed.
+      description: |
+        `S1`'s invoice pane, drawn as the document the customer receives: the
+        address line, the period, the terms, the line table and the foot.
+
+        ⚠️ **A LINE IS A METER TOTAL AND NEVER A DOCUMENT.** Documents read,
+        runs, ask turns, platform — four counts. There is no line naming a
+        counterparty, a document or an exception, which is §3 and also the
+        commercial truth: the customer is billed on volume, not on content.
+
+        ⚠️ **AND NO LINE CARRIES A USER.** `User Journeys` P6.3 and H7.3 both
+        record why: *"Per-user attribution is impossible for either of us —
+        `UsageRecord` ships with no `UserId`"*, which `S1` restates as *"any plan
+        that assumed per-seat chargeback is unbuildable."* No schema in this
+        file has a per-user metered field.
+
+        `x-plane: platform` rather than `tenant`, and the tag rule in §4 is what
+        forces the honesty: the path carries `{invoiceId}` and not `{tenantId}`,
+        so this is not addressed at a tenant even though one owes it.
+      parameters:
+        - $ref: '#/components/parameters/InvoiceId'
+      responses:
+        '200':
+          description: The invoice.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvoiceDetail' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /staff/billing/periods/{periodKey}/partner-settlement:
+    get:
+      tags: [S Staff Console]
+      operationId: listPartnerSettlement
+      x-capability: view_commercial
+      x-plane: platform
+      x-admin-authority: platform-role
+      summary: H7 — commission owed per partner, and on what basis.
+      description: |
+        `S1`'s partner settlement table, with the rule stated on the surface:
+        *"Commission is on **invoiced revenue** — nothing in the product knows
+        whether an invoice was paid."*
+
+        That sentence is a scope statement rather than a caveat, and the schema
+        obeys it: there is no `paidAt`, no settlement status and no receivable
+        anywhere in this file. A field for either would imply a ledger the
+        product does not have.
+
+        ⚠️ **`P1`'s ARRANGEMENT RECORDS THAT THE BASIS ITSELF WAS AMENDED** —
+        *"invoiced revenue, amended from March 2026 · was collected revenue"* —
+        so `basis` is a per-partner field read from the arrangement rather than a
+        constant, and a settlement run that assumed one basis for everybody
+        would be wrong for any partner on the older one.
+      parameters:
+        - $ref: '#/components/parameters/PeriodKey'
+      responses:
+        '200':
+          description: Settlement, per partner.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [settlements]
+                properties:
+                  settlements:
+                    type: array
+                    items: { $ref: '#/components/schemas/PartnerSettlementRow' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Denied' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+components:
+  securitySchemes:
+    sessionContext:
+      type: apiKey
+      in: cookie
+      name: __Host-reconcile_session
+      description: |
+        THE SESSION HANDLE, AS AN `HttpOnly` COOKIE — G386, 19 Sep 2026.
+
+        ⚠️ THIS SCHEME READ `in: header` / `name: X-Session` UNTIL THAT RULING
+        AND IS CORRECTED RATHER THAN DUPLICATED, because a second scheme would
+        leave four tiers declaring two credentials for one session and every
+        `security:` list in this file would have to choose between them.
+
+        The ruling: *"`Set-Cookie`, `HttpOnly` `Secure` `SameSite=Lax`, on the
+        tenant host, in production. Page script cannot read it, so the
+        exfiltration class `frontend/src/api/plane.ts`'s origin allowlist
+        exists to guard STOPS BEING POSSIBLE rather than being blocked."*
+
+        🛑 `X-Session` IS NOT DECLARED ANYWHERE ANY MORE AND THAT IS
+        DELIBERATE. It survives in exactly one place —
+        `server/dev/session-header.ts` — reachable only through a dynamic
+        import that runs when `RECONCILE_LOCAL_TEST_AUTH` is exactly `1`, so a
+        deployed plane holds no code that reads it. **A local-only channel
+        behind a flag is not part of the contract**; declaring it here would
+        publish a second way in and invite a client to use it. G192's own
+        argument, one channel over.
+
+        ⚠️ AND CSRF IS NOW A LIVE CONCERN THE HEADER DESIGN DID NOT HAVE. A
+        custom header is never attached by a cross-site form; a cookie is
+        attached by the browser. `SameSite=Lax` keeps it off every cross-site
+        `POST`, `PUT`, `PATCH` and `DELETE` — which is every state-changing
+        operation served today — and it is **not** a complete answer: a
+        state-changing `GET` reached by a top-level navigation would carry it,
+        and there is none only because nobody has written one.
+        `server/data-plane/session-cookie.ts` states the bound precisely. No
+        `csrfToken` is declared here, and minting one is a ruling.
+
+        ⚠️ THE CONTROL-PLANE TIER IS UNCHANGED AND STILL CARRIES A HEADER. That
+        is not an oversight: its credential is a machine channel secret read
+        from `RECONCILE_CONTROL_*`, not a person's session, and no browser is
+        involved. Two different credentials that happened to share a header
+        name now differ in the contract as they always differed in fact.
+  parameters:
+    TenantId:
+      name: tenantId
+      in: path
+      required: true
+      description: |
+        The tenant this act is ABOUT. Read §7 of this document's description
+        before treating it as a scope: the caller's authority comes from a
+        `TenantAccessGrant` that already names a tenant, and this value is
+        checked against it rather than establishing it.
+      schema: { type: string }
+    PartnerId:
+      name: partnerId
+      in: path
+      required: true
+      schema: { type: string }
+    InvoiceId:
+      name: invoiceId
+      in: path
+      required: true
+      schema: { type: string }
+    PackKey:
+      name: packKey
+      in: path
+      required: true
+      description: |
+        ⚠️ A PARAMETER, NOT A SCHEMA. `tools/check-wire-mirror.mjs` pins a
+        `PackKey` pair against `model/`, and a `PackKey` under this file's
+        `components.schemas` would give that pair a second declaration site to
+        resolve to. The vocabulary is closed under G224 and is mirrored where
+        the pair already looks; nothing here restates it.
+      schema: { type: string }
+    PeriodKey:
+      name: periodKey
+      in: path
+      required: true
+      description: |
+        The billing period. `control-plane.openapi.yaml` §4 owns the rule this
+        depends on — *"the clock is theirs, the period is ours"* — and the
+        sequence number rather than a timestamp is what makes a late arrival
+        attributable to the period it belongs to.
+      schema: { type: string }
+    OnboardingStage:
+      name: stage
+      in: query
+      required: false
+      description: Narrow the roster to one onboarding stage.
+      schema: { type: string }
+    InvoiceState:
+      name: state
+      in: query
+      required: false
+      schema: { type: string }
+  responses:
+    Unauthenticated:
+      description: |
+        No valid session — `session_invalid`. Reused rather than re-minted, for
+        the reason `session.openapi.yaml` gives: a console-flavoured twin would
+        be a second vocabulary.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+    Denied:
+      description: |
+        Authenticated, and not permitted — `capability_not_held`.
+
+        ⚠️ THE CODE NAMES A CAPABILITY AND NOTHING HERE HAS ONE, WHICH IS WORTH
+        BEING HONEST ABOUT RATHER THAN QUIET. `errors.yaml` minted it for G200's
+        request-time gate and defined it by the caller's position rather than by
+        the mechanism: *"`capability_not_held` is the caller never having been
+        granted the verb at all"*, as against `policy_denied`, which is *"F3
+        evaluating a policy and refusing THIS ACT."* A console caller refused
+        here has not been granted the verb — by a grant, a portal role or a
+        staff role — so the diagnostic distinction the enum exists to protect
+        survives, and a support engineer reading a redacted span still learns
+        *widen this* rather than *a policy fired*.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+    NotFound:
+      description: |
+        `resource_not_found`. RETURNED IDENTICALLY for a row that does not exist,
+        a tenant outside the caller's grant, and a tenant sold by another
+        partner — copied deliberately from `capability.openapi.yaml`, where the
+        same paragraph ends *"distinguishing them would make this endpoint an
+        existence oracle across the tenant boundary."* Here the boundary is the
+        partner book as well as the tenant.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+    Invalid:
+      description: |
+        `validation_failed`. The body does not satisfy the schema.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  schemas:
+
+    # --- shared -----------------------------------------------------------
+
+    DecimalAmount:
+      type: string
+      pattern: '^-?[0-9]+(\.[0-9]+)?$'
+      description: |
+        MONEY AS A DECIMAL STRING — **G111 and G112**. `Money.amountMinor` is
+        `bigint` in the model after G65 and G71, and *"every boundary calls the
+        codec"*. A JSON number silently loses the top of a large minor-unit
+        amount, which is the failure G112 exists to prevent. Every amount in
+        this document is this type; none is a `number`.
+
+    # --- staff: tenancy ---------------------------------------------------
+
+    TenantCreationRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        FOUR DECISIONS, AND TWO OF THEM ARE PERMANENT — `User Journeys` H1.1.
+        The permanence is not enforceable by a schema and is stated on each
+        field, because a reader deciding what to send needs to know which two
+        cost a migration.
+      required: [name, deploymentMode, residency, retention, supportAccessMode, telemetryProfile, environment]
+      properties:
+        name: { type: string }
+        soldVia:
+          type: string
+          description: |
+            The partner, where there is one. Null for a direct sale. A tenant
+            sold by a partner is never invoiced to the customer.
+        deploymentMode:
+          type: string
+          enum: [hosted, byoa]
+          description: PERMANENT. Changing it is a second tenant and a migration.
+        residency:
+          type: string
+          description: |
+            PERMANENT. Seven members under **G267**, which added
+            `ap-southeast-3` and `ap-southeast-5` on a residency ground and left
+            G256's refusal of `us-east-1` standing.
+
+            ⚠️ NOT DECLARED AS AN INLINE ENUM, DELIBERATELY. `RegionKey` is
+            mirrored on the wire and G267 records that
+            `tools/check-wire-mirror.mjs` has never registered the pair, so
+            every contract copy is unchecked. A sixth unchecked copy widens a
+            known drift; registering the pair is the fix.
+        retention:
+          type: string
+          description: |
+            Amendable, and the amendment is recorded. ⚠️ No amendment operation
+            exists in this document — `S1`: *"Specified, not built. No amendment
+            surface, and no record of one."* Shortening retention DESTROYS
+            documents, which is why the pack requires the customer's instruction
+            in writing and why a PATCH was not invented here.
+        supportAccessMode:
+          type: string
+          description: |
+            The customer's choice, amendable. 🛑 SET HERE WITH NOTHING GATING IT,
+            and amending it would be an act on a class a grant reaches. See
+            `createTenant`'s description.
+        telemetryProfile:
+          type: string
+          enum: [minimum, standard, full]
+          description: |
+            THE SECOND AXIS, AND THE ONE WITH A FLOOR. `S1`: *"The support
+            access mode says what we may reach on request. The telemetry profile
+            says what reaches us continuously, without asking."* `minimum` is a
+            floor nobody goes below and carries no customer content.
+
+            🛑 `full` ADDS EXPLANATIONS ON SPANS, WHICH CARRY VERBATIM EXTRACTED
+            VALUES, and the pack states the consequence: *"a delivery grant must
+            never be able to set it, because it turns the one class delivery may
+            read into an exfiltration path."* That is exactly why
+            `configure_telemetry` is classed `authority` rather than
+            `configuration` — and **at creation there is no tenant, so no
+            `authority` check applies.** The hole is named on the operation.
+        environment:
+          type: string
+          enum: [sandbox, evaluation, production]
+          description: |
+            What the invariants do here. *"Conversion is an act, never a date
+            passing."*
+        plan:
+          type: string
+          description: |
+            `User Journeys` H1.2 — *"Plan assigned, and the rate card behind
+            it."* `S1`'s create form does not draw this field and its list shows
+            the column; the journey is the stronger evidence and the field is
+            optional so that neither reading is contradicted.
+
+    TenantSummary:
+      type: object
+      additionalProperties: false
+      required: [tenantId, name, deploymentMode, residency, stage, supportAccessMode]
+      properties:
+        tenantId: { type: string }
+        name: { type: string }
+        soldVia: { type: string }
+        deploymentMode: { type: string }
+        residency: { type: string }
+        stage: { type: string }
+        stageNote: { type: string }
+        plan: { type: string }
+        supportAccessMode: { type: string }
+
+    TenantRecord:
+      allOf:
+        - $ref: '#/components/schemas/TenantSummary'
+        - type: object
+          additionalProperties: false
+          required: [retention, telemetryProfile, environment, permanentFields]
+          properties:
+            retention: { type: string }
+            telemetryProfile: { type: string }
+            environment: { type: string }
+            permanentFields:
+              type: array
+              items: { type: string }
+              description: |
+                WHICH FIELDS CANNOT BE AMENDED, STATED BY THE SERVER RATHER THAN
+                KNOWN BY THE CLIENT. `S1` puts the callout on the screen — *"Mode
+                and residency are frozen on this record"* — and a console that
+                hard-coded which two would go stale the day a third joined them.
+
+    ByoaEscalationRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        RECORDS A DECISION AND MIGRATES NOTHING. `User Journeys` C12.1: *"Decide
+        to escalate — commercial and security, not technical."*
+      required: [reason]
+      properties:
+        reason: { type: string }
+        targetAwsAccountId:
+          type: string
+          description: |
+            The customer's account, where it is known at the point of decision.
+            Optional because the pack's P8 sequence starts with an introduction
+            to their cloud engineer, which is where it usually becomes known.
+
+    # --- staff: catalogue and builder -------------------------------------
+
+    CatalogueBlueprint:
+      type: object
+      additionalProperties: false
+      required: [blueprint, version, reconciles, installableBy, state]
+      properties:
+        blueprint: { type: string }
+        version: { type: string }
+        reconciles: { type: string }
+        installableBy:
+          type: array
+          items: { type: string }
+          description: |
+            The read side of `setPartnerResaleScope`. Nothing enforces that the
+            two agree, and a disagreement is a commercial dispute rather than a
+            display bug.
+        state: { type: string }
+
+    CatalogueRateCard:
+      type: object
+      additionalProperties: false
+      description: |
+        EFFECTIVE DATES, NEVER A VERSION CHAIN — `User Journeys` H8.2. The cost
+        is stated there and carried on `raiseAdjustment`: an old invoice may not
+        be reproducible from the current card.
+      required: [card, appliesTo, effectiveFrom]
+      properties:
+        card: { type: string }
+        appliesTo: { type: string }
+        effectiveFrom: { type: string }
+        perDocument: { $ref: '#/components/schemas/DecimalAmount' }
+        perRun: { $ref: '#/components/schemas/DecimalAmount' }
+        perTenantMonth: { $ref: '#/components/schemas/DecimalAmount' }
+
+    ResaleScopeRequest:
+      type: object
+      additionalProperties: false
+      required: [blueprints]
+      properties:
+        blueprints:
+          type: array
+          items: { type: string }
+          description: |
+            THE WHOLE SET, REPLACED. An add-one endpoint would make removing the
+            last blueprint a different operation from removing any other.
+
+    BuilderPackSummary:
+      type: object
+      additionalProperties: false
+      required: [packKey, name, publishedVersion, draftVersion]
+      properties:
+        packKey: { type: string }
+        name: { type: string }
+        publishedVersion: { type: [string, 'null'] }
+        draftVersion: { type: [string, 'null'] }
+        installableBy:
+          type: array
+          items: { type: string }
+
+    PackDraft:
+      type: object
+      additionalProperties: false
+      description: |
+        THE FIVE PARTS `S1` NAMES. ⚠️ None of them exports from `model/` — see
+        `listBuilderPacks` for the gap this schema sits on top of.
+      required: [packKey, draftVersion, documentTypes, rules, sourceRoles]
+      properties:
+        packKey: { type: string }
+        draftVersion: { type: string }
+        documentTypes:
+          type: array
+          items: { $ref: '#/components/schemas/DocumentTypeRow' }
+        rules:
+          type: array
+          items: { $ref: '#/components/schemas/PackRuleRow' }
+        sourceRoles:
+          type: array
+          items: { type: string }
+          description: |
+            What an install binds to a customer's real systems. The pack names
+            roles; the install binds them.
+
+    DocumentTypeRow:
+      type: object
+      additionalProperties: false
+      description: |
+        A TYPE IS IDENTIFIED BY SOURCE AND PATTERN TOGETHER, so neither is
+        optional. `S1` states it as a rule rather than as a convention.
+      required: [type, pattern, sourceRole, floor]
+      properties:
+        type: { type: string }
+        pattern: { type: string }
+        sourceRole: { type: string }
+        floor: { type: number }
+
+    PackRuleRow:
+      type: object
+      additionalProperties: false
+      required: [rule, compares, threshold, onFailure]
+      properties:
+        rule: { type: string }
+        compares: { type: string }
+        threshold: { type: string }
+        onFailure: { type: string }
+
+    PackRuleRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        ALL THREE REQUIRED. `S1`'s form will not commit without them, and a
+        threshold refuses on absence rather than defaulting — H3.2.
+      required: [rule, compares, threshold]
+      properties:
+        rule: { type: string }
+        compares: { type: string }
+        threshold: { type: string }
+
+    PackPublishRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        PUBLISHING MINTS A VERSION AND SCOPES WHO MAY INSTALL IT, in one act,
+        because `S1` says they are one act. Splitting them would leave a
+        published version briefly installable by nobody or by everybody, and
+        neither is a state anybody chose.
+      required: [version, installableBy]
+      properties:
+        version: { type: string }
+        installableBy:
+          type: array
+          items: { type: string }
+
+    # --- staff: billing ---------------------------------------------------
+
+    BillingPeriodView:
+      type: object
+      additionalProperties: false
+      required: [period, metered, invoicedToCustomers, invoicedToPartners, adjustmentsCarried]
+      properties:
+        period: { type: string }
+        metered:
+          $ref: '#/components/schemas/DecimalAmount'
+        invoicedToCustomers:
+          $ref: '#/components/schemas/DecimalAmount'
+        invoicedToPartners:
+          $ref: '#/components/schemas/DecimalAmount'
+        adjustmentsCarried:
+          $ref: '#/components/schemas/DecimalAmount'
+
+    InvoiceSummary:
+      type: object
+      additionalProperties: false
+      required: [invoiceId, issuedTo, shape, lineCount, total, state]
+      properties:
+        invoiceId: { type: string }
+        issuedTo: { type: string }
+        shape:
+          type: string
+          description: |
+            retail to a customer, wholesale to a partner, or both. It is what
+            makes *"a tenant sold by a partner is never invoiced to the
+            customer"* checkable rather than asserted.
+        lineCount: { type: integer }
+        total: { $ref: '#/components/schemas/DecimalAmount' }
+        state:
+          type: string
+          description: |
+            issued, or adjustment carried. TERMINAL BY DESIGN — *"an issued
+            invoice stands."*
+
+    InvoiceDetail:
+      allOf:
+        - $ref: '#/components/schemas/InvoiceSummary'
+        - type: object
+          additionalProperties: false
+          required: [issuedAt, terms, lines]
+          properties:
+            addressLine: { type: string }
+            issuedAt: { type: string }
+            terms: { type: string }
+            lines:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                description: |
+                  🛑 A LINE IS A METER TOTAL AND NEVER A DOCUMENT, AND NEVER A
+                  USER. Four counts and a total. There is no counterparty, no
+                  document, no exception, and no per-seat dimension — *"usage
+                  records ship without a user id"*, so *"any plan that assumed
+                  per-seat chargeback is unbuildable."*
+                required: [subject, documentsRead, runs, askTurns, lineTotal]
+                properties:
+                  subject: { type: string }
+                  documentsRead: { type: integer }
+                  runs: { type: integer }
+                  askTurns: { type: integer }
+                  platform: { $ref: '#/components/schemas/DecimalAmount' }
+                  lineTotal: { $ref: '#/components/schemas/DecimalAmount' }
+
+    PartnerSettlementRow:
+      type: object
+      additionalProperties: false
+      description: |
+        NO PAYMENT STATE ANYWHERE. *"Commission is on invoiced revenue — nothing
+        in the product knows whether an invoice was paid."* A `paidAt` here
+        would imply a ledger the product does not have.
+      required: [partner, tenantCount, invoicedToThem, commissionOwed, basis]
+      properties:
+        partner: { type: string }
+        tenantCount: { type: integer }
+        invoicedToThem: { $ref: '#/components/schemas/DecimalAmount' }
+        commissionOwed: { $ref: '#/components/schemas/DecimalAmount' }
+        basis:
+          type: string
+          description: |
+            PER PARTNER, read from the arrangement. `P1` records a basis amended
+            from collected to invoiced revenue, so a settlement run assuming one
+            basis for everybody would be wrong for any partner on the older one.

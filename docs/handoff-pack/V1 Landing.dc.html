@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@200;300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./tokens.css">
+<link rel="stylesheet" href="./public.css">
+</helmet>
+
+<a class="skip" href="#how">Skip to how it works</a>
+
+<header class="pchrome">
+  <span class="logo" style="--logo-size:1.0625rem"><span class="mascot" style="--mascot-size:1em"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span><span>Reconcile</span><span class="badge">AI</span></span>
+  <nav>
+    <ul class="pnav">
+      <li><a href="#cost">The cost</a></li>
+      <li><a href="#how">How it reads</a></li>
+      <li><a href="#platform">The platform</a></li>
+      <li><a href="#runs">Where it runs</a></li>
+    </ul>
+  </nav>
+  <span class="sp"></span>
+  <a class="btn btn--quiet" href="./V3 Sign In.dc.html">Sign in</a>
+  <a class="btn" data-commit href="./V2 Book a Demo.dc.html">Book a demo</a>
+</header>
+
+<div class="shell">
+
+  <nav class="rail-nav" aria-label="On this page">
+    <ol>
+      <sc-for list="{{ rail }}" as="r" hint-placeholder-count="9">
+        <li>
+          <a href="{{ r.href }}" aria-current="{{ r.on }}" onClick="{{ r.go }}">
+            <i class="dash" aria-hidden="true"></i>
+            <span class="n">{{ r.n }}</span>
+            <span class="t">{{ r.label }}</span>
+          </a>
+        </li>
+      </sc-for>
+    </ol>
+  </nav>
+
+<main>
+
+  <!-- ═══ HERO ═══════════════════════════════════════════════════════════ -->
+  <section class="band" id="work">
+    <div class="wrapper split split--hero">
+      <div class="side" style="position:static">
+        <span class="eyebrow">Agentic reconciliation · 1CloudHub</span>
+        <h1>Everyone adopted AI. Almost nobody pointed it at the close.</h1>
+        <p class="stand">Reconciliation is where finance still does the reading
+        by hand. ReconcileAI reads every document, pairs it, judges what does
+        not agree, and proposes the resolution — then stops, and waits for a
+        person to decide.</p>
+        <div class="acts">
+          <a class="btn btn--lg" data-commit href="./V2 Book a Demo.dc.html">Book a demo</a>
+          <a class="btn btn--lg" href="#how">See how it reads a document</a>
+        </div>
+        <p class="small" style="margin-top:calc(var(--u)*8)">Runs in your own
+        AWS account if you need it to. Complementary to SAP and non-SAP systems
+        — it does not replace your ERP, it reconciles across what you already
+        run.</p>
+      </div>
+
+      <div class="main">
+      <div class="stack" style="margin-top:0">
+        <div class="sheetdoc">
+          <span class="dt">Purchase order</span>
+          <span class="lines"><i style="width:62%"></i><i style="width:88%"></i></span>
+        </div>
+        <div class="sheetdoc">
+          <span class="dt">Goods receipt</span>
+          <span class="lines"><i style="width:74%"></i><i style="width:54%"></i></span>
+        </div>
+        <div class="sheetdoc">
+          <span class="dt">Invoice 4471 <i class="mark" aria-hidden="true"></i></span>
+          <span class="lines"><i style="width:80%"></i><i style="width:66%"></i><i style="width:42%"></i></span>
+          <span class="chip lit">matching · 3 documents</span>
+        </div>
+      </div>
+      <p class="small" style="margin-top:calc(var(--u)*4)">Three documents, one
+      of which does not agree with the other two. Everything the product does
+      starts here. <b>Illustrative</b> — no customer document is shown anywhere
+      on this site.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ THE COST ═══════════════════════════════════════════════════════ -->
+  <section class="band band--sheet" id="cost">
+    <div class="wrapper split">
+      <div class="side">
+        <span class="eyebrow">The cost</span>
+      <h2>None of this is abstract. It is a person opening a spreadsheet.</h2>
+      </div>
+      <div class="main">
+        <p>Every exception in the pile is somebody pulling a statement, calling a
+      supplier, finding the goods receipt that was reversed, and writing down
+      what they concluded so the next person does not have to work it out
+      again. The work is not hard. There is simply too much of it, and it all
+      lands in the same five days.</p>
+      <ul class="list">
+        <li><span class="mk">~</span><span><b>Days, not minutes.</b> The close
+        waits on exceptions, and exceptions wait on whoever has the context.
+        The tilde is deliberate — that is an estimate, and the product marks
+        every number it is guessing at.</span></li>
+        <li><span class="mk">›</span><span><b>The judgement is the valuable
+        part</b>, and it is the part that gets rushed, because the reading ate
+        the time.</span></li>
+        <li><span class="mk">…</span><span><b>And some of it is not yours to
+        finish.</b> A charge nobody can account for is blocked on a bank, a
+        supplier or another team — work that is real, moving, and moving
+        somewhere else.</span></li>
+      </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ HOW IT READS ═══════════════════════════════════════════════════ -->
+  <section class="band" id="how">
+    <div class="wrapper split">
+      <div class="side">
+        <span class="eyebrow">How it reads</span>
+      <h2>It reads the document before it matches it.</h2>
+      </div>
+      <div class="main">
+        <p>Any layout, any language. Fields are lifted with a confidence score,
+      and <b>anything below the floor is parked for a person to confirm rather
+      than guessed at</b>. That floor is set per document pack by our delivery
+      team, not left to a default — a pack with no floor refuses to run.</p>
+
+      <div class="cols cols--two">
+        <div class="panel">
+          <span class="tag">Extraction · field by field</span>
+          <div style="display:flex;flex-direction:column;gap:calc(var(--u)*3)">
+            <sc-for list="{{ fields }}" as="f" hint-placeholder-count="4">
+              <div class="fieldrow" data-parked="{{ f.parked }}">
+                <span class="top">
+                  <span class="fname">{{ f.name }}</span>
+                  <span class="fval mono">{{ f.value }}</span>
+                </span>
+                <span class="meter" style="--score:{{ f.pct }};--floor:60%">
+                  <span class="v mono">{{ f.score }}</span>
+                  <span class="tick" data-t="{{ f.t }}"></span>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+          <p class="small" style="margin-top:calc(var(--u)*4)">One field is
+          deliberately parked. The bar is a measurement and nothing else — it
+          never means good, passed or safe.</p>
+        </div>
+        <div class="panel">
+          <span class="tag">What a person sees next</span>
+          <p><b>Needs confirmation <span class="mono">›</span></b><br>
+          <span class="small">Tax code read at 0.41, below the 0.60 floor. The
+          document is shown beside the field, and confirming it teaches the pack
+          rather than patching the row.</span></p>
+          <p><b>Ruled out <span class="mono">—</span></b><br>
+          <span class="small">Three candidate matches the model considered and
+          rejected, with the reason for each. The ruled-out list is what makes a
+          proposal reviewable instead of a verdict.</span></p>
+          <p><b>Run completed 03:12</b><br>
+          <span class="small">Past tense, with a time on it. A figure the system
+          is certain of never wears a hedge, so a number without one is a number
+          you can rely on.</span></p>
+        </div>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ THE GAP ════════════════════════════════════════════════════════ -->
+  <section class="band band--sheet" id="gap">
+    <div class="wrapper split">
+      <div class="side">
+        <span class="eyebrow">The gap</span>
+      <h2>Pick an exception. Watch what it costs.</h2>
+      </div>
+      <div class="main">
+        <p>Three exception types, three different teams, one shape. Something is
+      knowable from the documents, and nobody has had time to go and know it.</p>
+      <div class="choices" style="margin-top:calc(var(--u)*6)">
+        <sc-for list="{{ stories }}" as="s" hint-placeholder-count="3">
+          <button class="choice" type="button" aria-pressed="{{ s.on }}" onClick="{{ s.pick }}">{{ s.label }}</button>
+        </sc-for>
+      </div>
+      <div class="cols cols--two" style="margin-top:calc(var(--u)*5)">
+        <div class="panel">
+          <span class="tag">Today</span>
+          <p>{{ story.before }}</p>
+          <p class="small"><b>Whose move.</b> {{ story.who }}</p>
+        </div>
+        <div class="panel" data-pick="true">
+          <span class="tag">With ReconcileAI</span>
+          <p>{{ story.after }}</p>
+          <p class="small"><b>What the person still does.</b> {{ story.human }}</p>
+        </div>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ THE SIX STAGES ═════════════════════════════════════════════════ -->
+  <section class="band" id="platform">
+    <div class="wrapper split">
+      <div class="side">
+        <span class="eyebrow">The platform</span>
+      <h2>One path, six stages — and a person owns the last one.</h2>
+      </div>
+      <div class="main">
+        <p>Everything in the product serves one of these or governs it. The agent
+      runs every stage; naming it says nothing. <b>A person in the loop is the
+      exception, so that is what gets named.</b></p>
+      <div class="rail">
+        <div><div class="stage"><span class="n">1 · Arrive</span><span class="nm">Intake</span><span class="ds">Upload, S3 or SFTP, email, or a connector into your source systems.</span></div></div>
+        <div><div class="stage"><span class="n">2 · Read</span><span class="nm">Extraction</span><span class="ds">Typed values with a confidence each. Below the floor is parked, not guessed.</span></div></div>
+        <div><div class="stage"><span class="n">3 · Pair</span><span class="nm">Matching</span><span class="ds">Definitions and rules produce match groups across systems.</span></div></div>
+        <div><div class="stage"><span class="n">4 · Judge</span><span class="nm">Exceptions</span><span class="ds">Severity, an explanation, and the candidates it ruled out.</span></div></div>
+        <div><div class="stage"><span class="n">5 · Act</span><span class="nm">Resolution</span><span class="ds">Your SOPs, as proposals. Above an authority limit it stops and waits.</span></div></div>
+        <div><div class="stage"><span class="n">6 · Show</span><span class="nm">Reporting</span><span class="ds">A register that states its scope and its denominator, and exports on a schedule.</span></div></div>
+      </div>
+      <p class="small" style="margin-top:calc(var(--u)*6)"><b>Ask is a
+      capability before it is a destination.</b> Any question about the period,
+      in words — no SQL, no export request, no ticket — answered from the source
+      systems with a confidence and the cost of the answer. It opens over the
+      register rather than taking you away from it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ WHERE IT RUNS ══════════════════════════════════════════════════ -->
+  <section class="band band--sheet" id="runs">
+    <div class="wrapper split">
+      <div class="side">
+        <span class="eyebrow">Where it runs</span>
+      <h2>Two deployments, and the harder one is the one enterprises ask for.</h2>
+      </div>
+      <div class="main">
+        <p>Your documents are the most sensitive thing in the close. So the
+      question of <em>whose account they sit in</em> is not a deployment detail,
+      it is the first thing a security review asks.</p>
+      <div class="cols cols--two">
+        <div class="panel">
+          <span class="tag">Hosted</span>
+          <p>We run it. Fastest to a first reconciliation, and the default for a
+          partner-sold tenant.</p>
+          <p class="small">Your data sits in our account under your retention
+          and residency settings, and the audit trail is yours.</p>
+        </div>
+        <div class="panel" data-pick="true">
+          <span class="tag">Your own AWS account · BYOA</span>
+          <p><b>The product deploys into your account.</b> Your documents, your
+          KMS keys, your Bedrock quota, your bill — and your connector
+          credentials in your own Secrets Manager, which we never see.</p>
+          <p class="small">The application is served from our CloudFront and
+          your browser calls your own API directly, so <b>tenant data never
+          transits a 1CloudHub account.</b> The code comes from us and executes
+          against your data in your user's browser — stated plainly here because
+          a security review will ask about exactly that.</p>
+        </div>
+      </div>
+      <ul class="list">
+        <li><span class="mk">›</span><span><b>Half of onboarding is
+        yours.</b> The key exchange, the model pre-flight, identity federation
+        and the connector credentials all happen inside your account, by your
+        people. We track a state per step so "why are we not live yet" always
+        has an answer.</span></li>
+        <li><span class="mk">›</span><span><b>Your identity provider, your
+        roles.</b> OIDC or SAML, at your own host. There is no ReconcileAI
+        password.</span></li>
+        <li><span class="mk">…</span><span><b>Escalating hosted to your own
+        account moves everything</b> — documents, runs, resolutions, approvals
+        and the audit trail. A partial migration is a lost history wearing a
+        better word.</span></li>
+      </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SUCCESS STORIES ════════════════════════════════════════════════ -->
+  <section class="band" id="proof">
+    <div class="wrapper split">
+      <div class="side">
+        <span class="eyebrow">Success stories</span>
+      <h2>One engagement on the record. Two more being cleared.</h2>
+      </div>
+      <div class="main">
+        <p>Every client here is unnamed at their request, and every figure is
+      one the client agreed to. Where a story is not cleared yet, the slot says
+      so rather than being filled with something weaker.</p>
+
+      <div class="panel" data-pick="true" style="margin-top:calc(var(--u)*8)">
+        <span class="tag">Real estate · Philippines · GenAI</span>
+        <p><b>A 9-step manual payables process, read and matched by an
+        agent.</b></p>
+        <p class="small">A premier Philippine real estate conglomerate — 90
+        buildings, 3.4M sqm, 1,000+ employees. Vendors upload the pack, fields
+        are extracted and three-way matched across purchase order, goods receipt
+        and supplier invoice, and the team reviews only what is flagged.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(calc(var(--u)*40),1fr));gap:calc(var(--u)*6);margin-top:calc(var(--u)*6)">
+          <span style="display:block"><b class="figure" style="display:block;font-size:var(--s6);font-weight:var(--w-lede);line-height:1">65%</b><span class="small" style="display:block;margin-top:calc(var(--u)*2)">Less processing time per transaction</span></span>
+          <!-- ⚠️ THIS TILE READ 15→7 UNTIL 22 Sep 2026 AND IS CORRECTED RATHER THAN
+               DELETED, because it is the figure a reader would have quoted onward.
+               20 minutes is the engagement's PRE-PROJECT baseline; 7 is now. Verify,
+               do not read: 20→7 is 65.0% and 15→7 is 53.3%, so the 65% ON THE TILE
+               IMMEDIATELY BEFORE THIS ONE was only ever measured against 20 — here
+               the two figures are ADJACENT SIBLINGS in one grid and the reader meets
+               them together.
+               🛑 AND THE "Read the full story" BUTTON BELOW LINKS TO
+               V4 Success Story.dc.html, WHICH HAS READ 20→7 SINCE EARLIER THE SAME
+               DAY. Until this edit a prospect met two baselines for one engagement
+               ONE CLICK APART, which is worse than either figure alone.
+               The outcome did not change; an internal inconsistency was closed.
+               Owner's ruling of 22 Sep 2026, G1301, applied here under G1307, and
+               the control that keeps the two surfaces joined is
+               tests/docs/pack-figure-consistency.test.ts. -->
+          <span style="display:block"><b class="figure" style="display:block;font-size:var(--s6);font-weight:var(--w-lede);line-height:1">20→7</b><span class="small" style="display:block;margin-top:calc(var(--u)*2)">Minutes per transaction</span></span>
+          <span style="display:block"><b class="figure" style="display:block;font-size:var(--s6);font-weight:var(--w-lede);line-height:1">727 hrs</b><span class="small" style="display:block;margin-top:calc(var(--u)*2)">Saved per month at 2026 volumes</span></span>
+        </div>
+        <p class="small" style="margin-top:calc(var(--u)*6)">Extraction held
+        above 85% across 58+ vendor document formats. A two-week proof of
+        concept came first, then production in phases. Engagement period June
+        2025 — ongoing.</p>
+        <div class="acts" style="margin-top:calc(var(--u)*6)">
+          <a class="btn" href="./V4 Success Story.dc.html">Read the full story</a>
+        </div>
+      </div>
+
+      <div class="cols cols--two">
+        <div class="panel">
+          <span class="tag">Story two · slot open</span>
+          <p><b>Not written yet.</b></p>
+          <p class="small">Reserved for a second engagement. Sector, geography,
+          the exception type it started on, and the figures the client will
+          stand behind. Nothing goes in this slot until they are agreed in
+          writing.</p>
+        </div>
+
+        <div class="panel">
+          <span class="tag">Story three · slot open</span>
+          <p><b>Not written yet.</b></p>
+          <p class="small">Reserved for a third engagement, ideally in a
+          different industry and a different deployment mode to the first —
+          so the three together say the product is not shaped around one
+          landscape.</p>
+        </div>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ WHAT IT DOES NOT DO ════════════════════════════════════════════ -->
+  <section class="band" id="refuses">
+    <div class="wrapper split">
+      <div class="side">
+        <span class="eyebrow">What it does not do</span>
+      <h2>The refusals are the product, as much as the features are.</h2>
+      </div>
+      <div class="main">
+        <p>A reconciliation engine that quietly decides things is worth less than
+      one that stops. These are deliberate, and they are on the record.</p>
+      <ul class="list list--two">
+        <li><span class="mk">✕</span><span><b>It does not post above an
+        authority limit.</b> The agent proposes; a named person approves, with a
+        required reason. The reason is what an SOP amendment gets drafted
+        from.</span></li>
+        <li><span class="mk">✕</span><span><b>It does not guess a field below
+        the confidence floor.</b> It parks it and asks.</span></li>
+        <li><span class="mk">✕</span><span><b>No colour carries a
+        state.</b> Every status is a word. Nothing in the interface depends on
+        your being able to tell green from amber.</span></li>
+        <li><span class="mk">✕</span><span><b>It does not answer questions it
+        cannot evidence.</b> An answer arrives with a confidence, and a
+        confidence below the floor arrives as a question.</span></li>
+        <li><span class="mk">✕</span><span><b>There is no self-serve
+        sign-up.</b> A tenant carries a deployment mode, a residency, a
+        retention policy and a support-access mode — four decisions with no safe
+        defaults, so a person makes them with you.</span></li>
+      </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ ABOUT ══════════════════════════════════════════════════════════ -->
+  <sc-if value="{{ showAbout }}" hint-placeholder-val="{{ true }}">
+    <section class="band band--sheet" id="who">
+      <div class="wrapper split">
+      <div class="side">
+        <span class="eyebrow">Who builds it</span>
+        <h2>Built by 1CloudHub, on AWS.</h2>
+      </div>
+      <div class="main">
+        <p>We built ReconcileAI because we kept meeting the same gap in every
+        finance landscape we were asked to modernise: the systems were current,
+        the reconciliation was still manual, and nobody had pointed the new
+        tooling at the part that actually consumed the week.</p>
+        <p class="small">Offices in Singapore, India, the United States, Dubai
+        and the Philippines. Delivered by the same engineers who run the
+        onboarding.</p>
+        <p>ReconcileAI is listed on AWS Marketplace, so it can be bought
+        through your existing AWS agreement and billed against your committed
+        spend rather than through a new vendor contract.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:calc(var(--u)*8);align-items:flex-start;margin-top:calc(var(--u)*8)">
+          <div style="display:flex;flex-direction:column;gap:calc(var(--u)*3);align-items:flex-start">
+            <span class="small" style="font-size:var(--s1);letter-spacing:.08em;text-transform:uppercase">The company</span>
+            <a href="https://www.1cloudhub.com" style="display:inline-flex;align-items:center;background-color:#fff;padding:calc(var(--u)*2) calc(var(--u)*3);box-shadow:inset 0 0 0 1px var(--rule-strong)">
+              <img src="https://www.1cloudhub.com/wp-content/uploads/2020/01/1CloudHub-Logo-horiz-hires-RGB-copy-1.jpg" alt="1CloudHub" style="display:block;height:calc(var(--u)*7);width:auto"/>
+            </a>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:calc(var(--u)*3);align-items:flex-start">
+            <span class="small" style="font-size:var(--s1);letter-spacing:.08em;text-transform:uppercase">The partnership</span>
+            <div style="display:flex;flex-wrap:wrap;gap:calc(var(--u)*3)">
+              <span style="display:flex;align-items:center;justify-content:center;background-color:#fff;padding:calc(var(--u)*2);box-shadow:inset 0 0 0 1px var(--rule-strong)">
+                <img src="https://d1.awsstatic.com/customer-references-case-studies-logos/1200x900_logos/AWS-Partner-Advanced_1200x900_Logo.65f93763f637c09cd04a0274db3ebb34fb2b349d.png" alt="AWS Partner · Advanced Tier Services Partner" style="display:block;height:calc(var(--u)*14);width:auto"/>
+              </span>
+              <span style="display:flex;align-items:center;justify-content:center;background-color:#fff;padding:calc(var(--u)*2);box-shadow:inset 0 0 0 1px var(--rule-strong)">
+                <img src="https://d1.awsstatic.com/customer-references-case-studies-logos/1200x900_logos/Powered-by-AWS_1200x900_Logo.4525cf2f0c07616a2bedf9a9a52da83b935f64d3.png" alt="Powered by AWS" style="display:block;height:calc(var(--u)*14);width:auto"/>
+              </span>
+              <a href="https://aws.amazon.com/marketplace/seller-profile?id=seller-ht7ntrw2hga2i" style="display:flex;align-items:center;justify-content:center;background-color:#fff;padding:calc(var(--u)*2);box-shadow:inset 0 0 0 1px var(--rule-strong)">
+                <img src="https://d1.awsstatic.com/customer-references-case-studies-logos/1200x900_logos/Available-in-Marketplace_1200x900_Logo.f44b6504cba3b98a8202d0d501731f07b85d0656.png" alt="Available in AWS Marketplace" style="display:block;height:calc(var(--u)*14);width:auto"/>
+              </a>
+            </div>
+            <a class="btn btn--quiet" href="https://aws.amazon.com/marketplace/seller-profile?id=seller-ht7ntrw2hga2i">View the AWS Marketplace listing</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    </section>
+  </sc-if>
+
+  <!-- ═══ CTA ════════════════════════════════════════════════════════════ -->
+  <section class="band band--last" id="demo">
+    <div class="wrapper split">
+      <div class="side">
+        <span class="eyebrow">Start narrow</span>
+      <h2>Bring us one exception type.</h2>
+      </div>
+      <div class="main">
+        <p class="stand">Forty-five minutes on your landscape, your exception
+      types and who needs to see what. The demo runs on a real reconciliation
+      against synthetic documents, not a slide deck.</p>
+      <div class="acts">
+        <a class="btn btn--lg" data-commit href="./V2 Book a Demo.dc.html">Book a demo</a>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="pfoot">
+    <div class="wrapper">
+      <div class="rows">
+        <span class="logo" style="--logo-size:1.0625rem"><span class="mascot" style="--mascot-size:1em"><i class="d1">·</i><i class="d2">·</i><i class="d3">·</i></span><span>Reconcile</span><span class="badge">AI</span></span>
+        <ul>
+          <li><a href="#how">How it reads</a></li>
+          <li><a href="#platform">The platform</a></li>
+          <li><a href="#runs">Where it runs</a></li>
+        </ul>
+        <ul>
+          <li><a href="./V2 Book a Demo.dc.html">Book a demo</a></li>
+          <li><a href="./V3 Sign In.dc.html">Sign in</a></li>
+        </ul>
+        <div style="display:flex;flex-direction:column;gap:calc(var(--u)*3);align-items:flex-start">
+          <span class="small" style="font-size:var(--s1);letter-spacing:.08em;text-transform:uppercase">Built, delivered and run by</span>
+          <a href="https://www.1cloudhub.com" style="display:inline-flex;align-items:center;background-color:#fff;padding:calc(var(--u)*2) calc(var(--u)*3);box-shadow:inset 0 0 0 1px var(--rule-strong)">
+            <img src="https://www.1cloudhub.com/wp-content/uploads/2020/01/1CloudHub-Logo-horiz-hires-RGB-copy-1.jpg" alt="1CloudHub" style="display:block;height:calc(var(--u)*7);width:auto"/>
+          </a>
+        </div>
+      </div>
+      <p class="disclaimer">Every document and score on this page is
+      illustrative. No logo, testimonial, price, SLA or benchmark is named,
+      because none has been established. The figures under Success stories are
+      the exception: they come from a delivered engagement, and the client is
+      unnamed under a mutual NDA.</p>
+    </div>
+  </footer>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: {&quot;width&quot;: 1240},
+  &quot;showAbout&quot;: {&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Sections&quot;,&quot;label&quot;:&quot;Show the 1CloudHub section&quot;},
+  &quot;defaultStory&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;A duplicate invoice&quot;,&quot;An unaccounted charge&quot;,&quot;A compliance deadline&quot;],&quot;default&quot;:&quot;A duplicate invoice&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Content&quot;,&quot;label&quot;:&quot;Exception shown first&quot;}
+}">
+class Component extends DCLogic {
+  state = { story:null, active:'work' };
+
+  /* One field is deliberately below the floor. The meter is a MEASUREMENT and
+     nothing else — it never means good, passed or safe. */
+  /* One field is deliberately below the floor. The floor is LABELLED once — on
+     the first row — because four copies of "floor 0.60" down one column is
+     noise, and the tick itself is drawn on every row so each field can be read
+     against the same line. */
+  FIELDS = [
+    {name:'Supplier',   value:'NORDIC PARTS AB', score:'0.97', pct:'97%', t:'floor 0.60', parked:'false'},
+    {name:'Invoice no', value:'INV 4471',        score:'0.94', pct:'94%', t:'', parked:'false'},
+    {name:'Net amount', value:'96,480.00',       score:'0.91', pct:'91%', t:'', parked:'false'},
+    {name:'Tax code',   value:'parked · confirm', score:'0.41', pct:'41%', t:'', parked:'true'}
+  ];
+
+  STORIES = [
+    {label:'A duplicate invoice',
+     before:'The same invoice arrives twice, six weeks apart, under two purchase orders and a supplier name spelled two ways. It clears both times. Somebody finds it in a quarterly review, or nobody does.',
+     who:'Accounts payable, if anyone. Nothing in the ledger says the two rows are the same invoice.',
+     after:'Both documents are read, the supplier is resolved across both spellings, and the pair is flagged before the second payment runs — with the two documents side by side and the three near-matches it ruled out.',
+     human:'Confirms it is the same invoice and applies the SOP. The proposal is drafted; the decision is not.'},
+    {label:'An unaccounted charge',
+     before:'A charge on the statement with no receipt behind it. Someone pulls the bank feed, walks back through goods receipts, and finds one that was reversed after the match. Half a day, and the answer is one sentence long.',
+     who:'Whoever has the context, which is usually one person and usually not available in the close week.',
+     after:'The question is asked in words — which of these charges was never accounted for — and answered from the source systems with the four that qualify, the receipt that was reversed, and a confidence on each.',
+     human:'Decides what to do about it. The detective work is finished before the week starts.'},
+    {label:'A compliance deadline',
+     before:'The evidence exists across four systems and one inbox. Assembling it for a reviewer is a person\u2019s week, and the assembly is thrown away afterwards.',
+     who:'Finance, then whoever owns the control, then finance again.',
+     after:'Every run carries its scope, its time, its sources and an audit id. The evidence is the register rather than something reconstructed from it.',
+     human:'Reads it, and signs. The trail says who decided what, and when.'}
+  ];
+
+  SECTIONS = [
+    {id:'work',     label:'The work'},
+    {id:'cost',     label:'The cost'},
+    {id:'how',      label:'How it reads'},
+    {id:'gap',      label:'The gap'},
+    {id:'platform', label:'The platform'},
+    {id:'runs',     label:'Where it runs'},
+    {id:'proof',    label:'Success stories'},
+    {id:'refuses',  label:'What it refuses'},
+    {id:'who',      label:'Who builds it'},
+    {id:'demo',     label:'Book a demo'}
+  ];
+
+  /* The rail follows the reader rather than the click, so it is an observer
+     rather than a scroll handler: one callback per crossing instead of one per
+     frame. The topmost intersecting section wins, which is what makes the rail
+     agree with what is actually under the eye at the top of the viewport. */
+  componentDidMount(){
+    if(typeof IntersectionObserver === 'undefined') return;
+    this.io = new IntersectionObserver((entries)=>{
+      const seen = entries.filter(e=>e.isIntersecting)
+        .sort((a,b)=> a.boundingClientRect.top - b.boundingClientRect.top);
+      if(!seen.length) return;
+      const id = seen[0].target.id;
+      if(id !== this.state.active) this.setState({active:id});
+    }, {rootMargin:'-15% 0px -70% 0px', threshold:0});
+    this.SECTIONS.forEach(sec=>{
+      const el = document.getElementById(sec.id);
+      if(el) this.io.observe(el);
+    });
+  }
+  componentWillUnmount(){ if(this.io) this.io.disconnect(); }
+
+  renderVals(){
+    const s = this.state;
+    /* The story is unset until the reader picks one, so the prop decides which
+       exception the page opens on. */
+    const fromProp = this.STORIES.findIndex(x=>x.label === this.props.defaultStory);
+    const idx = s.story === null ? (fromProp < 0 ? 0 : fromProp) : s.story;
+    const st = this.STORIES[idx];
+    return {
+      showAbout:  this.props.showAbout  !== false,
+
+      fields: this.FIELDS,
+
+      rail: this.SECTIONS.map((sec,i)=>({
+        label: sec.label,
+        href: '#' + sec.id,
+        n: String(i + 1).padStart(2,'0'),
+        on: sec.id === s.active ? 'true' : undefined,
+        /* The anchor still does the navigating — the click only makes the rail
+           agree immediately instead of waiting for the observer to catch up. */
+        go: ()=> this.setState({active:sec.id})
+      })),
+
+      stories: this.STORIES.map((x,i)=>({
+        label:x.label,
+        on: i === idx ? 'true' : 'false',
+        pick: ()=> this.setState({story:i})
+      })),
+      story: st,
+
+    };
+  }
+}
+</script>
+</body>
+</html>

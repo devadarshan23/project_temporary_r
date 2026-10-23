@@ -1,0 +1,3237 @@
+openapi: 3.1.0
+
+info:
+  title: ReconcileAI — Control Plane (X1–X8)
+  version: 0.1.0-draft
+  summary: The only contract with two parties, and the only one that crosses an AWS account boundary.
+  description: |
+    THE ONLY TIER WHERE OPENAPI IS LOAD-BEARING RATHER THAN DESCRIPTIVE.
+
+    Every other document in `docs/contracts/` describes a boundary inside one
+    system, owned by one party, changeable in one deploy. This one describes a
+    boundary between 1CloudHub's control plane and software running in a
+    customer's own AWS account — an account we cannot reach, cannot roll back,
+    and cannot redeploy on our own schedule. A breaking change here does not
+    fail in CI. It fails in a bank.
+
+    Five rules follow from that, and every operation below is shaped by them.
+
+    ------------------------------------------------------------------------
+    1 · DIRECTION — every channel is data-plane-initiated
+    ------------------------------------------------------------------------
+
+    A regulated customer's security team will not open an inbound path into
+    their VPC for a vendor, and asking is a bad opening move. So:
+
+      THE CONTROL PLANE NEVER CALLS A DATA PLANE. There is no operation in
+      this document that we invoke on them. There is no callback, no webhook,
+      no push.
+
+    Distribution — packs, policy, entitlement leases, access grants — is
+    therefore modelled as a PULL performed by the plane, not a push performed
+    by us. `docs/byoa-topology.md` §3 draws it as an arrow pointing downward
+    ("distributes packs + policy") and `docs/component-architecture.html` §4
+    calls it "a publish from above"; both are describing the logical flow of
+    authority, not the direction of the TCP connection. The connection is
+    always outbound from the plane. Where the two readings differ, this
+    document takes the connection direction as binding, because that is the
+    one a customer's network team audits.
+
+    The single exception is the cross-account role assumption under a
+    `TenantAccessGrant` — a different path, a different consent model, and it
+    lands in THEIR CloudTrail. It is not an operation in this document either;
+    §X8 below carries only the announcement of a grant (pulled) and the report
+    of what a session touched (pushed).
+
+    For customers who forbid internet egress entirely, the same operations are
+    reachable through a VPC endpoint service. Same protocol, different
+    plumbing. See `docs/day-2-operations.md` §6.1.
+
+    ------------------------------------------------------------------------
+    2 · NO TENANT DATA CROSSES
+    ------------------------------------------------------------------------
+
+    Counts, versions, signatures, aggregates, and our own operational facts
+    about our own software. Nothing else. Constraint C3: the control plane
+    receives signed periodic aggregates and never queries into a data plane.
+
+    A deployment's patch level is our operational fact and does not become the
+    customer's business data by living in their account. An exception, a
+    document value, a counterparty's words, a definition name, a cost-centre
+    label — all of those are theirs, and none of them appears in any schema
+    here. Where a field was tempting and rejected, the schema says so.
+
+    NOTE WHAT IS ABSENT FROM EVERY REQUEST BODY: `dataPlaneId`. It is derived
+    from the SigV4 principal, exactly as `tenantId` is derived from the session
+    in `foundation.openapi.yaml`. A request that could state which plane it is
+    could state the wrong one. One deviation exists — `tenantRef` on the usage
+    event stream — and it is argued at the point of use rather than hidden.
+
+    ------------------------------------------------------------------------
+    3 · TWO AUTHENTICATIONS, DIFFERENT JOBS
+    ------------------------------------------------------------------------
+
+      SigV4              authenticates the CHANNEL.  Who is calling?
+      KMS signature      authenticates the CONTENT.  Can they later deny it?
+
+    Billing needs the second. Liveness does not. Using one mechanism for both
+    is the classic error, so the two are separate security schemes below and
+    the operations that need both declare both.
+
+    The signing key pair is generated IN THE CUSTOMER'S ACCOUNT at install.
+    The private half never leaves their KMS and the application never holds key
+    material; we hold only `DataPlane.attestationPublicKey`.
+
+    ------------------------------------------------------------------------
+    4 · THE CLOCK IS THEIRS. THE PERIOD IS OURS.
+    ------------------------------------------------------------------------
+
+    Every ingest schema carries an `emittedAt` supplied by the plane and marked
+    informational, and every ingest response returns a `receivedAt` supplied by
+    us and marked authoritative. Ordering, period assignment and billing use
+    ours, never theirs — a buffered replay arrives late BY DESIGN, and a
+    plane's clock is under the customer's control. This mirrors
+    `UsageRecord.recordedAt`, which exists for the same reason.
+
+    The sequence number, not the timestamp, is what makes a late arrival
+    attributable to the period it belongs to rather than the period it landed
+    in.
+
+    ------------------------------------------------------------------------
+    5 · COMPATIBILITY — additive only, and we deploy first
+    ------------------------------------------------------------------------
+
+    This contract lands in accounts we cannot reach and cannot roll back. The
+    rules are therefore asymmetric, and the asymmetry is the whole design:
+
+      · THE CONTROL PLANE IS ALWAYS DEPLOYED FIRST, and is always at a version
+        greater than or equal to every plane in the fleet. That is what makes
+        the rest of this safe, and it is not a convention — it is the reason
+        request bodies here may keep `additionalProperties: false` at all.
+
+      · ADDITIVE ONLY. A new response field may be added. A field may never be
+        removed, renamed, retyped, narrowed, or made required in a request.
+        A new request field must be optional with a defined absent-behaviour.
+
+      · PLANES MUST IGNORE UNKNOWN RESPONSE FIELDS. This is a build-time
+        requirement on the engine, stated here because the contract cannot
+        enforce it. A plane that rejects an unrecognised response field turns
+        our next additive change into a fleet-wide outage.
+
+      · A PLANE ON SCHEMA N-1 IS FULLY SUPPORTED — engine N runs against schema
+        N and N-1, migrations are forward-only and expand/contract, and a
+        column is deprecated for one full release before it is dropped
+        (`docs/day-2-operations.md` §3.2). It is `behind`, which is an upgrade
+        conversation and not an incident.
+
+      · BELOW `minimumSupportedSchemaVersion` THE TWO HALVES SPLIT. INGEST IS
+        UNCONDITIONAL — heartbeat, usage events and attestations are accepted
+        from a plane at any schema version, forever. Refusing them would mean
+        losing liveness on the plane most likely to be broken and losing
+        billing evidence we would later have to prove. DISTRIBUTION IS GATED —
+        pack, policy and lease pulls answer `409 schema_version_unsupported`,
+        because handing an unsupported plane an artefact it cannot load is how
+        an upgrade conversation becomes an outage.
+
+      · A PLANE AHEAD OF US CANNOT HAPPEN if the deploy order holds, and is
+        accepted rather than refused if it does — refusing it would strand a
+        plane we just shipped.
+
+    ------------------------------------------------------------------------
+    ERRORS
+    ------------------------------------------------------------------------
+
+    `Problem` and `ErrorCode` are referenced from `errors.yaml` rather than
+    restated. (This named `foundation.openapi.yaml`, which is where they lived
+    before the shared vocabulary was extracted.) One closed vocabulary across every tier, because
+    under a restrictive `SpanAttributePolicy` the error class is the only
+    diagnostic channel that survives redaction, and a second parallel enum
+    would mean a code that means one thing in a trace and another in a ticket.
+
+    This tier ADDED thirteen codes to that shared enum:
+
+      data_plane_unknown · data_plane_decommissioned · sequence_regressed ·
+      attestation_signature_invalid · attestation_chain_broken ·
+      attestation_sequence_gap · signature_key_unknown ·
+      schema_version_unsupported · pack_not_entitled ·
+      pack_version_unsupported · lease_revoked · access_grant_absent ·
+      policy_bundle_version_unsupported
+
+    ------------------------------------------------------------------------
+    SERVICES WITH NO PLANE-FACING SURFACE
+    ------------------------------------------------------------------------
+
+    X5 Billing and X7 Evaluation appear in `docs/component-architecture.html`
+    §4 and have NO operation in this document, deliberately. X5 reads what X4
+    ingested and never speaks to a plane. X7 is the corpus, the scorers and the
+    fleet-wide quality record — the asset that accumulates and never ships. A
+    plane-facing endpoint on either would be the downward edge that must not
+    exist.
+
+servers:
+  - url: https://{ingestHost}
+    description: |
+      Regional ingest endpoint, one per control-plane region. PLACEHOLDER —
+      no hostname is allocated. `.invalid` is reserved precisely so this cannot
+      be mistaken for a deployment instruction.
+
+      Customers who forbid internet egress reach the same operations through a
+      VPC endpoint service and never traverse the internet.
+    variables:
+      ingestHost:
+        default: control-plane.invalid
+
+tags:
+  - name: X1 Pack Registry & Authoring
+  - name: X2 Use-case Catalogue
+  - name: X3 Entitlement
+  - name: X4 Usage Ingest & Attestation
+  - name: X6 Fleet
+  - name: X8 Onboarding & Support Access
+  - name: X10 Console internal
+
+security:
+  - sigV4: []
+
+paths:
+
+  # ================================================================ X6
+  /fleet/heartbeats:
+    post:
+      tags: [X6 Fleet]
+      operationId: sendHeartbeat
+      x-capability: 'exempt: SigV4 machine caller — a data plane reporting its own liveness upward, and decide() refuses at the subject-status branch before reaching any capability'
+      summary: Is this deployment alive and current? Roughly every five minutes.
+      description: |
+        SigV4 ONLY. No content signature — liveness does not need
+        non-repudiation, and demanding a KMS call every five minutes would buy
+        nothing and cost a dependency.
+
+        GAPS ARE TOLERABLE. Beats are buffered locally when we are down and
+        replayed with their ORIGINAL sequence and `emittedAt`, so a burst of
+        late beats is a recovered outage rather than an anomaly. The sequence
+        exists so a lost beat is distinguishable from a plane that never sent
+        one; it is not a delivery guarantee, and nothing bills off it.
+
+        SENT EVEN WHEN THE PLANE DID NOTHING. A customer who reconciles monthly
+        is legitimately silent for twenty-nine days. If "no work" and "no
+        signal" shared a field, that customer would look broken every month,
+        the alert would get muted, and a genuinely dead plane would be muted
+        with it. `lastWorkAt` is therefore something the plane SAYS, not
+        something we infer from silence.
+
+        Idempotent on (calling plane, `sequence`). A replayed beat with the
+        same sequence is accepted and discarded.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Heartbeat' }
+      responses:
+        '202':
+          description: |
+            Accepted. The acknowledgement carries the supported-version window
+            and a list of PULL HINTS.
+
+            Read the hint list carefully: it is ADVISORY, never a command. A
+            plane that ignores it entirely and pulls on its own schedule must
+            still be correct, because the hint list is the one place in this
+            design where a push could sneak in disguised as a response. It
+            exists to save a poll, not to drive behaviour.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HeartbeatAck' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '404': { $ref: '#/components/responses/PlaneUnknown' }
+        '409': { $ref: '#/components/responses/SequenceRegressed' }
+
+  # ================================================================ X4
+  /usage/events:
+    post:
+      tags: [X4 Usage Ingest & Attestation]
+      operationId: shipUsageEvents
+      x-capability: 'exempt: SigV4 machine caller — the multi-tenant batch invariant 1 already carries a documented deviation for; a capability here would be a second way to name a tenant'
+      summary: The per-event billable stream. Buffered, sequenced, replayable.
+      description: |
+        EVENT GRANULARITY, NOT PERIOD AGGREGATE. Every billable event is
+        registered centrally as itself, so a gap in the per-plane sequence is
+        DETECTABLE rather than merely absent. A period total alone cannot tell
+        you whether a plane under-reported or simply idled.
+
+        This is safe only because `UsageRecord` is PII-free BY CONSTRUCTION —
+        meter, quantity, model, cost centre, and no content field at all.
+        Business records (runs, exceptions, documents) do NOT ship. What
+        crosses is THAT they happened, never what they contain. `runId` travels
+        as an opaque identifier for dispute scoping and is never resolvable by
+        us into anything.
+
+        BUFFERED REPLAY IS THE NORMAL CASE, not the exception: F6 is
+        fire-and-forget and must survive the control plane being down, so a
+        plane that has been offline ships its backlog with original sequences
+        and original `at`/`recordedAt` values. Period assignment still uses OUR
+        receipt time.
+
+        Idempotent per event on `idempotencyKey` — at-least-once delivery
+        otherwise double-counts tokens into an append-only table that has no
+        compensating instrument. A partial batch is a normal outcome: accepted
+        events are durable regardless of what else in the batch was rejected,
+        because a whole-batch failure would make one bad event block a month of
+        revenue behind it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UsageEventBatch' }
+      responses:
+        '202':
+          description: |
+            Accepted, per event. `receivedAt` is what the billing period is
+            assigned from.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UsageIngestAck' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '404': { $ref: '#/components/responses/PlaneUnknown' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+
+  /usage/attestations:
+    post:
+      tags: [X4 Usage Ingest & Attestation]
+      operationId: submitUsageAttestation
+      x-capability: 'exempt: SigV4 machine caller — an attestation a data plane signs about itself, with no human at the moment of action'
+      summary: A signed, chained claim about a 24-hour period. Gaps are not tolerable.
+      description: |
+        SIGV4 **AND** A KMS CONTENT SIGNATURE. This is the operation the
+        two-scheme split exists for. SigV4 proves the channel; the KMS
+        signature over the canonical body, made with a key whose private half
+        never left the customer's account, is what stops "we never sent that"
+        from being an argument we lose.
+
+        GAPS ARE NOT TOLERABLE, unlike the heartbeat. Two fields make the
+        series checkable rather than merely present:
+
+          `sequence`                 monotonic per plane, from 1
+          `previousAttestationHash`  the prior period's bodyHash, null at 1
+
+        With them, a missing period is detectable, back-dating breaks the
+        chain, and a plane that resets its counters is visible. Without them,
+        signed totals prove only that we received what they sent.
+
+        THIS CANNOT BE RETROFITTED. A series already signed without a chain
+        cannot acquire one retroactively, which is why the attestation channel
+        has to exist before the first deployment rather than after the first
+        dispute.
+
+        ZERO TOTALS ARE A LEGITIMATE, MEANINGFUL VALUE — the plane was idle,
+        and said so. An absent attestation and an idle one are different facts.
+
+        A FAILED VERIFICATION IS RETAINED, NEVER DISCARDED. It is evidence, and
+        discarding it would erase the only trace of the thing most worth
+        investigating. That is why a signature failure still returns the
+        assigned `receivedAt` alongside the error.
+      security:
+        - sigV4: []
+          contentSignature: []
+      parameters:
+        - $ref: '#/components/parameters/SignatureKeyId'
+      requestBody:
+        required: true
+        description: |
+          The canonical body. The KMS signature in the `X-Content-Signature`
+          header is over the canonicalised bytes of exactly this document, and
+          `bodyHash` is the digest of the same bytes — carried explicitly
+          because the NEXT attestation chains to it and the plane must not have
+          to re-derive it from a re-serialisation that might differ.
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UsageAttestation' }
+      responses:
+        '202':
+          description: |
+            Accepted and verified. `receivedAt` is authoritative for period
+            assignment; `periodTo` is the plane's account of itself and is
+            recorded, not believed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttestationAck' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '404': { $ref: '#/components/responses/PlaneUnknown' }
+        '409':
+          description: |
+            The chain does not hold. Three distinct codes, because "the
+            attestation was rejected" is not a diagnosis:
+
+              `attestation_chain_broken`   previousAttestationHash does not
+                                           match what we hold for sequence-1
+              `attestation_sequence_gap`   sequence skipped one or more periods
+              `idempotency_conflict`       same sequence, different bodyHash —
+                                           a replay that is not a replay
+
+            The attestation is STORED in every one of these cases. Rejection
+            here means "not counted as verified", never "thrown away".
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '422':
+          description: |
+            `attestation_signature_invalid`, or `signature_key_unknown` when
+            the key id is not the one registered for this plane. Both are
+            security events before they are engineering ones, and both retain
+            the body.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  /usage/attestations/chain-head:
+    get:
+      tags: [X4 Usage Ingest & Attestation]
+      operationId: getAttestationChainHead
+      x-capability: 'exempt: SigV4 machine caller — a data plane reading its own chain head to learn where to resume'
+      summary: The last sequence and hash we hold, so a rebuilt plane can resume the chain.
+      description: |
+        EXISTS FOR THE RESTORE CASE. A plane rebuilt from a snapshot, or
+        recovered after losing local state, cannot know what to put in
+        `previousAttestationHash` — and a plane that guesses breaks the chain
+        permanently for a reason that had nothing to do with dishonesty.
+
+        Returning our head is safe: it is a hash of something they sent us. It
+        tells them nothing they did not already produce.
+
+        A plane that calls this every period instead of tracking its own head
+        is a plane whose chain proves nothing about its own continuity. The
+        response therefore says so in `advisory`, and fleet operations watches
+        for planes that read it habitually.
+      responses:
+        '200':
+          description: Our head of the chain for the calling plane.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttestationChainHead' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '404': { $ref: '#/components/responses/PlaneUnknown' }
+
+  # ================================================================ X3
+  /entitlement/leases:
+    get:
+      tags: [X3 Entitlement]
+      operationId: fetchEntitlementLeases
+      x-capability: 'exempt: SigV4 machine caller — a data plane pulling the leases that ARE its authority, so gating the pull on one is circular'
+      summary: Fetch or renew the signed, offline-verifiable lease. A pull, always.
+      description: |
+        FETCH AND RENEW ARE THE SAME OPERATION. A renewal is a plane pulling a
+        lease with a higher sequence than the one it holds; there is no push,
+        because a push would require an inbound path and would make the lease
+        useless exactly when the control plane is unreachable.
+
+        THE LEASE IS VERIFIED OFFLINE AND DRAWN DOWN LOCALLY. That is what
+        resolves the conflict between a control-plane-observed usage floor and
+        constraint C1, which forbids a synchronous control-plane call on the
+        reconciliation hot path. No hot-path call, and a hard upper bound we
+        issued rather than one they reported. A control-plane outage is
+        invisible to the customer until the lease expires — the payoff of C1,
+        and worth stating as a selling point rather than leaving as an
+        implementation detail.
+
+        ⚠️ DISCLOSURE IS LOAD-BEARING. This is a licence lease and it functions
+        as a kill switch. Disclosed in the contract, in the documentation and
+        in the product — with expiry warnings well ahead of the date — it is
+        unremarkable commercial machinery. Discovered rather than disclosed, it
+        is the story that ends the partnership. The plane is expected to
+        surface `expiresAt` and `graceHours` in its own UI.
+
+        REVOCATION IS BEST-EFFORT BY CONSTRUCTION. An offline-verifiable lease
+        cannot learn it was revoked while offline. A revocation takes effect at
+        the plane's next successful pull, or at expiry, whichever comes first.
+        Stated rather than glossed: the guarantee is "no more than the ceiling,
+        and not past expiry", not "stops on command".
+
+        A hosted plane serves many tenants and receives many leases; a BYOA
+        plane serves one and receives one. `tenantRef` appears as an OUTPUT
+        here — the same posture `TenantContext.tenantId` takes in the
+        foundation tier.
+      parameters:
+        - $ref: '#/components/parameters/SchemaVersion'
+        - $ref: '#/components/parameters/EngineVersion'
+        - name: heldSequence
+          in: query
+          required: false
+          description: |
+            The highest lease sequence the plane already holds, per tenant is
+            not expressible in a query string, so this is the minimum across
+            them. Purely a bandwidth optimisation — omitting it returns
+            everything, which is always correct.
+          schema: { type: integer, minimum: 0 }
+      responses:
+        '200':
+          description: |
+            Every live lease for the tenants this plane is bound to. A plane
+            that receives a lease with a sequence LOWER than one it holds must
+            refuse it — that is the plane's rule, not ours, and it is what
+            stops a replayed lease from widening a ceiling.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EntitlementLeaseSet' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '404': { $ref: '#/components/responses/PlaneUnknown' }
+        '409': { $ref: '#/components/responses/SchemaVersionUnsupported' }
+
+  /signing-keys:
+    get:
+      tags: [X3 Entitlement]
+      operationId: listSigningKeys
+      x-capability: 'exempt: SigV4 machine caller — public verification keys a data plane needs before it can verify anything it was sent'
+      summary: Our public keys, so an offline verification survives a rotation.
+      description: |
+        THE OTHER HALF OF "OFFLINE-VERIFIABLE". A lease, a pack and a policy
+        bundle are all verified by a plane with no network — which is only true
+        if the plane already holds the key. It pins a key at install; this
+        operation is how it learns about a rotation before the old key goes
+        away.
+
+        Overlap is mandatory: a new key is published here for a full lease
+        window before anything is signed with it, and the old key stays
+        published for a full lease window after the last artefact signed with
+        it expires. Anything less strands a plane that was offline over the
+        rotation, and stranding a plane means it cannot verify its lease, which
+        means it stops.
+
+        Public keys only. No field in this contract may carry key material, and
+        a public key is not key material.
+      responses:
+        '200':
+          description: Active and retiring public keys, with their purposes.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [keys]
+                properties:
+                  keys:
+                    type: array
+                    items: { $ref: '#/components/schemas/SigningKey' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+
+  # ================================================================ X2
+  /catalogue/packs:
+    get:
+      tags: [X2 Use-case Catalogue]
+      operationId: listEntitledPacks
+      x-capability: 'exempt: SigV4 machine caller — invariant 3 — the control plane publishes downward, to a plane that has no session to derive a principal from'
+      summary: What this plane may install, filtered to versions it can actually load.
+      description: |
+        VERSION NEGOTIATION HAPPENS HERE, NOT AT FETCH. The listing is filtered
+        against the caller's declared `X-Schema-Version` and the supported
+        version window, so a plane never sees a pack version it cannot load. A
+        catalogue that lists everything and fails at install is a catalogue
+        that teaches operators to ignore it.
+
+        The schema version is declared as a header on this call rather than
+        read from the last heartbeat, because a heartbeat is up to five minutes
+        stale and a plane that has just finished a migration is exactly the
+        plane most likely to be pulling.
+
+        ENTITLEMENT GATES THE LISTING. A pack the tenant is not entitled to
+        cannot be installed at any price, so it is not listed either —
+        `pack_not_entitled` is reserved for a direct fetch of a known key,
+        which is a different diagnosis from "we have never heard of it".
+      parameters:
+        - $ref: '#/components/parameters/SchemaVersion'
+        - $ref: '#/components/parameters/EngineVersion'
+      responses:
+        '200':
+          description: |
+            Loadable, entitled pack versions. `label` and `domain` are ours —
+            platform-authored catalogue content, not customer-authored — so
+            they are safe to return.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [packs]
+                properties:
+                  packs:
+                    type: array
+                    items: { $ref: '#/components/schemas/PackSummary' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '404': { $ref: '#/components/responses/PlaneUnknown' }
+        '409': { $ref: '#/components/responses/SchemaVersionUnsupported' }
+
+  /catalogue/packs/{packKey}/versions/{packVersion}:
+    get:
+      tags: [X1 Pack Registry & Authoring]
+      operationId: fetchPackVersion
+      x-capability: 'exempt: SigV4 machine caller — a signed pack version pulled by a data plane; the human act is installPack on the capability tier and is gated'
+      summary: A signed pack artefact. Integrity is protectable; confidentiality is not.
+      description: |
+        THE HONEST POSITION IS INTEGRITY WITHOUT CONFIDENTIALITY. The pack runs
+        in the customer's account and is declarative content; anyone with
+        access to that account can read it. What we CAN guarantee is that they
+        cannot silently modify it — the detached signature is verified at load,
+        and `packVersionsInForce` appears in every heartbeat and every
+        attestation, so what actually ran is attributable.
+
+        Obfuscation would buy annoyance and cost trust with the security team
+        whose approval the deal needs. The durable asset was never the pack: it
+        is the seeded corpus, the scorers and the fleet-wide operating record,
+        none of which ever leaves the control plane (X7 has no plane-facing
+        operation in this document, deliberately).
+
+        THE ARTEFACT IS PULLED, NOT DELIVERED. The response carries a
+        short-lived read URL into OUR object storage, which the plane fetches
+        itself. The bytes travel outbound-initiated exactly like everything
+        else here; there is no path by which we hand them anything.
+      parameters:
+        - name: packKey
+          in: path
+          required: true
+          schema: { type: string }
+        - name: packVersion
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - $ref: '#/components/parameters/SchemaVersion'
+        - $ref: '#/components/parameters/EngineVersion'
+      responses:
+        '200':
+          description: A retrievable, signed artefact.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SignedArtifact' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '403':
+          description: |
+            `pack_not_entitled`. Distinct from 404 on purpose — the tenant is
+            real, the pack is real, and the entitlement is what is missing.
+            Collapsing the two would make a plan misconfiguration look like a
+            registry bug.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '404':
+          description: No such pack or version.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '409':
+          description: |
+            `pack_version_unsupported` — the version exists but cannot be
+            loaded at the caller's schema version — or
+            `schema_version_unsupported` when the plane is below the window
+            entirely.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  /catalogue/installations:
+    post:
+      tags: [X1 Pack Registry & Authoring]
+      operationId: reportPackInstallation
+      x-capability: 'exempt: SigV4 machine caller — and this is the operation carrying invariant 1 unremoved tenantRef deviation, which G113 rules REMOVED and which this pass does not launder'
+      summary: What the plane installed, or reverted. The only way rollout state gets here.
+      description: |
+        ROLLOUT STATE LIVES IN AN ACCOUNT WE CANNOT QUERY. `InstalledPack`
+        —including `rolloutState` and `rolledBackBy` — is a tenant-scoped row
+        in the customer's own database. Without this report, a `tenant_wise`
+        rollout across the fleet would be a plan with no feedback, and
+        `PackRollout.autoRollback` would fire invisibly.
+
+        This is the reporting half only. The DECISION to install, to proceed to
+        the next batch, or to revert is taken locally by the plane from the
+        rollout it already holds. We do not instruct; we learn what happened.
+
+        A REVERSION IS REPORTED, NOT REQUESTED. Consent to an upgrade includes
+        consent to its automatic reversion — a rollback returns the customer to
+        a version they were already running, which is the weakest possible
+        change, but the argument only works because it is stated in the
+        contract rather than assumed in the code. Only OUTCOME-level scorers
+        may trigger one; component drift notifies and never reverts.
+
+        No minted identifiers cross. `InstalledPack.mintedDefinitionIds` and
+        friends are tenant rows and stay where they are — the COUNT of what was
+        minted is an operational fact about our own installer and is enough to
+        tell a partial install from a complete one.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InstallationReport' }
+      responses:
+        '202':
+          description: Recorded against the rollout.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReceiptAck' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '404': { $ref: '#/components/responses/PlaneUnknown' }
+
+  # ================================================================ policy
+  /policy/bundle:
+    get:
+      tags: [X1 Pack Registry & Authoring]
+      operationId: fetchPolicyBundle
+      x-capability: 'exempt: SigV4 machine caller — invariant 3 again — policy published downward, never a read of tenant data'
+      summary: Authored centrally, distributed signed, evaluated locally. Constraint C2.
+      description: |
+        CONSTRAINT C2, EXPRESSED AS AN ENDPOINT. Policy is authored in the
+        control plane, distributed as a signed bundle, and evaluated by F3
+        INSIDE the data plane. There is no evaluation call to us, ever. Either
+        the hot path leaves the customer's account or policy is unenforceable
+        under BYOA, and this pull is what makes the third option exist.
+
+        It also disposes of the `PolicyEvaluation` volume argument entirely:
+        1.41M rows a month stay in the customer's own database and only a
+        signed summary — `policyVersionInForce` on the attestation — ever
+        crosses.
+
+        WHAT IS IN THE BUNDLE IS NARROWER THAN "POLICY". `Policy` in
+        `model/policy.ts` is TENANT-scoped, versioned, and adopted or authored
+        by a tenant admin; it is not ours to distribute and it is not in here.
+        What is in here is the platform-authored material a tenant policy
+        resolves against:
+
+          · platform DEFAULTS for every LIVE policy kind — six, not eight.
+            `spend` and `content_guardrail` are `@dropped-for-v1`, and a bundle
+            carrying either would ship a rule the plane has no evaluator for.
+            All six are REQUIRED: see `PolicyDefaults`.
+          · `PolicyTemplate`s, which are a starting point until adopted
+          · the per-domain autonomy defaults
+
+        Calling that "policy distribution" is the loose usage in
+        `docs/data-architecture.md` §6 and `docs/byoa-topology.md` §3; this
+        operation is deliberately named for the bundle rather than for policy,
+        so nobody reads it as us setting a customer's autonomy ceiling
+        remotely.
+
+        Cached and pulled on a slow cadence — daily is the expectation. A plane
+        with a stale bundle is correct, merely behind, and that is the property
+        C1 is protecting.
+      parameters:
+        - $ref: '#/components/parameters/SchemaVersion'
+        - $ref: '#/components/parameters/EngineVersion'
+        - name: heldBundleVersion
+          in: query
+          required: false
+          description: |
+            Returns `304` when unchanged. Omitting it always returns the
+            bundle, which is always correct and merely larger.
+          schema: { type: integer, minimum: 0 }
+      responses:
+        '200':
+          description: A signed bundle, verifiable offline against a published key.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SignedPolicyBundle' }
+        '304':
+          description: Unchanged since `heldBundleVersion`.
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '409':
+          description: |
+            `policy_bundle_version_unsupported` when the current bundle format
+            postdates the caller's schema version, or
+            `schema_version_unsupported` below the window.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  # ================================================================ X8
+  /access/grants:
+    get:
+      tags: [X8 Onboarding & Support Access]
+      operationId: fetchTenantAccessGrants
+      x-capability: 'exempt: SigV4 machine caller — a data plane pulling the grants that ARE the authority; gating the pull on a capability is circular'
+      summary: Live access grants, pulled — so the plane can permit the assumption and show the customer.
+      description: |
+        HOW A `TenantAccessGrant` BECOMES A CROSS-ACCOUNT ROLE ASSUMPTION.
+
+        The assumption itself is not an operation in this contract. It is AWS
+        STS: a 1CloudHub principal assumes `DataPlane.supportRoleArn` in the
+        customer's account, presenting `DataPlane.externalId`, time-boxed by
+        session policy, and every action lands in THEIR CloudTrail. That is a
+        stronger accountability claim than any audit table we keep about
+        ourselves, and it is the one documented exception to "we never call
+        them" — a different path, a different consent model, and never an HTTP
+        call into their VPC.
+
+        This operation is what makes that assumption LEGIBLE inside the plane.
+        The plane pulls the live grant set and does three things with it:
+
+          1. Renders it. `visibleToTenant` is a literal `true` on the model, so
+             an access the customer cannot see is unrepresentable rather than
+             merely discouraged. The audit trail IS the customer-facing
+             surface; this pull is what populates it.
+          2. Narrows locally. `grantAllows()` runs in the plane, against the
+             grant, per request — the trust policy in their account decides
+             WHETHER a role can be assumed at all, and the grant decides what
+             may be touched once it is.
+          3. Lapses it. Expiry, idle lapse and engagement end are enforced
+             where the clock and the request are, which is the plane.
+
+        THE CUSTOMER'S HALF IS THEIRS AND WE DO NOT PRETEND OTHERWISE. Under
+        BYOA the role trust policy lives in their account. They can gate or
+        revoke it whatever `customerApprovedAt` says, and a grant returned here
+        is a claim about what WE authorised, never a guarantee of reach.
+
+        Delivery grants run for weeks and cannot reach `tenant_data` EXCEPT
+        INSTANCE BY INSTANCE — corrected 7 Aug 2026, and the property got
+        STRONGER rather than weaker. It read "cannot reach `tenant_data` at
+        all", which stopped being true on 5 Aug when `REQUIRES_ENUMERATION`
+        replaced the `sample_data` class: delivery may now name `tenant_data`,
+        and only with a non-empty enumeration the customer handed over. That is
+        what makes a weeks-long grant acceptable. Incident grants reach it on
+        the strength of the purpose, for at most 24 hours.
+        `nominatedSubjectIds` are identifiers the CUSTOMER chose and that
+        already exist in their plane; an empty list grants nothing rather than
+        everything.
+      responses:
+        '200':
+          description: Live, signed grants for the tenants this plane serves.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccessGrantSet' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '404': { $ref: '#/components/responses/PlaneUnknown' }
+
+  /access/sessions:
+    post:
+      tags: [X8 Onboarding & Support Access]
+      operationId: reportAccessSessions
+      x-capability: 'exempt: SigV4 machine caller — staff sessions reported upward for audit, about acts a local authorize() already minted a grant for'
+      summary: What a support session actually touched. Classes and counts, never subjects.
+      description: |
+        THE GRANT PERMITS; THE SESSION RECORDS. What was actually touched is
+        usually far narrower than what a grant allows, and it is the number
+        worth reporting — to the customer, and to us for the access report and
+        for `BreachRecord.affectedTenants` if it ever comes to that.
+
+        `AccessSession.accessedSubjects` — "every distinct thing looked at" —
+        DOES NOT CROSS. It is a list of tenant record identifiers, it is the
+        customer-facing access report, and it belongs in their plane where the
+        report is rendered. What crosses is the resource CLASSES touched and a
+        COUNT per class. A count does not invert to a subject; a subject list
+        would put an index of their exceptions in our database, which is the
+        exact thing the account boundary exists to prevent.
+
+        Reported on session close and buffered like everything else. A session
+        whose report is delayed is not an unaudited session — their CloudTrail
+        already has it, and ours is the derivative record.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AccessSessionReportBatch' }
+      responses:
+        '202':
+          description: Recorded.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReceiptAck' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '404':
+          description: |
+            `access_grant_absent` — a session reported against a grant we do
+            not hold. Retained and alerted rather than dropped: it is either a
+            replay of a purged grant or an access nobody authorised, and both
+            are worth a human.
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  /access/diagnostic-jobs:
+    get:
+      tags: [X8 Onboarding & Support Access]
+      operationId: fetchDiagnosticJobs
+      x-capability: 'exempt: SigV4 machine caller — a data plane asking whether any diagnostic job is outstanding for it'
+      summary: Pull pending telemetry/diagnostic jobs from the Control Plane.
+      description: |
+        PULL-BASED REMOTE TELEMETRY. Because the Control Plane cannot push commands
+        to the Data Plane (INVARIANT 3 — "the control plane publishes downward and
+        never reads tenant data"), support staff cannot "ssh" or curl the Data Plane
+        directly for logs.
+
+        ⚠️ THIS BLOCK CITED "Invariant 1" UNTIL 12 Aug 2026. Invariant 1 is tenant
+        scope from the session; the no-push rule is invariant 3 and rule 1 of this
+        contract's own header. CLAUDE.md is the only place the invariants are
+        numbered, and a paraphrased or misnumbered invariant is a changed one.
+
+        1CloudHub staff create a `DiagnosticJob`. The Data Plane polls this endpoint
+        to discover pending jobs, runs them locally, and pushes back a bundle that is
+        VALUE-FREE BY CONSTRUCTION.
+
+        🛑 THE REDACTION MODEL IS GONE, AND ITS ABSENCE IS THE POINT. This block
+        said the plane "applies the `SpanAttributePolicy` redaction" before upload.
+        Redaction at the sender is unverifiable at the receiver: the Control Plane
+        could neither evaluate the policy nor detect a value that survived it, so one
+        missed attribute was a tenant-data leak into our account that nothing would
+        find. `DiagnosticBundleMetadata` below carries no field capable of holding a
+        tenant value, so there is nothing to redact and nothing to verify —
+        unrepresentable rather than forbidden.
+
+        SCOPE: PLANE, NOT TENANT. A job addresses a plane, a version and a time
+        window. It carries NO `tenantRef` — deliberately, because a hosted plane is
+        multi-tenant and this contract already carries one argued exception to
+        invariant 1 and is trying to reduce that to zero, not raise it to three.
+        Diagnosing a single customer's run is a different question and needs a
+        tenant-scoped path with its own grant; no such path exists.
+      parameters:
+        - $ref: '#/components/parameters/SchemaVersion'
+        - $ref: '#/components/parameters/EngineVersion'
+      responses:
+        '200':
+          description: List of pending diagnostic jobs.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DiagnosticJobSet' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '404': { $ref: '#/components/responses/PlaneUnknown' }
+
+  /access/diagnostic-bundles:
+    post:
+      tags: [X8 Onboarding & Support Access]
+      operationId: uploadDiagnosticBundle
+      x-capability: 'exempt: SigV4 machine caller — a bundle a data plane produced about itself, under a job it was already handed'
+      summary: Push the collected, redacted telemetry bundle back to the Control Plane.
+      description: |
+        THE RESULT OF A DIAGNOSTIC JOB. The Data Plane executes a job and pushes the
+        result here as a single JSON document.
+
+        🛑 THE PRE-SIGNED S3 URL IS WITHDRAWN, AND SO IS "full traces". This block
+        said: "For large bundles (e.g., full traces), this endpoint will respond with
+        a 202 and a pre-signed S3 URL for the Data Plane to upload the payload."
+        Struck rather than deleted, because it is the sentence a reader would have
+        built against. Three things were wrong with it:
+
+          - A FULL TRACE IS NOT AN AGGREGATE. This contract's header permits
+            "counts, versions, signatures, aggregates, and our own operational facts
+            about our own software. Nothing else." A trace carries span attributes,
+            which carry tenant strings.
+          - THE BUCKET WAS IN OUR ACCOUNT, IN ONE REGION. An EU plane's payload would
+            have landed in ap-southeast-1. Tenant data never crosses a region, and a
+            diagnostic upload is not an exception to that.
+          - A SEPARATE PAYLOAD CHANNEL IS AN UNTYPED ONE. Whatever the schema below
+            forbids, an opaque object at the end of a pre-signed URL reinstates.
+
+        A bundle is now small by construction, because it holds no values. If one
+        does not fit in a request body, that is evidence it is carrying something
+        this schema was written to exclude.
+
+        RETENTION: the bundle is held for a BOUNDED, AUTO-EXPIRING window, in the
+        plane's own residency region, and never copied into a general store.
+        ⚠️ THE WINDOW HAS NO NUMBER HERE, DELIBERATELY — any number in this
+        repository would be invented. It joins the thirteen retention windows as a
+        question for counsel, and `retentionDays` below is `required` so the value
+        cannot be omitted once it exists.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DiagnosticBundleMetadata' }
+      responses:
+        '202':
+          description: |
+            Accepted. The body was the whole bundle; there is no second upload step.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [bundleId, expiresAt]
+                properties:
+                  bundleId: { type: string }
+                  expiresAt:
+                    type: string
+                    format: date-time
+                    description: |
+                      When the Control Plane will have discarded this bundle. Stated
+                      back to the sender so the retention claim is on the wire rather
+                      than in prose.
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '404': { $ref: '#/components/responses/PlaneUnknown' }
+
+  # ================================================================ X10
+  # THE INTERNAL EDGE — G4301–G4310, 5 Oct 2026, applying THE OWNER'S rulings:
+  #   "Full restore: copy the tenant name to the data plane, put onboarding
+  #    writes and roster reads behind signed control-plane endpoints, then
+  #    retire both control-DB credentials from the data plane."
+  #   "SigV4 task role": the data-plane task role signs internal requests; the
+  #    control plane verifies.
+  # The ONE caller is the data plane, acting for a console act it has already
+  # gated with decide() and recorded under invariant 10 (G726 is unchanged).
+  # These operations are never published at an edge and no person calls them.
+  /internal/console/roster:
+    get:
+      tags: [X10 Console internal]
+      operationId: getInternalRoster
+      x-capability: 'exempt: SigV4 machine caller — the data plane reading a control-owned roster DOWNWARD for listTenants, which it has already gated on view_substrate and recorded'
+      summary: The tenancy roster and each tenant's stored onboarding facts, for the data plane to render.
+      description: |
+        FACTS, NOT A RENDERING. Each row is the stored roster row, the stored
+        prefix length (`null` when no onboarding record exists) and the stored
+        forced marks. The DATA plane assembles them with `model/onboarding.ts`
+        and owns every refusal a console caller sees, so the rule lives once.
+
+        Invariant 3 is untouched: a roster of which tenants exist, and our own
+        delivery record about them, is not tenant data (G831, G1241).
+      parameters:
+        - $ref: '#/components/parameters/InternalIdempotencyKey'
+        - $ref: '#/components/parameters/PlatformAuthorisationIdOrSystem'
+        - $ref: '#/components/parameters/InternalContentSha256'
+      responses:
+        '200':
+          description: Every roster row, in tenant-id order.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [tenants]
+                properties:
+                  tenants:
+                    type: array
+                    items: { $ref: '#/components/schemas/InternalRosterFact' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+
+  /internal/console/tenants/{tenantId}/onboarding:
+    get:
+      tags: [X10 Console internal]
+      operationId: getInternalOnboarding
+      x-capability: 'exempt: SigV4 machine caller — the data plane reading one tenant''s onboarding facts for listOnboardingSteps, which it has already gated and recorded'
+      summary: One tenant's stored onboarding facts.
+      parameters:
+        - $ref: '#/components/parameters/InternalTenantId'
+        - $ref: '#/components/parameters/InternalIdempotencyKey'
+        - $ref: '#/components/parameters/PlatformAuthorisationId'
+        - $ref: '#/components/parameters/InternalContentSha256'
+      responses:
+        '200':
+          description: |
+            `onRoster: false` is an ANSWER, not an error — the data plane maps
+            it to its own 404, so the refusal is named in one place.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InternalOnboardingFact' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+
+  /internal/console/tenants/{tenantId}/onboarding/steps/{stepKey}/complete:
+    post:
+      tags: [X10 Console internal]
+      operationId: completeInternalOnboardingStep
+      x-capability: 'exempt: SigV4 machine caller — the write half of completeOnboardingStep, which the data plane has already gated on provision_substrate and recorded'
+      summary: Complete the next onboarding step, under the record's row lock.
+      description: |
+        THE TRANSITION IS DECIDED HERE, UNDER THE LOCK, by `completeStep()` —
+        a decision taken outside the transaction that writes would race.
+
+        IDEMPOTENT ON `Idempotency-Key`. The first answer is stored in the same
+        transaction as the act and a repeat of the SAME request returns it; the
+        same key on a different request is a 409. The signature is replayable
+        inside STS's window, which is why this is not optional.
+      parameters:
+        - $ref: '#/components/parameters/InternalTenantId'
+        - $ref: '#/components/parameters/InternalStepKey'
+        - $ref: '#/components/parameters/InternalIdempotencyKey'
+        - $ref: '#/components/parameters/PlatformAuthorisationId'
+        - $ref: '#/components/parameters/InternalContentSha256'
+      responses:
+        '200':
+          description: The outcome — advanced, refused on a stored fact, or a model verdict.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InternalTransitionAnswer' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '404':
+          description: '`stepKey` is not a member of `ONBOARDING_STEPS` — `resource_not_found`.'
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+
+  /internal/console/tenants/{tenantId}/onboarding/steps/{stepKey}/force:
+    post:
+      tags: [X10 Console internal]
+      operationId: forceInternalOnboardingStep
+      x-capability: 'exempt: SigV4 machine caller — the write half of forceOnboardingStep, which the data plane has already gated on provision_substrate and recorded'
+      summary: Force a gate, appending the permanent reason, under the record's row lock.
+      parameters:
+        - $ref: '#/components/parameters/InternalTenantId'
+        - $ref: '#/components/parameters/InternalStepKey'
+        - $ref: '#/components/parameters/InternalIdempotencyKey'
+        - $ref: '#/components/parameters/PlatformAuthorisationId'
+        - $ref: '#/components/parameters/InternalContentSha256'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [reason]
+              properties:
+                reason: { type: string, maxLength: 2000 }
+      responses:
+        '200':
+          description: The outcome — advanced, refused on a stored fact, or a model verdict.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InternalTransitionAnswer' }
+        '401': { $ref: '#/components/responses/ChannelUnauthenticated' }
+        '404':
+          description: '`stepKey` is not a member of `ONBOARDING_STEPS` — `resource_not_found`.'
+          content:
+            application/problem+json:
+              schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+
+components:
+
+  securitySchemes:
+
+    sigV4:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: |
+        CHANNEL AUTHENTICATION. AWS Signature Version 4.
+
+        The data plane assumes a narrow role in OUR account, scoped to a
+        per-deployment prefix or queue. AWS authenticates who is calling and we
+        manage no shared secrets — there is no API key to rotate, leak, or find
+        in a customer's Terraform state.
+
+        THIS IS WHERE `dataPlaneId` COMES FROM. The calling identity resolves
+        to exactly one `DataPlane`, which is why no request body in this
+        document states which plane it is. A request that could state its plane
+        could state another plane's.
+
+        What SigV4 does NOT do is stop the plane's operator from later denying
+        what the plane sent. That is a different question and needs a different
+        mechanism.
+
+    contentSignature:
+      type: apiKey
+      in: header
+      name: X-Content-Signature
+      description: |
+        CONTENT AUTHENTICATION. A base64 KMS asymmetric signature over the
+        canonicalised request body.
+
+        The key pair is generated IN THE CUSTOMER'S ACCOUNT at install; the
+        private half never leaves their KMS and the application never holds key
+        material. We hold the public half as
+        `DataPlane.attestationPublicKey`.
+
+        REQUIRED ONLY WHERE NON-REPUDIATION IS THE POINT — attestation, and
+        nothing else. A heartbeat does not carry it, because liveness is not
+        something anyone disputes and a KMS call every five minutes would add a
+        failure mode to the one channel that must never have one.
+
+        Channel auth answers *who sent this*. Content signing answers *can they
+        later deny it*. Billing disputes need the second.
+
+  parameters:
+
+    InternalIdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: |
+        X10 only. Covered by the signature. On the two writes the first answer
+        is stored and returned for a repeat of the same request (G4306); on the
+        reads it is carried and bound, and nothing stores it.
+      schema: { type: string, pattern: '^[A-Za-z0-9_-]{16,128}$' }
+
+    PlatformAuthorisationId:
+      name: X-Platform-Authorisation-Id
+      in: header
+      required: true
+      description: |
+        X10 only. The invariant 10 record the DATA plane minted for the console
+        act this call serves — `tenant.platform_authorization_grant.id`. Bound
+        by the signature and stored on every write's receipt (G4309), so the
+        control-side change names the authorisation it ran under.
+      schema: { type: string, pattern: '^azg_[0-9a-f]{32}$' }
+
+    PlatformAuthorisationIdOrSystem:
+      name: X-Platform-Authorisation-Id
+      in: header
+      required: true
+      description: |
+        `getInternalRoster` only (G4312). As `PlatformAuthorisationId`, or the
+        literal `system` for the data plane's tenant-name pull — a system act
+        with no person behind it, the one actor invariant 10's
+        `AUTHORIZATION_MAY_BE_ABSENT` names. No internal WRITE admits `system`.
+      schema: { type: string, pattern: '^(azg_[0-9a-f]{32}|system)$' }
+
+    InternalContentSha256:
+      name: X-Reconcile-Content-Sha256
+      in: header
+      required: true
+      description: |
+        X10 only. SHA-256 of the RFC 8785 canonical form of the body (of the
+        empty string when there is none). Covered by the signature and
+        re-derived from the parsed body before any handler acts.
+      schema: { type: string, pattern: '^[0-9a-f]{64}$' }
+
+    InternalTenantId:
+      name: tenantId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^ten_[a-z0-9][a-z0-9_]{0,60}$' }
+
+    InternalStepKey:
+      name: stepKey
+      in: path
+      required: true
+      description: A member of `ONBOARDING_STEPS`; an unknown key is the data plane's 404, never sent here.
+      schema: { type: string, maxLength: 64 }
+
+    SchemaVersion:
+      name: X-Schema-Version
+      in: header
+      required: true
+      description: |
+        The caller's schema version. THE GATE — monotonic and mechanically
+        comparable, where an engine version string is not.
+
+        Declared per pull rather than read from the last heartbeat, which may
+        be five minutes stale. A plane that has just completed a migration is
+        precisely the plane most likely to be pulling, and serving it against
+        its pre-migration version is how a good upgrade becomes a bad one.
+      schema: { type: integer, minimum: 1 }
+
+    EngineVersion:
+      name: X-Engine-Version
+      in: header
+      required: true
+      description: |
+        Informational. Recorded everywhere, gates nothing. Present so a support
+        conversation can name a build; absent from every decision, because a
+        version string is not comparable and pretending otherwise produces a
+        gate that fails on `1.10.0` versus `1.9.0`.
+      schema: { type: string }
+
+    SignatureKeyId:
+      name: X-Signature-Key-Id
+      in: header
+      required: true
+      description: |
+        Which registered key made `X-Content-Signature`. Outside the signed
+        body by necessity — you cannot know which key to verify with by first
+        verifying with it.
+      schema: { type: string }
+
+  responses:
+
+    ChannelUnauthenticated:
+      description: |
+        SigV4 absent, malformed, or the principal is not a fleet member.
+        Deliberately indistinguishable from a plane we have never provisioned:
+        an unauthenticated caller learns nothing about which plane ids exist.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+    PlaneUnknown:
+      description: |
+        `data_plane_unknown` or `data_plane_decommissioned`. The two are
+        separate because they mean opposite things operationally: the first is
+        a provisioning error, the second is an ex-customer's stack that nobody
+        tore down and is still beating. The second is the one worth a phone
+        call.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+    SequenceRegressed:
+      description: |
+        `sequence_regressed` — a sequence lower than one already accepted, with
+        different content. Tolerated on the heartbeat channel as a warning
+        because a rebuilt plane legitimately restarts its counter; never
+        tolerated on attestation, where it breaks the chain.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+    SchemaVersionUnsupported:
+      description: |
+        `schema_version_unsupported` — the caller is below
+        `minimumSupportedSchemaVersion`.
+
+        DISTRIBUTION IS GATED; INGEST IS NOT. This response appears only on
+        pulls. Heartbeat, usage events and attestation accept an unsupported
+        plane unconditionally and forever — refusing them would cost us
+        liveness on the plane most likely to be broken and billing evidence we
+        would later have to prove.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+    IdempotencyConflict:
+      description: Same key or sequence, different payload.
+      content:
+        application/problem+json:
+          schema: { $ref: './errors.yaml#/components/schemas/Problem' }
+
+  schemas:
+
+    # ---------------------------------------------------------------- X10
+    InternalForcedFact:
+      type: object
+      additionalProperties: false
+      required: [step, reason]
+      properties:
+        step: { type: string }
+        reason: { type: string }
+
+    InternalRosterFact:
+      type: object
+      additionalProperties: false
+      required: [tenantId, name, deploymentMode, residency, supportAccessMode, plan, completedSteps, forced]
+      properties:
+        tenantId: { type: string }
+        name: { type: string }
+        deploymentMode: { type: string }
+        residency: { type: string }
+        supportAccessMode: { type: string }
+        plan: { type: [string, 'null'] }
+        completedSteps: { type: [integer, 'null'] }
+        forced:
+          type: array
+          items: { $ref: '#/components/schemas/InternalForcedFact' }
+
+    InternalOnboardingFact:
+      type: object
+      additionalProperties: false
+      required: [onRoster, completedSteps, forced]
+      properties:
+        onRoster: { type: boolean }
+        completedSteps: { type: [integer, 'null'] }
+        forced:
+          type: array
+          items: { $ref: '#/components/schemas/InternalForcedFact' }
+
+    InternalTransitionAnswer:
+      type: object
+      additionalProperties: false
+      required: [outcome]
+      properties:
+        outcome: { type: string, enum: [ok, refused, verdict] }
+        completedSteps: { type: integer, minimum: 0 }
+        forced:
+          type: array
+          items: { $ref: '#/components/schemas/InternalForcedFact' }
+        refusal:
+          type: string
+          enum: [tenant_not_on_roster, onboarding_record_absent, completed_count_unreadable, forced_step_unreadable]
+        verdict:
+          type: string
+          enum: [step_not_current, step_already_done, step_is_current, reason_too_short]
+
+
+    # ---------------------------------------------------------------- shared
+    # Referenced, not restated. One closed vocabulary across every tier —
+    # a second parallel enum would mean a code that means one thing in a trace
+    # and another in a ticket.
+
+
+
+    Meter:
+      $ref: './foundation.openapi.yaml#/components/schemas/Meter'
+
+    PackKey:
+      $ref: './foundation.openapi.yaml#/components/schemas/PackKey'
+
+    # ---------------------------------------------------------------- X6
+
+    Heartbeat:
+      type: object
+      description: |
+        Mirrors `DataPlaneHeartbeat` in `model/deployment.ts`, minus
+        `dataPlaneId` (from SigV4) and `receivedAt` (ours, assigned on
+        arrival).
+
+        DELIBERATELY EXCLUDES ANY NOTION OF BUSY OR IDLE beyond `lastWorkAt`.
+        Liveness describes the channel; activity describes the workload;
+        neither is derivable from the other, and this schema is where that
+        stays true.
+      additionalProperties: false
+      required:
+        - sequence
+        - emittedAt
+        - engineVersion
+        - schemaVersion
+        - schemaMigrationPending
+        - packVersionsInForce
+        - errorCounts
+        - queueDepth
+        - selfReported
+        - lastWorkAt
+        - leaseSequence
+        - leaseExpiresAt
+      properties:
+        sequence:
+          type: integer
+          minimum: 1
+          description: |
+            Monotonic per plane. Buffered beats replay with their ORIGINAL
+            number, so a gap is a lost beat rather than an absence. Nothing
+            bills off this; it exists so silence is interpretable.
+        emittedAt:
+          type: string
+          format: date-time
+          description: |
+            THE PLANE'S CLOCK. Informational only, never used for ordering.
+            Recorded so that clock skew is visible as a fact rather than
+            appearing as reordering.
+        engineVersion:
+          type: string
+          description: Informational. Recorded everywhere, gates nothing.
+        schemaVersion:
+          type: integer
+          description: The gate. Compared against the supported version window.
+        schemaMigrationPending:
+          type: boolean
+          description: |
+            True while a migration is applied but not complete. A half-migrated
+            plane must be VISIBLE rather than merely slow — it is the state in
+            which a support call is most likely and a version-based diagnosis
+            most likely to be wrong.
+        packVersionsInForce:
+          type: object
+          description: |
+            Pack key to version. Content, not code — pack releases and engine
+            releases are different trains and share no version axis.
+
+            The KEY is a platform-authored pack key, never a tenant-authored
+            name — and since G224 (22 Aug 2026) that is CLOSED here rather
+            than merely asserted in prose. `propertyNames` refuses a key the
+            platform has not pre-registered, the way `totals` on the
+            attestation body already refuses a meter.
+          propertyNames: { $ref: '#/components/schemas/PackKey' }
+          additionalProperties: { type: integer }
+        errorCounts:
+          $ref: '#/components/schemas/ErrorCounts'
+        queueDepth:
+          type: integer
+          minimum: 0
+          description: |
+            A depth, not a backlog listing. Permitted because it is a number
+            about our own runtime; anything that named what was queued would
+            not be.
+        selfReported:
+          type: string
+          enum: [ok, degraded]
+          description: The plane's own assessment. We record it; we need not believe it.
+        lastWorkAt:
+          type: [string, 'null']
+          format: date-time
+          description: |
+            Last billable work AS THE PLANE SEES IT. Null means never.
+
+            CARRIED HERE ON PURPOSE so that zero activity is something the
+            plane SAYS rather than something we infer from silence. A customer
+            who reconciles monthly is silent for twenty-nine days and must not
+            look broken for any of them.
+        leaseSequence:
+          type: integer
+          description: Which lease is in force, so drift between issue and use is visible.
+        leaseExpiresAt:
+          type: string
+          format: date-time
+
+    ErrorCounts:
+      type: object
+      description: |
+        Errors since the previous beat, keyed by error CLASS.
+
+        KEYS ARE CONSTRAINED TO THE CLOSED VOCABULARY, mechanically, by
+        `propertyNames`. Free text is never the diagnostic channel: under a
+        restrictive `SpanAttributePolicy` the class is the only thing that
+        survives redaction, and a free-text key would also be the easiest place
+        in this whole contract for a customer-authored string to escape into
+        our database.
+      propertyNames: { $ref: '#/components/schemas/ErrorCode' }
+      additionalProperties: { type: integer, minimum: 0 }
+
+    HeartbeatAck:
+      type: object
+      description: |
+        What the plane learns by beating. Everything here is either a fact
+        about our commitments or a hint about what changed.
+
+        THERE IS NO COMMAND FIELD AND THERE MUST NEVER BE ONE. The moment this
+        response can tell a plane to do something, the architecture has an
+        inbound control path wearing a response's clothes.
+      additionalProperties: false
+      required: [receivedAt, versionWindow, versionPosture, pullHints]
+      properties:
+        receivedAt:
+          type: string
+          format: date-time
+          description: OUR clock. Authoritative for ordering.
+        versionWindow:
+          $ref: '#/components/schemas/SupportedVersionWindow'
+        versionPosture:
+          type: string
+          enum: [current, behind, unsupported]
+          description: |
+            Where this plane sits. `behind` is an upgrade conversation, not an
+            incident — a plane can be perfectly healthy and two versions
+            behind, and treating that as an outage trains everyone to ignore
+            the signal.
+        pullHints:
+          type: array
+          description: |
+            ADVISORY ONLY. What has changed that the plane may wish to pull. A
+            plane that ignores this entirely and pulls on its own schedule must
+            still be correct.
+          items:
+            type: string
+            enum:
+              - entitlement_lease_available
+              - policy_bundle_available
+              - pack_version_available
+              - access_grant_changed
+              - signing_key_rotating
+        leaseExpiresInHours:
+          type: [number, 'null']
+          description: |
+            Surfaced so the plane can warn the customer WELL AHEAD of expiry.
+            The lease is disclosed commercial machinery; a customer meeting it
+            as a surprise is the failure this field exists to prevent.
+
+    SupportedVersionWindow:
+      type: object
+      description: |
+        What we commit to supporting. Expressed in SCHEMA versions rather than
+        engine versions because a schema version is a monotonic integer and
+        mechanically comparable.
+
+        Only meaningful because migrations are forward-only and
+        expand/contract: engine N runs against schema N and N-1. You cannot
+        roll back a schema change in an account you cannot reach, whose backups
+        you do not hold, and whose PITR window is the customer's decision.
+      additionalProperties: false
+      required: [currentSchemaVersion, minimumSupportedSchemaVersion, securityPatchHours]
+      properties:
+        currentSchemaVersion: { type: integer }
+        minimumSupportedSchemaVersion:
+          type: integer
+          description: Oldest still under SLA. Typically current − 2.
+        securityPatchHours:
+          type: integer
+          description: |
+            The contractual window for a critical security patch, pre-authorised
+            at signing and distinct from feature rollout, which the customer
+            consents to per release. Without this clause a fleet-wide
+            vulnerability becomes N separate negotiations conducted under
+            disclosure pressure. Default 72.
+
+    # ---------------------------------------------------------------- X4
+
+    UsageEventBatch:
+      type: object
+      additionalProperties: false
+      required: [emittedAt, events]
+      properties:
+        emittedAt:
+          type: string
+          format: date-time
+          description: The plane's clock. Informational.
+        events:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/PlaneUsageEvent' }
+
+    PlaneUsageEvent:
+      type: object
+      description: |
+        One metered fact, as it crosses. Mirrors the PII-free subset of
+        `UsageRecord`.
+
+        WHAT IS NOT HERE IS THE POINT: no document, no exception, no run
+        payload, no definition name, no counterparty, no extracted value. The
+        meters were chosen so that every one is something a customer can verify
+        independently and something we would defend in a dispute.
+      additionalProperties: false
+      required: [tenantRef, idempotencyKey, sequence, at, recordedAt, meter, quantity]
+      properties:
+        tenantRef:
+          type: string
+          description: |
+            ⚠️ THE ONE DEVIATION IN THIS CONTRACT SET from "no request states
+            its own scope", and it is argued rather than hidden.
+
+            A hosted plane is multi-tenant and ships usage for many tenants in
+            one batch, with no session left to derive scope from at ship time.
+            A BYOA plane has exactly one tenant and still states it, so one
+            code path serves both topologies.
+
+            This is an ATTRIBUTION LABEL ON A COUNTER, not a scope assertion.
+            The control plane rejects any ref not already bound to the calling
+            plane at provisioning, so the worst a compromised plane can do is
+            misattribute revenue between tenants it already serves — it cannot
+            reach a tenant it does not.
+        idempotencyKey:
+          type: string
+          description: |
+            The provider's own request id where one exists. At-least-once
+            delivery otherwise double-counts tokens into an append-only table
+            that has no compensating instrument.
+        sequence:
+          type: integer
+          minimum: 1
+          description: |
+            Monotonic per plane. Metering is the spine: a gap here is
+            DETECTABLE rather than merely absent, which is what makes a
+            self-reported meter checkable at all.
+        at:
+          type: string
+          format: date-time
+          description: When the metered event happened, by the plane's clock.
+        recordedAt:
+          type: string
+          format: date-time
+          description: |
+            When the plane recorded it. Differs from `at` under retry and clock
+            skew. Preserved verbatim through a buffered replay — and still not
+            what the billing period is assigned from.
+        meter: { $ref: '#/components/schemas/Meter' }
+        quantity:
+          type: number
+          description: Integer where the meter is countable; decimals only for storage.
+        runId:
+          type: [string, 'null']
+          description: |
+            OPAQUE. Carried so a customer disputing a line can be answered at
+            run granularity from their OWN database. We cannot resolve it into
+            anything and hold nothing it points at.
+        model:
+          type: [string, 'null']
+          description: |
+            A model identifier from our own catalogue. Ours, not theirs.
+        costCenter:
+          type: [string, 'null']
+          description: |
+            ⚠️ CUSTOMER-AUTHORED AND THEREFORE REVEALING — a cost-centre
+            vocabulary names departments, projects and sometimes counterparties.
+            It crosses because enterprise chargeback is unbuildable without it
+            and it is the customer's own request that we carry it.
+
+            It is closed-vocabulary at source (F11 rejects free-form tags), it
+            is classified like any other value, and it must NOT appear on
+            aggregate fleet surfaces. `DataPlaneHealth` excludes cost-centre
+            names explicitly for this reason.
+        domain:
+          type: [string, 'null']
+          description: Platform domain key. Ours.
+        packId:
+          type: [string, 'null']
+          description: Platform pack id. Ours.
+
+    UsageIngestAck:
+      type: object
+      additionalProperties: false
+      required: [receivedAt, accepted, rejected]
+      properties:
+        receivedAt:
+          type: string
+          format: date-time
+          description: |
+            OURS, AND AUTHORITATIVE. The billing period is assigned from this
+            and never from `at` or `recordedAt`. A replayed backlog lands in
+            the period it arrived in; the sequence is what makes it attributable
+            to the period it belongs to.
+        accepted:
+          type: integer
+          description: Durable upstream. Safe for the plane to drop from its buffer.
+        rejected:
+          type: array
+          description: |
+            Per-event, because a whole-batch failure would let one bad event
+            block a month of revenue queued behind it. Everything not listed
+            here is accepted.
+          items:
+            type: object
+            additionalProperties: false
+            required: [idempotencyKey, code]
+            properties:
+              idempotencyKey: { type: string }
+              code: { $ref: '#/components/schemas/ErrorCode' }
+        highWaterSequence:
+          type: integer
+          description: |
+            The highest sequence we hold for this plane. Returned so a plane
+            recovering from a crash can resume without replaying its whole
+            buffer.
+
+    UsageAttestation:
+      type: object
+      description: |
+        A signed claim about what the plane did over a period. Mirrors
+        `UsageAttestation` in `model/billing.ts`, minus `dataPlaneId` (SigV4),
+        `signature` (the header), and `receivedAt` / `verifiedAt` (ours).
+
+        AGGREGATE COUNTS ONLY — no content, no identifiers, no per-run detail.
+
+        A NOTE ON MULTI-TENANT PLANES, stated rather than papered over: the
+        model gives `UsageAttestation` a `dataPlaneId` and no tenant, so a
+        hosted plane's attestation is a PER-PLANE integrity artefact while
+        per-tenant billing comes from the event stream above. Under BYOA — the
+        topology attestation exists for — the plane is single-tenant and the
+        two coincide. If per-tenant attestation is ever required for a hosted
+        plane, that is a model change, not a field to slip in here.
+      additionalProperties: false
+      required:
+        - sequence
+        - previousAttestationHash
+        - bodyHash
+        - periodFrom
+        - periodTo
+        - totals
+        - policyVersionInForce
+        - packVersionsInForce
+        - engineVersion
+      properties:
+        sequence:
+          type: integer
+          minimum: 1
+          description: |
+            Monotonic per plane, FROM 1. A gap is a missing period, not an
+            absence — this is the field that makes the difference expressible.
+        previousAttestationHash:
+          type: [string, 'null']
+          description: |
+            Hash of the previous attestation's canonical body. Null ONLY at
+            sequence 1.
+
+            Together with `sequence` this is what makes the series checkable:
+            back-dating breaks the chain, a plane that resets its counters is
+            visible, and a missing period is detectable. Totals with a
+            signature and no chain prove only that we received what they sent.
+        bodyHash:
+          type: string
+          description: |
+            Digest of this attestation's canonical body — the same bytes the
+            content signature covers. Carried explicitly because the NEXT
+            attestation chains to it, and the plane must not have to re-derive
+            it from a re-serialisation that might differ by a key order.
+        periodFrom:
+          type: string
+          format: date-time
+          description: The plane's clock. Recorded, not believed.
+        periodTo:
+          type: string
+          format: date-time
+          description: |
+            The plane's clock. PERIOD ASSIGNMENT DOES NOT USE THIS — it uses
+            our `receivedAt`. A buffered replay arrives late by design.
+        totals:
+          type: object
+          description: |
+            Per-meter totals for the period.
+
+            ZERO TOTALS ARE LEGITIMATE AND MEANINGFUL: the plane was idle and
+            said so. An idle attestation and a missing one are different facts,
+            and the whole heartbeat/attestation design exists to keep them
+            different.
+
+            Note that `storage_gb_month` is a STOCK, not a flow — the period
+            value is a mean of samples, and summing it would over-bill by the
+            sample count. See `METER_AGGREGATION`.
+          propertyNames: { $ref: '#/components/schemas/Meter' }
+          additionalProperties: { type: number, minimum: 0 }
+        policyVersionInForce:
+          type: integer
+          description: What was in force, so a dispute is scopeable to a version.
+        packVersionsInForce:
+          type: object
+          description: |
+            Pack key to version, in force for the period.
+
+            THE SECOND MAP ON THIS BODY, AND UNTIL G224 THE ONLY OPEN ONE.
+            `totals` above closes against `Meter`; this accepted any key a
+            plane chose to send, on the one body that is signed, hash-chained
+            and used to settle a bill. `propertyNames` closes it against the
+            pre-registered vocabulary — a plane cannot attest usage against a
+            pack the platform never published.
+          propertyNames: { $ref: '#/components/schemas/PackKey' }
+          additionalProperties: { type: integer }
+        engineVersion: { type: string }
+
+    AttestationAck:
+      type: object
+      additionalProperties: false
+      required: [receivedAt, sequence, verified]
+      properties:
+        receivedAt:
+          type: string
+          format: date-time
+          description: OURS. Period assignment uses this, never `periodTo`.
+        sequence: { type: integer }
+        verified:
+          type: boolean
+          description: |
+            Signature checked against the registered public key and the chain
+            checked against our head. False never appears with a 202 — it is
+            here so the field exists on the stored record either way.
+        chainHeadSequence:
+          type: integer
+          description: Our head after accepting this one.
+
+    AttestationChainHead:
+      type: object
+      additionalProperties: false
+      required: [sequence, bodyHash, advisory]
+      properties:
+        sequence:
+          type: [integer, 'null']
+          description: Null when we have never accepted an attestation from this plane.
+        bodyHash:
+          type: [string, 'null']
+          description: |
+            What the next attestation must chain to. A hash of something they
+            sent us — returning it discloses nothing they did not produce.
+        advisory:
+          type: string
+          description: |
+            Human-readable note that resuming from OUR head is a recovery
+            action, not a normal one. A plane that reads this every period has
+            a chain that proves nothing about its own continuity.
+
+    # ---------------------------------------------------------------- X3
+
+    EntitlementLeaseSet:
+      type: object
+      additionalProperties: false
+      required: [issuedAt, leases]
+      properties:
+        issuedAt: { type: string, format: date-time }
+        leases:
+          type: array
+          items: { $ref: '#/components/schemas/SignedEntitlementLease' }
+
+    SignedEntitlementLease:
+      type: object
+      description: |
+        A signed grant of capacity, verified OFFLINE by the plane with no
+        network call. Mirrors `EntitlementLease` in `model/billing.ts`.
+      additionalProperties: false
+      required:
+        - id
+        - tenantRef
+        - sequence
+        - issuedAt
+        - notBefore
+        - expiresAt
+        - tierCeilings
+        - ceilings
+        - ceilingMultiple
+        - graceHours
+        - signature
+        - signingKeyId
+      properties:
+        id: { type: string }
+        tenantRef:
+          type: string
+          description: |
+            An OUTPUT, exactly as `TenantContext.tenantId` is an output in the
+            foundation tier. The plane is told which tenant this lease is for;
+            it never asks.
+        sequence:
+          type: integer
+          description: |
+            Monotonic per plane. THE PLANE REFUSES A LEASE OLDER THAN ITS
+            CURRENT — that rule lives in the plane, and it is what stops a
+            replayed lease from widening a ceiling that has since been reduced.
+        issuedAt: { type: string, format: date-time }
+        notBefore: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        tierCeilings:
+          type: object
+          description: |
+            THE COMMERCIAL LIMIT — what the customer contracted for. Exceeding
+            it WARNS and bills overage. It never stops work.
+          propertyNames: { $ref: '#/components/schemas/Meter' }
+          additionalProperties: { type: number, minimum: 0 }
+        ceilings:
+          type: object
+          description: |
+            THE RUNAWAY GUARD — a multiple of `tierCeilings`. Exceeding it
+            means something is wrong and the plane stops accepting NEW work.
+
+            TWO NUMBERS ON PURPOSE. Setting them equal would block a regulated
+            customer's month-end close over a billing threshold and would
+            contradict the rule that in-flight work always completes. Keeping
+            them apart preserves the hard bound that makes metering defensible
+            while leaving the commercial limit soft, which is where softness
+            belongs.
+
+            Meters that are REPORTED rather than PRICED under BYOA — tokens and
+            storage, which land on the customer's own AWS bill — still carry a
+            guard. An unbounded token count in a customer's account is their
+            cost exposure, and a runaway is worth stopping even where we do not
+            bill for it.
+          propertyNames: { $ref: '#/components/schemas/Meter' }
+          additionalProperties: { type: number, minimum: 0 }
+        ceilingMultiple:
+          type: number
+          description: |
+            The multiple used to derive `ceilings`, carried so it is auditable
+            rather than inferred. Default 3 — a starting position, per-deployment
+            overridable, and still an open item.
+        graceHours:
+          type: integer
+          description: |
+            Hours after expiry during which IN-FLIGHT WORK COMPLETES and new
+            work warns. Expiry is a grace period, never a stop: halting mid-run
+            wastes spend already incurred and entitlement already drawn.
+        revoked:
+          type: boolean
+          description: |
+            BEST-EFFORT BY CONSTRUCTION. An offline-verifiable lease cannot
+            learn it was revoked while offline; this flag takes effect at this
+            pull, or at expiry, whichever comes first. The guarantee is "no
+            more than the ceiling, and not past expiry", not "stops on
+            command". Paired with `lease_revoked` in the error vocabulary for
+            the case where a plane presents a revoked lease sequence.
+        signature:
+          type: string
+          description: |
+            Our signature over the canonical lease body. THE PLANE VERIFIES
+            THIS WITH NO NETWORK — that property is the whole mechanism, and it
+            is why the public key has to be pulled separately and pinned.
+        signingKeyId: { type: string }
+
+    DiagnosticJobSet:
+      type: object
+      additionalProperties: false
+      required: [jobs]
+      description: |
+        Pending diagnostic jobs for the polling plane.
+
+        ⚠️ REFERENCED SINCE THE FILE WAS WRITTEN AND DEFINED NOWHERE UNTIL
+        12 Aug 2026. This and `DiagnosticBundleMetadata` were dangling `$ref`s — and
+        they are the only two operations that move telemetry across the account
+        boundary, so the two least specified schemas in the contract were the two
+        that mattered most. `tools/check-wire-mirror.mjs` could not catch it: it does
+        not resolve `$ref` targets, which is the unbuilt half of G109.
+
+        A job names a PLANE, a WINDOW and a SUBJECT KIND. It never names a tenant.
+      properties:
+        jobs:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [jobId, kind, windowStart, windowEnd, requestedBy, expiresAt]
+            properties:
+              jobId: { type: string }
+              kind:
+                type: string
+                enum: [run_timings, error_census, queue_depth, version_census, span_shape]
+                description: |
+                  A CLOSED VOCABULARY, not a query language. Each kind names a
+                  value-free question. There is deliberately no `custom` or `query`
+                  member: an open kind is an open channel, and this schema exists to
+                  close one.
+              windowStart: { type: string, format: date-time }
+              windowEnd: { type: string, format: date-time }
+              requestedBy:
+                type: string
+                description: |
+                  The `AuthorizationGrant` id under which staff created this job.
+                  Invariant 10 — an act with no authorisation is unrecordable.
+              expiresAt:
+                type: string
+                format: date-time
+                description: A job the plane has not collected by this time is dead, not queued.
+
+    DiagnosticBundleMetadata:
+      type: object
+      additionalProperties: false
+      required: [jobId, planeRef, engineVersion, schemaVersion, collectedAt, retentionDays, findings]
+      description: |
+        The whole result of a diagnostic job. There is no second payload.
+
+        🛑 EVERY FIELD BELOW IS AN ID, AN ENUM, AN INTEGER OR A TIMESTAMP. THAT IS
+        THE CONTROL, AND IT IS STRUCTURAL RATHER THAN PROCEDURAL. An earlier design
+        had the plane redact a full trace before upload; redaction at the sender
+        cannot be verified at the receiver, so a value that survived it would have
+        entered our account undetected. This schema instead has NO FIELD CAPABLE OF
+        CARRYING A TENANT VALUE — no free-form string, no map, no opaque object, no
+        `additionalProperties`. Unrepresentable beats forbidden, which is the polarity
+        this record has chosen every time it has had the choice.
+
+        ⚠️ IF YOU ADD A FIELD HERE, THAT PROPERTY IS WHAT YOU ARE SPENDING. A single
+        `notes: string` reinstates the entire channel this schema was written to
+        close, and no checker in this repository would notice.
+
+        NO `tenantRef`. A hosted plane is multi-tenant; this reports on OUR software,
+        not on a customer's data.
+      properties:
+        jobId: { type: string }
+        planeRef: { type: string }
+        engineVersion: { type: string }
+        schemaVersion: { type: string }
+        collectedAt: { type: string, format: date-time }
+        retentionDays:
+          type: integer
+          minimum: 1
+          description: |
+            How long the Control Plane may hold this bundle, in the plane's own
+            region, before automatic expiry. ⚠️ Required so the window cannot be
+            omitted; the VALUE is a counsel question and no number is invented here.
+        findings:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [kind, count]
+            properties:
+              kind:
+                type: string
+                enum:
+                  [run_started, run_completed, run_refused, reader_refused,
+                   admission_refused, postcondition_failed, queue_saturated,
+                   lease_expired, upstream_unavailable]
+                description: |
+                  Closed. An error KIND is our own operational fact; an error
+                  MESSAGE is whatever text a tenant's data provoked, and no member
+                  here carries one.
+              count: { type: integer, minimum: 0 }
+              p50Ms: { type: integer, minimum: 0 }
+              p95Ms: { type: integer, minimum: 0 }
+              maxMs: { type: integer, minimum: 0 }
+              spanDepth:
+                type: integer
+                minimum: 0
+                description: Shape of the trace, never its contents.
+
+    SigningKey:
+      type: object
+      additionalProperties: false
+      required: [keyId, publicKeyPem, purposes, notBefore, notAfter]
+      properties:
+        keyId: { type: string }
+        publicKeyPem:
+          type: string
+          description: |
+            Public half only. No field in this contract may carry key material,
+            and a public key is not key material.
+        purposes:
+          type: array
+          items:
+            type: string
+            enum: [entitlement_lease, pack, policy_bundle, access_grant]
+        notBefore: { type: string, format: date-time }
+        notAfter:
+          type: [string, 'null']
+          description: |
+            Null while active. Set on rotation, and always at least one full
+            lease window in the future — an offline plane that misses the
+            overlap cannot verify its lease, and a plane that cannot verify its
+            lease stops.
+
+    # ---------------------------------------------------------------- X1 / X2
+
+    PackSummary:
+      type: object
+      additionalProperties: false
+      required: [packKey, packVersion, label, domain, lifecycle, minimumSchemaVersion]
+      properties:
+        packKey: { type: string }
+        packVersion: { type: integer }
+        label:
+          type: string
+          description: Platform-authored catalogue content. Ours, so it is safe to return.
+        domain: { type: string }
+        lifecycle:
+          type: string
+          enum: [draft, validated, tested, staged, approved, promoted, active, deprecated]
+          description: |
+            Eight states, every transition gated. A plane will only ever see
+            `promoted`, `active` or `deprecated`; the earlier ones are internal
+            and are listed so the enum stays one enum.
+        minimumSchemaVersion:
+          type: integer
+          description: |
+            The lowest schema version that can load this pack. The filter that
+            makes "listed" and "installable" the same set.
+        supersededBy:
+          type: [string, 'null']
+          description: Set when deprecated, so a pack can be migrated before it breaks.
+
+    SignedArtifact:
+      type: object
+      description: |
+        A retrievable, signed bundle. The plane fetches the bytes itself; we
+        never deliver them.
+      additionalProperties: false
+      required: [artifactUrl, expiresAt, digestSha256, signature, signingKeyId]
+      properties:
+        artifactUrl:
+          type: string
+          format: uri
+          description: |
+            Short-lived read URL into OUR object storage. Outbound-initiated by
+            the plane like everything else here.
+        expiresAt: { type: string, format: date-time }
+        digestSha256:
+          type: string
+          description: |
+            Checked before the signature, so a truncated download fails as a
+            transfer error rather than as a signature failure — which is a
+            security alert nobody should be triaging over a dropped connection.
+        signature:
+          type: string
+          description: |
+            Detached signature over the artefact contents, VERIFIED AT LOAD and
+            not merely at download. Integrity is the guarantee we can actually
+            make; confidentiality is not, and claiming both costs credibility
+            with the security team whose approval the deal needs.
+        signingKeyId: { type: string }
+
+    InstallationReport:
+      type: object
+      additionalProperties: false
+      required: [tenantRef, packKey, packVersion, environment, rolloutState, at]
+      properties:
+        tenantRef: { type: string }
+        packKey: { type: string }
+        packVersion: { type: integer }
+        environment:
+          type: string
+          enum: [sandbox, evaluation, production]
+        rolloutState:
+          type: string
+          enum: [pending, rolling_out, active, rolled_back, failed]
+        rolledBackBy:
+          type: [string, 'null']
+          description: |
+            The trigger class that reverted it, from the closed set:
+            `outcome_breach`, `cost_overrun`, `compliance_violation`,
+            `anomaly`. Only OUTCOME-level scorers may trigger a rollback at
+            all; component drift notifies and never reverts.
+          enum: [outcome_breach, cost_overrun, compliance_violation, anomaly, null]
+        mintedCounts:
+          type: object
+          description: |
+            HOW MANY tenant rows the install minted, per kind. Not WHICH — the
+            ids are tenant rows and stay in the plane. The count is enough to
+            tell a partial install from a complete one, which is the only
+            question we need to answer from here.
+          additionalProperties: { type: integer, minimum: 0 }
+        at:
+          type: string
+          format: date-time
+          description: The plane's clock. Ordering uses our receipt time.
+        failureCode:
+          $ref: '#/components/schemas/ErrorCode'
+
+    SignedPolicyBundle:
+      type: object
+      description: |
+        Platform-authored material a tenant policy resolves against. NOT a
+        tenant's policy — see the operation description for why that
+        distinction is load-bearing.
+
+        TYPED 7 Aug 2026. Until then `defaults` and `templates` were both
+        `additionalProperties: true` while `PolicyConfig` in `model/policy.ts`
+        was a discriminated union — so the ONE document in this system that
+        crosses an AWS account boundary, is signed, is verified offline and is
+        then evaluated by F3 INSIDE the customer's plane was the one document
+        with no schema at all. Signing an unschematised body proves it arrived
+        unaltered; it proves nothing about what it says. A malformed
+        `AutonomyConfig` in a validly signed bundle is a correctly
+        authenticated instruction to widen an autonomy envelope, and the plane
+        has no network to ask us about it.
+
+        CONTENT MIRRORS `PolicyBundle` in `model/policy.ts`. The two envelope
+        fields — `signature`, `signingKeyId` — have NO model counterpart, and
+        that is deliberate: a signature is a property of surviving an untrusted
+        channel rather than of the domain object, which is where
+        `SignedArtifact` and `SignedAccessGrant` already put it. `signingKeyId`
+        is additionally a KMS-minted identifier naming a key registry that does
+        not exist in `model/`.
+
+        SIX KINDS, NOT EIGHT. `spend` and `content_guardrail` are
+        `@dropped-for-v1` on `POLICY_KINDS` — declared, not built. A bundle
+        carrying either would ship a rule the plane has no evaluator for, which
+        is worse than shipping nothing: the plane would verify it, load it, and
+        silently fail to apply it. Restoring a kind adds a REQUIRED key to
+        `defaults` and is therefore a bundle FORMAT change — announced by
+        `bundleVersion` and refused by the existing
+        `policy_bundle_version_unsupported` on the operation. That error code
+        already existed; this is what will use it.
+      additionalProperties: false
+      required: [bundleVersion, issuedAt, defaults, templates, signature, signingKeyId]
+      properties:
+        bundleVersion:
+          type: integer
+          description: |
+            Monotonic. Appears in every attestation as `policyVersionInForce`,
+            which is how a dispute becomes scopeable to a version.
+        issuedAt: { type: string, format: date-time }
+        defaults: { $ref: '#/components/schemas/PolicyDefaults' }
+        templates:
+          type: array
+          description: |
+            Starting points, NOT BINDING UNTIL ADOPTED by a tenant admin. A
+            partner may publish a template; a partner may not impose policy on
+            a customer it resells to, and shipping templates down this channel
+            must never become a way around that.
+          items: { $ref: '#/components/schemas/PolicyTemplate' }
+        signature:
+          type: string
+          description: Verified offline by the plane before the bundle is loaded.
+        signingKeyId: { type: string }
+
+    PolicyDefaults:
+      type: object
+      description: |
+        The platform default for every LIVE policy kind. Mirrors
+        `PolicyDefaults` in `model/policy.ts`, which is a total mapped type over
+        `LivePolicyKind`.
+
+        ALL SIX ARE REQUIRED, and that is the whole value of typing this.
+        `Policy` states the rule — *a platform default exists for every kind; a
+        tenant policy overrides it* — so an omitted key leaves a guardrail
+        resolving to nothing inside a customer's account. `autonomy` is the one
+        that matters most: it is the most consequential policy in an agentic
+        product, and a bundle that could omit it is a bundle that could ship an
+        undefined autonomy envelope past a valid signature.
+
+        Autonomy defaults are deliberately NOT uniform across domains.
+        Auto-resolving a rounding difference on an invoice is the product
+        working; auto-resolving an identity mismatch in KYC is not. That
+        variation lives in `AutonomyConfig.autonomousIn` and in
+        `DEFAULT_AUTONOMY_BY_DOMAIN`, not in the shape of this object.
+      additionalProperties: false
+      required: [autonomy, approval, model_use, managed_service_use, data_egress, correspondence]
+      properties:
+        autonomy: { $ref: '#/components/schemas/AutonomyConfig' }
+        approval: { $ref: '#/components/schemas/ApprovalConfig' }
+        model_use: { $ref: '#/components/schemas/ModelUseConfig' }
+        managed_service_use: { $ref: '#/components/schemas/ManagedServiceUseConfig' }
+        data_egress: { $ref: '#/components/schemas/DataEgressConfig' }
+        correspondence: { $ref: '#/components/schemas/CorrespondenceConfig' }
+
+    PolicyTemplate:
+      type: object
+      description: |
+        Mirrors `PolicyTemplate` in `model/policy.ts`, with `spec` narrowed to
+        the live kinds — `BundledPolicyTemplate` there.
+      additionalProperties: false
+      required: [id, name, description, authoredBy, spec, recommendedFor]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        authoredBy:
+          type: [string, 'null']
+          description: |
+            Null for platform templates; a `PartnerId` when a partner authored
+            it. THE FIELD THAT CARRIES THE PARTNER RULE: a partner may publish a
+            template and may not impose policy on a customer it resells to, so
+            adoption stays a tenant act that produces a `Policy` with
+            `derivedFromTemplate` set.
+        spec: { $ref: '#/components/schemas/PolicyConfig' }
+        recommendedFor:
+          type: array
+          items: { $ref: '#/components/schemas/DomainKey' }
+
+    PolicyConfig:
+      description: |
+        Discriminated union on `kind`. Mirrors `PolicyConfig` in
+        `model/policy.ts`, NARROWED to the six kinds live in v1 —
+        `LivePolicyConfig` there.
+
+        `spend` and `content_guardrail` are absent by construction rather than
+        by validation: there is no arm to select, so a bundle naming one fails
+        the `oneOf` rather than passing into an evaluator that has no branch for
+        it.
+      oneOf:
+        - $ref: '#/components/schemas/PolicyConfigAutonomy'
+        - $ref: '#/components/schemas/PolicyConfigApproval'
+        - $ref: '#/components/schemas/PolicyConfigModelUse'
+        - $ref: '#/components/schemas/PolicyConfigManagedServiceUse'
+        - $ref: '#/components/schemas/PolicyConfigDataEgress'
+        - $ref: '#/components/schemas/PolicyConfigCorrespondence'
+      discriminator:
+        propertyName: kind
+        mapping:
+          autonomy: '#/components/schemas/PolicyConfigAutonomy'
+          approval: '#/components/schemas/PolicyConfigApproval'
+          model_use: '#/components/schemas/PolicyConfigModelUse'
+          managed_service_use: '#/components/schemas/PolicyConfigManagedServiceUse'
+          data_egress: '#/components/schemas/PolicyConfigDataEgress'
+          correspondence: '#/components/schemas/PolicyConfigCorrespondence'
+
+    PolicyConfigAutonomy:
+      type: object
+      additionalProperties: false
+      required: [kind, config]
+      properties:
+        kind: { type: string, const: autonomy }
+        config: { $ref: '#/components/schemas/AutonomyConfig' }
+
+    PolicyConfigApproval:
+      type: object
+      additionalProperties: false
+      required: [kind, config]
+      properties:
+        kind: { type: string, const: approval }
+        config: { $ref: '#/components/schemas/ApprovalConfig' }
+
+    PolicyConfigModelUse:
+      type: object
+      additionalProperties: false
+      required: [kind, config]
+      properties:
+        kind: { type: string, const: model_use }
+        config: { $ref: '#/components/schemas/ModelUseConfig' }
+
+    PolicyConfigManagedServiceUse:
+      type: object
+      additionalProperties: false
+      required: [kind, config]
+      properties:
+        kind: { type: string, const: managed_service_use }
+        config: { $ref: '#/components/schemas/ManagedServiceUseConfig' }
+
+    PolicyConfigDataEgress:
+      type: object
+      additionalProperties: false
+      required: [kind, config]
+      properties:
+        kind: { type: string, const: data_egress }
+        config: { $ref: '#/components/schemas/DataEgressConfig' }
+
+    PolicyConfigCorrespondence:
+      type: object
+      additionalProperties: false
+      required: [kind, config]
+      properties:
+        kind: { type: string, const: correspondence }
+        config: { $ref: '#/components/schemas/CorrespondenceConfig' }
+
+    # ---- the five configs. Mirrors model/policy.ts, field for field ----
+
+    AutonomyConfig:
+      type: object
+      description: |
+        The most consequential policy in an agentic product. *"The agent may
+        auto-resolve low-severity quantity variances under SGD 5,000 in finance,
+        must propose-only above that, and is autonomous nowhere else"* is one
+        instance of this object.
+      additionalProperties: false
+      required:
+        - maxAutoResolveSeverity
+        - autonomousIn
+        - autoResolveValueCeiling
+        - permittedActions
+        - mayProposeBeyondLimits
+      properties:
+        maxAutoResolveSeverity: { $ref: '#/components/schemas/AutonomyCeiling' }
+        autonomousIn:
+          allOf:
+            - $ref: '#/components/schemas/ScopeOfDomains'
+          description: |
+            Domains where autonomous resolution is permitted AT ALL — a
+            POSITIVE list, and the polarity is load-bearing. It was
+            `neverAutonomousIn: DomainKey[]`, so a bundle nobody had filled in
+            authorised autonomy in KYC, credit underwriting and medical records.
+            An empty `{ kind: these, values: [] }` now permits nothing;
+            `{ kind: all }` is legitimate and has to be written down by someone.
+        autoResolveValueCeiling:
+          oneOf:
+            - $ref: '#/components/schemas/MoneyAmount'
+            - type: 'null'
+          description: Null = no monetary gate.
+        permittedActions:
+          type: array
+          items: { $ref: '#/components/schemas/AgentAction' }
+        mayProposeBeyondLimits:
+          type: boolean
+          description: If true the agent may still propose; only execution is gated.
+
+    ApprovalConfig:
+      type: object
+      additionalProperties: false
+      required:
+        - approvers
+        - quorum
+        - mandatoryAtOrAbove
+        - mandatoryAtOrAboveValue
+        - segregationOfDuties
+        - escalateAfterHours
+      properties:
+        approvers:
+          type: array
+          description: |
+            What an approver must HOLD. An EMPTY LIST IS A HARD STOP, not a
+            missing value — approval becomes impossible. Stated as capability
+            requirements rather than role keys because `RoleKey` included
+            `partner_admin`, and a partner may never be the approving authority
+            for a customer's disposition.
+          items: { $ref: '#/components/schemas/CapabilityRequirement' }
+        quorum:
+          type: integer
+          minimum: 1
+          description: |
+            Distinct approvers across all requirements. NOT the same count as
+            `CapabilityRequirement.distinctHolders`, which binds within one
+            requirement; the two must not be collapsed.
+        mandatoryAtOrAbove: { $ref: '#/components/schemas/Severity' }
+        mandatoryAtOrAboveValue:
+          oneOf:
+            - $ref: '#/components/schemas/MoneyAmount'
+            - type: 'null'
+          description: |
+            Value at or above which approval is mandatory regardless of
+            severity. Severity is deliberately decoupled from value elsewhere in
+            this model, so *"high value implies high severity"* was never
+            available as a defence.
+        segregationOfDuties:
+          type: boolean
+          description: |
+            ⚠️ VACUOUS WHEN THE PROPOSER IS AN AGENT, and the model says so at
+            the field. `ProposalActor` is a union, so `approver !== proposer` is
+            trivially true against an agent arm. Carried on the wire as it
+            stands rather than silently corrected here — a plane must see the
+            same flag the model does.
+        escalateAfterHours:
+          type: [integer, 'null']
+          description: |
+            ⚠️ UNENFORCEABLE AS THE MODEL STANDS: `ApprovalDecision` records
+            `decidedAt` and nothing recording when approval was REQUESTED, so
+            there is no t0 to measure from. Shipped because the default belongs
+            in the bundle; recorded because a plane reading this must not treat
+            it as a working clock.
+
+    ModelUseConfig:
+      type: object
+      description: |
+        Invariant 7's entire tenant-scoped input. `resolveModel()` reads
+        `allowedModels`, `allowedRegions` and `requireZeroRetention`, and is the
+        only executable enforcement of *residency survives inference* in the
+        codebase.
+      additionalProperties: false
+      required:
+        - allowedModels
+        - allowedRegions
+        - maxDataClassInPrompt
+        - requireZeroRetention
+      properties:
+        allowedModels:
+          allOf:
+            - $ref: '#/components/schemas/ScopeOfStrings'
+          description: |
+            Model identifiers permitted in this tenant. A POSITIVE list, for the
+            same polarity reason as `autonomousIn` and with a worse blast
+            radius: it was `string[]` documented *"empty = platform default
+            set"* with NO platform default set anywhere, so an empty list
+            permitted the whole catalogue on the control that carries invariant
+            7.
+
+            ⚠️ `resolveModel()` in `model/catalog.ts` still takes
+            `allowedModels: string[]` and still applies the empty-permits-all
+            rule. The wire shape here does not change that function; the two
+            must be landed together or the fix is cosmetic.
+        allowedRegions:
+          type: array
+          minItems: 1
+          description: |
+            Inference must occur in one of these. `global.*` routing is rejected
+            by `resolveModel()` unconditionally and on a separate line — that
+            rejection, not this list, is what has been carrying invariant 7.
+          items: { $ref: '#/components/schemas/RegionKey' }
+        maxDataClassInPrompt:
+          allOf:
+            - $ref: '#/components/schemas/DataClass'
+          description: |
+            Highest classification permitted in a prompt. Fields above this are
+            redacted before the call, not merely discouraged. Governs the
+            ASSEMBLED context, where `FieldSpec.modelProcessingAllowed` governs
+            a single extracted value — the distinction that kept `model_use`
+            live in v1.
+        requireZeroRetention:
+          type: boolean
+          description: Reject prompts whose provider retains data for training.
+
+    ManagedServiceUseConfig:
+      type: object
+      description: |
+        Mirrors `ManagedServiceUseConfig` in `model/policy.ts`. Created by G79,
+        8 Aug 2026, with G7's full four-field shape and not widened since.
+
+        ⚠️ `allowedRegions` HERE IS THE ONLY RESIDENCY CONSTRAINT THAT REACHES
+        EXTRACTION AT ALL, and that is why this schema is load-bearing rather
+        than tidy. Red team RD-1 corrected the record on exactly this point:
+        `ModelCatalogEntry` requires `ModelCapabilities` — `contextWindowTokens`,
+        `maxOutputTokens`, `toolUse`, `structuredOutput` — for which Textract has
+        no analogue, and G54 closes `provider` to `bedrock | sagemaker`, which
+        Textract is neither. So v1's primary IDP engine CANNOT be a catalogue
+        entry and never passes `resolveModel()`, the only executable enforcement
+        of invariant 7 in the codebase. `ModelUseConfig.allowedRegions` governs
+        inference and does NOT govern Textract; the two fields are namesakes and
+        not substitutes.
+
+        G8 travels with this type as an ONBOARDING dependency, not a runtime one:
+        the plane's role needs `organizations:DescribeEffectivePolicy`, which
+        every customer must grant. The opt-out posture splits within one pipeline
+        — it applies to Textract and NOT to a self-hosted SageMaker endpoint.
+      additionalProperties: false
+      required:
+        - allowedFeatures
+        - allowedRegions
+        - maxDataClassToService
+        - maxProviderRetentionDays
+      properties:
+        allowedFeatures:
+          type: array
+          description: |
+            Service features permitted in this tenant — Textract's
+            `AnalyzeDocument` and `DetectDocumentText` are the v1 population.
+
+            ⚠️ A plain array and NOT `ScopeOfStrings`, unlike `allowedModels`
+            beside it, and the asymmetry is deliberate rather than an oversight
+            to be tidied away. The polarity inversion applies to a list whose
+            EMPTY state was documented "empty = platform default set" and
+            therefore failed open. This list has no such documentation and no
+            platform default set: empty means no feature is permitted, which is
+            the safe reading and the only one available.
+          items: { type: string }
+        allowedRegions:
+          type: array
+          minItems: 1
+          description: |
+            The service call must occur in one of these. Read the schema banner
+            before narrowing, widening or defaulting this field — nothing
+            downstream re-checks it, and there is no `resolveModel()` on this
+            path to catch a mistake.
+          items: { $ref: '#/components/schemas/RegionKey' }
+        maxDataClassToService:
+          allOf:
+            - $ref: '#/components/schemas/DataClass'
+          description: |
+            Highest classification permitted to LEAVE for the managed service.
+            The extraction-side sibling of `ModelUseConfig.maxDataClassInPrompt`
+            and of `TelemetryPolicy.maxDataClassInSpanAttributes` — one ceiling
+            per boundary crossed, deliberately, because a single ceiling would
+            force one of the three to be wrong. This governs a document image or
+            page handed to a third-party service, the crossing with the least
+            downstream recourse: once the page is sent, redaction after the fact
+            is not available.
+        maxProviderRetentionDays:
+          type: integer
+          description: |
+            Longest the provider may retain the submitted artefact.
+
+        # 🛑 THERE IS DELIBERATELY NO `requireImprovementOptOut` HERE, AND ONE
+        # MUST NOT BE ADDED. A boolean that switches the opt-out check on or off
+        # is a caller-supplied parameter that switches a check off — and it is an
+        # argument the callee could compute itself, since the opt-out verdict is
+        # DERIVED from `organizations:DescribeEffectivePolicy` against the
+        # tenant's own account rather than asserted by whoever authors the
+        # policy. The caller with the strongest motive to pass `false` is the
+        # caller whose account has no opt-out in force.
+
+    DataEgressConfig:
+      type: object
+      additionalProperties: false
+      required:
+        - allowExport
+        - exportable
+        - requireApprovalToExport
+        - allowedDestinations
+      properties:
+        allowExport: { type: boolean }
+        exportable:
+          allOf:
+            - $ref: '#/components/schemas/ScopeOfDataClasses'
+          description: |
+            Classifications that MAY be exported; everything else may not,
+            whatever the role. Was `neverExport: DataClass[]`, where empty meant
+            `sensitive_personal` walks out of the tenant in a CSV.
+        requireApprovalToExport: { type: boolean }
+        allowedDestinations:
+          type: array
+          items: { type: string }
+
+    CorrespondenceConfig:
+      type: object
+      description: |
+        Governs BOTH directions, because they are the same trust boundary seen
+        from two sides: outbound is disclosure to a third party, inbound is
+        instruction arriving from one. The inbound half is invariant 6's gate —
+        ingested content is data, never instruction.
+      additionalProperties: false
+      required:
+        - maxDataClassInOutbound
+        - requiresApprovalAboveClass
+        - permittedChannels
+        - agentMaySendUnattended
+        - requireVerifiedEndpoint
+        - capabilityToAdmit
+        - orgClassesThatMayAdmit
+        - agentMayAdmitInbound
+        - agentMayAdmitUpToClass
+        - secondPersonToAdmitAboveClass
+        - admittingAgentMayCarryTools
+      properties:
+        maxDataClassInOutbound: { $ref: '#/components/schemas/DataClass' }
+        requiresApprovalAboveClass:
+          oneOf:
+            - $ref: '#/components/schemas/DataClass'
+            - type: 'null'
+          description: Null = never.
+        permittedChannels:
+          type: array
+          items:
+            type: string
+            enum: [email, portal, phone_log, connector]
+        agentMaySendUnattended: { type: boolean }
+        requireVerifiedEndpoint: { type: boolean }
+        capabilityToAdmit:
+          type: string
+          description: |
+            What a principal must HOLD to admit an inbound message as evidence.
+            A CAPABILITY, not a role key — `minimumRoleToAdmit` was an ordered
+            ladder that a partner cleared (a partner operates AS `operator`, the
+            ladder's own default) and that returned -1 for every pack-authored
+            role, so admission failed closed across the whole customer estate.
+            `admit_correspondence` exists as its own capability precisely so
+            this gate has something to ask for that survives a pack inventing
+            role names.
+          const: admit_correspondence
+        orgClassesThatMayAdmit:
+          type: array
+          description: |
+            Which organisations may admit at all, whatever capability they hold.
+            A PLAIN LIST rather than a scope dimension, deliberately:
+            `{ kind: all }` would admit `platform`, and there is no arrangement
+            under which 1CloudHub staff decide what a customer treats as
+            evidence. Empty denies everyone, which is the correct empty value.
+            `[customer]` is the default.
+          items:
+            type: string
+            enum: [platform, partner, customer]
+        agentMayAdmitInbound: { type: boolean }
+        agentMayAdmitUpToClass: { $ref: '#/components/schemas/DataClass' }
+        secondPersonToAdmitAboveClass:
+          oneOf:
+            - $ref: '#/components/schemas/DataClass'
+            - type: 'null'
+          description: Null = never.
+        admittingAgentMayCarryTools:
+          type: boolean
+          description: |
+            FALSE is the safe value and the default. If the reasoning that reads
+            a message is the reasoning that decides whether to trust it,
+            injected text can induce its own admission and the checkpoint has a
+            hole in the middle.
+
+    CapabilityRequirement:
+      type: object
+      description: |
+        Mirrors `CapabilityRequirement` in `model/access.ts`. `capability` is
+        left as a bare string here rather than enumerated: not one of the
+        thirty-six capabilities appears in any contract file yet, and
+        enumerating them in this one document would create a second, partial
+        copy of a closed set that the administration tier is going to have to
+        publish properly.
+      additionalProperties: false
+      required: [capability, distinctHolders, appliesAtOrAboveValue]
+      properties:
+        capability: { type: string }
+        distinctHolders:
+          type: integer
+          minimum: 1
+          description: |
+            Above one, they must be different PEOPLE — four-eyes means two
+            names, and stating it here is what stops a second signature being
+            the first person signing twice.
+        appliesAtOrAboveValue:
+          oneOf:
+            - $ref: '#/components/schemas/MoneyAmount'
+            - type: 'null'
+          description: Null = always.
+
+    MoneyAmount:
+      type: object
+      additionalProperties: false
+      required: [currency, amountMinor]
+      properties:
+        currency: { type: string }
+        amountMinor:
+          type: string
+          pattern: '^-?[0-9]+$'
+          description: |
+            Exact minor units, as a DECIMAL STRING. Never a float — this is money.
+
+            🛑 A STRING SINCE 19 Sep 2026 AND `{ type: integer }` BEFORE IT —
+            G286, applying G65: *"JSON has no bigint, so both contract files
+            change."* This is the second of the two. The model type is `bigint`;
+            a JSON number would be read back as an IEEE-754 double and lose
+            exactness above 2^53 minor units.
+            `model/money.ts` is the only permitted conversion — G111.
+
+    # ---- ScopeDimension<T>. One schema per T; OpenAPI has no generics --------
+
+    ScopeOfDomains:
+      type: object
+      description: |
+        `ScopeDimension<DomainKey>`. `all` or an explicit list, never a nullable
+        array — a null meaning *unrestricted* is the shape `AssignmentScope` was
+        moved off, and an empty list must deny rather than permit.
+      additionalProperties: false
+      required: [kind]
+      properties:
+        kind: { type: string, enum: [all, these] }
+        values:
+          type: array
+          description: Required when `kind` is `these`; absent when `kind` is `all`.
+          items: { $ref: '#/components/schemas/DomainKey' }
+      if:
+        properties: { kind: { const: these } }
+      then:
+        required: [values]
+
+    ScopeOfDataClasses:
+      type: object
+      description: '`ScopeDimension<DataClass>`. See `ScopeOfDomains`.'
+      additionalProperties: false
+      required: [kind]
+      properties:
+        kind: { type: string, enum: [all, these] }
+        values:
+          type: array
+          items: { $ref: '#/components/schemas/DataClass' }
+      if:
+        properties: { kind: { const: these } }
+      then:
+        required: [values]
+
+    ScopeOfStrings:
+      type: object
+      description: '`ScopeDimension<string>`. See `ScopeOfDomains`.'
+      additionalProperties: false
+      required: [kind]
+      properties:
+        kind: { type: string, enum: [all, these] }
+        values:
+          type: array
+          items: { type: string }
+      if:
+        properties: { kind: { const: these } }
+      then:
+        required: [values]
+
+    # ---- primitives. Defined locally, not $ref'd across contract files ------
+    #
+    # `capability.openapi.yaml` and `foundation.openapi.yaml` each declare their
+    # own copies of these, which is the house pattern and is deliberate here:
+    # this is the only contract that crosses an AWS account boundary, and a
+    # cross-file $ref would let a data-plane-side edit change what a customer's
+    # plane validates against. A breaking change here does not fail in CI.
+
+    DomainKey:
+      type: string
+      enum: [finance, kyc, credit_underwriting, medical_records]
+
+    Severity:
+      type: string
+      enum: [critical, high, medium, low]
+
+    AutonomyCeiling:
+      type: string
+      description: |
+        `Severity | 'none'`. The ladder is none → low → medium → high →
+        critical, and widening moves right.
+      enum: [none, low, medium, high, critical]
+
+    DataClass:
+      type: string
+      enum: [public, internal, personal, sensitive_personal]
+
+    RegionKey:
+      type: string
+      description: |
+        `ap-southeast-1` is the default: Singapore-resident data avoids PDPA's
+        Transfer Limitation Obligation entirely. `global.*` is not a region and
+        is not representable here.
+      enum: [ap-southeast-1, us-west-2, ap-south-1, eu-west-1]
+
+    AgentAction:
+      type: string
+      description: |
+        Includes `admit` — admitting an inbound message as evidence. It was
+        added because the single most security-critical act an agent can take
+        could not be NAMED, so `AutonomyConfig.permittedActions` could not list
+        it. An unnameable action is an ungoverned one.
+      enum:
+        - classify
+        - extract
+        - explain
+        - admit
+        - propose_resolution
+        - execute_resolution
+        - notify
+        - close_exception
+
+    # ---------------------------------------------------------------- X8
+
+    AccessGrantSet:
+      type: object
+      additionalProperties: false
+      required: [issuedAt, grants]
+      properties:
+        issuedAt: { type: string, format: date-time }
+        grants:
+          type: array
+          description: |
+            LIVE GRANTS ONLY. An expired, revoked or idle-lapsed grant is
+            simply absent rather than present-and-flagged — a plane that has to
+            reason about why a grant is inert is a plane that will get it
+            wrong. Absence is unambiguous.
+          items: { $ref: '#/components/schemas/SignedAccessGrant' }
+
+    SignedAccessGrant:
+      type: object
+      description: |
+        Mirrors `TenantAccessGrant` in `model/governance.ts`. Signed, so the
+        plane can verify it without trusting the channel it arrived on.
+      additionalProperties: false
+      required:
+        - id
+        - tenantRef
+        - purpose
+        - staffUserId
+        - approvedByStaffUserId
+        - justification
+        - resources
+        - grantedAt
+        - expiresAt
+        - idleRevokeDays
+        - visibleToTenant
+        - signature
+        - signingKeyId
+      properties:
+        id: { type: string }
+        tenantRef: { type: string }
+        purpose:
+          type: string
+          enum: [delivery, incident]
+          description: |
+            `delivery` runs for WEEKS under a signed engagement and CANNOT
+            REACH `tenant_data` at all — that resource ceiling is the property
+            that makes a long grant acceptable. `incident` may reach tenant
+            data, for at most 24 hours, under per-incident consent.
+        staffUserId: { type: string }
+        approvedByStaffUserId:
+          type: string
+          description: |
+            A second staff member. `approvedByStaffUserId !== staffUserId` is
+            enforced at issue; self-approval is the failure mode the field
+            exists for. The plane re-checks it rather than trusting that we
+            did.
+        justification:
+          type: string
+          description: Required, free text, and SHOWN TO THE CUSTOMER.
+        resources:
+          type: array
+          items: { $ref: '#/components/schemas/AccessResourceGrant' }
+        grantedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        engagementRef:
+          type: [string, 'null']
+          description: |
+            Delivery only, and required there. A grant cannot outlive the
+            engagement someone signed — a date that already exists rather than
+            a fresh judgement call.
+        idleRevokeDays:
+          type: integer
+          description: |
+            Lapses after this many idle days REGARDLESS OF EXPIRY. The
+            abandoned grant nobody remembered to close is the common failure,
+            not the malicious one.
+        visibleToTenant:
+          type: boolean
+          const: true
+          description: |
+            Literal `true`, so an access the customer cannot see is
+            unrepresentable rather than merely discouraged. The audit trail IS
+            the customer-facing surface.
+        customerNotifiedAt: { type: [string, 'null'], format: date-time }
+        customerApprovedAt:
+          type: [string, 'null']
+          description: |
+            Null unless this tenant contracted for an approval gate. The
+            default posture is `granted_only` — no customer gate — because
+            blocking troubleshooting or delivery on someone else's internal
+            process is not acceptable.
+
+            Under BYOA this is only half ours anyway: the cross-account role
+            TRUST POLICY lives in the customer's account, and they can gate or
+            revoke it whatever this field says.
+        signature: { type: string }
+        signingKeyId: { type: string }
+
+    AccessResourceGrant:
+      type: object
+      additionalProperties: false
+      # `nominatedSubjectIds` joined the required list 7 Aug 2026. The model
+      # field is non-optional (`string[]`, never `string[] | undefined`), and
+      # ABSENT vs EMPTY is the one distinction this line cannot afford to leave
+      # open: an empty list grants nothing, and a missing key is a reader's
+      # choice between that and "unrestricted".
+      required: [resource, mode, nominatedSubjectIds]
+      properties:
+        resource:
+          type: string
+          enum: [telemetry, configuration, identity, endpoint, tenant_data, secret, authority]
+          description: |
+            ⚠️ CORRECTED AGAIN 9 Aug 2026 — G75'S WIRE HALF, WHICH WAS MISSING
+            FOR A DAY WHILE THE RECORD SAID IT HAD LANDED. G75 put `secret`
+            into `PERMITTED_RESOURCES.delivery` and removed it from
+            `NON_DELEGABLE_RESOURCES` in `model/governance.ts` on 8 Aug. This
+            enum stayed at six values with `secret` absent, so a plane
+            validating strictly would have REFUSED a well-formed grant the
+            model permits — while the G75 row in `docs/HANDOFF.md` §3 and
+            `docs/v1-trim-proposal.md` §5 item 1 both asserted that "the
+            access-path enum went six values to seven". That is `docs/HANDOFF.md`
+            §5.4 — a claim asserted in a document the contracts refute — sitting
+            on the invariant-8 amendment itself.
+
+            THE SENTENCE THAT IS GONE read: *"`statutory` and `secret` are in
+            `NON_DELEGABLE_RESOURCES` and no authorisation opens them at any
+            price."* It is quoted rather than deleted because it is the exact
+            property G75 was taken against, and because half of it survives:
+            `statutory` is still reachable by nothing and is now the ONLY member
+            of that list.
+
+            `tests/contracts/g75-wire.test.ts` now derives this enum from
+            `model/governance.ts` and fails on any divergence, including the
+            prose counts below. Nothing watched it before, which is why the
+            drift lasted.
+
+            ⚠️ CORRECTED 7 Aug 2026. This enum read
+            `[telemetry, configuration, sample_data, tenant_data]` and had done
+            since 5 Aug. `sample_data` STOPPED BEING A RESOURCE CLASS on 5 Aug
+            evening (pass E, `docs/access-and-agency.md` §11.3): it was never a
+            class, it was `tenant_data` under a different SELECTOR, and
+            `REQUIRES_ENUMERATION` replaced it. The wire kept naming a class
+            `grantAllows()` can no longer be handed, and omitted three classes
+            a grant genuinely reaches.
+
+            THE SEVEN VALUES ARE DERIVED, NOT CHOSEN. They are exactly
+            `PERMITTED_RESOURCES.delivery ∪ PERMITTED_RESOURCES.incident ∪
+            CONTRACT_ONLY_RESOURCES` from `model/governance.ts` — the complete
+            set a `TenantAccessGrant` line may name. The other nine of the
+            sixteen classes are absent for four stated reasons and none of
+            them is oversight: `statutory` is in `NON_DELEGABLE_RESOURCES`,
+            which `authorisationPermits()` checks FIRST — before the null
+            check, before withdrawal — and no purpose and no authorisation
+            opens it at any price; `substrate` and `catalogue` are reached by a
+            platform RELEASE and not by a grant; `deal`, `sandbox` and
+            `partner_staff` are a partner firm's OWN surface, answered on
+            `decide()`'s fifth arm and held in no customer tenant, so a grant
+            INTO one cannot name them (R10, 1 Oct 2026 — this sentence said
+            "the other six of the thirteen classes" and "three stated reasons"
+            until then); `commercial`, `metering` and
+            `schedule` are opened by no purpose and by no contract, and adding
+            one is a WIDENING and therefore an act.
+
+            `secret` IS IN THIS LIST AND IT CARRIES A STANDING 90-DAY REACH.
+            `MAX_GRANT_HOURS.delivery` is `24 * 90`, so membership of
+            `PERMITTED_RESOURCES.delivery` is a standing reach to the customer's
+            credential rather than a per-engagement one.
+            `docs/v1-trim-proposal.md` §4.4 recommended
+            `CONTRACT_ONLY_RESOURCES` instead, beside `authority`, so the
+            customer would decide it at contract time; the product owner chose
+            the broader shape with that argument in front of them. Do not
+            relitigate it and do not quietly narrow it back — narrowing it is a
+            decision, and this enum is derived, so it would have to be taken in
+            `model/governance.ts` first.
+
+            🛑 AN OPEN GAP THIS CORRECTION DOES NOT CLOSE, RECORDED BECAUSE IT
+            IS NEWLY REACHABLE. `secret` HAS NO READ MODE in the model — the
+            class comment in `model/governance.ts` states its modes are bind and
+            rotate and that `read` is unrepresentable, which is the whole reason
+            G75 is survivable. THE `mode` ENUM BELOW IS `[read, write]` AND
+            CANNOT EXPRESS THAT. So `{resource: secret, mode: read}` is now
+            well-formed on the wire and is a grant line the model does not
+            honour. This was unreachable while `secret` was absent from the enum
+            and is reachable as of this change. Closing it is a decision about
+            the `mode` vocabulary, not a transcription, so it is flagged here
+            rather than taken.
+
+            `authority` is in this list and in NEITHER `PERMITTED_RESOURCES`
+            entry. It appears here because a live `SupportAuthorisation` is the
+            one way in — the customer decides it, the platform does not — so a
+            grant line naming it is legitimate and must be transmissible.
+
+            CONFIGURATION IS NOT TENANT DATA. Definitions, rules, procedures,
+            document types and tag policy are what delivery writes, and
+            delivery reads almost no exceptions. A grant permitting
+            configuration write and no data read is a far smaller thing than
+            the old read_write.
+
+            Not overclaimed: configuration is LOW risk, not zero. A fuzzy-match
+            constant or a guard expression could name an individual, and
+            cost-centre vocabularies are customer-authored. It is still
+            recorded as a data access; it simply does not need the same
+            approval weight.
+        mode:
+          type: string
+          enum: [read, write]
+        nominatedSubjectIds:
+          type: array
+          description: |
+            ⚠️ RENAMED 7 Aug 2026, with the enum above and for the same reason.
+            It was `nominatedDocumentIds`, and its description read
+            "`sample_data` ONLY, and required there".
+
+            The model field is `AccessResourceGrant.nominatedSubjectIds`
+            (`model/governance.ts`), and the widening from documents to
+            subjects was the FIX rather than a tidy-up: a branded
+            `SourceDocumentId[]` could only ever name documents, so an FDE who
+            needed one EXCEPTION to debug a field mapping had no delivery path
+            and raised an INCIDENT grant instead — defeating the
+            delivery/incident split that makes a weeks-long grant acceptable.
+
+            WHICH LINES REQUIRE IT IS NOW `REQUIRES_ENUMERATION`, not a class
+            name: `delivery` may name `tenant_data` only with a non-empty list;
+            `incident` requires none, because it reaches the actual failing
+            record on the strength of the purpose, under a grant measured in
+            hours.
+
+            THE CUSTOMER nominates these; an empty list grants NOTHING rather
+            than everything. A FINITE ENUMERATION, never a pattern — `id =
+            ANY($1)` is still a SELECT and `id LIKE '01J%'` is not, and the
+            reverse query, "who can reach this", has to stay relational.
+
+            These identifiers originate in the plane and are returning to it.
+            Nothing new about the customer's data enters our database by
+            carrying them.
+          items: { type: string }
+
+    AccessSessionReportBatch:
+      type: object
+      additionalProperties: false
+      required: [sessions]
+      properties:
+        sessions:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/AccessSessionReport' }
+
+    AccessSessionReport:
+      type: object
+      description: |
+        One period of actual use. The grant permits; the session records.
+      additionalProperties: false
+      required: [sessionId, grantId, staffUserId, startedAt, endedAt, touched]
+      properties:
+        sessionId: { type: string }
+        grantId: { type: string }
+        staffUserId: { type: string }
+        startedAt: { type: string, format: date-time }
+        endedAt: { type: [string, 'null'], format: date-time }
+        touched:
+          type: array
+          description: |
+            Resource classes actually touched, WITH A COUNT AND NO SUBJECTS.
+
+            `AccessSession.accessedSubjects` — every distinct thing looked at —
+            stays in the plane, where the customer-facing access report is
+            rendered. A count does not invert to a subject; a subject list
+            would put an index of the customer's exceptions in our database,
+            which is the exact thing the account boundary exists to prevent.
+          items:
+            type: object
+            additionalProperties: false
+            required: [resource, subjectCount]
+            properties:
+              resource:
+                type: string
+                # ⚠️ CORRECTED 7 Aug 2026 and AGAIN 9 Aug 2026, both times with
+                # `AccessResourceGrant.resource`, which carries the argument.
+                # Same seven values and they must stay the same seven: a session
+                # can only touch a class some grant permitted, so a report
+                # naming a class no grant can name is either a defect in the
+                # plane or a report about an act nobody authorised. Divergence
+                # between these two enums would hide exactly that.
+                #
+                # It was six here until 9 Aug — `secret` was missing from BOTH
+                # enums, so they agreed with each other and disagreed with the
+                # model. That is why `tests/contracts/g75-wire.test.ts` derives
+                # the expectation from `model/governance.ts` and checks the two
+                # enums against IT, not against one another: mutual agreement is
+                # not evidence, and here it was actively hiding the drift.
+                enum: [telemetry, configuration, identity, endpoint, tenant_data, secret, authority]
+              subjectCount: { type: integer, minimum: 0 }
+
+    # ---------------------------------------------------------------- shared ack
+
+    ReceiptAck:
+      type: object
+      additionalProperties: false
+      required: [receivedAt]
+      properties:
+        receivedAt:
+          type: string
+          format: date-time
+          description: OURS. Ordering uses this, never the plane's clock.
+
+# ------------------------------------------------------------- reason codes
+    #
+    # 🛑 A LOCAL COPY OF `errors.yaml#/components/schemas/ErrorCode`, GENERATED
+    # FROM IT, AND THE COPY IS A RULING RATHER THAN AN OVERSIGHT. The owner,
+    # 21 Sep 2026: *"Stop `$ref`-ing `errors.yaml` from success bodies. A
+    # success body carries its own closed enum rather than pointing at the error
+    # taxonomy."* `server/contract/bundle.ts` is NOT changed and its refusal of
+    # external pointers stands — that refusal is the thing that made a success
+    # body pointing here unserialisable, and it is deliberate.
+    #
+    # ⚠️ WHAT IT COST, NAMED RATHER THAN DISCOVERED: this is a SECOND HOME for a
+    # closed vocabulary, which is `db/migrations/0002`'s *"third place to
+    # drift"*. It is a MIRROR rather than a fork, and the thing that makes it one
+    # is `tests/contracts/success-body-error-codes.test.ts`, which asserts SET
+    # EQUALITY WITH `errors.yaml` IN BOTH DIRECTIONS and compares ORDER —
+    # `db/migrations/0008`'s precedent for seeded reference data, and
+    # `tests/contracts/field-path-wire.test.ts` §3's precedent for a structural
+    # copy this same bundler refusal already forced on `FieldPath`.
+    #
+    # ⚠️ IT IS NOT NARROWED, AND THE NON-NARROWING IS A DECISION WITH A
+    # MEASUREMENT BEHIND IT. Only FIVE of these members can be produced into a
+    # success body today — `BLOCKER_CODE` in
+    # `server/data-plane/resolution-vocabulary.ts` is a TOTAL
+    # `Record<ApprovalBlocker, string>` over four, and `unavailableFor`'s
+    # producer writes two literals. A narrowed copy was refused for three
+    # measured reasons: `decidableBy.blockedBy` has NO producer at all, so any
+    # subset there is a guess; at `fast-json-stringify@7.0.1` an `enum` nested
+    # in a `oneOf` IS ENFORCED, so an under-guess on `unavailableFor` is a 500
+    # in production rather than a documentation error; and a narrow set has no
+    # mechanically checkable completeness direction, which is the whole control.
+    # **This slice changes the POINTER, not the SURFACE.** Narrowing is a second
+    # ruling and needs producers most of these fields do not have.
+    #
+    # ⚠️ IT IS APPENDED AT THE END OF `components.schemas` DELIBERATELY, AND NOT
+    # PLACED ALPHABETICALLY. `docs/contracts/README.md` records that roughly
+    # sixty citations in this record address these files as `file.yaml:NNN`;
+    # inserting 88 lines anywhere above would shift every one of them into
+    # the resolving-but-wrong class `tools/check-citations.mjs` structurally
+    # cannot catch.
+    #
+    # DERIVED, NEVER HAND-TYPED. Regenerate and diff:
+    #   node -e "const y=require('yaml'),f=require('fs');\
+    #     const p=(x)=>y.parse(f.readFileSync(x,'utf8')).components.schemas.ErrorCode.enum;\
+    #     console.log(JSON.stringify(p('docs/contracts/errors.yaml'))===\
+    #       JSON.stringify(p('docs/contracts/<this file>')))"
+
+    ErrorCode:
+      type: string
+      description: |
+        Closed and shared. Listed alphabetically; any tier may return any code.
+
+        A LOCAL COPY of `errors.yaml`'s enum of the same name, kept identical to
+        it — members and order — by
+        `tests/contracts/success-body-error-codes.test.ts`. Read the comment
+        block above before changing a member here: this file is the MIRROR and
+        `errors.yaml` is the AUTHORITY.
+      enum:
+        - access_grant_absent
+        - adjustment_currency_mismatch
+        - admission_already_decided
+        - admission_class_above_agent_ceiling
+        - admission_role_insufficient
+        - admission_second_person_required
+        - admitting_step_carries_tools
+        - approval_quorum_unmet
+        - approval_rejection_reason_required
+        - approval_second_approver_required
+        - approval_segregation_violation
+        - attestation_chain_broken
+        - attestation_sequence_gap
+        - attestation_signature_invalid
+        - autonomy_override_reason_required
+        - bound_negative
+        - bound_not_a_number
+        - bound_not_an_integer
+        - bound_zero
+        - bounds_not_configured
+        - capability_not_held
+        - classification_ceiling_exceeded
+        - connection_disabled
+        - data_plane_decommissioned
+        - data_plane_unknown
+        - definition_not_active
+        - disposition_not_offered
+        - disposition_requires_adjustment
+        - document_type_unknown
+        - domain_claimed_by_more_than_one_connection
+        - domain_not_claimed
+        - domain_not_verified
+        - entitlement_ceiling_breached
+        - entitlement_exhausted
+        - entitlement_expired
+        - exception_already_resolved
+        - export_class_excluded
+        - export_destination_not_allowed
+        - export_forbidden_by_policy
+        - idempotency_conflict
+        - idle_exceeds_lifetime
+        - lease_revoked
+        - membership_absent
+        - message_not_admitted
+        - model_provider_throttled
+        - model_residency_violation
+        - model_unavailable_in_account
+        - non_synthetic_ingest_refused
+        - outbound_channel_not_permitted
+        - outbound_endpoint_unverified
+        - pack_not_entitled
+        - pack_version_unsupported
+        - period_closed
+        - policy_bundle_version_unsupported
+        - policy_denied
+        - policy_redacted
+        - policy_requires_approval
+        - proposal_not_executable
+        - proposal_superseded
+        - rate_limited
+        - recommendation_superseded
+        - required_evidence_missing
+        - resolution_not_configured
+        - resource_not_found
+        - retention_class_unknown
+        - reversal_window_expired
+        - sanitisation_rejected
+        - schema_version_unsupported
+        - sender_unverified
+        - sequence_regressed
+        - session_idle_exceeds_ceiling
+        - session_invalid
+        - session_lifetime_exceeds_ceiling
+        - sign_in_attempt_challenge_mismatch
+        - sign_in_attempt_connection_mismatch
+        - sign_in_attempt_handle_mismatch
+        - sign_in_attempt_replayed
+        - signature_key_unknown
+        - slot_fill_incomplete
+        - step_awaiting_reply
+        - step_not_current
+        - subject_location_unregistered
+        - tag_vocabulary_violation
+        - tenant_context_missing
+        - tenant_suspended
+        - tool_out_of_scope
+        - trigger_not_enabled
+        - upload_expired
+        - upstream_unavailable
+        - user_disabled
+        - validation_failed
